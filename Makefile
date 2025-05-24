@@ -1,259 +1,238 @@
 # IotPilot Server Management Makefile
 
-.PHONY: help install start stop restart logs status clean build deploy backup restore update dev test
+.PHONY: help install start stop restart logs status clean build deploy backup restore update
+.PHONY: local-install local-start local-stop local-restart local-logs local-status local-clean
+.PHONY: dev test lint shell health
+
+# Variables
+COMPOSE_FILE = docker-compose.yml
+LOCAL_COMPOSE_FILE = docker-compose.local.yml
+SERVICE ?= iotpilot-app
+ENV_FILE = .env
+LOCAL_ENV_FILE = .env.local
 
 # Default target
 help:
 	@echo "IotPilot Server Management Commands"
 	@echo "=================================="
 	@echo ""
-	@echo "Setup Commands:"
+	@echo "Production:"
 	@echo "  install      - Initial installation and setup"
-	@echo "  build        - Build all Docker images"
+	@echo "  build        - Build Docker images"
+	@echo "  start        - Start services"
+	@echo "  stop         - Stop services"
+	@echo "  restart      - Restart services"
+	@echo "  status       - Show service status"
+	@echo "  logs         - Show logs (SERVICE=name for specific)"
 	@echo "  deploy       - Deploy to production"
 	@echo ""
-	@echo "Service Management:"
-	@echo "  start        - Start all services"
-	@echo "  stop         - Stop all services"
-	@echo "  restart      - Restart all services"
-	@echo "  status       - Show service status"
+	@echo "Local Development:"
+	@echo "  local-install - Setup local environment"
+	@echo "  local-start   - Start local services"
+	@echo "  local-stop    - Stop local services"
+	@echo "  local-restart - Restart local services"
+	@echo "  local-status  - Show local status"
+	@echo "  local-logs    - Show local logs"
+	@echo "  local-clean   - Clean local resources"
 	@echo ""
 	@echo "Development:"
-	@echo "  dev          - Start development environment"
+	@echo "  dev          - Start development (alias for local-start)"
 	@echo "  test         - Run tests"
 	@echo "  lint         - Run linter"
 	@echo ""
 	@echo "Maintenance:"
-	@echo "  logs         - Show logs (use SERVICE=name for specific service)"
 	@echo "  backup       - Create backup"
 	@echo "  restore      - Restore from backup"
-	@echo "  update       - Update and restart services"
-	@echo "  clean        - Clean up unused Docker resources"
-	@echo ""
-	@echo "Examples:"
-	@echo "  make logs SERVICE=iotpilot-app"
-	@echo "  make backup"
-	@echo "  make deploy"
+	@echo "  update       - Update and restart"
+	@echo "  clean        - Clean Docker resources"
+	@echo "  shell        - SSH into container"
+	@echo "  health       - Health check"
 
-# Variables
-COMPOSE_FILE = docker-compose.yml
-SERVICE ?= iotpilot-app
-BACKUP_DIR = ./backups
-ENV_FILE = .env
-
-# Check if .env exists
+# Check environment files
 check-env:
 	@if [ ! -f $(ENV_FILE) ]; then \
-		echo "❌ .env file not found!"; \
-		echo "   Copy .env.example to .env and configure it first:"; \
-		echo "   cp .env.example .env"; \
-		exit 1; \
+		echo "❌ .env not found! Copy .env.example to .env"; exit 1; \
 	fi
 
-# Initial installation
+check-local-env:
+	@if [ ! -f $(LOCAL_ENV_FILE) ]; then \
+		echo "❌ .env.local not found! Copy .env.example to .env.local"; exit 1; \
+	fi
+
+# =============================================================================
+# PRODUCTION COMMANDS
+# =============================================================================
+
 install: check-env
 	@echo "🚀 Installing IotPilot Server..."
 	@chmod +x scripts/*.sh
 	@./scripts/install.sh
 	@echo "✅ Installation complete!"
 
-# Build Docker images
 build: check-env
 	@echo "🔨 Building Docker images..."
 	@docker compose -f $(COMPOSE_FILE) build --no-cache
 	@echo "✅ Build complete!"
 
-# Start services
 start: check-env
-	@echo "▶️  Starting IotPilot services..."
+	@echo "▶️  Starting services..."
 	@docker compose -f $(COMPOSE_FILE) up -d
 	@echo "✅ Services started!"
-	@echo ""
-	@echo "🌐 Access your installation:"
-	@echo "   Dashboard: https://$(shell grep DOMAIN .env | cut -d '=' -f2)"
-	@echo "   Grafana:   https://$(shell grep DOMAIN .env | cut -d '=' -f2)/grafana"
-	@echo "   Traefik:   http://$(shell grep DOMAIN .env | cut -d '=' -f2):8080"
+	@echo "🌐 Dashboard: https://$(shell grep DOMAIN .env | cut -d '=' -f2)"
 
-# Stop services
 stop:
-	@echo "⏹️  Stopping IotPilot services..."
+	@echo "⏹️  Stopping services..."
 	@docker compose -f $(COMPOSE_FILE) down
 	@echo "✅ Services stopped!"
 
-# Restart services
 restart: stop start
 
-# Show service status
 status:
 	@echo "📊 Service Status:"
-	@echo "=================="
 	@docker compose -f $(COMPOSE_FILE) ps
 	@echo ""
-	@echo "📈 Resource Usage:"
-	@echo "=================="
-	@docker stats --no-stream --format "table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.NetIO}}"
+	@docker stats --no-stream --format "table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}"
 
-# Show logs
 logs:
-	@echo "📋 Showing logs for $(SERVICE)..."
+	@echo "📋 Logs for $(SERVICE):"
 	@docker compose -f $(COMPOSE_FILE) logs -f --tail=100 $(SERVICE)
 
-# Development environment
-dev: check-env
-	@echo "🛠️  Starting development environment..."
-	@docker compose -f $(COMPOSE_FILE) -f docker-compose.dev.yml up --build
-	@echo "✅ Development environment started!"
+deploy: check-env build
+	@echo "🚀 Deploying..."
+	@docker compose -f $(COMPOSE_FILE) up -d --remove-orphans
+	@echo "✅ Deployed!"
 
-# Run tests
+# =============================================================================
+# LOCAL DEVELOPMENT COMMANDS
+# =============================================================================
+
+local-install: check-local-env
+	@echo "🚀 Setting up local development..."
+	@chmod +x scripts/*.sh
+	@./scripts/setup-local.sh
+	@echo "✅ Local setup complete!"
+
+local-start: check-local-env
+	@echo "▶️  Starting local services..."
+	@docker compose -f $(LOCAL_COMPOSE_FILE) up -d
+	@echo "✅ Local services started!"
+	@echo "🌐 Dashboard: http://iotpilotserver.test:3001"
+	@echo "🌐 Grafana: http://iotpilotserver.test:3002"
+
+local-stop:
+	@echo "⏹️  Stopping local services..."
+	@docker compose -f $(LOCAL_COMPOSE_FILE) down
+	@echo "✅ Local services stopped!"
+
+local-restart: local-stop local-start
+
+local-status:
+	@echo "📊 Local Service Status:"
+	@docker compose -f $(LOCAL_COMPOSE_FILE) ps
+	@echo ""
+	@docker stats --no-stream --format "table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}"
+
+local-logs:
+	@echo "📋 Local logs for $(SERVICE):"
+	@docker compose -f $(LOCAL_COMPOSE_FILE) logs -f --tail=100 $(SERVICE)
+
+local-clean:
+	@echo "🧹 Cleaning local resources..."
+	@docker compose -f $(LOCAL_COMPOSE_FILE) down -v --remove-orphans
+	@docker system prune -f
+	@echo "✅ Local cleanup complete!"
+
+# =============================================================================
+# DEVELOPMENT COMMANDS
+# =============================================================================
+
+dev: local-start
+
 test:
 	@echo "🧪 Running tests..."
 	@cd app && npm test
 	@echo "✅ Tests complete!"
 
-# Run linter
 lint:
 	@echo "🔍 Running linter..."
 	@cd app && npm run lint
 	@echo "✅ Linting complete!"
 
-# Create backup
+# =============================================================================
+# MAINTENANCE COMMANDS
+# =============================================================================
+
 backup:
 	@echo "💾 Creating backup..."
-	@mkdir -p $(BACKUP_DIR)
+	@mkdir -p ./backups
 	@./scripts/backup.sh
-	@echo "✅ Backup created in $(BACKUP_DIR)/"
+	@echo "✅ Backup created!"
 
-# Restore from backup
 restore:
-	@echo "📥 Restoring from backup..."
+	@echo "📥 Restoring..."
 	@./scripts/restore.sh
 	@echo "✅ Restore complete!"
 
-# Update services
 update: check-env
-	@echo "🔄 Updating IotPilot..."
+	@echo "🔄 Updating..."
 	@git pull
 	@docker compose -f $(COMPOSE_FILE) pull
 	@docker compose -f $(COMPOSE_FILE) build --no-cache
 	@docker compose -f $(COMPOSE_FILE) up -d
 	@echo "✅ Update complete!"
 
-# Deploy to production
-deploy: check-env build
-	@echo "🚀 Deploying to production..."
-	@docker compose -f $(COMPOSE_FILE) up -d --remove-orphans
-	@echo "✅ Deployment complete!"
-	@echo ""
-	@echo "🔍 Checking service health..."
-	@sleep 10
-	@make status
-
-# Clean up Docker resources
 clean:
-	@echo "🧹 Cleaning up Docker resources..."
+	@echo "🧹 Cleaning Docker resources..."
 	@docker system prune -f
 	@docker volume prune -f
 	@echo "✅ Cleanup complete!"
 
-# Show system information
-info:
-	@echo "📊 System Information:"
-	@echo "====================="
-	@echo "Docker version: $(shell docker --version)"
-	@echo "Compose version: $(shell docker compose version)"
-	@echo "Available disk space: $(shell df -h . | tail -1 | awk '{print $4}')"
-	@echo "Memory usage: $(shell free -h | head -2 | tail -1 | awk '{print $3 "/" $2}')"
-	@echo "Load average: $(shell uptime | awk -F'load average:' '{print $2}')"
-	@echo ""
-	@echo "🐳 Docker containers:"
-	@docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
-
-# SSH into a container
 shell:
 	@echo "🖥️  Opening shell in $(SERVICE)..."
 	@docker compose -f $(COMPOSE_FILE) exec $(SERVICE) /bin/bash || \
 	 docker compose -f $(COMPOSE_FILE) exec $(SERVICE) /bin/sh
 
-# Show application logs with filtering
-app-logs:
-	@echo "📱 Application logs:"
-	@docker compose -f $(COMPOSE_FILE) logs -f --tail=50 iotpilot-app | grep -E "(ERROR|WARN|INFO)"
+local-shell:
+	@echo "🖥️  Opening local shell in $(SERVICE)..."
+	@docker compose -f $(LOCAL_COMPOSE_FILE) exec $(SERVICE) /bin/bash || \
+	 docker compose -f $(LOCAL_COMPOSE_FILE) exec $(SERVICE) /bin/sh
 
-# Database operations
-db-migrate:
-	@echo "🗄️  Running database migrations..."
-	@docker compose -f $(COMPOSE_FILE) exec iotpilot-app npm run db:migrate
-	@echo "✅ Migrations complete!"
-
-db-seed:
-	@echo "🌱 Seeding database..."
-	@docker compose -f $(COMPOSE_FILE) exec iotpilot-app npm run db:seed
-	@echo "✅ Database seeded!"
-
-db-backup:
-	@echo "💾 Creating database backup..."
-	@docker compose -f $(COMPOSE_FILE) exec postgres pg_dump -U iotpilot iotpilot > $(BACKUP_DIR)/database-$(shell date +%Y%m%d-%H%M%S).sql
-	@echo "✅ Database backup created!"
-
-# Security scan
-security-scan:
-	@echo "🔒 Running security scan..."
-	@docker run --rm -v $(PWD):/app -w /app node:18-alpine npm audit
-	@echo "✅ Security scan complete!"
-
-# Generate SSL certificates (for development)
-ssl-cert:
-	@echo "🔐 Generating SSL certificates..."
-	@./scripts/generate-ssl.sh
-	@echo "✅ SSL certificates generated!"
-
-# Monitor real-time metrics
-monitor:
-	@echo "📊 Real-time monitoring (Press Ctrl+C to exit)..."
-	@watch -n 2 'docker stats --no-stream --format "table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.NetIO}}"'
-
-# Check health of all services
 health:
 	@echo "❤️  Health check:"
-	@echo "================"
-	@for service in $(docker compose -f $(COMPOSE_FILE) config --services); do \
-		echo -n "$service: "; \
-		if docker compose -f $(COMPOSE_FILE) exec -T $service sh -c 'exit 0' 2>/dev/null; then \
-			echo "✅ healthy"; \
-		else \
-			echo "❌ unhealthy"; \
-		fi; \
-	done
+	@docker compose -f $(COMPOSE_FILE) ps
+	@echo "Testing connectivity..."
+	@curl -f http://localhost:3000/api/health 2>/dev/null && echo "✅ App healthy" || echo "❌ App unhealthy"
 
-# Tail all logs
-logs-all:
-	@echo "📋 Showing all service logs..."
-	@docker compose -f $(COMPOSE_FILE) logs -f --tail=20
+local-health:
+	@echo "❤️  Local health check:"
+	@docker compose -f $(LOCAL_COMPOSE_FILE) ps
+	@echo "Testing connectivity..."
+	@curl -f http://localhost:3001/api/health 2>/dev/null && echo "✅ App healthy" || echo "❌ App unhealthy"
 
-# Quick setup for new installations
-quick-setup: install build deploy
-	@echo "🎉 Quick setup complete!"
-	@echo ""
-	@echo "Next steps:"
-	@echo "1. Configure your domain DNS"
-	@echo "2. Set up device monitoring"
-	@echo "3. Configure Grafana dashboards"
+# =============================================================================
+# QUICK SHORTCUTS
+# =============================================================================
 
-# Development helpers
-dev-install:
-	@echo "📦 Installing development dependencies..."
-	@cd app && npm install
-	@echo "✅ Development dependencies installed!"
+# Quick development setup
+quick-dev: local-install local-start
+	@echo "🎉 Quick development setup complete!"
 
-dev-build:
-	@echo "🔨 Building for development..."
-	@cd app && npm run build
-	@echo "✅ Development build complete!"
+# Quick production setup
+quick-prod: install build deploy
+	@echo "🎉 Quick production setup complete!"
 
-# Performance testing
-perf-test:
-	@echo "⚡ Running performance tests..."
-	@docker run --rm --network iotpilot-network \
-		-v $(PWD)/tests:/tests \
-		node:18-alpine sh -c "cd /tests && npm install && npm run perf"
-	@echo "✅ Performance tests complete!"
+# Switch environments
+switch-local:
+	@make stop 2>/dev/null || true
+	@make local-start
+
+switch-prod:
+	@make local-stop 2>/dev/null || true
+	@make start
+
+# Show what's running
+env-status:
+	@echo "Production:"
+	@docker compose -f $(COMPOSE_FILE) ps 2>/dev/null || echo "  Not running"
+	@echo "Local:"
+	@docker compose -f $(LOCAL_COMPOSE_FILE) ps 2>/dev/null || echo "  Not running"
