@@ -1,0 +1,74 @@
+# Traefik configuration for local development
+api:
+  dashboard: true
+  debug: true
+  insecure: true  # Allow insecure API access for local development
+
+entryPoints:
+  web:
+    address: ":80"
+
+  websecure:
+    address: ":443"
+    http:
+      tls:
+        options: default
+
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false
+    network: iotpilot-server-network
+  file:
+    directory: /etc/traefik/dynamic
+    watch: true
+
+# Disable ACME for local development
+# certificatesResolvers:
+#   letsencrypt:
+#     acme:
+#       email: "admin@iotpilotserver.test"
+#       storage: /etc/traefik/acme/acme.json
+#       httpChallenge:
+#         entryPoint: web
+
+# Global redirect to HTTPS (disabled for local)
+http:
+  middlewares:
+    default-headers:
+      headers:
+        browserXssFilter: true
+        contentTypeNosniff: true
+        frameDeny: false  # Allow frames for local development
+        customFrameOptionsValue: "SAMEORIGIN"
+        customRequestHeaders:
+          X-Forwarded-Proto: "http"  # Use HTTP for local
+
+    secure-headers:
+      headers:
+        accessControlAllowMethods:
+          - GET
+          - OPTIONS
+          - PUT
+          - POST
+          - DELETE
+          - PATCH
+        accessControlMaxAge: 100
+        hostsProxyHeaders:
+          - "X-Forwarded-Host"
+        referrerPolicy: "same-origin"
+
+log:
+  level: DEBUG  # More verbose logging for development
+
+accessLog:
+  filePath: "/var/log/traefik/access.log"
+  format: json
+
+# Disable metrics for local development
+# metrics:
+#   prometheus:
+#     addEntryPointsLabels: true
+#     addServicesLabels: true
+
+ping: {}

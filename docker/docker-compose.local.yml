@@ -1,0 +1,165 @@
+version: '3.8'
+
+services:
+  # Main IotPilot Application
+  iotpilot-app:
+    build:
+      context: ./app
+      dockerfile: ../docker/Dockerfile
+      args:
+        - NODE_ENV=development
+    container_name: iotpilot-server-app
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://iotpilot:${POSTGRES_PASSWORD}@postgres:5432/iotpilot
+      - GRAFANA_URL=http://grafana:3000
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN}
+      - LOKI_URL=http://loki:3100
+      - JWT_SECRET=${JWT_SECRET}
+      - DEVICE_API_KEY=${DEVICE_API_KEY}
+      - DOMAIN=iotpilotserver.test
+      - TAILSCALE_DOMAIN=""
+    ports:
+      - "3001:3000"  # Different port to avoid conflicts
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./app:/app:cached  # For hot reload during development
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      - postgres
+      - redis
+      - influxdb
+      - grafana
+      - loki
+    restart: unless-stopped
+    networks:
+      - iotpilot-network
+      - default  # Connect to default network to communicate with IoT devices
+    extra_hosts:
+      - "iotpilot.test:host-gateway"  # Access your IoT device
+      - "host.docker.internal:host-gateway"
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: iotpilot-server-postgres
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-iotpilot}
+      - POSTGRES_USER=${POSTGRES_USER:-iotpilot}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-iotpilot123}
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=C --lc-ctype=C
+    ports:
+      - "5433:5432"  # Different port to avoid conflicts
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+    networks:
+      - iotpilot-network
+
+  # Redis for caching and sessions
+  redis:
+    image: redis:7-alpine
+    container_name: iotpilot-server-redis
+    ports:
+      - "6380:6379"  # Different port to avoid conflicts
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    networks:
+      - iotpilot-network
+
+  # Grafana for monitoring dashboards
+  grafana:
+    image: grafana/grafana:latest
+    container_name: iotpilot-server-grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin123}
+      - GF_SERVER_DOMAIN=iotpilotserver.test
+      - GF_SERVER_ROOT_URL=http://iotpilotserver.test:3002/
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource,grafana-worldmap-panel,grafana-piechart-panel
+      - GF_FEATURE_TOGGLES_ENABLE=ngalert
+      - GF_UNIFIED_ALERTING_ENABLED=true
+      - GF_ALERTING_ENABLED=false
+    ports:
+      - "3002:3000"  # Direct access to Grafana
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      - postgres
+      - influxdb
+      - loki
+    restart: unless-stopped
+    networks:
+      - iotpilot-network
+
+  # InfluxDB for time-series metrics
+  influxdb:
+    image: influxdb:2.7-alpine
+    container_name: iotpilot-server-influxdb
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=${INFLUXDB_USERNAME:-admin}
+      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUXDB_PASSWORD:-influxdb123}
+      - DOCKER_INFLUXDB_INIT_ORG=${INFLUXDB_ORG:-iotpilot}
+      - DOCKER_INFLUXDB_INIT_BUCKET=${INFLUXDB_BUCKET:-devices}
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUXDB_TOKEN:-my-super-secret-auth-token}
+      - DOCKER_INFLUXDB_INIT_RETENTION=8760h
+    ports:
+      - "8087:8086"  # Different port to avoid conflicts
+    volumes:
+      - influxdb-data:/var/lib/influxdb2
+      - ./influxdb/config:/etc/influxdb2
+    restart: unless-stopped
+    networks:
+      - iotpilot-network
+
+  # Loki for log aggregation
+  loki:
+    image: grafana/loki:latest
+    container_name: iotpilot-server-loki
+    ports:
+      - "3101:3100"  # Different port to avoid conflicts
+    volumes:
+      - ./loki/config.yml:/etc/loki/local-config.yaml
+      - loki-data:/tmp/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    restart: unless-stopped
+    networks:
+      - iotpilot-network
+
+  # Simplified Traefik for local testing (optional)
+  traefik:
+    image: traefik:v3.0
+    container_name: iotpilot-server-traefik
+    ports:
+      - "8081:8080"  # Dashboard on different port
+      - "81:80"      # HTTP on different port
+    volumes:
+      - ./traefik/traefik.local.yml:/etc/traefik/traefik.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped
+    networks:
+      - iotpilot-network
+
+volumes:
+  postgres-data:
+    driver: local
+  grafana-data:
+    driver: local
+  influxdb-data:
+    driver: local
+  loki-data:
+    driver: local
+  redis-data:
+    driver: local
+
+networks:
+  iotpilot-network:
+    name: iotpilot-server-network
+    driver: bridge
