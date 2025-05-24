@@ -1,0 +1,31 @@
+http:
+  middlewares:
+    auth:
+      basicAuth:
+        users:
+          - "${TRAEFIK_AUTH}"
+
+    compression:
+      compress: {}
+
+    rate-limit:
+      rateLimit:
+        burst: 100
+        average: 50
+
+    security-headers:
+      headers:
+        browserXssFilter: true
+        contentTypeNosniff: true
+        forceSTSHeader: true
+        frameDeny: true
+        sslRedirect: true
+        stsIncludeSubdomains: true
+        stsPreload: true
+        stsSeconds: 31536000
+        customFrameOptionsValue: "SAMEORIGIN"
+        customRequestHeaders:
+          X-Forwarded-Proto: "https"
+        customResponseHeaders:
+          X-Robots-Tag: "noindex,nofollow,nosnippet,noarchive"
+          server: ""

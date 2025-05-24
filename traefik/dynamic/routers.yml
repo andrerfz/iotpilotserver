@@ -1,0 +1,26 @@
+http:
+  routers:
+    api:
+      rule: "Host(`${DOMAIN}`) && PathPrefix(`/traefik`)"
+      service: api@internal
+      middlewares:
+        - auth
+        - security-headers
+      tls:
+        certResolver: letsencrypt
+
+  services: {}
+
+tcp:
+  routers:
+    mqtt:
+      rule: "HostSNI(`*`)"
+      service: mqtt
+      entryPoints:
+        - mqtt
+
+  services:
+    mqtt:
+      loadBalancer:
+        servers:
+          - address: "mosquitto:1883"
