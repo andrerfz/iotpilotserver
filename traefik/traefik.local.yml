@@ -1,12 +1,13 @@
-# Traefik configuration for local development
+# Traefik v3.0 configuration with SSL for local development
 api:
   dashboard: true
   debug: true
-  insecure: true  # Allow insecure API access for local development
+  insecure: true
 
 entryPoints:
   web:
     address: ":80"
+    # NO automatic HTTPS redirect for local development
 
   websecure:
     address: ":443"
@@ -18,57 +19,36 @@ providers:
   docker:
     endpoint: "unix:///var/run/docker.sock"
     exposedByDefault: false
-    network: iotpilot-server-network
+    network: iotpilot-network
   file:
     directory: /etc/traefik/dynamic
     watch: true
 
-# Disable ACME for local development
-# certificatesResolvers:
-#   letsencrypt:
-#     acme:
-#       email: "admin@iotpilotserver.test"
-#       storage: /etc/traefik/acme/acme.json
-#       httpChallenge:
-#         entryPoint: web
-
-# Global redirect to HTTPS (disabled for local)
-http:
-  middlewares:
-    default-headers:
-      headers:
-        browserXssFilter: true
-        contentTypeNosniff: true
-        frameDeny: false  # Allow frames for local development
-        customFrameOptionsValue: "SAMEORIGIN"
-        customRequestHeaders:
-          X-Forwarded-Proto: "http"  # Use HTTP for local
-
-    secure-headers:
-      headers:
-        accessControlAllowMethods:
-          - GET
-          - OPTIONS
-          - PUT
-          - POST
-          - DELETE
-          - PATCH
-        accessControlMaxAge: 100
-        hostsProxyHeaders:
-          - "X-Forwarded-Host"
-        referrerPolicy: "same-origin"
+# TLS certificates configuration for local development
+tls:
+  certificates:
+    - certFile: "/etc/traefik/certs/iotpilotserver.test.crt"
+      keyFile: "/etc/traefik/certs/iotpilotserver.test.key"
 
 log:
-  level: DEBUG  # More verbose logging for development
+  level: DEBUG
 
 accessLog:
   filePath: "/var/log/traefik/access.log"
   format: json
 
-# Disable metrics for local development
-# metrics:
-#   prometheus:
-#     addEntryPointsLabels: true
-#     addServicesLabels: true
-
 ping: {}
+
+# HTTP middleware for local development (no redirects)
+http:
+  middlewares:
+    compression:
+      compress: {}
+
+    security-headers:
+      headers:
+        browserXssFilter: true
+        contentTypeNosniff: true
+        frameDeny: false  # Allow frames for local development
+        customFrameOptionsValue: "SAMEORIGIN"
+        # NO SSL redirect for local development

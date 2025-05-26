@@ -2,7 +2,8 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x", "darwin-arm64"]
 }
 
 datasource db {
@@ -20,10 +21,10 @@ model User {
   updatedAt DateTime @updatedAt
 
   // Relations
-  sessions    Session[]
-  devices     Device[]
-  alerts      Alert[]
-  apiKeys     ApiKey[]
+  sessions Session[]
+  devices  Device[]
+  alerts   Alert[]
+  apiKeys  ApiKey[]
 
   @@map("users")
 }
@@ -42,13 +43,13 @@ model Session {
 }
 
 model ApiKey {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   userId    String
   name      String
-  key       String   @unique
+  key       String    @unique
   lastUsed  DateTime?
   expiresAt DateTime?
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
 
   // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -57,52 +58,52 @@ model ApiKey {
 }
 
 model Device {
-  id            String      @id @default(cuid())
-  deviceId      String      @unique // hostname-mac format
-  hostname      String
-  deviceType    DeviceType
-  deviceModel   String?
-  architecture  String
-  location      String?
-  description   String?
+  id           String     @id @default(cuid())
+  deviceId     String     @unique // hostname-mac format
+  hostname     String
+  deviceType   DeviceType
+  deviceModel  String?
+  architecture String
+  location     String?
+  description  String?
 
   // Network information
-  ipAddress     String?
-  tailscaleIp   String?
-  macAddress    String?
+  ipAddress   String?
+  tailscaleIp String?
+  macAddress  String?
 
   // Status
-  status        DeviceStatus @default(OFFLINE)
-  lastSeen      DateTime?
-  lastBoot      DateTime?
-  uptime        String?
+  status   DeviceStatus @default(OFFLINE)
+  lastSeen DateTime?
+  lastBoot DateTime?
+  uptime   String?
 
   // System information
-  cpuUsage      Float?
-  cpuTemp       Float?
-  memoryUsage   Float?
-  memoryTotal   Int?
-  diskUsage     Float?
-  diskTotal     String?
-  loadAverage   String?
+  cpuUsage    Float?
+  cpuTemp     Float?
+  memoryUsage Float?
+  memoryTotal Int?
+  diskUsage   Float?
+  diskTotal   String?
+  loadAverage String?
 
   // Application status
-  appStatus     AppStatus @default(UNKNOWN)
-  agentVersion  String?
+  appStatus    AppStatus @default(UNKNOWN)
+  agentVersion String?
 
   // Ownership
-  userId        String?
+  userId String?
 
   // Timestamps
-  registeredAt  DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  registeredAt DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   // Relations
-  user          User?           @relation(fields: [userId], references: [id])
-  metrics       DeviceMetric[]
-  logs          DeviceLog[]
-  alerts        Alert[]
-  commands      DeviceCommand[]
+  user     User?           @relation(fields: [userId], references: [id])
+  metrics  DeviceMetric[]
+  logs     DeviceLog[]
+  alerts   Alert[]
+  commands DeviceCommand[]
 
   @@map("devices")
 }
@@ -110,9 +111,9 @@ model Device {
 model DeviceMetric {
   id        String   @id @default(cuid())
   deviceId  String
-  metric    String   // cpu_usage, memory_usage, temperature, etc.
+  metric    String // cpu_usage, memory_usage, temperature, etc.
   value     Float
-  unit      String?  // %, °C, MB, etc.
+  unit      String? // %, °C, MB, etc.
   timestamp DateTime @default(now())
 
   // Relations
@@ -127,7 +128,7 @@ model DeviceLog {
   deviceId  String
   level     LogLevel @default(INFO)
   message   String
-  source    String?  // systemd, application, agent, etc.
+  source    String? // systemd, application, agent, etc.
   timestamp DateTime @default(now())
 
   // Relations
@@ -138,17 +139,17 @@ model DeviceLog {
 }
 
 model DeviceCommand {
-  id          String        @id @default(cuid())
-  deviceId    String
-  command     String
-  arguments   String?
-  status      CommandStatus @default(PENDING)
-  output      String?
-  error       String?
-  exitCode    Int?
-  executedAt  DateTime?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id         String        @id @default(cuid())
+  deviceId   String
+  command    String
+  arguments  String?
+  status     CommandStatus @default(PENDING)
+  output     String?
+  error      String?
+  exitCode   Int?
+  executedAt DateTime?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
 
   // Relations
   device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
@@ -157,17 +158,17 @@ model DeviceCommand {
 }
 
 model Alert {
-  id          String      @id @default(cuid())
-  deviceId    String?
-  userId      String?
-  type        AlertType
-  severity    AlertSeverity @default(INFO)
-  title       String
-  message     String
-  resolved    Boolean     @default(false)
-  resolvedAt  DateTime?
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  id         String        @id @default(cuid())
+  deviceId   String?
+  userId     String?
+  type       AlertType
+  severity   AlertSeverity @default(INFO)
+  title      String
+  message    String
+  resolved   Boolean       @default(false)
+  resolvedAt DateTime?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
 
   // Relations
   device Device? @relation(fields: [deviceId], references: [id], onDelete: Cascade)
@@ -253,3 +254,7 @@ enum AlertSeverity {
   ERROR
   CRITICAL
 }
+
+
+
+

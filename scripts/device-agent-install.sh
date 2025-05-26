@@ -1,8 +1,9 @@
 #!/bin/bash
 
-# IotPilot Device Agent Installer
-# Adds monitoring and reporting to existing Pi installations
-# Usage: curl -sSL https://raw.githubusercontent.com/andrerfz/iotpilot/main/scripts/device-agent-install.sh | sudo TAILSCALE_HOSTNAME="custom-name" TAILSCALE_AUTH_KEY="tskey-auth-xxxx" bash
+# IotPilot Device Agent Installer - PRODUCTION
+# Cross-platform installer for ARM devices (armv6, armv7, aarch64)
+# Assumes Tailscale is already installed by the main device installation
+# Usage: curl -sSL https://raw.githubusercontent.com/andrerfz/iotpilotserver/main/scripts/device-agent-install.sh | sudo IOTPILOT_SERVER="dashboard.iotpilot.app" INFLUXDB_TOKEN="your-token" DEVICE_API_KEY="your-key" DEVICE_LOCATION="sensor-room-1" bash
 
 set -e
 
@@ -13,22 +14,10 @@ RED='\033[0;31m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-info() {
-    echo -e "${GREEN}[INFO]${NC} $1"
-}
-
-warn() {
-    echo -e "${YELLOW}[WARNING]${NC} $1"
-}
-
-error() {
-    echo -e "${RED}[ERROR]${NC} $1"
-    exit 1
-}
-
-header() {
-    echo -e "${BLUE}[AGENT]${NC} $1"
-}
+info() { echo -e "${GREEN}[INFO]${NC} $1"; }
+warn() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
+error() { echo -e "${RED}[ERROR]${NC} $1"; exit 1; }
+header() { echo -e "${BLUE}[AGENT]${NC} $1"; }
 
 # Check if running as root
 if [ "$EUID" -ne 0 ]; then
@@ -36,15 +25,24 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 # Configuration variables (can be set as environment variables)
-IOTPILOT_SERVER="${IOTPILOT_SERVER:-iotpilot.app}"
-TAILSCALE_AUTH_KEY="${TAILSCALE_AUTH_KEY:-}"
-DEVICE_TOKEN="${DEVICE_TOKEN:-}"
+IOTPILOT_SERVER="${IOTPILOT_SERVER:-dashboard.iotpilot.app}"
+INFLUXDB_TOKEN="${INFLUXDB_TOKEN:-}"
+DEVICE_API_KEY="${DEVICE_API_KEY:-}"
 DEVICE_LOCATION="${DEVICE_LOCATION:-unknown}"
 
 # Auto-detect if this is being called from existing installation scripts
 if [ -f "/opt/iotpilot/.env" ]; then
     info "Detected existing IotPilot installation, reading configuration..."
     source /opt/iotpilot/.env
+fi
+
+# Validate required environment variables
+if [ -z "$INFLUXDB_TOKEN" ]; then
+    error "INFLUXDB_TOKEN environment variable is required"
+fi
+
+if [ -z "$DEVICE_API_KEY" ]; then
+    error "DEVICE_API_KEY environment variable is required"
 fi
 
 # Detect device type
@@ -62,6 +60,10 @@ detect_device_type() {
             DEVICE_TYPE="pi-3"
         elif [[ "$DEVICE_MODEL" == *"Pi 4"* ]]; then
             DEVICE_TYPE="pi-4"
+        elif [[ "$DEVICE_MODEL" == *"Pi 5"* ]]; then
+            DEVICE_TYPE="pi-5"
+        elif [[ "$DEVICE_MODEL" == *"Orange Pi"* ]]; then
+            DEVICE_TYPE="orange-pi"
         else
             DEVICE_TYPE="raspberry-pi"
         fi
@@ -70,67 +72,173 @@ detect_device_type() {
         warn "Could not detect device model"
     fi
 
-    # Get architecture
-    ARCH=$(uname -m)
-    info "Architecture: $ARCH"
-
     # Generate unique device ID
     DEVICE_ID=$(hostname)-$(cat /sys/class/net/eth0/address 2>/dev/null | tr -d ':' || echo "unknown")
     info "Device ID: $DEVICE_ID"
+    info "Device Type: $DEVICE_TYPE"
 
-    export DEVICE_TYPE DEVICE_MODEL DEVICE_ID ARCH
+    export DEVICE_TYPE DEVICE_MODEL DEVICE_ID
 }
 
-# Install Tailscale for secure networking
-install_tailscale() {
-    header "Installing Tailscale for secure networking..."
+# Detect architecture
+detect_architecture() {
+    ARCH=$(uname -m)
 
-    if command -v tailscale &> /dev/null; then
-        info "Tailscale is already installed"
-        return 0
-    fi
+    case "$ARCH" in
+        "armv6l")
+            ARM_TYPE="armv6"
+            info "Detected: ARM v6 (32-bit) - Pi Zero"
+            ;;
+        "armv7l")
+            ARM_TYPE="armv7"
+            info "Detected: ARM v7 (32-bit) - Pi 2/3"
+            ;;
+        "aarch64")
+            ARM_TYPE="arm64"
+            info "Detected: ARM 64-bit - Pi 3/4/5"
+            ;;
+        "x86_64")
+            ARM_TYPE="x86_64"
+            info "Detected: x86_64 - Generic Linux"
+            ;;
+        *)
+            ARM_TYPE="unknown"
+            warn "Unknown architecture: $ARCH"
+            ;;
+    esac
 
-    # Install Tailscale
-    curl -fsSL https://tailscale.com/install.sh | sh
-    TAILSCALE_HOSTNAME=${TAILSCALE_HOSTNAME:-"iotpilot"}
+    export ARCH ARM_TYPE
+}
 
-    if [ -n "$TAILSCALE_AUTH_KEY" ]; then
-        info "Connecting to Tailscale network..."
-        tailscale up --authkey="$TAILSCALE_AUTH_KEY" \
-                     --hostname="TAILSCALE_HOSTNAME" \
-                     --advertise-tags=tag:iot-device \
-                     --accept-routes
+# Check existing Tailscale installation and determine endpoints
+determine_endpoints() {
+    header "Determining server endpoints..."
+
+    # Check if Tailscale is installed and connected
+    if command -v tailscale &> /dev/null && tailscale status &> /dev/null 2>&1; then
+        info "Tailscale is installed and connected"
+
+        # Get Tailscale IP
+        TAILSCALE_IP=$(tailscale ip -4 2>/dev/null || echo "")
+        if [ -n "$TAILSCALE_IP" ]; then
+            info "Device Tailscale IP: $TAILSCALE_IP"
+            export TAILSCALE_IP
+        fi
+
+        # Try to find IoT Pilot server via Tailscale
+        SERVER_IP=$(tailscale status --json 2>/dev/null | jq -r '.Peer[] | select(.HostName | contains("iotpilot-server")) | .TailscaleIPs[0]' 2>/dev/null || echo "")
+
+        if [ -n "$SERVER_IP" ] && [ "$SERVER_IP" != "null" ]; then
+            info "Found IotPilot server via Tailscale: $SERVER_IP"
+            # Use internal HTTP endpoints for Tailscale mesh
+            INFLUX_ENDPOINT="http://$SERVER_IP:8086"
+            LOKI_ENDPOINT="http://$SERVER_IP:3100/loki/api/v1/push"
+            API_ENDPOINT="http://$SERVER_IP:3000/api"
+            SERVER_TYPE="tailscale"
+        else
+            warn "Tailscale connected but IotPilot server not found in mesh"
+            # Fall back to public endpoints
+            INFLUX_ENDPOINT="https://$IOTPILOT_SERVER"
+            LOKI_ENDPOINT="https://$IOTPILOT_SERVER/loki/api/v1/push"
+            API_ENDPOINT="https://$IOTPILOT_SERVER/api"
+            SERVER_TYPE="public"
+        fi
     else
-        warn "No Tailscale auth key provided. Device will not be automatically connected."
-        info "Run: sudo tailscale up --authkey=YOUR_KEY --hostname=TAILSCALE_HOSTNAME"
+        info "Tailscale not available, using public endpoints"
+        # Use public HTTPS endpoints
+        INFLUX_ENDPOINT="https://$IOTPILOT_SERVER"
+        LOKI_ENDPOINT="https://$IOTPILOT_SERVER/loki/api/v1/push"
+        API_ENDPOINT="https://$IOTPILOT_SERVER/api"
+        SERVER_TYPE="public"
     fi
+
+    info "Server type: $SERVER_TYPE"
+    info "InfluxDB endpoint: $INFLUX_ENDPOINT"
+    info "Loki endpoint: $LOKI_ENDPOINT"
+    info "API endpoint: $API_ENDPOINT"
+
+    export INFLUX_ENDPOINT LOKI_ENDPOINT API_ENDPOINT SERVER_TYPE
 }
 
-# Install and configure Telegraf for metrics collection
+# Install system dependencies
+install_dependencies() {
+    header "Installing system dependencies..."
+
+    # Update package list
+    apt-get update
+
+    # Install required packages
+    apt-get install -y \
+        curl \
+        wget \
+        unzip \
+        jq \
+        cron \
+        lsb-release \
+        gnupg2 \
+        ca-certificates \
+        apt-transport-https
+
+    info "System dependencies installed"
+}
+
+# Install Telegraf with architecture support
 install_telegraf() {
-    header "Installing Telegraf for metrics collection..."
+    header "Installing Telegraf for $ARM_TYPE architecture..."
 
     if command -v telegraf &> /dev/null; then
-        info "Telegraf is already installed"
+        info "Telegraf already installed"
     else
         # Add InfluxData repository
         wget -qO- https://repos.influxdata.com/influxdb.key | apt-key add -
         echo "deb https://repos.influxdata.com/debian $(lsb_release -cs) stable" > /etc/apt/sources.list.d/influxdb.list
         apt-get update
-        apt-get install -y telegraf
-    fi
 
-    # Get Tailscale server address
-    if command -v tailscale &> /dev/null && tailscale status &> /dev/null; then
-        SERVER_ADDRESS=$(tailscale status --json | jq -r '.Peer[] | select(.HostName == "iotpilot-server") | .TailscaleIPs[0]')
-        if [ -z "$SERVER_ADDRESS" ] || [ "$SERVER_ADDRESS" = "null" ]; then
-            SERVER_ADDRESS="$IOTPILOT_SERVER"
+        # Install with fallback to manual installation
+        if ! apt-get install -y telegraf; then
+            warn "Repository installation failed, trying manual download..."
+            install_telegraf_manual
         fi
-    else
-        SERVER_ADDRESS="$IOTPILOT_SERVER"
     fi
 
-    info "Configuring Telegraf to send metrics to: $SERVER_ADDRESS"
+    # Configure Telegraf
+    configure_telegraf
+}
+
+# Manual Telegraf installation fallback
+install_telegraf_manual() {
+    TELEGRAF_VERSION="1.28.5"
+
+    case "$ARM_TYPE" in
+        "armv6"|"armv7")
+            TELEGRAF_URL="https://dl.influxdata.com/telegraf/releases/telegraf_${TELEGRAF_VERSION}-1_armhf.deb"
+            ;;
+        "arm64")
+            TELEGRAF_URL="https://dl.influxdata.com/telegraf/releases/telegraf_${TELEGRAF_VERSION}-1_arm64.deb"
+            ;;
+        "x86_64")
+            TELEGRAF_URL="https://dl.influxdata.com/telegraf/releases/telegraf_${TELEGRAF_VERSION}-1_amd64.deb"
+            ;;
+        *)
+            error "No manual installation available for $ARM_TYPE"
+            ;;
+    esac
+
+    info "Downloading Telegraf for $ARM_TYPE..."
+    wget "$TELEGRAF_URL" -O /tmp/telegraf.deb
+
+    if dpkg -i /tmp/telegraf.deb; then
+        info "Telegraf installed manually"
+        rm /tmp/telegraf.deb
+        apt-get install -f -y
+    else
+        error "Failed to install Telegraf manually"
+    fi
+}
+
+# Configure Telegraf
+configure_telegraf() {
+    info "Configuring Telegraf for $SERVER_TYPE endpoints..."
 
     # Create Telegraf configuration
     cat > /etc/telegraf/telegraf.conf << EOF
@@ -141,6 +249,7 @@ install_telegraf() {
   device_model = "$DEVICE_MODEL"
   location = "$DEVICE_LOCATION"
   architecture = "$ARCH"
+  server_type = "$SERVER_TYPE"
 
 # Agent configuration
 [agent]
@@ -157,8 +266,8 @@ install_telegraf() {
 
 # Output to InfluxDB
 [[outputs.influxdb_v2]]
-  urls = ["http://$SERVER_ADDRESS:8086"]
-  token = "\$INFLUXDB_TOKEN"
+  urls = ["$INFLUX_ENDPOINT"]
+  token = "$INFLUXDB_TOKEN"
   organization = "iotpilot"
   bucket = "devices"
   timeout = "10s"
@@ -243,10 +352,11 @@ install_promtail() {
     else
         # Determine architecture for download
         PROMTAIL_VERSION="2.9.2"
-        case "$ARCH" in
-            "armv6l") PROMTAIL_ARCH="armv6" ;;
-            "armv7l") PROMTAIL_ARCH="armv7" ;;
-            "aarch64") PROMTAIL_ARCH="arm64" ;;
+        case "$ARM_TYPE" in
+            "armv6") PROMTAIL_ARCH="armv6" ;;
+            "armv7") PROMTAIL_ARCH="armv7" ;;
+            "arm64") PROMTAIL_ARCH="arm64" ;;
+            "x86_64") PROMTAIL_ARCH="amd64" ;;
             *) PROMTAIL_ARCH="arm64" ;;
         esac
 
@@ -256,16 +366,6 @@ install_promtail() {
         mv "/tmp/promtail-linux-${PROMTAIL_ARCH}" /usr/local/bin/promtail
         chmod +x /usr/local/bin/promtail
         rm /tmp/promtail.zip
-    fi
-
-    # Get server address
-    if command -v tailscale &> /dev/null && tailscale status &> /dev/null; then
-        SERVER_ADDRESS=$(tailscale status --json | jq -r '.Peer[] | select(.HostName == "iotpilot-server") | .TailscaleIPs[0]')
-        if [ -z "$SERVER_ADDRESS" ] || [ "$SERVER_ADDRESS" = "null" ]; then
-            SERVER_ADDRESS="$IOTPILOT_SERVER"
-        fi
-    else
-        SERVER_ADDRESS="$IOTPILOT_SERVER"
     fi
 
     # Create Promtail configuration
@@ -279,7 +379,7 @@ positions:
   filename: /tmp/positions.yaml
 
 clients:
-  - url: http://$SERVER_ADDRESS:3100/loki/api/v1/push
+  - url: $LOKI_ENDPOINT
 
 scrape_configs:
   - job_name: system
@@ -290,6 +390,7 @@ scrape_configs:
           job: varlogs
           device_id: $DEVICE_ID
           device_type: $DEVICE_TYPE
+          server_type: $SERVER_TYPE
           __path__: /var/log/*log
 
   - job_name: iotpilot-app
@@ -300,6 +401,7 @@ scrape_configs:
           job: iotpilot
           device_id: $DEVICE_ID
           device_type: $DEVICE_TYPE
+          server_type: $SERVER_TYPE
           __path__: /opt/iotpilot/app/*.log
 
   - job_name: systemd
@@ -309,6 +411,7 @@ scrape_configs:
         job: systemd-journal
         device_id: $DEVICE_ID
         device_type: $DEVICE_TYPE
+        server_type: $SERVER_TYPE
     relabel_configs:
       - source_labels: ['__journal__systemd_unit']
         target_label: 'unit'
@@ -351,20 +454,19 @@ create_device_agent() {
 #!/bin/bash
 # IotPilot Device Agent - Reports device status to central server
 
-IOTPILOT_SERVER="$IOTPILOT_SERVER"
 DEVICE_ID="$DEVICE_ID"
-DEVICE_TOKEN="$DEVICE_TOKEN"
+DEVICE_API_KEY="$DEVICE_API_KEY"
 
-# Function to get server address (Tailscale preferred)
+# Function to get server address (Tailscale preferred, fallback to public)
 get_server_address() {
-    if command -v tailscale &> /dev/null && tailscale status &> /dev/null; then
-        SERVER_IP=\$(tailscale status --json | jq -r '.Peer[] | select(.HostName == "iotpilot-server") | .TailscaleIPs[0]')
+    if command -v tailscale &> /dev/null && tailscale status &> /dev/null 2>&1; then
+        SERVER_IP=\$(tailscale status --json 2>/dev/null | jq -r '.Peer[] | select(.HostName | contains("iotpilot-server")) | .TailscaleIPs[0]' 2>/dev/null)
         if [ -n "\$SERVER_IP" ] && [ "\$SERVER_IP" != "null" ]; then
-            echo "http://\$SERVER_IP:3000"
+            echo "http://\$SERVER_IP:3000/api"
             return
         fi
     fi
-    echo "https://\$IOTPILOT_SERVER"
+    echo "$API_ENDPOINT"
 }
 
 # Function to collect device metrics
@@ -426,7 +528,7 @@ collect_device_metrics() {
   "tailscale_ip": "\$TAILSCALE_IP",
   "uptime": "\$(uptime -p)",
   "load_average": "\$LOAD_AVERAGE",
-  "cpu_usage": "\$CPU_USAGE",
+  "cpu_usage": \$CPU_USAGE,
   "cpu_temperature": \$CPU_TEMP,
   "memory_usage_percent": \$MEMORY_PERCENT,
   "memory_used_mb": \$MEMORY_USED,
@@ -449,9 +551,9 @@ report_device_status() {
 
     # Send to IotPilot server
     HTTP_STATUS=\$(curl -w "%{http_code}" -o /dev/null -s \\
-         -X POST "\$SERVER_URL/api/devices/heartbeat" \\
+         -X POST "\$SERVER_URL/devices/heartbeat" \\
          -H "Content-Type: application/json" \\
-         -H "Authorization: Bearer \$DEVICE_TOKEN" \\
+         -H "X-API-Key: \$DEVICE_API_KEY" \\
          -H "User-Agent: IotPilot-Agent/1.0.0" \\
          -d "\$DEVICE_DATA" \\
          --max-time 15 \\
@@ -534,16 +636,16 @@ EOF
 register_device() {
     header "Registering device with IotPilot server..."
 
-    # Try to register the device
-    if command -v tailscale &> /dev/null && tailscale status &> /dev/null; then
-        SERVER_IP=$(tailscale status --json | jq -r '.Peer[] | select(.HostName == "iotpilot-server") | .TailscaleIPs[0]')
+    # Determine registration endpoint
+    if command -v tailscale &> /dev/null && tailscale status &> /dev/null 2>&1; then
+        SERVER_IP=$(tailscale status --json 2>/dev/null | jq -r '.Peer[] | select(.HostName | contains("iotpilot-server")) | .TailscaleIPs[0]' 2>/dev/null)
         if [ -n "$SERVER_IP" ] && [ "$SERVER_IP" != "null" ]; then
-            SERVER_URL="http://$SERVER_IP:3000"
+            SERVER_URL="http://$SERVER_IP:3000/api"
         else
-            SERVER_URL="https://$IOTPILOT_SERVER"
+            SERVER_URL="$API_ENDPOINT"
         fi
     else
-        SERVER_URL="https://$IOTPILOT_SERVER"
+        SERVER_URL="$API_ENDPOINT"
     fi
 
     REGISTRATION_DATA=$(cat << EOF
@@ -555,6 +657,7 @@ register_device() {
   "architecture": "$ARCH",
   "location": "$DEVICE_LOCATION",
   "ip_address": "$(hostname -I | awk '{print $1}')",
+  "tailscale_ip": "${TAILSCALE_IP:-}",
   "auto_registered": true,
   "registration_time": "$(date -Iseconds)"
 }
@@ -564,8 +667,9 @@ EOF
     info "Attempting to register with: $SERVER_URL"
 
     HTTP_STATUS=$(curl -w "%{http_code}" -o /tmp/registration_response.json -s \
-         -X POST "$SERVER_URL/api/devices/register" \
+         -X POST "$SERVER_URL/devices/register" \
          -H "Content-Type: application/json" \
+         -H "X-API-Key: $DEVICE_API_KEY" \
          -H "User-Agent: IotPilot-Agent/1.0.0" \
          -d "$REGISTRATION_DATA" \
          --max-time 15 \
@@ -586,47 +690,6 @@ EOF
     rm -f /tmp/registration_response.json
 }
 
-# Update existing installation scripts
-update_existing_scripts() {
-    header "Updating existing IotPilot installation scripts..."
-
-    # Function to add agent installation to existing scripts
-    add_agent_to_script() {
-        local script_path="$1"
-        local script_name="$2"
-
-        if [ -f "$script_path" ]; then
-            info "Found $script_name, updating..."
-            if ! grep -q "install_iotpilot_agent" "$script_path"; then
-                cat >> "$script_path" << 'AGENT_EOF'
-
-# Install IotPilot Device Agent
-install_iotpilot_agent() {
-    info "Installing IotPilot Device Agent..."
-    curl -sSL https://raw.githubusercontent.com/andrerfz/iotpilot/main/scripts/device-agent-install.sh | \
-        IOTPILOT_SERVER="$IOTPILOT_SERVER" \
-        TAILSCALE_AUTH_KEY="$TAILSCALE_AUTH_KEY" \
-        DEVICE_LOCATION="$DEVICE_LOCATION" \
-        bash
-}
-
-# Add to main installation function
-install_iotpilot_agent
-AGENT_EOF
-                info "Updated $script_name with agent installation"
-            else
-                info "$script_name already includes agent installation"
-            fi
-        fi
-    }
-
-    # Update known installation scripts
-    add_agent_to_script "/root/autoinstaller-pi-zero-armv6.sh" "Pi Zero installer script"
-    add_agent_to_script "/root/autoinstaller-pi-3-aarch64.sh" "Pi 3/4 installer script"
-    add_agent_to_script "/opt/iotpilot/scripts/autoinstaller-pi-zero-armv6.sh" "Pi Zero installer (iotpilot dir)"
-    add_agent_to_script "/opt/iotpilot/scripts/autoinstaller-pi-3-aarch64.sh" "Pi 3/4 installer (iotpilot dir)"
-}
-
 # Show final information
 show_final_info() {
     echo ""
@@ -640,16 +703,20 @@ show_final_info() {
     echo "  • Device ID: $DEVICE_ID"
     echo "  • Device Type: $DEVICE_TYPE"
     echo "  • Model: $DEVICE_MODEL"
-    echo "  • Architecture: $ARCH"
+    echo "  • Architecture: $ARCH ($ARM_TYPE)"
     echo ""
     echo "🔗 Connection:"
     echo "  • IotPilot Server: $IOTPILOT_SERVER"
+    echo "  • Connection Type: $SERVER_TYPE"
     echo "  • Reporting Interval: Every 5 minutes"
+    if [ -n "$TAILSCALE_IP" ]; then
+        echo "  • Tailscale IP: $TAILSCALE_IP"
+    fi
     echo ""
     echo "📈 Monitoring:"
-    echo "  • Metrics: Telegraf → InfluxDB"
-    echo "  • Logs: Promtail → Loki"
-    echo "  • Status: Device Agent → API"
+    echo "  • Metrics: Telegraf → InfluxDB ($INFLUX_ENDPOINT)"
+    echo "  • Logs: Promtail → Loki ($LOKI_ENDPOINT)"
+    echo "  • Status: Device Agent → API ($API_ENDPOINT)"
     echo ""
     echo "🛠️ Management Commands:"
     echo "  • iotpilot-agent test    - Test agent functionality"
@@ -657,6 +724,12 @@ show_final_info() {
     echo "  • systemctl status iotpilot-agent.timer - Check timer status"
     echo "  • tail -f /var/log/iotpilot-agent.log - View agent logs"
     echo ""
+    if [ -n "$TAILSCALE_IP" ]; then
+        echo "🌐 Tailscale Status:"
+        echo "  • tailscale status       - Check Tailscale connection"
+        echo "  • tailscale ip          - Show Tailscale IP addresses"
+        echo ""
+    fi
     echo "📁 Configuration Files:"
     echo "  • Telegraf: /etc/telegraf/telegraf.conf"
     echo "  • Promtail: /etc/promtail/config.yml"
@@ -666,6 +739,9 @@ show_final_info() {
     echo "  1. Check agent status: iotpilot-agent status"
     echo "  2. View logs: tail -f /var/log/iotpilot-agent.log"
     echo "  3. Verify device appears in your IotPilot dashboard"
+    if [ "$SERVER_TYPE" = "tailscale" ]; then
+        echo "  4. Verify Tailscale connectivity: tailscale status"
+    fi
     echo ""
     echo "Your device is now connected to the IotPilot management system!"
     echo ""
@@ -675,21 +751,23 @@ show_final_info() {
 main() {
     echo ""
     echo -e "${BLUE}=============================================${NC}"
-    echo -e "${BLUE}   IotPilot Device Agent Installer   ${NC}"
+    echo -e "${BLUE}   IotPilot Device Agent Installer (Production)   ${NC}"
     echo -e "${BLUE}=============================================${NC}"
     echo ""
 
     info "Installing IotPilot device monitoring agent..."
+    info "Target server: $IOTPILOT_SERVER"
     info "This will add monitoring capabilities to your device"
     echo ""
 
     detect_device_type
-    install_tailscale
+    detect_architecture
+    determine_endpoints
+    install_dependencies
     install_telegraf
     install_promtail
     create_device_agent
     register_device
-    update_existing_scripts
     show_final_info
 }
 

@@ -59,11 +59,20 @@ export async function GET() {
 
 async function checkInfluxDB(): Promise<string> {
     try {
+        // Create AbortController for timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+
         const response = await fetch(`${process.env.INFLUXDB_URL}/health`, {
-            timeout: 5000
+            signal: controller.signal
         });
+
+        clearTimeout(timeoutId);
         return response.ok ? 'healthy' : 'unhealthy';
-    } catch {
+    } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError') {
+            return 'timeout';
+        }
         return 'unreachable';
     }
 }
@@ -79,11 +88,20 @@ async function checkRedis(): Promise<string> {
 
 async function checkGrafana(): Promise<string> {
     try {
+        // Create AbortController for timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+
         const response = await fetch(`${process.env.GRAFANA_URL}/api/health`, {
-            timeout: 5000
+            signal: controller.signal
         });
+
+        clearTimeout(timeoutId);
         return response.ok ? 'healthy' : 'unhealthy';
-    } catch {
+    } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError') {
+            return 'timeout';
+        }
         return 'unreachable';
     }
 }

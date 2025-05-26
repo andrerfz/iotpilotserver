@@ -62,13 +62,6 @@ setup_hosts() {
         echo "127.0.0.1 iotpilotserver.test" | sudo tee -a /etc/hosts
     fi
 
-    # Check if iotpilot.test exists (your IoT device)
-    if grep -q "iotpilot.test" /etc/hosts; then
-        info "iotpilot.test already in hosts file ✓"
-    else
-        warn "iotpilot.test not found in hosts file. Make sure your IoT device is accessible."
-        info "You may need to add: 127.0.0.1 iotpilot.test"
-    fi
 }
 
 # Create necessary directories
@@ -96,65 +89,22 @@ setup_configs() {
         info ".env file already exists"
     fi
 
-    # Create minimal Loki config
-    cat > loki/config.yml << 'EOF'
-auth_enabled: false
-
-server:
-  http_listen_port: 3100
-
-common:
-  path_prefix: /tmp/loki
-  storage:
-    filesystem:
-      chunks_directory: /tmp/loki/chunks
-      rules_directory: /tmp/loki/rules
-  replication_factor: 1
-  ring:
-    instance_addr: 127.0.0.1
-    kvstore:
-      store: inmemory
-
-schema_config:
-  configs:
-    - from: 2020-10-24
-      store: boltdb-shipper
-      object_store: filesystem
-      schema: v11
-      index:
-        prefix: index_
-        period: 24h
-
-ruler:
-  alertmanager_url: http://localhost:9093
-EOF
-
-    # Create Grafana datasource config
-    mkdir -p grafana/provisioning/datasources
-    cat > grafana/provisioning/datasources/datasources.yml << 'EOF'
-apiVersion: 1
-
-datasources:
-  - name: InfluxDB
-    type: influxdb
-    access: proxy
-    url: http://influxdb:8086
-    database: iotpilot
-    jsonData:
-      version: Flux
-      organization: iotpilot
-      defaultBucket: devices
-    secureJsonData:
-      token: my-super-secret-auth-token-for-local-testing
-
-  - name: Loki
-    type: loki
-    access: proxy
-    url: http://loki:3100
-    isDefault: false
-EOF
-
     info "Configuration files created ✓"
+}
+
+# Load environment variables from .env
+load_env() {
+    if [ -f .env ]; then
+        # Export variables from .env file
+        set -a  # automatically export all variables
+        source .env
+        set +a  # stop automatically exporting
+        info "Environment variables loaded from .env"
+    else
+        warn ".env file not found, using defaults"
+        GRAFANA_PASSWORD=""
+        INFLUXDB_PASSWORD=""
+    fi
 }
 
 # Build and start services
@@ -162,28 +112,16 @@ start_services() {
     header "Building and starting services..."
 
     info "Building Docker images..."
-    docker-compose -f docker-compose.local.yml build
+    docker-compose -f docker/docker-compose.local.yml --env-file .env build --no-cache
 
     info "Starting services..."
-    docker-compose -f docker-compose.local.yml up -d
+    docker-compose -f docker/docker-compose.local.yml --env-file .env up -d
 
     info "Waiting for services to start..."
     sleep 15
 
     # Check service health
-    docker-compose -f docker-compose.local.yml ps
-}
-
-# Test connectivity to IoT device
-test_iot_connectivity() {
-    header "Testing IoT device connectivity..."
-
-    if curl -s --connect-timeout 5 http://iotpilot.test &> /dev/null; then
-        info "Successfully connected to IoT device at iotpilot.test ✓"
-    else
-        warn "Cannot reach IoT device at iotpilot.test"
-        info "Make sure your IoT device Docker container is running and accessible"
-    fi
+    docker-compose -f docker/docker-compose.local.yml ps
 }
 
 # Show final information
@@ -196,32 +134,25 @@ show_final_info() {
     echo "🎉 Your IotPilot server is now running locally!"
     echo ""
     echo "📱 Access URLs:"
-    echo "  • Main Dashboard:    http://iotpilotserver.test:3001"
+    echo "  • Main Dashboard:    https://iotpilotserver.test:9443"
     echo "  • Grafana:           http://iotpilotserver.test:3002"
     echo "  • InfluxDB:          http://iotpilotserver.test:8087"
-    echo "  • Loki:              http://iotpilotserver.test:3101"
+    echo "  • Loki:              http://iotpilotserver.test:3101/metrics"
     echo "  • Traefik Dashboard: http://iotpilotserver.test:8081"
     echo ""
     echo "🔐 Login credentials:"
-    echo "  • Grafana:    admin / admin123"
-    echo "  • InfluxDB:   admin / influxdb123"
+    echo "  • Grafana:    admin / ${GRAFANA_PASSWORD}"
+    echo "  • InfluxDB:   admin / ${INFLUXDB_PASSWORD}"
     echo ""
     echo "🔧 Management commands:"
-    echo "  • Start:    docker-compose -f docker-compose.local.yml up -d"
-    echo "  • Stop:     docker-compose -f docker-compose.local.yml down"
-    echo "  • Logs:     docker-compose -f docker-compose.local.yml logs -f [service]"
-    echo "  • Status:   docker-compose -f docker-compose.local.yml ps"
-    echo ""
-    echo "🌐 IoT Device:"
-    echo "  • Your device should be accessible at: http://iotpilot.test"
-    echo "  • The server will collect metrics from this device"
+    echo "  • Help: make help"
     echo ""
     echo "🛠️ Next steps:"
     echo "  1. Configure your IoT device to send data to: http://iotpilotserver.test:3001"
     echo "  2. Set up Grafana dashboards for your metrics"
     echo "  3. Test data flow from your IoT device"
     echo ""
-    echo "For logs: docker-compose -f docker-compose.local.yml logs -f iotpilot-app"
+    echo "For logs: docker-compose -f docker/docker-compose.local.yml logs -f iotpilot-app"
     echo ""
 }
 
@@ -237,8 +168,8 @@ main() {
     setup_hosts
     create_directories
     setup_configs
+    load_env
     start_services
-    test_iot_connectivity
     show_final_info
 }
 

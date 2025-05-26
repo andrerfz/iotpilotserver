@@ -212,13 +212,13 @@ ALTER TABLE "alerts" ADD CONSTRAINT "alerts_deviceId_fkey" FOREIGN KEY ("deviceI
 -- AddForeignKey
 ALTER TABLE "alerts" ADD CONSTRAINT "alerts_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
--- Insert default admin user (password: admin123)
+-- Insert default admin user
 INSERT INTO "users" ("id", "email", "username", "password", "role", "createdAt", "updatedAt")
 VALUES (
            'default-admin-user',
            'admin@iotpilot.local',
            'admin',
-           '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPZTkQP5vDz.K', -- bcrypt hash for 'admin123'
+           '$2a$12$6AqdbjYxNrBnTRJ6wlTIgO/.h4FpO5YCOPtVEHEiMvaOgR.JHiWJq',
            'ADMIN',
            CURRENT_TIMESTAMP,
            CURRENT_TIMESTAMP

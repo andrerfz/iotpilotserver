@@ -9,7 +9,48 @@ http:
       tls:
         certResolver: letsencrypt
 
-  services: {}
+    # Add InfluxDB routing
+    influxdb:
+      rule: "Host(`${DOMAIN}`) && PathPrefix(`/influxdb`)"
+      service: influxdb
+      middlewares:
+        - auth
+        - security-headers
+        - influxdb-strip-prefix
+      tls:
+        certResolver: letsencrypt
+
+    # Add Grafana routing
+    grafana:
+      rule: "Host(`${DOMAIN}`) && PathPrefix(`/grafana`)"
+      service: grafana
+      middlewares:
+        - security-headers
+        - grafana-strip-prefix
+      tls:
+        certResolver: letsencrypt
+
+  services:
+    influxdb:
+      loadBalancer:
+        servers:
+          - url: "http://influxdb:8086"
+
+    grafana:
+      loadBalancer:
+        servers:
+          - url: "http://grafana:3000"
+
+  middlewares:
+    influxdb-strip-prefix:
+      stripPrefix:
+        prefixes:
+          - "/influxdb"
+
+    grafana-strip-prefix:
+      stripPrefix:
+        prefixes:
+          - "/grafana"
 
 tcp:
   routers:

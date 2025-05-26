@@ -37,23 +37,6 @@ check_env() {
     info ".env file found ✓"
 }
 
-# Create necessary directories
-create_directories() {
-    header "Creating application directories..."
-
-    mkdir -p data logs backups
-    mkdir -p grafana/{dashboards,provisioning/dashboards,provisioning/datasources}
-    mkdir -p influxdb/config
-    mkdir -p loki
-    mkdir -p traefik/{config,dynamic}
-    mkdir -p prometheus
-    mkdir -p alertmanager
-    mkdir -p database/init
-    mkdir -p ssh_keys
-
-    info "Directories created ✓"
-}
-
 # Setup permissions
 setup_permissions() {
     header "Setting up permissions..."
@@ -74,161 +57,6 @@ setup_permissions() {
     chmod +x scripts/*.sh || true
 
     info "Permissions set ✓"
-}
-
-# Generate default configuration files
-generate_configs() {
-    header "Generating configuration files..."
-
-    # Loki configuration
-    cat > loki/config.yml << 'EOF'
-auth_enabled: false
-
-server:
-  http_listen_port: 3100
-
-common:
-  path_prefix: /tmp/loki
-  storage:
-    filesystem:
-      chunks_directory: /tmp/loki/chunks
-      rules_directory: /tmp/loki/rules
-  replication_factor: 1
-  ring:
-    instance_addr: 127.0.0.1
-    kvstore:
-      store: inmemory
-
-schema_config:
-  configs:
-    - from: 2020-10-24
-      store: boltdb-shipper
-      object_store: filesystem
-      schema: v11
-      index:
-        prefix: index_
-        period: 24h
-
-ruler:
-  alertmanager_url: http://alertmanager:9093
-
-limits_config:
-  reject_old_samples: true
-  reject_old_samples_max_age: 168h
-EOF
-
-    # Grafana datasources
-    mkdir -p grafana/provisioning/datasources
-    cat > grafana/provisioning/datasources/datasources.yml << EOF
-apiVersion: 1
-
-datasources:
-  - name: InfluxDB
-    type: influxdb
-    access: proxy
-    url: http://influxdb:8086
-    database: iotpilot
-    jsonData:
-      version: Flux
-      organization: \${INFLUXDB_ORG}
-      defaultBucket: \${INFLUXDB_BUCKET}
-    secureJsonData:
-      token: \${INFLUXDB_TOKEN}
-
-  - name: Loki
-    type: loki
-    access: proxy
-    url: http://loki:3100
-    isDefault: false
-
-  - name: Prometheus
-    type: prometheus
-    access: proxy
-    url: http://prometheus:9090
-    isDefault: false
-EOF
-
-    # Prometheus configuration
-    cat > prometheus/prometheus.yml << 'EOF'
-global:
-  scrape_interval: 15s
-  evaluation_interval: 15s
-
-rule_files:
-  - "rules/*.yml"
-
-alerting:
-  alertmanagers:
-    - static_configs:
-        - targets:
-          - alertmanager:9093
-
-scrape_configs:
-  - job_name: 'prometheus'
-    static_configs:
-      - targets: ['localhost:9090']
-
-  - job_name: 'iotpilot-app'
-    static_configs:
-      - targets: ['iotpilot-app:3000']
-    metrics_path: '/api/metrics'
-
-  - job_name: 'node-exporter'
-    static_configs:
-      - targets: ['node-exporter:9100']
-
-  - job_name: 'traefik'
-    static_configs:
-      - targets: ['traefik:8080']
-EOF
-
-    # Alertmanager configuration
-    cat > alertmanager/alertmanager.yml << 'EOF'
-global:
-  smtp_smarthost: 'localhost:587'
-  smtp_from: 'alertmanager@iotpilot.app'
-
-route:
-  group_by: ['alertname']
-  group_wait: 10s
-  group_interval: 10s
-  repeat_interval: 1h
-  receiver: 'web.hook'
-
-receivers:
-  - name: 'web.hook'
-    webhook_configs:
-      - url: 'http://iotpilot-app:3000/api/webhooks/alerts'
-EOF
-
-    # Redis configuration
-    mkdir -p redis
-    cat > redis/redis.conf << 'EOF'
-# Redis configuration for IotPilot
-bind 0.0.0.0
-port 6379
-protected-mode yes
-requirepass ${REDIS_PASSWORD:-}
-
-# Memory management
-maxmemory 128mb
-maxmemory-policy allkeys-lru
-
-# Persistence
-save 900 1
-save 300 10
-save 60 10000
-
-# Logging
-loglevel notice
-logfile ""
-
-# Performance
-tcp-keepalive 300
-timeout 0
-EOF
-
-    info "Configuration files generated ✓"
 }
 
 # Install Node.js dependencies
@@ -293,9 +121,7 @@ main() {
     echo ""
 
     check_env
-    create_directories
     setup_permissions
-    generate_configs
     install_dependencies
     generate_ssl_certs
     init_database

@@ -8,6 +8,7 @@ RUN apk add --no-cache \
     g++ \
     git \
     openssl \
+    openssl-dev \
     ca-certificates \
     && apk upgrade --no-cache
 
@@ -15,27 +16,44 @@ RUN apk add --no-cache \
 WORKDIR /app
 
 # Copy package files first for better caching
-COPY app/package*.json ./
+COPY package*.json ./
+COPY postcss.config.js ./
+COPY tailwind.config.js ./
+COPY next.config.js ./
+COPY tsconfig.json ./
 
-# Install all dependencies (including dev dependencies for build)
-RUN npm ci --include=dev && npm cache clean --force
+# Install dependencies
+RUN if [ -f package-lock.json ]; then \
+        echo "Found package-lock.json, using npm ci"; \
+        npm ci --include=dev && npm cache clean --force; \
+    else \
+        echo "No package-lock.json found, using npm install"; \
+        npm install --include=dev && npm cache clean --force; \
+    fi
 
 # Copy source code
-COPY app/ .
+COPY . .
 
-# Generate Prisma client
-RUN npx prisma generate
+# Create public directory if it doesn't exist
+RUN mkdir -p public
 
-# Build the application
+# Generate Prisma client if schema exists
+RUN if [ -f prisma/schema.prisma ]; then npx prisma generate; fi
+
+# CRITICAL: Build with proper environment for Tailwind
+ENV NODE_ENV=production
 RUN npm run build
 
-# Remove dev dependencies
+# Verify CSS was built properly
+RUN ls -la .next/static/css/ || echo "No CSS files found"
+
+# Remove dev dependencies to reduce image size
 RUN npm prune --omit=dev
 
 # Production stage
-FROM node:20-alpine AS production
+FROM node:20-alpine3.18 AS production
 
-# Install runtime dependencies and security updates
+# Install runtime dependencies
 RUN apk add --no-cache \
     curl \
     bash \
@@ -44,6 +62,10 @@ RUN apk add --no-cache \
     dumb-init \
     tini \
     tzdata \
+    jq \
+    openssl \
+    openssl-dev \
+    libc6-compat \
     && apk upgrade --no-cache \
     && rm -rf /var/cache/apk/*
 
@@ -54,28 +76,51 @@ RUN addgroup -g 1001 -S nodejs && \
 # Set working directory
 WORKDIR /app
 
-# Copy built application from builder stage
-COPY --from=base --chown=iotpilot:nodejs /app/node_modules ./node_modules
+# Copy package files
 COPY --from=base --chown=iotpilot:nodejs /app/package*.json ./
-COPY --from=base --chown=iotpilot:nodejs /app/.next ./.next
-COPY --from=base --chown=iotpilot:nodejs /app/public ./public
-COPY --from=base --chown=iotpilot:nodejs /app/prisma ./prisma
-COPY --from=base --chown=iotpilot:nodejs /app/server.js ./
-COPY --from=base --chown=iotpilot:nodejs /app/next.config.js ./
 
-# Copy additional configuration files
-COPY --chown=iotpilot:nodejs app/tailwind.config.js ./
-COPY --chown=iotpilot:nodejs app/tsconfig.json ./
+# Copy node_modules (production only)
+COPY --from=base --chown=iotpilot:nodejs /app/node_modules ./node_modules
+
+# Copy built Next.js application
+COPY --from=base --chown=iotpilot:nodejs /app/.next ./.next
+
+# Copy static assets
+COPY --from=base --chown=iotpilot:nodejs /app/public ./public
+
+# Copy server file
+COPY --from=base --chown=iotpilot:nodejs /app/server.js ./
+
+# Copy configuration files
+COPY --from=base --chown=iotpilot:nodejs /app/next.config.js ./
+COPY --from=base --chown=iotpilot:nodejs /app/tailwind.config.js ./
+COPY --from=base --chown=iotpilot:nodejs /app/postcss.config.js ./
+COPY --from=base --chown=iotpilot:nodejs /app/tsconfig.json ./
+COPY --from=base --chown=iotpilot:nodejs /app/next-env.d.ts ./
+
+# Copy Prisma files
+COPY --from=base --chown=iotpilot:nodejs /app/prisma ./prisma
+
+# Copy source directory (needed for API routes in Next.js 14 app directory)
+COPY --from=base --chown=iotpilot:nodejs /app/src ./src
+
+# Copy migration file if it exists
+COPY --from=base --chown=iotpilot:nodejs /app/prisma/migration/001_initial_setup.sql ./migration.sql
+
+# Copy startup script
+COPY --from=base --chown=iotpilot:nodejs /app/start.sh ./start.sh
 
 # Create necessary directories with proper permissions
 RUN mkdir -p /app/data /app/logs /app/tmp && \
-    chown -R iotpilot:nodejs /app/data /app/logs /app/tmp && \
-    chmod 755 /app/data /app/logs /app/tmp
+    chown -R iotpilot:nodejs /app && \
+    chmod -R 755 /app && \
+    chmod +x ./start.sh
 
 # Set environment variables
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
+ENV NEXT_TELEMETRY_DISABLED=1
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
@@ -90,20 +135,5 @@ USER iotpilot
 # Use tini as PID 1 to handle signals properly
 ENTRYPOINT ["tini", "--"]
 
-# Start the application
-CMD ["node", "server.js"]
-
-# Build info labels
-ARG BUILD_DATE
-ARG VCS_REF
-ARG VERSION
-
-LABEL org.label-schema.build-date=$BUILD_DATE \
-      org.label-schema.name="iotpilot" \
-      org.label-schema.description="IoT Device Management Platform" \
-      org.label-schema.url="https://github.com/andrerfz/iotpilot" \
-      org.label-schema.vcs-ref=$VCS_REF \
-      org.label-schema.vcs-url="https://github.com/andrerfz/iotpilot" \
-      org.label-schema.vendor="IoTPilot" \
-      org.label-schema.version=$VERSION \
-      org.label-schema.schema-version="1.0"
+# Start with migration script
+CMD ["env", "./start.sh"]

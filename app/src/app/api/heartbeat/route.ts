@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, AlertType, AlertSeverity } from '@prisma/client';
 import { z } from 'zod';
+import { validateApiKey } from '@/lib/auth';
 
 const prisma = new PrismaClient();
 
@@ -25,21 +26,57 @@ const heartbeatSchema = z.object({
     tailscale_ip: z.string().optional()
 });
 
-// POST /api/devices/heartbeat - Receive device heartbeat
+// POST /api/devices/heartbeat - Receive device heartbeat (API key required)
 export async function POST(request: NextRequest) {
     try {
+        // Validate API key for device authentication
+        const apiKey = request.headers.get('x-api-key') ||
+            request.headers.get('authorization')?.replace('ApiKey ', '') ||
+            request.headers.get('authorization')?.replace('Bearer ', '');
+
+        if (!apiKey) {
+            return NextResponse.json(
+                { error: 'API key required for device heartbeat' },
+                { status: 401 }
+            );
+        }
+
+        const { valid, user } = await validateApiKey(apiKey);
+        if (!valid || !user) {
+            return NextResponse.json(
+                { error: 'Invalid API key' },
+                { status: 401 }
+            );
+        }
+
         const body = await request.json();
         const data = heartbeatSchema.parse(body);
 
         // Find the device
         const device = await prisma.device.findUnique({
-            where: { deviceId: data.device_id }
+            where: { deviceId: data.device_id },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        username: true
+                    }
+                }
+            }
         });
 
         if (!device) {
             return NextResponse.json(
                 { error: 'Device not found. Please register the device first.' },
                 { status: 404 }
+            );
+        }
+
+        // Check device ownership (unless API key belongs to admin)
+        if (user.role !== 'ADMIN' && device.userId !== user.id) {
+            return NextResponse.json(
+                { error: 'Device belongs to another user' },
+                { status: 403 }
             );
         }
 
@@ -113,10 +150,13 @@ export async function POST(request: NextRequest) {
         }
 
         // Check for alerts
-        await checkDeviceAlerts(device.id, data);
+        await checkDeviceAlerts(device.id, data, device.userId);
 
         // Send data to InfluxDB for time-series storage
         await sendToInfluxDB(data);
+
+        // Log device heartbeat
+        console.log(`Device heartbeat received: ${data.device_id} from user: ${user.username}`);
 
         return NextResponse.json({
             status: 'success',
@@ -145,15 +185,23 @@ export async function POST(request: NextRequest) {
 }
 
 // Check for alert conditions
-async function checkDeviceAlerts(deviceId: string, data: any) {
-    const alerts = [];
+async function checkDeviceAlerts(deviceId: string, data: any, userId: string | null) {
+    const alerts: Array<{
+        deviceId: string;
+        userId: string | null;
+        type: AlertType;
+        severity: AlertSeverity;
+        title: string;
+        message: string;
+    }> = [];
 
     // High CPU usage
     if (data.cpu_usage && data.cpu_usage > 85) {
         alerts.push({
             deviceId,
-            type: 'HIGH_CPU',
-            severity: data.cpu_usage > 95 ? 'CRITICAL' : 'WARNING',
+            userId,
+            type: AlertType.HIGH_CPU,
+            severity: data.cpu_usage > 95 ? AlertSeverity.CRITICAL : AlertSeverity.WARNING,
             title: 'High CPU Usage',
             message: `CPU usage is ${data.cpu_usage}%`
         });
@@ -163,8 +211,9 @@ async function checkDeviceAlerts(deviceId: string, data: any) {
     if (data.memory_usage_percent && data.memory_usage_percent > 85) {
         alerts.push({
             deviceId,
-            type: 'HIGH_MEMORY',
-            severity: data.memory_usage_percent > 95 ? 'CRITICAL' : 'WARNING',
+            userId,
+            type: AlertType.HIGH_MEMORY,
+            severity: data.memory_usage_percent > 95 ? AlertSeverity.CRITICAL : AlertSeverity.WARNING,
             title: 'High Memory Usage',
             message: `Memory usage is ${data.memory_usage_percent}%`
         });
@@ -174,8 +223,9 @@ async function checkDeviceAlerts(deviceId: string, data: any) {
     if (data.cpu_temperature && data.cpu_temperature > 70) {
         alerts.push({
             deviceId,
-            type: 'HIGH_TEMPERATURE',
-            severity: data.cpu_temperature > 80 ? 'CRITICAL' : 'WARNING',
+            userId,
+            type: AlertType.HIGH_TEMPERATURE,
+            severity: data.cpu_temperature > 80 ? AlertSeverity.CRITICAL : AlertSeverity.WARNING,
             title: 'High Temperature',
             message: `CPU temperature is ${data.cpu_temperature}°C`
         });
@@ -185,8 +235,9 @@ async function checkDeviceAlerts(deviceId: string, data: any) {
     if (data.disk_usage_percent && data.disk_usage_percent > 85) {
         alerts.push({
             deviceId,
-            type: 'LOW_DISK_SPACE',
-            severity: data.disk_usage_percent > 95 ? 'CRITICAL' : 'WARNING',
+            userId,
+            type: AlertType.LOW_DISK_SPACE,
+            severity: data.disk_usage_percent > 95 ? AlertSeverity.CRITICAL : AlertSeverity.WARNING,
             title: 'Low Disk Space',
             message: `Disk usage is ${data.disk_usage_percent}%`
         });
@@ -196,8 +247,9 @@ async function checkDeviceAlerts(deviceId: string, data: any) {
     if (data.app_status === 'ERROR') {
         alerts.push({
             deviceId,
-            type: 'APPLICATION_ERROR',
-            severity: 'ERROR',
+            userId,
+            type: AlertType.APPLICATION_ERROR,
+            severity: AlertSeverity.ERROR,
             title: 'Application Error',
             message: 'Device application is in error state'
         });
@@ -256,6 +308,10 @@ async function sendToInfluxDB(data: any) {
 
         if (points.length === 0) return;
 
+        // Create AbortController for timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+
         // Send to InfluxDB
         const response = await fetch(`${influxUrl}/api/v2/write?org=${influxOrg}&bucket=${influxBucket}`, {
             method: 'POST',
@@ -263,14 +319,21 @@ async function sendToInfluxDB(data: any) {
                 'Authorization': `Token ${influxToken}`,
                 'Content-Type': 'text/plain'
             },
-            body: points.join('\n')
+            body: points.join('\n'),
+            signal: controller.signal
         });
+
+        clearTimeout(timeoutId);
 
         if (!response.ok) {
             console.error('Failed to send metrics to InfluxDB:', response.statusText);
         }
 
     } catch (error) {
-        console.error('Error sending metrics to InfluxDB:', error);
+        if (error instanceof Error && error.name === 'AbortError') {
+            console.error('InfluxDB request timed out');
+        } else {
+            console.error('Error sending metrics to InfluxDB:', error);
+        }
     }
 }

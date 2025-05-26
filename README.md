@@ -1,96 +1,101 @@
 # 🚀 IoT Pilot - Complete IoT Device Management Platform
 
-A comprehensive, production-ready IoT management platform for Raspberry Pi and similar devices. Built with Next.js, Docker, and modern monitoring tools.
+A production-ready IoT management platform for Raspberry Pi and similar devices. Built with Next.js 14, Docker, TypeScript, and modern monitoring tools.
 
-## 📋 Project Status: **COMPLETED & READY**
+## 📋 Project Status: **PRODUCTION READY**
 
-✅ **All critical components implemented**  
-✅ **Production-ready infrastructure**  
-✅ **Complete monitoring stack**  
-✅ **Automated installation scripts**  
-✅ **Security hardened**
+✅ **Complete Next.js 14 App Router implementation**  
+✅ **Full TypeScript with Prisma ORM**  
+✅ **Docker containerization with multi-stage builds**  
+✅ **Production monitoring stack (Grafana, InfluxDB, Loki)**  
+✅ **Tailscale VPN integration**  
+✅ **Device agent with auto-installation**  
+✅ **Real-time SSH terminal access**  
+✅ **Advanced security & authentication**
 
 ---
 
-## 🏗️ Architecture Overview
+## 🏗️ Architecture
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   IoT Devices   │───▶│  Orange Pi Zero │───▶│   Cloud/Remote  │
-│  (Pi Zero, 3,4) │    │   (IoT Server)  │    │   Dashboard     │
+│   IoT Devices   │───▶│  Server/Cloud   │───▶│   Dashboard     │
+│  (Pi Zero, 3,4) │    │  (Any Linux)    │    │   Web/Mobile    │
 │                 │    │                 │    │                 │
-│ • Telegraf      │    │ • Next.js App   │    │ • Web Interface │
-│ • Promtail      │    │ • InfluxDB      │    │ • Mobile App    │
-│ • Agent         │    │ • Grafana       │    │ • API Access   │
-│ • Tailscale     │    │ • Traefik       │    │ • Alerts        │
+│ • Telegraf      │    │ • Next.js 14    │    │ • React/TS      │
+│ • Promtail      │    │ • InfluxDB      │    │ • Real-time WS  │
+│ • Device Agent  │    │ • Grafana       │    │ • SSH Terminal  │
+│ • Tailscale     │    │ • Traefik       │    │ • API Access    │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
-## 🎯 Features
+## 🎯 Core Features
 
 ### 📱 **Device Management**
-- **Real-time monitoring** of CPU, memory, disk, temperature
-- **Device registration** with auto-discovery
-- **Remote SSH access** through web browser
-- **Command execution** on remote devices
-- **File transfer** and log viewing
-- **Grouping and tagging** of devices
+- **Real-time monitoring** - CPU, memory, disk, temperature
+- **Device registration** with auto-discovery via agent
+- **SSH terminal** access through web browser with xterm.js
+- **Remote command execution** with status tracking
+- **File system management** and log viewing
+- **Device grouping** and location-based organization
 
-### 📊 **Monitoring & Analytics**
-- **Grafana dashboards** with beautiful visualizations
-- **InfluxDB** for time-series metrics storage
-- **Loki** for centralized log aggregation
-- **Prometheus** for application metrics
-- **Real-time alerts** via email, Slack, webhooks
+### 📊 **Monitoring Stack**
+- **Grafana dashboards** - Beautiful visualizations and alerting
+- **InfluxDB 2.x** - High-performance time-series storage
+- **Loki** - Centralized log aggregation from all devices
+- **Prometheus** - Application and infrastructure metrics
+- **Real-time alerts** - Email, webhooks, custom integrations
 
 ### 🔒 **Security & Networking**
-- **Tailscale mesh VPN** for secure device connections
-- **SSL/TLS encryption** with automatic certificates
-- **Rate limiting** and DDoS protection
-- **User authentication** and role-based access
-- **API key management** for integrations
+- **Tailscale mesh VPN** - Zero-trust networking for devices
+- **JWT authentication** with role-based access control
+- **API key management** for device authentication
+- **SSL/TLS encryption** with Let's Encrypt auto-renewal
+- **Rate limiting** and security headers via Traefik
 
-### 🛠️ **DevOps & Automation**
-- **Docker containerization** for easy deployment
-- **Automated backups** with S3 support
-- **CI/CD pipeline** with GitHub Actions
-- **Health checks** and monitoring
-- **Horizontal scaling** support
+### 🛠️ **Modern Tech Stack**
+- **Next.js 14** - App Router, Server Components, TypeScript
+- **Prisma ORM** - Type-safe database access with PostgreSQL
+- **Docker** - Multi-stage builds, health checks, security
+- **Traefik v3** - Advanced reverse proxy with auto-SSL
+- **Socket.IO** - Real-time WebSocket communication
 
 ---
 
 ## 🚀 Quick Start
 
-### 1️⃣ **Server Setup (Orange Pi Zero 3)**
+### 1️⃣ **Server Setup (One Command)**
 
 ```bash
-# One-command server installation
-curl -sSL https://raw.githubusercontent.com/andrerfz/iotpilot/main/scripts/orangepi-server-setup.sh | \
-  sudo TAILSCALE_AUTH_KEY="tskey-auth-xxxx" DOMAIN="iotpilot.app" bash
+# Production deployment
+curl -sSL https://raw.githubusercontent.com/andrerfz/iotpilotserver/main/scripts/orangepi-server-setup.sh | \
+  sudo TAILSCALE_AUTH_KEY="tskey-auth-xxxx" DOMAIN="iotpilot.yourdomain.com" bash
 ```
 
 ### 2️⃣ **Device Agent Installation**
 
 ```bash
 # Install on each IoT device
-curl -sSL https://raw.githubusercontent.com/andrerfz/iotpilot/main/scripts/device-agent-install.sh | \
-  sudo IOTPILOT_SERVER="iotpilot.app" TAILSCALE_AUTH_KEY="tskey-auth-xxxx" bash
+curl -sSL https://raw.githubusercontent.com/andrerfz/iotpilotserver/main/scripts/device-agent-install.sh | \
+  sudo IOTPILOT_SERVER="iotpilot.yourdomain.com" TAILSCALE_AUTH_KEY="tskey-auth-xxxx" bash
 ```
 
 ### 3️⃣ **Local Development**
 
 ```bash
-# Clone repository
-git clone https://github.com/andrerfz/iotpilot.git
-cd iotpilot
+# Clone and setup
+git clone https://github.com/andrerfz/iotpilotserver.git
+cd iotpilotserver
 
-# Setup local environment
+# Environment setup
 cp .env.example .env.local
-make local-install
-make local-start
+# Edit .env.local with your configuration
+
+# Quick development start
+make quick-dev
 
 # Access dashboard
-open http://iotpilotserver.test:3001
+open https://iotpilotserver.test:9443
 ```
 
 ---
@@ -98,103 +103,94 @@ open http://iotpilotserver.test:3001
 ## 📁 Project Structure
 
 ```
-iotpilot/
-├── 📱 app/                          # Next.js Application
+iotpilotserver/
+├── 📱 app/                           # Next.js 14 Application
 │   ├── src/
-│   │   ├── app/
-│   │   │   ├── api/                 # API Routes
-│   │   │   │   ├── health/          # Health checks
-│   │   │   │   ├── devices/         # Device management
-│   │   │   │   └── auth/            # Authentication
-│   │   │   ├── page.tsx             # Main dashboard
-│   │   │   └── layout.tsx           # App layout
-│   │   ├── components/              # React components
-│   │   └── lib/                     # Utilities
+│   │   ├── app/                      # App Router
+│   │   │   ├── api/                  # API Routes
+│   │   │   │   ├── auth/             # Authentication
+│   │   │   │   ├── devices/          # Device management
+│   │   │   │   └── health/           # Health checks
+│   │   │   ├── devices/[id]/         # Device pages
+│   │   │   ├── login/                # Auth pages
+│   │   │   ├── page.tsx              # Dashboard
+│   │   │   └── layout.tsx            # Root layout
+│   │   ├── components/               # React components
+│   │   │   ├── device-list.tsx       # Device grid
+│   │   │   ├── ssh-terminal.tsx      # Web terminal
+│   │   │   └── user-menu.tsx         # User interface
+│   │   ├── contexts/                 # React contexts
+│   │   ├── lib/                      # Utilities
+│   │   └── middleware.ts             # Auth middleware
 │   ├── prisma/
-│   │   ├── schema.prisma            # Database schema
-│   │   └── migrations/              # DB migrations
-│   ├── package.json                 # Dependencies
-│   ├── server.js                    # Express server
-│   └── next.config.js               # Next.js config
-├── 🐳 docker/                       # Docker Configuration
-│   ├── Dockerfile                   # App container
-│   ├── docker-compose.yml           # Production setup
-│   └── docker-compose.local.yml     # Development setup
-├── 🔧 scripts/                      # Installation Scripts
-│   ├── orangepi-server-setup.sh     # Server installation
-│   ├── device-agent-install.sh      # Device agent
-│   ├── backup.sh                    # Backup script
-│   └── restore.sh                   # Restore script
-├── 🌐 traefik/                      # Reverse Proxy
-│   ├── traefik.yml                  # Main config
-│   └── dynamic/                     # Dynamic config
-├── 📊 grafana/                      # Monitoring Dashboards
-│   ├── dashboards/                  # Pre-built dashboards
-│   └── provisioning/                # Auto-configuration
-├── 🗄️ influxdb/                     # Time-series Database
-├── 📝 loki/                         # Log Aggregation
-├── 🔍 prometheus/                   # Metrics Collection
-├── ⚙️ .github/workflows/            # CI/CD Pipeline
-└── 📖 docs/                         # Documentation
+│   │   ├── schema.prisma             # Database schema
+│   │   └── migration/                # SQL migrations
+│   ├── server.js                     # Express + Next.js
+│   └── package.json                  # Dependencies
+├── 🐳 docker/                        # Containerization
+│   ├── Dockerfile                    # Multi-stage build
+│   ├── docker-compose.yml            # Production
+│   └── docker-compose.local.yml      # Development
+├── 🔧 scripts/                       # Installation & Management
+│   ├── orangepi-server-setup.sh      # Server installer
+│   ├── device-agent-install.sh       # Device agent
+│   └── setup-local.sh                # Local development
+├── 🌐 traefik/                       # Reverse Proxy
+│   ├── traefik.yml                   # Main config
+│   └── dynamic/                      # Dynamic routing
+├── 📊 grafana/                       # Monitoring
+│   ├── dashboards/                   # Pre-built dashboards
+│   └── provisioning/                 # Auto-config
+├── 🗄️ influxdb/                      # Time-series DB
+├── 📝 loki/                          # Log aggregation
+├── 🔍 prometheus/                    # Metrics
+└── Makefile                          # Management commands
 ```
 
 ---
 
-## 🔧 Components & Technologies
+## 🔧 Technology Stack
 
 ### **Frontend & Backend**
-- **Next.js 14** - React framework with SSR
-- **TypeScript** - Type-safe development
-- **Tailwind CSS** - Utility-first styling
-- **Socket.IO** - Real-time communication
-- **Express.js** - Custom server integration
+- **Next.js 14** - App Router, Server Components, React 18
+- **TypeScript** - Full type safety across the stack
+- **Tailwind CSS** - Utility-first styling with custom design
+- **Lucide React** - Consistent icon system
+- **Socket.IO** - Real-time bidirectional communication
 
 ### **Database & Storage**
-- **PostgreSQL** - Primary database
-- **Prisma** - Type-safe ORM
-- **InfluxDB** - Time-series metrics
-- **Redis** - Caching and sessions
+- **PostgreSQL 15** - Primary relational database
+- **Prisma ORM** - Type-safe database client with migrations
+- **InfluxDB 2.x** - Time-series metrics storage
+- **Redis 7** - Session storage and caching
 
 ### **Monitoring & Observability**
-- **Grafana** - Visualization dashboards
-- **Loki** - Log aggregation
-- **Prometheus** - Metrics collection
-- **Telegraf** - Metrics agent
-- **Promtail** - Log shipping
+- **Grafana 10** - Dashboards, alerting, visualization
+- **Loki** - Log aggregation and querying
+- **Prometheus** - Metrics collection and alerting
+- **Telegraf** - Device metrics collection agent
+- **Promtail** - Log shipping agent
 
 ### **Infrastructure & DevOps**
-- **Docker** - Containerization
-- **Traefik** - Reverse proxy & SSL
-- **Tailscale** - Mesh VPN networking
-- **GitHub Actions** - CI/CD automation
+- **Docker** - Containerization with multi-stage builds
+- **Traefik v3** - Reverse proxy, SSL termination, load balancing
+- **Tailscale** - Zero-trust mesh VPN networking
+- **Let's Encrypt** - Automatic SSL certificate management
 
 ---
 
 ## 🌐 Access Points
 
-### **Production Deployment**
-- **Main Dashboard**: `https://iotpilot.app`
-- **Grafana**: `https://iotpilot.app/grafana`
-- **Traefik Dashboard**: `https://iotpilot.app/traefik` (admin only)
-
-### **Local Development**
-- **Main Dashboard**: `http://iotpilotserver.test:3001`
-- **Grafana**: `http://iotpilotserver.test:3002`
-- **InfluxDB**: `http://localhost:8087`
-- **Traefik**: `http://localhost:8081`
-
----
-
-## 🔑 Default Credentials
-
 ### **Production**
-- **Admin User**: Check `/opt/iotpilot/.env` after installation
-- **Grafana**: `admin` / `${GRAFANA_PASSWORD}`
+- **Main Dashboard**: `https://yourdomain.com`
+- **Grafana**: `https://yourdomain.com/grafana`
+- **Traefik Dashboard**: `https://yourdomain.com/traefik` (admin only)
 
 ### **Local Development**
-- **Admin User**: `admin@iotpilot.local` / `admin123`
-- **Grafana**: `admin` / `admin123`
-- **InfluxDB**: `admin` / `influxdb123`
+- **Main Dashboard**: `https://iotpilotserver.test:9443`
+- **Grafana**: `http://iotpilotserver.test:3002`
+- **InfluxDB**: `http://iotpilotserver.test:8087`
+- **Traefik**: `http://iotpilotserver.test:8081`
 
 ---
 
@@ -203,80 +199,72 @@ iotpilot/
 ### **Production Server**
 ```bash
 # Service management
-iotpilot start        # Start all services
-iotpilot stop         # Stop all services  
-iotpilot restart      # Restart services
-iotpilot status       # Check status
-iotpilot logs         # View logs
+sudo systemctl start iotpilot      # Start all services
+sudo systemctl stop iotpilot       # Stop all services
+sudo systemctl status iotpilot     # Check status
 
-# Maintenance
-iotpilot backup       # Create backup
-iotpilot update       # Update and restart
+# Using Makefile
+make start                          # Start production services
+make stop                           # Stop services
+make logs SERVICE=iotpilot-app      # View logs
+make backup                         # Create backup
 ```
 
 ### **Local Development**
 ```bash
-# Quick commands
-make dev              # Start development
-make local-start      # Start local services
-make local-stop       # Stop local services
-make local-status     # Check status
+# Quick setup
+make fresh-setup                    # Complete fresh install
+make local-start-with-migration     # Start with DB migration
 
-# Development
-make test             # Run tests
-make lint             # Code linting
-make shell            # Access container shell
+# Development workflow
+make dev                            # Start development mode
+make local-logs-app                 # View app logs
+make db-status                      # Check database
+make test-api                       # Test API endpoints
+
+# Database management
+make migrate                        # Run migrations
+make db-shell                       # Open DB shell
+make apply-migration                # Apply SQL migration
 ```
 
 ---
 
-## 📊 Monitoring & Alerting
+## 📊 Built-in Dashboards
 
-### **Built-in Dashboards**
-- **Device Overview** - All devices status
-- **System Metrics** - CPU, memory, disk usage
-- **Network Monitoring** - Connectivity and traffic
-- **Application Health** - Service status and performance
-- **Security Monitoring** - Failed logins, alerts
+### **Device Monitoring**
+- **System Overview** - All devices, status, alerts
+- **Performance Metrics** - CPU, memory, disk, temperature
+- **Network Status** - Connectivity, Tailscale mesh
+- **Historical Trends** - Long-term performance analysis
 
-### **Alert Conditions**
-- 🔥 **High CPU** (>85%)
-- 🧠 **High Memory** (>85%)
-- 🌡️ **High Temperature** (>70°C)
-- 💾 **Low Disk Space** (>85%)
-- 📡 **Device Offline** (>5 minutes)
-- ⚠️ **Application Errors**
-
-### **Notification Channels**
-- 📧 Email notifications
-- 💬 Slack integration
-- 🔗 Custom webhooks
-- 📱 Mobile push (planned)
+### **Application Health**
+- **Service Status** - All components health
+- **API Performance** - Response times, error rates
+- **Resource Usage** - Container metrics
+- **Security Events** - Authentication, access logs
 
 ---
 
 ## 🔒 Security Features
 
-### **Network Security**
-- **Tailscale VPN** mesh networking
-- **SSL/TLS** encryption everywhere
-- **Firewall** configuration
-- **Rate limiting** protection
+### **Authentication & Authorization**
+- **JWT tokens** with configurable expiration
+- **Role-based access** (Admin, User, ReadOnly)
+- **API key management** for device authentication
+- **Session management** with secure cookies
 
-### **Application Security**
-- **JWT** authentication
-- **Role-based** access control
-- **API key** management
-- **Session** security
-- **CORS** protection
-- **Helmet.js** security headers
+### **Network Security**
+- **Tailscale VPN** - Zero-trust mesh networking
+- **TLS encryption** - End-to-end with auto-renewal
+- **Rate limiting** - Protection against abuse
+- **Security headers** - OWASP recommended headers
 
 ### **Infrastructure Security**
-- **Container** isolation
-- **Read-only** file systems
-- **Non-root** users
-- **Secret** management
-- **Automated** security updates
+- **Container isolation** - Non-root users, read-only filesystems
+- **Secret management** - Environment-based configuration
+- **Firewall rules** - Minimal exposed ports
+- **Automated updates** - Security patches via CI/CD
 
 ---
 
@@ -284,101 +272,114 @@ make shell            # Access container shell
 
 ### **Horizontal Scaling**
 - **Load balancing** with Traefik
-- **Database** clustering support
-- **Redis** cluster mode
-- **Multi-region** deployment
+- **Database clustering** - PostgreSQL replication
+- **Cache distribution** - Redis cluster mode
+- **Multi-region deployment** - CloudFlare + Tailscale
 
 ### **Performance Optimizations**
-- **Caching** strategies
-- **Database** indexing
-- **Connection** pooling
-- **Resource** limits
-- **Compression** enabled
-
-### **Monitoring Performance**
-- **Response time** tracking
-- **Error rate** monitoring
-- **Resource usage** alerts
-- **Capacity** planning
+- **Connection pooling** - Database and Redis
+- **Query optimization** - Prisma with indexes
+- **Asset optimization** - Next.js built-in optimizations
+- **Compression** - Gzip/Brotli everywhere
 
 ---
 
 ## 🗃️ Backup & Recovery
 
 ### **Automated Backups**
-- **Daily** automated backups
-- **PostgreSQL** database dumps
-- **InfluxDB** data export
-- **Grafana** dashboards and config
-- **Application** data and logs
+- **Daily database dumps** - Compressed and encrypted
+- **Grafana configuration** - Dashboards and settings
+- **InfluxDB data export** - Time-series data
+- **Application data** - Logs, configurations
 
-### **Backup Storage**
-- **Local** filesystem
-- **AWS S3** integration
-- **Retention** policies
-- **Compression** and encryption
+### **Storage Options**
+- **Local filesystem** - Immediate availability
+- **S3 compatible** - AWS, MinIO, Backblaze
+- **Retention policies** - Configurable cleanup
+- **Encryption** - AES-256 for all backups
 
-### **Disaster Recovery**
 ```bash
-# Create backup
-./scripts/backup.sh
-
-# Restore from backup
-./scripts/restore.sh backup_file.tar.gz
-
-# Verify backup integrity
-make verify-backup
+# Backup commands
+make backup                         # Create full backup
+./scripts/restore.sh backup.tar.gz  # Restore from backup
+make verify-backup                  # Verify backup integrity
 ```
 
 ---
 
-## 🤝 Contributing
+## 🤝 Development & Contributing
 
 ### **Development Setup**
 ```bash
 # Fork and clone
-git clone https://github.com/yourusername/iotpilot.git
-cd iotpilot
+git clone https://github.com/yourusername/iotpilotserver.git
+cd iotpilotserver
 
-# Install dependencies
-make local-install
+# Environment setup
+cp .env.example .env.local
+# Edit with your configuration
 
-# Start development environment
-make dev
-
-# Run tests
-make test
-make lint
+# Development start
+make fresh-setup                    # Complete setup
+make dev                           # Start development
 ```
 
-### **Project Guidelines**
-- **TypeScript** for all new code
-- **ESLint** and **Prettier** for formatting
-- **Jest** for testing
-- **Conventional Commits** for git messages
-- **GitHub Flow** for branching
+### **Code Quality**
+- **TypeScript** - Strict mode enabled
+- **ESLint** - Airbnb configuration with custom rules
+- **Prettier** - Consistent code formatting
+- **Husky** - Pre-commit hooks
+- **Jest** - Unit and integration testing
+
+### **Architecture Principles**
+- **Separation of concerns** - Clear layer boundaries
+- **Type safety** - End-to-end TypeScript
+- **Error handling** - Comprehensive error boundaries
+- **Logging** - Structured logging with Winston
+- **Documentation** - JSDoc and README driven
 
 ---
 
-## 📄 License
+## 🆘 Troubleshooting
 
-MIT License - see [LICENSE](LICENSE) file for details.
+### **Common Issues**
+
+**Database Connection Issues**
+```bash
+make db-status                      # Check database
+make apply-migration                # Apply missing migrations
+make db-shell                       # Direct database access
+```
+
+**Service Health**
+```bash
+make health                         # Overall health check
+make logs SERVICE=iotpilot-app      # Check specific service
+docker ps                           # Container status
+```
+
+**Network Issues**
+```bash
+make tailscale-status               # Check Tailscale connection
+make tailscale-devices              # List connected devices
+curl -f localhost:3001/api/health   # Test API directly
+```
 
 ---
 
-## 🆘 Support & Documentation
+## 📄 License & Support
 
-### **Documentation**
+**License**: MIT License - see [LICENSE](LICENSE) file
+
+**Documentation**:
 - 📖 [Installation Guide](docs/installation.md)
 - 🔧 [Configuration Reference](docs/configuration.md)
 - 🚀 [Deployment Guide](docs/deployment.md)
-- 🔍 [Troubleshooting](docs/troubleshooting.md)
 - 🛠️ [API Documentation](docs/api.md)
 
-### **Community**
-- 💬 [Discord Server](https://discord.gg/iotpilot)
-- 🐛 [Issue Tracker](https://github.com/andrerfz/iotpilot/issues)
-- 💡 [Feature Requests](https://github.com/andrerfz/iotpilot/discussions)
+**Community**:
+- 🐛 [Issue Tracker](https://github.com/andrerfz/iotpilotserver/issues)
+- 💡 [Discussions](https://github.com/andrerfz/iotpilotserver/discussions)
 - 📧 [Email Support](mailto:support@iotpilot.app)
 
 ---
@@ -387,26 +388,25 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ### **Planned Features**
 - 📱 **Mobile app** (React Native)
-- 🤖 **AI-powered** anomaly detection
-- 🔌 **Plugin system** for extensions
+- 🤖 **AI-powered anomaly detection**
+- 🔌 **Plugin system** for custom integrations
 - 📊 **Advanced analytics** and reporting
 - 🌍 **Multi-tenancy** support
-- 🔄 **Device provisioning** automation
 
 ### **Integrations**
-- **Home Assistant** integration
-- **AWS IoT** connectivity
-- **Azure IoT** hub support
-- **Google Cloud IoT** platform
-- **MQTT** broker support
-- **LoRaWAN** device support
+- **Home Assistant** - Smart home integration
+- **AWS IoT** - Cloud connectivity
+- **MQTT brokers** - Industrial IoT protocols
+- **LoRaWAN** - Long-range device support
 
 ---
 
 <div align="center">
 
-## 🌟 **Ready to manage your IoT fleet like a pro?**
+## 🌟 **Ready to manage your IoT infrastructure like a pro?**
 
-[⚡ Get Started](docs/installation.md) • [📖 Documentation](docs/) • [💬 Community](https://discord.gg/iotpilot)
+[⚡ Get Started](docs/installation.md) • [📖 Documentation](docs/) • [🤝 Contributing](CONTRIBUTING.md)
+
+**Built with ❤️ for the IoT community**
 
 </div>

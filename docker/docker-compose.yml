@@ -1,6 +1,29 @@
 version: '3.8'
 
 services:
+  # Tailscale Sidecar - Core networking component
+  tailscale:
+    image: tailscale/tailscale:latest
+    container_name: iotpilot-tailscale
+    hostname: iotpilot-server
+    environment:
+      - TS_AUTHKEY=${TAILSCALE_AUTH_KEY}
+      - TS_HOSTNAME=iotpilot-server
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_USERSPACE=false
+      - TS_ACCEPT_DNS=true
+      - TS_EXTRA_ARGS=--advertise-tags=tag:server --accept-routes
+    volumes:
+      - tailscale-state:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    restart: unless-stopped
+    networks:
+      - iotpilot-network
+    command: tailscaled
+
   # Main IotPilot Application
   iotpilot-app:
     build:
@@ -34,6 +57,7 @@ services:
       - ./data:/app/data
       - ./logs:/app/logs
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - tailscale-socket:/tmp/tailscale
     depends_on:
       postgres:
         condition: service_healthy
@@ -41,6 +65,8 @@ services:
         condition: service_healthy
       influxdb:
         condition: service_healthy
+      tailscale:
+        condition: service_started
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
@@ -48,23 +74,15 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-          cpus: '0.5'
-        reservations:
-          memory: 256M
-          cpus: '0.25'
+    networks:
+      - iotpilot-network
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.iotpilot.rule=Host(`${DOMAIN}`) || Host(`${TAILSCALE_DOMAIN}`)"
+      - "traefik.http.routers.iotpilot.rule=Host(\`${DOMAIN}\`) || Host(\`${TAILSCALE_DOMAIN}\`)"
       - "traefik.http.routers.iotpilot.tls=true"
       - "traefik.http.routers.iotpilot.tls.certresolver=letsencrypt"
       - "traefik.http.services.iotpilot.loadbalancer.server.port=3000"
       - "traefik.http.routers.iotpilot.middlewares=compression,rate-limit,security-headers"
-    networks:
-      - iotpilot-network
 
   # PostgreSQL Database
   postgres:
@@ -85,26 +103,6 @@ services:
       timeout: 5s
       retries: 5
       start_period: 30s
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-          cpus: '0.3'
-        reservations:
-          memory: 128M
-          cpus: '0.1'
-    command: >
-      postgres
-      -c shared_preload_libraries=pg_stat_statements
-      -c pg_stat_statements.track=all
-      -c max_connections=100
-      -c shared_buffers=64MB
-      -c effective_cache_size=128MB
-      -c maintenance_work_mem=32MB
-      -c checkpoint_completion_target=0.9
-      -c wal_buffers=8MB
-      -c random_page_cost=1.1
-      -c effective_io_concurrency=200
     networks:
       - iotpilot-network
 
@@ -114,8 +112,6 @@ services:
     container_name: iotpilot-redis
     volumes:
       - redis-data:/data
-      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
-    command: redis-server /usr/local/etc/redis/redis.conf
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
@@ -123,14 +119,6 @@ services:
       timeout: 3s
       retries: 3
       start_period: 10s
-    deploy:
-      resources:
-        limits:
-          memory: 128M
-          cpus: '0.2'
-        reservations:
-          memory: 64M
-          cpus: '0.1'
     networks:
       - iotpilot-network
 
@@ -140,9 +128,10 @@ services:
     container_name: iotpilot-grafana
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
-      - GF_SERVER_DOMAIN=${DOMAIN}
-      - GF_SERVER_ROOT_URL=https://${DOMAIN}/grafana/
+      - GF_SERVER_DOMAIN=${DOMAIN_TUNEL}
+      - GF_SERVER_ROOT_URL=https://${DOMAIN_TUNEL}/grafana/
       - GF_SERVER_SERVE_FROM_SUB_PATH=true
+      - GF_SECURITY_ALLOW_EMBEDDING=true
       - GF_AUTH_ANONYMOUS_ENABLED=false
       - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource,grafana-worldmap-panel,grafana-piechart-panel
       - GF_FEATURE_TOGGLES_ENABLE=ngalert
@@ -154,7 +143,6 @@ services:
       - GF_DATABASE_USER=${POSTGRES_USER}
       - GF_DATABASE_PASSWORD=${POSTGRES_PASSWORD}
       - GF_DATABASE_SSL_MODE=disable
-      - GF_LOG_LEVEL=warn
     volumes:
       - grafana-data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
@@ -173,23 +161,15 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-          cpus: '0.3'
-        reservations:
-          memory: 128M
-          cpus: '0.1'
+    networks:
+      - iotpilot-network
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.grafana.rule=Host(`${DOMAIN}`) && PathPrefix(`/grafana`)"
+      - "traefik.http.routers.grafana.rule=Host(\`${DOMAIN}\`) && PathPrefix(\`/grafana\`)"
       - "traefik.http.routers.grafana.tls=true"
       - "traefik.http.routers.grafana.tls.certresolver=letsencrypt"
       - "traefik.http.services.grafana.loadbalancer.server.port=3000"
       - "traefik.http.routers.grafana.middlewares=compression,security-headers"
-    networks:
-      - iotpilot-network
 
   # InfluxDB for time-series metrics
   influxdb:
@@ -214,27 +194,17 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-          cpus: '0.5'
-        reservations:
-          memory: 256M
-          cpus: '0.2'
-    command: >
-      sh -c "influxd --reporting-disabled"
     networks:
       - iotpilot-network
 
   # Loki for log aggregation
   loki:
-    image: grafana/loki:latest
+    image: grafana/loki:2.9.8
     container_name: iotpilot-loki
     volumes:
-      - ./loki/config.yml:/etc/loki/local-config.yaml:ro
+      - ./loki/config.yml:/etc/loki/config.yaml:ro
       - loki-data:/tmp/loki
-    command: -config.file=/etc/loki/local-config.yaml
+    command: -config.file=/etc/loki/config.yaml
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3100/ready || exit 1"]
@@ -242,18 +212,10 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-          cpus: '0.3'
-        reservations:
-          memory: 128M
-          cpus: '0.1'
     networks:
       - iotpilot-network
 
-  # Traefik reverse proxy
+  # Traefik reverse proxy with Tailscale integration
   traefik:
     image: traefik:v3.0
     container_name: iotpilot-traefik
@@ -264,12 +226,13 @@ services:
     environment:
       - ACME_EMAIL=${ACME_EMAIL}
       - DOMAIN=${DOMAIN}
-      - TRAEFIK_AUTH=${TRAEFIK_AUTH:-admin:$$2y$$10$$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi}
+      - TRAEFIK_AUTH=${TRAEFIK_AUTH}
     volumes:
       - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
       - ./traefik/dynamic:/etc/traefik/dynamic:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - traefik-certs:/etc/traefik/acme
+      - tailscale-socket:/tmp/tailscale:ro
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "traefik", "healthcheck"]
@@ -277,22 +240,14 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
-    deploy:
-      resources:
-        limits:
-          memory: 128M
-          cpus: '0.2'
-        reservations:
-          memory: 64M
-          cpus: '0.1'
+    networks:
+      - iotpilot-network
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.traefik-dashboard.rule=Host(`${DOMAIN}`) && PathPrefix(`/traefik`)"
+      - "traefik.http.routers.traefik-dashboard.rule=Host(\`${DOMAIN}\`) && PathPrefix(\`/traefik\`)"
       - "traefik.http.routers.traefik-dashboard.tls=true"
       - "traefik.http.routers.traefik-dashboard.service=api@internal"
       - "traefik.http.routers.traefik-dashboard.middlewares=auth"
-    networks:
-      - iotpilot-network
 
   # Prometheus for additional metrics
   prometheus:
@@ -317,195 +272,28 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-          cpus: '0.3'
-        reservations:
-          memory: 128M
-          cpus: '0.1'
-    networks:
-      - iotpilot-network
-
-  # Node Exporter for system metrics
-  node-exporter:
-    image: prom/node-exporter:latest
-    container_name: iotpilot-node-exporter
-    volumes:
-      - /proc:/host/proc:ro
-      - /sys:/host/sys:ro
-      - /:/rootfs:ro
-    command:
-      - '--path.procfs=/host/proc'
-      - '--path.rootfs=/rootfs'
-      - '--path.sysfs=/host/sys'
-      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
-      - '--log.level=warn'
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 64M
-          cpus: '0.1'
-        reservations:
-          memory: 32M
-          cpus: '0.05'
-    network_mode: host
-
-  # Alertmanager for notifications
-  alertmanager:
-    image: prom/alertmanager:latest
-    container_name: iotpilot-alertmanager
-    volumes:
-      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
-      - alertmanager-data:/alertmanager
-    command:
-      - '--config.file=/etc/alertmanager/alertmanager.yml'
-      - '--storage.path=/alertmanager'
-      - '--web.external-url=https://${DOMAIN}/alertmanager'
-      - '--log.level=warn'
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9093/-/healthy"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
-    deploy:
-      resources:
-        limits:
-          memory: 128M
-          cpus: '0.2'
-        reservations:
-          memory: 64M
-          cpus: '0.1'
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.alertmanager.rule=Host(`${DOMAIN}`) && PathPrefix(`/alertmanager`)"
-      - "traefik.http.routers.alertmanager.tls=true"
-      - "traefik.http.services.alertmanager.loadbalancer.server.port=9093"
-      - "traefik.http.routers.alertmanager.middlewares=auth,compression"
-    networks:
-      - iotpilot-network
-
-  # Backup service
-  backup:
-    image: alpine:latest
-    container_name: iotpilot-backup
-    volumes:
-      - postgres-data:/backup/postgres:ro
-      - grafana-data:/backup/grafana:ro
-      - influxdb-data:/backup/influxdb:ro
-      - ./backups:/backups
-      - ./scripts/backup.sh:/backup.sh:ro
-    environment:
-      - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - BACKUP_ENABLED=${BACKUP_ENABLED:-true}
-      - BACKUP_RETENTION_DAYS=${BACKUP_RETENTION_DAYS:-30}
-      - BACKUP_S3_BUCKET=${BACKUP_S3_BUCKET:-}
-      - BACKUP_S3_ACCESS_KEY=${BACKUP_S3_ACCESS_KEY:-}
-      - BACKUP_S3_SECRET_KEY=${BACKUP_S3_SECRET_KEY:-}
-      - BACKUP_S3_REGION=${BACKUP_S3_REGION:-}
-    command: |
-      sh -c "
-        apk add --no-cache postgresql-client curl tar gzip
-        chmod +x /backup.sh
-        echo '0 2 * * * /backup.sh' | crontab -
-        crond -f -l 2
-      "
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 128M
-          cpus: '0.1'
-        reservations:
-          memory: 64M
-          cpus: '0.05'
-    depends_on:
-      - postgres
-    networks:
-      - iotpilot-network
-
-  # Watchtower for automatic updates (optional)
-  watchtower:
-    image: containrrr/watchtower
-    container_name: iotpilot-watchtower
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    environment:
-      - WATCHTOWER_CLEANUP=true
-      - WATCHTOWER_POLL_INTERVAL=86400  # 24 hours
-      - WATCHTOWER_INCLUDE_STOPPED=true
-      - WATCHTOWER_REVIVE_STOPPED=false
-      - WATCHTOWER_NOTIFICATIONS=slack
-      - WATCHTOWER_NOTIFICATION_SLACK_HOOK_URL=${SLACK_WEBHOOK_URL:-}
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 64M
-          cpus: '0.1'
-        reservations:
-          memory: 32M
-          cpus: '0.05'
-    profiles:
-      - auto-update
     networks:
       - iotpilot-network
 
 volumes:
+  tailscale-state:
+    driver: local
+  tailscale-socket:
+    driver: local
   postgres-data:
     driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ./data/postgres
   grafana-data:
     driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ./data/grafana
   influxdb-data:
     driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ./data/influxdb
   loki-data:
     driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ./data/loki
   traefik-certs:
     driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ./data/traefik-certs
   redis-data:
     driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ./data/redis
   prometheus-data:
     driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ./data/prometheus
-  alertmanager-data:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ./data/alertmanager
 
 networks:
   iotpilot-network:

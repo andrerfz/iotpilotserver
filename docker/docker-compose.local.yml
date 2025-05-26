@@ -1,10 +1,28 @@
-version: '3.8'
+name: iotpilotserver
 
 services:
+  # Tailscale Sidecar - Core networking component
+  tailscale:
+    image: tailscale/tailscale:latest
+    container_name: iotpilot-server-tailscale
+    volumes:
+      - tailscale-state:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    network_mode: "service:traefik"
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    environment:
+      - TS_AUTHKEY=${TAILSCALE_AUTH_KEY}
+      - TS_EXTRA_ARGS=--hostname=${HOST_NAME:-iotpilotserver-test} --reset --accept-routes
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_USERSPACE=false
+    restart: unless-stopped
+
   # Main IotPilot Application
   iotpilot-app:
     build:
-      context: ./app
+      context: ../app
       dockerfile: ../docker/Dockerfile
       args:
         - NODE_ENV=development
@@ -12,50 +30,72 @@ services:
     environment:
       - NODE_ENV=development
       - DATABASE_URL=postgresql://iotpilot:${POSTGRES_PASSWORD}@postgres:5432/iotpilot
-      - GRAFANA_URL=http://grafana:3000
-      - INFLUXDB_URL=http://influxdb:8086
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - INFLUXDB_TOKEN=${INFLUXDB_TOKEN}
-      - LOKI_URL=http://loki:3100
       - JWT_SECRET=${JWT_SECRET}
       - DEVICE_API_KEY=${DEVICE_API_KEY}
       - DOMAIN=iotpilotserver.test
-      - TAILSCALE_DOMAIN=""
+      - DOMAIN_TUNEL=dashboarddev.iotpilot.app
+      - TAILSCALE_DOMAIN=${TAILSCALE_DOMAIN}
     ports:
-      - "3001:3000"  # Different port to avoid conflicts
+      - "3001:3000"
     volumes:
-      - ./data:/app/data
-      - ./logs:/app/logs
-      - ./app:/app:cached  # For hot reload during development
+      - ../app/src:/app/src
+      - ../app/tailwind.config.js:/app/tailwind.config.js
+      - ../app/package.json:/app/package.json
+      - ../data:/app/data
+      - ../logs:/app/logs
       - /var/run/docker.sock:/var/run/docker.sock:ro
     depends_on:
-      - postgres
-      - redis
-      - influxdb
-      - grafana
-      - loki
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      influxdb:
+        condition: service_healthy
+      grafana:
+        condition: service_healthy
+      loki:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - iotpilot-network
-      - default  # Connect to default network to communicate with IoT devices
-    extra_hosts:
-      - "iotpilot.test:host-gateway"  # Access your IoT device
-      - "host.docker.internal:host-gateway"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.iotpilot-app.loadbalancer.server.port=3000"
+      # Local development - simple routing
+      - "traefik.http.routers.iotpilot-app-local.rule=Host(`iotpilotserver.test`)"
+      - "traefik.http.routers.iotpilot-app-local.entrypoints=websecure"
+      - "traefik.http.routers.iotpilot-app-local.tls=true"
+      - "traefik.http.routers.iotpilot-app-local.priority=100"
+      # CloudFlare tunnel - main domain
+      - "traefik.http.routers.iotpilot-app-cf.rule=Host(`dashboarddev.iotpilot.app`)"
+      - "traefik.http.routers.iotpilot-app-cf.entrypoints=web,websecure"
+      - "traefik.http.routers.iotpilot-app-cf.priority=100"
 
   # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
     container_name: iotpilot-server-postgres
     environment:
-      - POSTGRES_DB=${POSTGRES_DB:-iotpilot}
-      - POSTGRES_USER=${POSTGRES_USER:-iotpilot}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-iotpilot123}
-      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=C --lc-ctype=C
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     ports:
-      - "5433:5432"  # Different port to avoid conflicts
+      - "5433:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
-      - ./database/init:/docker-entrypoint-initdb.d
+      - ../database/init:/docker-entrypoint-initdb.d
+      - ../app/prisma/migration:/docker-entrypoint-initdb.d/prisma
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U iotpilot -d iotpilot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     networks:
       - iotpilot-network
 
@@ -64,90 +104,147 @@ services:
     image: redis:7-alpine
     container_name: iotpilot-server-redis
     ports:
-      - "6380:6379"  # Different port to avoid conflicts
+      - "6380:6379"
     volumes:
       - redis-data:/data
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
     networks:
       - iotpilot-network
 
-  # Grafana for monitoring dashboards
+  # Grafana for monitoring dashboards - SIMPLE DIRECT ACCESS
   grafana:
     image: grafana/grafana:latest
     container_name: iotpilot-server-grafana
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin123}
-      - GF_SERVER_DOMAIN=iotpilotserver.test
-      - GF_SERVER_ROOT_URL=http://iotpilotserver.test:3002/
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      - GF_SERVER_ROOT_URL=http://localhost:3000/
+      - GF_SERVER_SERVE_FROM_SUB_PATH=false
+      - GF_SECURITY_ALLOW_EMBEDDING=true
       - GF_AUTH_ANONYMOUS_ENABLED=false
-      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource,grafana-worldmap-panel,grafana-piechart-panel
-      - GF_FEATURE_TOGGLES_ENABLE=ngalert
-      - GF_UNIFIED_ALERTING_ENABLED=true
-      - GF_ALERTING_ENABLED=false
     ports:
-      - "3002:3000"  # Direct access to Grafana
+      - "3002:3000"
     volumes:
       - grafana-data:/var/lib/grafana
-      - ./grafana/provisioning:/etc/grafana/provisioning
-      - ./grafana/dashboards:/var/lib/grafana/dashboards
+      - ../grafana/provisioning:/etc/grafana/provisioning
+      - ../grafana/dashboards:/var/lib/grafana/dashboards
     depends_on:
-      - postgres
-      - influxdb
-      - loki
+      postgres:
+        condition: service_healthy
+      influxdb:
+        condition: service_healthy
+      loki:
+        condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
     networks:
       - iotpilot-network
+    # CloudFlare tunnel for subdomain access
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+      - "traefik.http.routers.grafana-cf.rule=Host(`dashboarddev-grafana.iotpilot.app`)"
+      - "traefik.http.routers.grafana-cf.entrypoints=web,websecure"
+      - "traefik.http.routers.grafana-cf.service=grafana"
+      - "traefik.http.routers.grafana-cf.priority=200"
 
-  # InfluxDB for time-series metrics
+  # InfluxDB for time-series metrics - SIMPLE DIRECT ACCESS
   influxdb:
     image: influxdb:2.7-alpine
     container_name: iotpilot-server-influxdb
     environment:
       - DOCKER_INFLUXDB_INIT_MODE=setup
-      - DOCKER_INFLUXDB_INIT_USERNAME=${INFLUXDB_USERNAME:-admin}
-      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUXDB_PASSWORD:-influxdb123}
-      - DOCKER_INFLUXDB_INIT_ORG=${INFLUXDB_ORG:-iotpilot}
-      - DOCKER_INFLUXDB_INIT_BUCKET=${INFLUXDB_BUCKET:-devices}
-      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUXDB_TOKEN:-my-super-secret-auth-token}
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUXDB_PASSWORD}
+      - DOCKER_INFLUXDB_INIT_ORG=iotpilot
+      - DOCKER_INFLUXDB_INIT_BUCKET=devices
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUXDB_TOKEN}
       - DOCKER_INFLUXDB_INIT_RETENTION=8760h
+      - INFLUXD_LOG_LEVEL=warn
     ports:
-      - "8087:8086"  # Different port to avoid conflicts
+      - "8087:8086"
     volumes:
       - influxdb-data:/var/lib/influxdb2
-      - ./influxdb/config:/etc/influxdb2
     restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "influx ping --host http://localhost:8086" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
     networks:
       - iotpilot-network
+    # CloudFlare tunnel for subdomain access
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.influxdb.loadbalancer.server.port=8086"
+      - "traefik.http.routers.influxdb-cf.rule=Host(`dashboarddev-influxdb.iotpilot.app`)"
+      - "traefik.http.routers.influxdb-cf.entrypoints=web,websecure"
+      - "traefik.http.routers.influxdb-cf.service=influxdb"
+      - "traefik.http.routers.influxdb-cf.priority=200"
 
   # Loki for log aggregation
   loki:
-    image: grafana/loki:latest
+    image: grafana/loki:2.9.8
     container_name: iotpilot-server-loki
     ports:
-      - "3101:3100"  # Different port to avoid conflicts
+      - "3101:3100"
     volumes:
-      - ./loki/config.yml:/etc/loki/local-config.yaml
-      - loki-data:/tmp/loki
+      - ../loki/config.yml:/etc/loki/local-config.yaml:ro
+      - loki-data:/loki
     command: -config.file=/etc/loki/local-config.yaml
     restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3100/ready || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     networks:
       - iotpilot-network
 
-  # Simplified Traefik for local testing (optional)
+  # Traefik reverse proxy
   traefik:
     image: traefik:v3.0
     container_name: iotpilot-server-traefik
     ports:
-      - "8081:8080"  # Dashboard on different port
-      - "81:80"      # HTTP on different port
+      - "8081:8080"
+      - "9080:80"
+      - "9443:443"
     volumes:
-      - ./traefik/traefik.local.yml:/etc/traefik/traefik.yml:ro
+      - ../traefik/traefik.local.yml:/etc/traefik/traefik.yml:ro
+      - ../traefik/dynamic:/etc/traefik/dynamic:ro
+      - ../traefik/certs:/etc/traefik/certs:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
     restart: unless-stopped
     networks:
       - iotpilot-network
 
+  # Cloudflared tunnel
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: iotpilot-cloudflared
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    restart: unless-stopped
+    depends_on:
+      iotpilot-app:
+        condition: service_healthy
+    networks:
+      - iotpilot-network
+
 volumes:
+  tailscale-state:
+    driver: local
   postgres-data:
     driver: local
   grafana-data:
@@ -161,5 +258,5 @@ volumes:
 
 networks:
   iotpilot-network:
-    name: iotpilot-server-network
+    name: iotpilot-network
     driver: bridge

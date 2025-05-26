@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, DeviceType, DeviceStatus, AlertType, AlertSeverity } from '@prisma/client';
 import { z } from 'zod';
+import { authenticate, validateApiKey } from '@/lib/auth';
 
 const prisma = new PrismaClient();
 
@@ -19,35 +20,27 @@ const deviceRegistrationSchema = z.object({
     registration_time: z.string().optional()
 });
 
-// Device heartbeat schema
-const deviceHeartbeatSchema = z.object({
-    device_id: z.string(),
-    hostname: z.string(),
-    uptime: z.string().optional(),
-    load_average: z.string().optional(),
-    cpu_usage: z.number().optional(),
-    cpu_temperature: z.number().optional(),
-    memory_usage_percent: z.number().optional(),
-    memory_used_mb: z.number().optional(),
-    memory_total_mb: z.number().optional(),
-    disk_usage_percent: z.number().optional(),
-    disk_used: z.string().optional(),
-    disk_total: z.string().optional(),
-    app_status: z.enum(['RUNNING', 'STOPPED', 'ERROR', 'NOT_INSTALLED', 'UNKNOWN']).optional(),
-    agent_version: z.string().optional(),
-    last_boot: z.string().optional(),
-    timestamp: z.string().optional()
-});
-
-// GET /api/devices - List all devices
+// GET /api/devices - List all devices (requires authentication)
 export async function GET(request: NextRequest) {
     try {
+        // Authenticate user
+        const { user, error } = await authenticate(request);
+        if (error || !user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
         const { searchParams } = new URL(request.url);
-        const status = searchParams.get('status');
-        const type = searchParams.get('type');
+        const status = searchParams.get('status') as DeviceStatus | null;
+        const type = searchParams.get('type') as DeviceType | null;
         const location = searchParams.get('location');
 
         const where: any = {};
+
+        // Users can only see their own devices unless they're admin
+        if (user.role !== 'ADMIN') {
+            where.userId = user.id;
+        }
+
         if (status) where.status = status;
         if (type) where.deviceType = type;
         if (location) where.location = location;
@@ -60,6 +53,12 @@ export async function GET(request: NextRequest) {
                         alerts: {
                             where: { resolved: false }
                         }
+                    }
+                },
+                user: {
+                    select: {
+                        username: true,
+                        email: true
                     }
                 }
             },
@@ -92,11 +91,36 @@ export async function GET(request: NextRequest) {
     }
 }
 
-// POST /api/devices - Register a new device
+// POST /api/devices - Register a new device (requires API key or user auth)
 export async function POST(request: NextRequest) {
     try {
+        let userId: string | null = null;
+
+        // Try API key authentication first
+        const apiKey = request.headers.get('x-api-key') ||
+            request.headers.get('authorization')?.replace('ApiKey ', '');
+
+        if (apiKey) {
+            const { valid, user } = await validateApiKey(apiKey);
+            if (valid && user) {
+                userId = user.id;
+            } else {
+                return NextResponse.json({ error: 'Invalid API key' }, { status: 401 });
+            }
+        } else {
+            // Try user authentication
+            const { user, error } = await authenticate(request);
+            if (error || !user) {
+                return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+            }
+            userId = user.id;
+        }
+
         const body = await request.json();
         const data = deviceRegistrationSchema.parse(body);
+
+        // Map string device type to enum
+        const deviceTypeEnum = data.device_type as DeviceType;
 
         // Check if device already exists
         const existingDevice = await prisma.device.findUnique({
@@ -104,19 +128,27 @@ export async function POST(request: NextRequest) {
         });
 
         if (existingDevice) {
-            // Update existing device
+            // Update existing device (only if owned by user or user is admin)
+            const { user: authUser } = await authenticate(request);
+            if (authUser?.role !== 'ADMIN' && existingDevice.userId !== userId) {
+                return NextResponse.json(
+                    { error: 'Device belongs to another user' },
+                    { status: 403 }
+                );
+            }
+
             const updatedDevice = await prisma.device.update({
                 where: { deviceId: data.device_id },
                 data: {
                     hostname: data.hostname,
-                    deviceType: data.device_type,
+                    deviceType: deviceTypeEnum,
                     deviceModel: data.device_model,
                     architecture: data.architecture,
                     location: data.location,
                     ipAddress: data.ip_address,
                     tailscaleIp: data.tailscale_ip,
                     macAddress: data.mac_address,
-                    status: 'ONLINE',
+                    status: DeviceStatus.ONLINE,
                     lastSeen: new Date(),
                     updatedAt: new Date()
                 }
@@ -133,16 +165,17 @@ export async function POST(request: NextRequest) {
             data: {
                 deviceId: data.device_id,
                 hostname: data.hostname,
-                deviceType: data.device_type,
+                deviceType: deviceTypeEnum,
                 deviceModel: data.device_model,
                 architecture: data.architecture,
                 location: data.location,
                 ipAddress: data.ip_address,
                 tailscaleIp: data.tailscale_ip,
                 macAddress: data.mac_address,
-                status: 'ONLINE',
+                status: DeviceStatus.ONLINE,
                 lastSeen: new Date(),
-                registeredAt: new Date()
+                registeredAt: new Date(),
+                userId: userId
             }
         });
 
@@ -150,8 +183,9 @@ export async function POST(request: NextRequest) {
         await prisma.alert.create({
             data: {
                 deviceId: newDevice.id,
-                type: 'CUSTOM',
-                severity: 'INFO',
+                userId: userId,
+                type: AlertType.CUSTOM,
+                severity: AlertSeverity.INFO,
                 title: 'Device Registered',
                 message: `Device ${data.hostname} (${data.device_id}) has been registered successfully.`
             }

@@ -6,21 +6,12 @@ api:
 entryPoints:
   web:
     address: ":80"
-    http:
-      redirections:
-        entrypoint:
-          to: websecure
-          scheme: https
-          permanent: true
 
   websecure:
     address: ":443"
     http:
       tls:
         options: default
-
-  mqtt:
-    address: ":1883"
 
 providers:
   docker:
@@ -38,12 +29,9 @@ certificatesResolvers:
       storage: /etc/traefik/acme/acme.json
       httpChallenge:
         entryPoint: web
-      # Use DNS challenge for wildcard certificates (optional)
-      # dnsChallenge:
-      #   provider: cloudflare
-      #   resolvers:
-      #     - "1.1.1.1:53"
-      #     - "8.8.8.8:53"
+      # DNS challenge for wildcard certificates
+      dnsChallenge:
+        delayBeforeCheck: 0
 
 # Global redirect to HTTPS
 http:

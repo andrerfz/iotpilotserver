@@ -17,9 +17,9 @@ http:
       headers:
         browserXssFilter: true
         contentTypeNosniff: true
-        forceSTSHeader: true
+        forceSTSHeader: false  # CloudFlare handles this
         frameDeny: true
-        sslRedirect: true
+        sslRedirect: false     # CRITICAL: CloudFlare handles SSL
         stsIncludeSubdomains: true
         stsPreload: true
         stsSeconds: 31536000

@@ -2,7 +2,7 @@
 
 # IotPilot Orange Pi Zero 3 Server Deployment Script
 # This script sets up a complete IoT management server on Orange Pi Zero 3
-# Usage: curl -sSL https://raw.githubusercontent.com/andrerfz/iotpilot/main/scripts/orangepi-server-setup.sh | sudo bash
+# Usage: curl -sSL https://raw.githubusercontent.com/andrerfz/iotpilotserver/main/scripts/orangepi-server-setup.sh | sudo bash
 
 set -e
 
@@ -194,7 +194,7 @@ setup_application_directory() {
         git pull
     else
         info "Cloning IotPilot repository..."
-        git clone https://github.com/andrerfz/iotpilot.git .
+        git clone https://github.com/andrerfz/iotpilotserver.git .
     fi
 
     # Set ownership
@@ -425,7 +425,7 @@ show_final_information() {
     echo "  2. Add your first IoT device using the device installation script"
     echo "  3. Configure Grafana dashboards for monitoring"
     echo ""
-    echo "For support and documentation: https://github.com/andrerfz/iotpilot"
+    echo "For support and documentation: https://github.com/andrerfz/iotpilotserver"
     echo ""
 }
 
