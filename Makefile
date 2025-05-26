@@ -6,7 +6,7 @@
 
 # Variables
 COMPOSE_FILE = docker-compose.yml
-LOCAL_COMPOSE_FILE = docker-compose.local.yml
+LOCAL_COMPOSE_FILE = docker/docker-compose.local.yml
 SERVICE ?= iotpilot-app
 ENV_FILE = .env
 LOCAL_ENV_FILE = .env.local
