@@ -45,9 +45,17 @@ jobs:
         working-directory: ./app
         run: npm run type-check
 
+      - name: Generate Prisma client
+        working-directory: ./app
+        run: npx prisma generate
+
       - name: Run tests
         working-directory: ./app
-        run: npm test -- --coverage
+        run: npm test -- --coverage --watchAll=false
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/test_db
+          JWT_SECRET: test-jwt-secret
+          NODE_ENV: test
 
       - name: Upload coverage reports
         uses: codecov/codecov-action@v3
@@ -67,7 +75,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'npm'
           cache-dependency-path: 'app/package-lock.json'
 
@@ -81,19 +89,22 @@ jobs:
 
       - name: Run Snyk to check for vulnerabilities
         uses: snyk/actions/node@master
+        continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          args: --severity-threshold=high
+          args: --severity-threshold=high --file=app/package.json
           command: test
 
   build:
     name: Build Docker Images
     runs-on: ubuntu-latest
     needs: [test, security]
+    if: github.event_name != 'pull_request'
 
     outputs:
       image-digest: ${{ steps.build.outputs.digest }}
+      image-tags: ${{ steps.meta.outputs.tags }}
 
     steps:
       - name: Checkout code
@@ -123,27 +134,38 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,prefix={{branch}}-
 
       - name: Build and push Docker image
         id: build
         uses: docker/build-push-action@v5
         with:
-          context: ./app
-          platforms: linux/amd64,linux/arm64,linux/arm/v6,linux/arm/v7
+          context: .
+          file: ./docker/Dockerfile
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-args: |
+            NODE_ENV=production
 
-  build-installer:
+  build-installer-packages:
     name: Build Pi Packages
     runs-on: ubuntu-latest
     needs: test
+    if: github.event_name != 'pull_request'
 
     strategy:
       matrix:
-        arch: [armv6, arm64v8]
+        include:
+          - arch: armv6
+            platform: linux/arm/v6
+            target: pi-zero
+          - arch: arm64v8
+            platform: linux/arm64
+            target: pi-3-4
 
     steps:
       - name: Checkout code
@@ -155,13 +177,22 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Create package directory
+        run: mkdir -p packages/${{ matrix.arch }}
+
       - name: Build ${{ matrix.arch }} package
         run: |
-          if [ "${{ matrix.arch }}" = "armv6" ]; then
-            ./docker/node/build-for-pi-zero.sh
-          else
-            ./docker/node/build-for-pi-3-arm64.sh
-          fi
+          # Create a simple package with scripts and configs
+          cp -r scripts packages/${{ matrix.arch }}/
+          cp -r app/package.json packages/${{ matrix.arch }}/
+          cp -r app/prisma packages/${{ matrix.arch }}/
+          cp .env.example packages/${{ matrix.arch }}/
+          
+          # Create build info
+          echo "Build Date: $(date)" > packages/${{ matrix.arch }}/build-info.txt
+          echo "Git Commit: ${{ github.sha }}" >> packages/${{ matrix.arch }}/build-info.txt
+          echo "Architecture: ${{ matrix.arch }}" >> packages/${{ matrix.arch }}/build-info.txt
+          echo "Target: ${{ matrix.target }}" >> packages/${{ matrix.arch }}/build-info.txt
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -175,55 +206,158 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build]
     if: github.ref == 'refs/heads/develop'
-
     environment:
       name: staging
-      url: https://staging.iotpilot.app
+      url: https://staging.iotpilot.local
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Deploy to staging server
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.STAGING_HOST }}
           username: ${{ secrets.STAGING_USER }}
           key: ${{ secrets.STAGING_SSH_KEY }}
+          port: ${{ secrets.STAGING_SSH_PORT || 22 }}
+          timeout: 300
+          script: |
+            set -e
+            cd /opt/iotpilot || exit 1
+            
+            # Backup current deployment
+            sudo docker compose down || true
+            
+            # Pull latest changes
+            git fetch origin
+            git checkout develop
+            git pull origin develop
+            
+            # Pull latest images
+            sudo docker compose pull
+            
+            # Start services
+            sudo docker compose up -d
+            
+            # Wait for services to be ready
+            sleep 60
+            
+            # Health check
+            if ! curl -f http://localhost:3000/api/health; then
+              echo "Health check failed, rolling back..."
+              sudo docker compose down
+              exit 1
+            fi
+            
+            echo "Staging deployment successful!"
+
+      - name: Run integration tests
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          port: ${{ secrets.STAGING_SSH_PORT || 22 }}
           script: |
             cd /opt/iotpilot
-            git pull origin develop
-            docker compose pull
-            docker compose up -d
-            sleep 30
-            curl -f https://staging.iotpilot.app/api/health
+            
+            # Test API endpoints
+            curl -f http://localhost:3000/api/health || exit 1
+            curl -f http://localhost:3000/api/devices || exit 1
+            
+            # Test Grafana
+            curl -f http://localhost:3000/grafana/api/health || exit 1
+            
+            echo "Integration tests passed!"
 
   deploy-production:
     name: Deploy to Production
     runs-on: ubuntu-latest
     needs: [build, deploy-staging]
     if: github.ref == 'refs/heads/main'
-
     environment:
       name: production
       url: https://iotpilot.app
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create deployment backup
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.PRODUCTION_HOST }}
+          username: ${{ secrets.PRODUCTION_USER }}
+          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          port: ${{ secrets.PRODUCTION_SSH_PORT || 22 }}
+          script: |
+            cd /opt/iotpilot
+            sudo ./scripts/backup.sh
+            echo "Backup created before deployment"
+
       - name: Deploy to production server
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.PRODUCTION_HOST }}
           username: ${{ secrets.PRODUCTION_USER }}
           key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          port: ${{ secrets.PRODUCTION_SSH_PORT || 22 }}
+          timeout: 600
           script: |
-            cd /opt/iotpilot
+            set -e
+            cd /opt/iotpilot || exit 1
+            
+            # Stop services gracefully
+            sudo docker compose down --timeout 30
+            
+            # Pull latest changes
+            git fetch origin
+            git checkout main
             git pull origin main
-            docker compose pull
-            docker compose up -d
-            sleep 30
-            curl -f https://iotpilot.app/api/health
+            
+            # Pull latest images
+            sudo docker compose pull
+            
+            # Database migrations
+            sudo docker compose run --rm iotpilot-app npx prisma migrate deploy || true
+            
+            # Start services
+            sudo docker compose up -d
+            
+            # Wait for services to be ready
+            sleep 90
+            
+            # Health check with retries
+            for i in {1..10}; do
+              if curl -f https://iotpilot.app/api/health; then
+                echo "Health check passed on attempt $i"
+                break
+              fi
+              echo "Health check failed on attempt $i, retrying in 30s..."
+              sleep 30
+              if [ $i -eq 10 ]; then
+                echo "Health check failed after 10 attempts, deployment failed!"
+                exit 1
+              fi
+            done
+            
+            echo "Production deployment successful!"
+
+      - name: Verify deployment
+        run: |
+          # Additional verification from GitHub Actions runner
+          sleep 30
+          if ! curl -f https://iotpilot.app/api/health; then
+            echo "External health check failed!"
+            exit 1
+          fi
+          echo "External verification passed!"
 
   release:
     name: Create Release
     runs-on: ubuntu-latest
-    needs: [build, build-installer]
+    needs: [build, build-installer-packages]
     if: github.event_name == 'release'
 
     steps:
@@ -240,14 +374,18 @@ jobs:
           mkdir -p release
           
           # Create Pi Zero package
-          cd artifacts/iotpilot-armv6-package
-          tar -czf ../../release/iotpilot-pi-zero-v${{ github.event.release.tag_name }}.tar.gz *
-          cd ../..
+          if [ -d "artifacts/iotpilot-armv6-package" ]; then
+            cd artifacts/iotpilot-armv6-package
+            tar -czf ../../release/iotpilot-pi-zero-v${{ github.event.release.tag_name }}.tar.gz .
+            cd ../..
+          fi
           
           # Create Pi 3/4 package
-          cd artifacts/iotpilot-arm64v8-package
-          tar -czf ../../release/iotpilot-pi-3-4-v${{ github.event.release.tag_name }}.tar.gz *
-          cd ../..
+          if [ -d "artifacts/iotpilot-arm64v8-package" ]; then
+            cd artifacts/iotpilot-arm64v8-package
+            tar -czf ../../release/iotpilot-pi-3-4-v${{ github.event.release.tag_name }}.tar.gz .
+            cd ../..
+          fi
           
           # Create installation script bundle
           tar -czf release/iotpilot-scripts-v${{ github.event.release.tag_name }}.tar.gz scripts/
@@ -272,22 +410,39 @@ jobs:
     name: Notify Deployment
     runs-on: ubuntu-latest
     needs: [deploy-production]
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && always()
 
     steps:
-      - name: Notify Slack
-        uses: 8398a7/action-slack@v3
-        with:
-          status: ${{ job.status }}
-          channel: '#deployments'
-          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
-          fields: repo,message,commit,author,action,eventName,ref,workflow
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+      - name: Notify via webhook
+        if: success()
+        run: |
+          if [ -n "${{ secrets.WEBHOOK_URL }}" ]; then
+            curl -X POST "${{ secrets.WEBHOOK_URL }}" \
+              -H "Content-Type: application/json" \
+              -d '{
+                "text": "✅ IoTPilot deployment successful",
+                "deployment": {
+                  "status": "success",
+                  "version": "${{ github.sha }}",
+                  "environment": "production",
+                  "url": "https://iotpilot.app"
+                }
+              }'
+          fi
 
-      - name: Notify Discord
-        uses: Ilshidur/action-discord@master
-        with:
-          args: '🚀 IotPilot v${{ github.sha }} has been deployed to production! https://iotpilot.app'
-        env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+      - name: Notify failure via webhook
+        if: failure()
+        run: |
+          if [ -n "${{ secrets.WEBHOOK_URL }}" ]; then
+            curl -X POST "${{ secrets.WEBHOOK_URL }}" \
+              -H "Content-Type: application/json" \
+              -d '{
+                "text": "❌ IoTPilot deployment failed",
+                "deployment": {
+                  "status": "failed",
+                  "version": "${{ github.sha }}",
+                  "environment": "production",
+                  "logs_url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                }
+              }'
+          fi

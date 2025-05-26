@@ -1,0 +1,255 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  username  String   @unique
+  password  String
+  role      UserRole @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  sessions    Session[]
+  devices     Device[]
+  alerts      Alert[]
+  apiKeys     ApiKey[]
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model ApiKey {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  key       String   @unique
+  lastUsed  DateTime?
+  expiresAt DateTime?
+  createdAt DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("api_keys")
+}
+
+model Device {
+  id            String      @id @default(cuid())
+  deviceId      String      @unique // hostname-mac format
+  hostname      String
+  deviceType    DeviceType
+  deviceModel   String?
+  architecture  String
+  location      String?
+  description   String?
+
+  // Network information
+  ipAddress     String?
+  tailscaleIp   String?
+  macAddress    String?
+
+  // Status
+  status        DeviceStatus @default(OFFLINE)
+  lastSeen      DateTime?
+  lastBoot      DateTime?
+  uptime        String?
+
+  // System information
+  cpuUsage      Float?
+  cpuTemp       Float?
+  memoryUsage   Float?
+  memoryTotal   Int?
+  diskUsage     Float?
+  diskTotal     String?
+  loadAverage   String?
+
+  // Application status
+  appStatus     AppStatus @default(UNKNOWN)
+  agentVersion  String?
+
+  // Ownership
+  userId        String?
+
+  // Timestamps
+  registeredAt  DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  user          User?           @relation(fields: [userId], references: [id])
+  metrics       DeviceMetric[]
+  logs          DeviceLog[]
+  alerts        Alert[]
+  commands      DeviceCommand[]
+
+  @@map("devices")
+}
+
+model DeviceMetric {
+  id        String   @id @default(cuid())
+  deviceId  String
+  metric    String   // cpu_usage, memory_usage, temperature, etc.
+  value     Float
+  unit      String?  // %, °C, MB, etc.
+  timestamp DateTime @default(now())
+
+  // Relations
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@index([deviceId, metric, timestamp])
+  @@map("device_metrics")
+}
+
+model DeviceLog {
+  id        String   @id @default(cuid())
+  deviceId  String
+  level     LogLevel @default(INFO)
+  message   String
+  source    String?  // systemd, application, agent, etc.
+  timestamp DateTime @default(now())
+
+  // Relations
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@index([deviceId, level, timestamp])
+  @@map("device_logs")
+}
+
+model DeviceCommand {
+  id          String        @id @default(cuid())
+  deviceId    String
+  command     String
+  arguments   String?
+  status      CommandStatus @default(PENDING)
+  output      String?
+  error       String?
+  exitCode    Int?
+  executedAt  DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Relations
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@map("device_commands")
+}
+
+model Alert {
+  id          String      @id @default(cuid())
+  deviceId    String?
+  userId      String?
+  type        AlertType
+  severity    AlertSeverity @default(INFO)
+  title       String
+  message     String
+  resolved    Boolean     @default(false)
+  resolvedAt  DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // Relations
+  device Device? @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  user   User?   @relation(fields: [userId], references: [id])
+
+  @@index([deviceId, resolved, createdAt])
+  @@map("alerts")
+}
+
+model SystemConfig {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  category  String?
+  updatedAt DateTime @updatedAt
+
+  @@map("system_config")
+}
+
+// Enums
+enum UserRole {
+  ADMIN
+  USER
+  READONLY
+}
+
+enum DeviceType {
+  PI_ZERO
+  PI_3
+  PI_4
+  PI_5
+  ORANGE_PI
+  GENERIC
+  UNKNOWN
+}
+
+enum DeviceStatus {
+  ONLINE
+  OFFLINE
+  MAINTENANCE
+  ERROR
+}
+
+enum AppStatus {
+  RUNNING
+  STOPPED
+  ERROR
+  NOT_INSTALLED
+  UNKNOWN
+}
+
+enum LogLevel {
+  DEBUG
+  INFO
+  WARN
+  ERROR
+  FATAL
+}
+
+enum CommandStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  TIMEOUT
+}
+
+enum AlertType {
+  DEVICE_OFFLINE
+  HIGH_CPU
+  HIGH_MEMORY
+  HIGH_TEMPERATURE
+  LOW_DISK_SPACE
+  APPLICATION_ERROR
+  SYSTEM_ERROR
+  SECURITY_ALERT
+  CUSTOM
+}
+
+enum AlertSeverity {
+  INFO
+  WARNING
+  ERROR
+  CRITICAL
+}
