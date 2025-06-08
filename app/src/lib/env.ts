@@ -53,14 +53,14 @@ function getCurrentEnvironment(): Environment {
   // Client-side: detect based on hostname
   const hostname = window.location.hostname;
 
-  // If accessing via local development domain, use dev environment
+  // Local development
   if (hostname === 'iotpilotserver.test' || hostname === 'localhost') {
     return devEnvironment;
   }
 
-  // If accessing via CloudFlare tunnel or production domain, use appropriate environment
+  // CloudFlare tunnel - use production URLs even in dev mode
   if (hostname.includes('iotpilot.app')) {
-    return isProd ? prodEnvironment : devEnvironment;
+    return prodEnvironment;
   }
 
   // Default fallback
@@ -70,7 +70,7 @@ function getCurrentEnvironment(): Environment {
 // Select appropriate environment
 export const environment = getCurrentEnvironment();
 
-// Dynamic URL builders that respect current origin
+// Dynamic URL builders that respect the current origin
 export function getApiUrl(endpoint?: string): string {
   if (typeof window !== 'undefined') {
     const baseUrl = `${window.location.origin}/api`;

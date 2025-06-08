@@ -1,7 +1,10 @@
-import { Server, AlertTriangle, Wrench, Globe, Network } from 'lucide-react';
+"use client";
+
+import {Server, AlertTriangle, Wrench, Globe, Network} from 'lucide-react';
 import DeviceList from '@/components/device-list';
 import UserMenu from '@/components/user-menu';
 import ProtectedRoute from '@/components/protected-route';
+import { useState, useEffect } from 'react';
 import {
     isDevelopment,
     isProduction,
@@ -13,6 +16,13 @@ import {
 } from '@/lib/env';
 
 function EnvironmentBanner() {
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+
     if (isProduction()) return null;
 
     const envInfo = getEnvironmentInfo();
@@ -25,19 +35,17 @@ function EnvironmentBanner() {
                 <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
                         <div className="flex items-center">
-                            <Wrench className="w-4 h-4 mr-2" />
-                            <span className="text-sm font-medium">
-                Development Environment
-              </span>
+                            <Wrench className="w-4 h-4 mr-2"/>
+                            <span className="text-sm font-medium"> Development Environment </span>
                         </div>
 
                         <div className="hidden md:flex items-center space-x-4 text-xs">
                             <div className="flex items-center">
-                                <Globe className="w-3 h-3 mr-1" />
+                                <Globe className="w-3 h-3 mr-1"/>
                                 <span>CF: {hasCloudFlare ? 'Active' : 'Inactive'}</span>
                             </div>
                             <div className="flex items-center">
-                                <Network className="w-3 h-3 mr-1" />
+                                <Network className="w-3 h-3 mr-1"/>
                                 <span>TS: {hasTailscale ? 'Active' : 'Inactive'}</span>
                             </div>
                             <div>
@@ -47,7 +55,7 @@ function EnvironmentBanner() {
                     </div>
 
                     <div className="text-xs font-mono bg-blue-700 px-2 py-1 rounded">
-                        {getBaseUrl()}
+                        {mounted ? window.location.origin : getBaseUrl()}
                     </div>
                 </div>
             </div>
@@ -65,7 +73,7 @@ function MaintenanceBanner() {
             <div className="max-w-7xl mx-auto">
                 <div className="flex">
                     <div className="flex-shrink-0">
-                        <AlertTriangle className="h-5 w-5 text-yellow-400" />
+                        <AlertTriangle className="h-5 w-5 text-yellow-400"/>
                     </div>
                     <div className="ml-3">
                         <p className="text-sm text-yellow-700">
@@ -153,7 +161,7 @@ function NetworkStatus() {
                 {cloudflareUrl && (
                     <div className="flex items-center justify-between text-sm">
                         <span className="text-gray-600 flex items-center">
-              <Globe className="w-3 h-3 mr-1" />
+              <Globe className="w-3 h-3 mr-1"/>
               CloudFlare Tunnel:
             </span>
                         <span className="font-mono text-xs text-gray-900">{cloudflareUrl}</span>
@@ -163,7 +171,7 @@ function NetworkStatus() {
                 {tailscaleDomain && (
                     <div className="flex items-center justify-between text-sm">
                         <span className="text-gray-600 flex items-center">
-              <Network className="w-3 h-3 mr-1" />
+              <Network className="w-3 h-3 mr-1"/>
               Tailscale Domain:
             </span>
                         <span className="font-mono text-xs text-gray-900">{tailscaleDomain}</span>
@@ -192,21 +200,21 @@ export default function Dashboard() {
         <ProtectedRoute>
             <div className="min-h-screen bg-gray-50">
                 {/* Environment Banner */}
-                <EnvironmentBanner />
+                <EnvironmentBanner/>
 
                 {/* Header */}
                 <header className="bg-white shadow-sm border-b border-gray-200">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="flex justify-between items-center py-6">
                             <div className="flex items-center">
-                                <Server className="w-8 h-8 text-blue-600 mr-3" />
+                                <Server className="w-8 h-8 text-blue-600 mr-3"/>
                                 <div>
                                     <h1 className="text-2xl font-bold text-gray-900 flex items-center">
                                         IoT Pilot
                                         {isDevelopment() && (
-                                            <span className="ml-2 text-sm font-normal text-blue-600 bg-blue-50 px-2 py-1 rounded">
-                        Development
-                      </span>
+                                            <span
+                                                className="ml-2 text-sm font-normal text-blue-600 bg-blue-50 px-2 py-1 rounded"> Development
+                                            </span>
                                         )}
                                     </h1>
                                     <p className="text-sm text-gray-500">
@@ -217,25 +225,25 @@ export default function Dashboard() {
                                     </p>
                                 </div>
                             </div>
-                            <UserMenu />
+                            <UserMenu/>
                         </div>
                     </div>
                 </header>
 
                 {/* Maintenance Banner */}
-                <MaintenanceBanner />
+                <MaintenanceBanner/>
 
                 <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     {/* Development Info Panels */}
                     {isDevelopment() && (
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                            <FeatureStatus />
-                            <NetworkStatus />
+                            <FeatureStatus/>
+                            <NetworkStatus/>
                         </div>
                     )}
 
                     {/* Main Device List */}
-                    <DeviceList />
+                    <DeviceList/>
 
                     {/* Footer with Environment Info */}
                     {isDevelopment() && (
