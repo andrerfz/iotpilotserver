@@ -1,23 +1,45 @@
+// app/src/environment.local.ts (Development)
 export const environment = {
   production: false,
   appIdentify: 1,
 
-  // Main URLs - Dynamic based on access method
-  baseUrl: 'https://iotpilotserver.test:9443',
-  apiUrl: 'https://iotpilotserver.test:9443/api',
-  wsUrl: 'wss://iotpilotserver.test:9443',
+  // Main URLs - Use NEXT_PUBLIC_ for client access
+  baseUrl: process.env.NEXT_PUBLIC_DOMAIN_TUNEL
+      ? `https://${process.env.NEXT_PUBLIC_DOMAIN_TUNEL}`
+      : 'https://iotpilotserver.test:9443',
 
-  // External Services - FIX: Use CloudFlare subdomains
-  grafanaUrl: 'http://iotpilotserver.test:3002',
-  influxdbUrl: 'http://iotpilotserver.test:8087',
+  apiUrl: process.env.NEXT_PUBLIC_DOMAIN_TUNEL
+      ? `https://${process.env.NEXT_PUBLIC_DOMAIN_TUNEL}/api`
+      : 'https://iotpilotserver.test:9443/api',
 
-  // Network Configuration - ADD THESE
-  cloudflareUrl: 'https://dashboarddev.iotpilot.app',
-  grafanaCloudflareUrl: 'https://dashboarddev-grafana.iotpilot.app',
-  influxdbCloudflareUrl: 'https://dashboarddev-influxdb.iotpilot.app',
-  tailscaleDomain: process.env.TAILSCALE_DOMAIN,
+  wsUrl: process.env.NEXT_PUBLIC_DOMAIN_TUNEL
+      ? `wss://${process.env.NEXT_PUBLIC_DOMAIN_TUNEL}`
+      : 'wss://iotpilotserver.test:9443',
 
-  // Feature Flags - More permissive in development
+  // External Services - These should work now
+  grafanaUrl: process.env.NEXT_PUBLIC_GRAFANA_CLOUDFLARE_URL
+      ? `https://${process.env.NEXT_PUBLIC_GRAFANA_CLOUDFLARE_URL}`
+      : 'http://localhost:3002',
+
+  influxdbUrl: process.env.NEXT_PUBLIC_INFLUXDB_CLOUDFLARE_URL
+      ? `https://${process.env.NEXT_PUBLIC_INFLUXDB_CLOUDFLARE_URL}`
+      : 'http://localhost:8087',
+
+  // Network Configuration
+  cloudflareUrl: process.env.NEXT_PUBLIC_DOMAIN_TUNEL
+      ? `https://${process.env.NEXT_PUBLIC_DOMAIN_TUNEL}`
+      : 'https://dashboarddev.iotpilot.app',
+
+  grafanaCloudflareUrl: process.env.NEXT_PUBLIC_GRAFANA_CLOUDFLARE_URL
+      ? `https://${process.env.NEXT_PUBLIC_GRAFANA_CLOUDFLARE_URL}`
+      : 'https://dashboarddev-grafana.iotpilot.app',
+
+  influxdbCloudflareUrl: process.env.NEXT_PUBLIC_INFLUXDB_CLOUDFLARE_URL
+      ? `https://${process.env.NEXT_PUBLIC_INFLUXDB_CLOUDFLARE_URL}`
+      : 'https://dashboarddev-influxdb.iotpilot.app',
+
+  tailscaleDomain: process.env.NEXT_PUBLIC_TAILSCALE_DOMAIN,
+
   features: {
     sshTerminal: true,
     tailscaleIntegration: true,
@@ -26,21 +48,18 @@ export const environment = {
     advancedMetrics: true,
   },
 
-  // Timeouts (more lenient for development)
   timeouts: {
-    api: 30000,           // 30 seconds
-    websocket: 10000,     // 10 seconds
-    deviceHeartbeat: 600000, // 10 minutes
+    api: 30000,
+    websocket: 10000,
+    deviceHeartbeat: 600000,
   },
 
-  // Polling Intervals (faster for development)
   intervals: {
-    deviceRefresh: 10000,    // 10 seconds
-    metricsRefresh: 30000,   // 30 seconds
-    alertsRefresh: 5000,     // 5 seconds
+    deviceRefresh: 10000,
+    metricsRefresh: 30000,
+    alertsRefresh: 5000,
   },
 
-  // Limits (smaller for development)
   limits: {
     maxDevices: 50,
     maxConcurrentSSH: 5,

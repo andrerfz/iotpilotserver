@@ -1,107 +1,150 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import {NextRequest, NextResponse} from 'next/server';
+import {UserRole} from '@prisma/client';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import { z } from 'zod';
-import {
-    isProduction,
-} from '@/lib/env';
+import {z} from 'zod';
+import {tenantPrisma} from '@/lib/tenant-middleware';
 
-const prisma = new PrismaClient();
+// Define UserStatus enum values directly since there's an issue with importing from @prisma/client
+enum UserStatus {
+    ACTIVE = 'ACTIVE',
+    PENDING = 'PENDING',
+    SUSPENDED = 'SUSPENDED',
+    INACTIVE = 'INACTIVE'
+}
 
-const loginSchema = z.object({
+// Registration schema
+const registrationSchema = z.object({
     email: z.string().email(),
-    password: z.string().min(1),
-    remember: z.boolean().optional()
+    username: z.string().min(3).max(50),
+    password: z.string().min(8).regex(/[A-Z]/).regex(/[a-z]/).regex(/\d/)
 });
 
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { email, password, remember } = loginSchema.parse(body);
+        const { email, username, password } = registrationSchema.parse(body);
 
-        // Find user
-        const user = await prisma.user.findUnique({
-            where: { email },
-            select: {
-                id: true,
-                email: true,
-                username: true,
-                password: true,
-                role: true
+        // Check if user already exists
+        const existingUser = await (tenantPrisma.client as any).user.findFirst({
+            where: {
+                OR: [
+                    { email },
+                    { username }
+                ]
             }
         });
 
-        if (!user) {
+        if (existingUser) {
             return NextResponse.json(
-                { error: 'Invalid credentials' },
-                { status: 401 }
-            );
-        }
-
-        // Verify password
-        const isValidPassword = await bcrypt.compare(password, user.password);
-        if (!isValidPassword) {
-            return NextResponse.json(
-                { error: 'Invalid credentials' },
-                { status: 401 }
-            );
-        }
-
-        // Generate JWT
-        const token = jwt.sign(
-            {
-                userId: user.id,
-                email: user.email,
-                role: user.role
-            },
-            process.env.JWT_SECRET!,
-            { expiresIn: remember ? '7d' : '24h' }
-        );
-
-        // Create session
-        const expiresAt = new Date();
-        expiresAt.setTime(expiresAt.getTime() + (remember ? 7 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000));
-
-        const session = await prisma.session.create({
-            data: {
-                userId: user.id,
-                token,
-                expiresAt
-            }
-        });
-
-        // Create response
-        const response = NextResponse.json({
-            user: {
-                id: user.id,
-                email: user.email,
-                username: user.username,
-                role: user.role
-            },
-            token
-        });
-
-        // Set HTTP-only cookie
-        response.cookies.set('auth-token', token, {
-            httpOnly: true,
-            secure: isProduction(),
-            sameSite: 'lax',
-            maxAge: remember ? 7 * 24 * 60 * 60 : 24 * 60 * 60,
-            path: '/'
-        });
-
-        return response;
-
-    } catch (error) {
-        if (error instanceof z.ZodError) {
-            return NextResponse.json(
-                { error: 'Invalid input', details: error.errors },
+                { error: existingUser.email === email ? 'Email already in use' : 'Username already taken' },
                 { status: 400 }
             );
         }
 
-        console.error('Login error:', error);
+        // Prevent SUPERADMIN creation via API
+        if (email.endsWith('@iotpilot.system')) {
+            return NextResponse.json(
+                { error: 'Invalid email domain' },
+                { status: 400 }
+            );
+        }
+
+        // Hash password
+        const hashedPassword = await bcrypt.hash(password, 12);
+
+        // Check if company exists by email domain
+        const emailDomain = email.split('@')[1];
+        const existingCompany = await (tenantPrisma.client as any).customer.findFirst({
+            where: { domain: emailDomain }
+        });
+
+        // Determine if this is a new company or existing company
+        const isNewCompany = !existingCompany;
+
+        // Create customer if it's a new company
+        let customerId: string;
+        if (isNewCompany) {
+            // Generate a slug from the email domain
+            const slug = emailDomain.split('.')[0];
+
+            // Create new customer
+            const newCustomer = await (tenantPrisma.client as any).customer.create({
+                data: {
+                    name: `${slug.charAt(0).toUpperCase() + slug.slice(1)} Organization`,
+                    slug,
+                    domain: emailDomain,
+                    status: 'ACTIVE',
+                    subscriptionTier: 'FREE'
+                }
+            });
+
+            customerId = newCustomer.id;
+        } else {
+            customerId = existingCompany.id;
+        }
+
+        // Determine user status and role
+        // First user of a new company is auto-approved as ADMIN
+        // Users for existing companies start as PENDING
+        const userStatus = isNewCompany ? UserStatus.ACTIVE : UserStatus.PENDING;
+        const userRole = isNewCompany ? UserRole.ADMIN : UserRole.USER;
+
+        // Create user
+        const user = await (tenantPrisma.client as any).user.create({
+            data: {
+                email,
+                username,
+                password: hashedPassword,
+                role: userRole,
+                status: userStatus,
+                customerId,
+                profileImage: `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=random`
+            }
+        });
+
+        // For existing companies, notify admins about pending user
+        if (!isNewCompany) {
+            // TODO: Implement email notifications
+            console.log(`New user ${email} is pending approval for company ${existingCompany.name}`);
+
+            // In a real implementation, we would send emails to company admins here
+            // For now, we'll just log it
+        }
+
+        // Return appropriate response
+        if (isNewCompany) {
+            return NextResponse.json({
+                message: 'Account created successfully. You can now log in.',
+                user: {
+                    id: user.id,
+                    email: user.email,
+                    username: user.username,
+                    role: user.role,
+                    status: user.status
+                }
+            });
+        } else {
+            return NextResponse.json({
+                message: 'Registration submitted. An administrator will approve your account.',
+                status: 'PENDING'
+            });
+        }
+
+    } catch (error) {
+        if (error instanceof z.ZodError) {
+            return NextResponse.json(
+                { 
+                    error: 'Invalid input', 
+                    details: error.errors.map(err => ({
+                        path: err.path.join('.'),
+                        message: err.message
+                    }))
+                },
+                { status: 400 }
+            );
+        }
+
+        console.error('Registration error:', error);
         return NextResponse.json(
             { error: 'Internal server error' },
             { status: 500 }

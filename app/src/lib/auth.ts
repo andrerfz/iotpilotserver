@@ -1,6 +1,14 @@
 import jwt from 'jsonwebtoken';
 import { NextRequest } from 'next/server';
 import { PrismaClient, UserRole } from '@prisma/client';
+import { 
+    hasRole, 
+    isAdmin, 
+    isSuperAdmin, 
+    sessionHasRole, 
+    sessionIsAdmin, 
+    sessionIsSuperAdmin 
+} from './permissions';
 
 const prisma = new PrismaClient();
 
@@ -64,7 +72,8 @@ export async function authenticate(request: NextRequest) {
                         id: true,
                         email: true,
                         username: true,
-                        role: true
+                        role: true,
+                        customerId: true
                     }
                 }
             }
@@ -91,7 +100,7 @@ export function requireAuth(requiredRole?: UserRole) {
 
         // Check role if specified
         if (requiredRole) {
-            const roleHierarchy = { READONLY: 0, USER: 1, ADMIN: 2 };
+            const roleHierarchy = { READONLY: 0, USER: 1, ADMIN: 2, SUPERADMIN: 3};
             const userLevel = roleHierarchy[user.role];
             const requiredLevel = roleHierarchy[requiredRole];
 
@@ -120,7 +129,8 @@ export async function validateApiKey(apiKey: string) {
                         id: true,
                         email: true,
                         username: true,
-                        role: true
+                        role: true,
+                        customerId: true
                     }
                 }
             }
@@ -142,3 +152,69 @@ export async function validateApiKey(apiKey: string) {
         return { valid: false, user: null };
     }
 }
+
+// Get server session for server components
+export async function getServerSession() {
+    // This is a simplified implementation - in a real app, you would use
+    // the next-auth getServerSession or a similar mechanism
+    try {
+        // Get the session cookie from the request
+        const cookies = require('next/headers').cookies;
+        const token = cookies().get('auth-token')?.value;
+
+        if (!token) {
+            return null;
+        }
+
+        const payload = verifyToken(token);
+        if (!payload) {
+            return null;
+        }
+
+        // Check if session is valid in database
+        const session = await prisma.session.findFirst({
+            where: {
+                token,
+                expiresAt: {
+                    gt: new Date()
+                }
+            },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        email: true,
+                        username: true,
+                        role: true,
+                        customerId: true
+                    }
+                }
+            }
+        });
+
+        if (!session) {
+            return null;
+        }
+
+        // Return session with user data
+        return {
+            user: session.user,
+            role: session.user.role,
+            userId: session.user.id,
+            customerId: session.user.customerId || 'default' // Fallback to 'default' if not set
+        };
+    } catch (error) {
+        console.error('Error getting server session:', error);
+        return null;
+    }
+}
+
+// Re-export permission service functions
+export {
+    hasRole,
+    isAdmin,
+    isSuperAdmin,
+    sessionHasRole,
+    sessionIsAdmin,
+    sessionIsSuperAdmin
+};

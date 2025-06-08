@@ -590,7 +590,7 @@ EOF
    info "Attempting to register with: https://$IOTPILOT_SERVER"
 
    HTTP_STATUS=$(curl -w "%{http_code}" -o /tmp/registration_response.json -s \
-        -X POST "https://$IOTPILOT_SERVER/api/devices/register" \
+        -X POST "https://$IOTPILOT_SERVER/api/devices" \
         -H "Content-Type: application/json" \
         -H "X-API-Key: $DEVICE_API_KEY" \
         -H "User-Agent: IotPilot-Agent/1.0.0" \

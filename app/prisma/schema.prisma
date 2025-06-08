@@ -12,20 +12,28 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  username  String   @unique
-  password  String
-  role      UserRole @default(USER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String     @id @default(cuid())
+  email        String     @unique
+  username     String     @unique
+  password     String
+  role         UserRole   @default(USER)
+  status       UserStatus @default(ACTIVE)
+  profileImage String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  // Customer relationship - nullable for SUPERADMIN
+  customerId   String?
+  customer     Customer?  @relation(fields: [customerId], references: [id])
 
   // Relations
-  sessions Session[]
-  devices  Device[]
-  alerts   Alert[]
-  apiKeys  ApiKey[]
+  sessions     Session[]
+  devices      Device[]
+  alerts       Alert[]
+  apiKeys      ApiKey[]
+  preferences  UserPreference[]
 
+  @@index([customerId])
   @@map("users")
 }
 
@@ -94,6 +102,10 @@ model Device {
   // Ownership
   userId String?
 
+  // Customer relationship - NOT NULL
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+
   // Timestamps
   registeredAt DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -105,6 +117,7 @@ model Device {
   alerts   Alert[]
   commands DeviceCommand[]
 
+  @@index([customerId])
   @@map("devices")
 }
 
@@ -188,11 +201,70 @@ model SystemConfig {
   @@map("system_config")
 }
 
+model UserPreference {
+  id        String             @id @default(cuid())
+  userId    String
+  category  PreferenceCategory
+  key       String
+  value     String
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, category, key])
+  @@index([userId, category])
+  @@map("user_preferences")
+}
+
+// Customer model
+model Customer {
+  id              String         @id @default(cuid())
+  name            String
+  slug            String         @unique
+  domain          String?        @unique
+  status          CustomerStatus @default(ACTIVE)
+  subscriptionTier String        @default("FREE")
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  // Relations
+  users    User[]
+  devices  Device[]
+
+  @@map("customers")
+}
+
 // Enums
+enum PreferenceCategory {
+  PROFILE
+  NOTIFICATIONS
+  SECURITY
+  SYSTEM
+  APPEARANCE
+  ACCESSIBILITY
+}
+
 enum UserRole {
+  SUPERADMIN
   ADMIN
   USER
   READONLY
+}
+
+enum UserStatus {
+  ACTIVE
+  PENDING
+  SUSPENDED
+  INACTIVE
+}
+
+enum CustomerStatus {
+  ACTIVE
+  PENDING
+  SUSPENDED
+  INACTIVE
 }
 
 enum DeviceType {
@@ -254,7 +326,3 @@ enum AlertSeverity {
   ERROR
   CRITICAL
 }
-
-
-
-

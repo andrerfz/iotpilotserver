@@ -1,14 +1,12 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
-import { verifyToken } from '@/lib/auth';
+import type {NextRequest} from 'next/server';
+import {NextResponse} from 'next/server';
+import prisma from '@/lib/db';
 
-// Public routes that don't require authentication
+// Public routes that don't require any authentication
 const PUBLIC_ROUTES = [
     '/api/auth/login',
     '/api/auth/register',
     '/api/health',
-    '/api/devices/heartbeat', // Device heartbeat should use API key
-    '/api/devices/register',  // Device registration should use API key
     '/login',
     '/register',
     '/terms',
@@ -16,10 +14,10 @@ const PUBLIC_ROUTES = [
     '/forgot-password'
 ];
 
-// API routes that allow API key authentication (handled in route handlers)
+// API routes that accept EITHER JWT token OR API key (handled in route handlers)
 const API_KEY_ROUTES = [
     '/api/devices/heartbeat',
-    '/api/devices/register',
+    '/api/devices',
     '/api/devices/tailscale-register'
 ];
 
@@ -30,7 +28,7 @@ const ADMIN_ROUTES = [
 ];
 
 export async function middleware(request: NextRequest) {
-    const { pathname } = request.nextUrl;
+    const {pathname} = request.nextUrl;
 
     // Skip middleware for static files and _next
     if (
@@ -42,17 +40,78 @@ export async function middleware(request: NextRequest) {
         return NextResponse.next();
     }
 
-    // Check if route is public
+    // Check if route is public - no authentication required
     if (PUBLIC_ROUTES.some(route => pathname.startsWith(route))) {
         return NextResponse.next();
     }
 
-    // For API key routes, let the route handler validate the API key
+    // For API key routes, check if they have API key OR JWT token
     if (API_KEY_ROUTES.some(route => pathname.startsWith(route))) {
-        return NextResponse.next();
+        const apiKey = request.headers.get('x-api-key') ||
+            request.headers.get('authorization')?.replace('ApiKey ', '');
+
+        const jwtToken = request.cookies.get('auth-token')?.value ||
+            request.headers.get('authorization')?.replace('Bearer ', '');
+
+        // If they have API key, let route handler validate it
+        if (apiKey) {
+            return NextResponse.next();
+        }
+
+        // If they have JWT token, validate session in database (like /api/auth/me)
+        if (jwtToken) {
+            try {
+                const session = await prisma.session.findFirst({
+                    where: {
+                        token: jwtToken,
+                        expiresAt: {
+                            gt: new Date()
+                        }
+                    },
+                    include: {
+                        user: {
+                            select: {
+                                id: true,
+                                email: true,
+                                username: true,
+                                role: true,
+                                customerId: true
+                            }
+                        }
+                    }
+                });
+
+                if (session) {
+                    // Add user info to headers for the route handler
+                    const requestHeaders = new Headers(request.headers);
+                    requestHeaders.set('x-user-id', session.user.id);
+                    requestHeaders.set('x-user-email', session.user.email);
+                    requestHeaders.set('x-user-role', session.user.role);
+
+                    // Add customer context if needed
+                    if (session.user.customerId) {
+                        requestHeaders.set('x-customer-id', session.user.customerId);
+                    }
+
+                    return NextResponse.next({
+                        request: {
+                            headers: requestHeaders,
+                        },
+                    });
+                }
+            } catch (error) {
+                console.error('Session validation error:', error);
+            }
+        }
+
+        // No valid API key or JWT token
+        return NextResponse.json(
+            {error: 'Authentication required - provide API key or JWT token'},
+            {status: 401}
+        );
     }
 
-    // Extract token from cookies or headers (don't read body)
+    // For all other routes, require JWT token with DATABASE SESSION VALIDATION
     const token = request.cookies.get('auth-token')?.value ||
         request.headers.get('authorization')?.replace('Bearer ', '');
 
@@ -66,56 +125,98 @@ export async function middleware(request: NextRequest) {
 
         // Return 401 for API routes
         return NextResponse.json(
-            { error: 'Authentication required' },
-            { status: 401 }
+            {error: 'Authentication required'},
+            {status: 401}
         );
     }
 
-    // Verify token
-    const payload = verifyToken(token);
-    if (!payload) {
-        // Clear invalid token
-        if (pathname.startsWith('/api')) {
-            return NextResponse.json(
-                { error: 'Invalid token' },
-                { status: 401 }
-            );
-        }
+    // FIXED: Use database session validation instead of just JWT expiration
+    try {
+        const session = await prisma.session.findFirst({
+            where: {
+                token,
+                expiresAt: {
+                    gt: new Date()
+                }
+            },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        email: true,
+                        username: true,
+                        role: true,
+                        customerId: true
+                    }
+                }
+            }
+        });
 
-        const response = NextResponse.redirect(new URL('/login', request.url));
-        response.cookies.delete('auth-token');
-        return response;
-    }
-
-    // Check admin routes
-    if (ADMIN_ROUTES.some(route => pathname.startsWith(route))) {
-        if (payload.role !== 'ADMIN') {
+        if (!session) {
+            console.log('🚨 MIDDLEWARE: Session not found or expired for token');
+            // Session expired or not found - redirect to login
             if (pathname.startsWith('/api')) {
                 return NextResponse.json(
-                    { error: 'Admin access required' },
-                    { status: 403 }
+                    {error: 'Session expired'},
+                    {status: 401}
                 );
             }
 
-            return NextResponse.redirect(new URL('/', request.url));
+            const response = NextResponse.redirect(new URL('/login', request.url));
+            response.cookies.delete('auth-token');
+            return response;
         }
+
+        console.log('✅ MIDDLEWARE: Valid session found for user:', session.user.email);
+
+        // Check admin routes
+        if (ADMIN_ROUTES.some(route => pathname.startsWith(route))) {
+            if (session.user.role !== 'ADMIN') {
+                if (pathname.startsWith('/api')) {
+                    return NextResponse.json(
+                        {error: 'Admin access required'},
+                        {status: 403}
+                    );
+                }
+
+                return NextResponse.redirect(new URL('/', request.url));
+            }
+        }
+
+        // Add user info to request headers for API routes
+        if (pathname.startsWith('/api')) {
+            const requestHeaders = new Headers(request.headers);
+            requestHeaders.set('x-user-id', session.user.id);
+            requestHeaders.set('x-user-email', session.user.email);
+            requestHeaders.set('x-user-role', session.user.role);
+
+            // Add customer context if needed
+            if (session.user.customerId) {
+                requestHeaders.set('x-customer-id', session.user.customerId);
+            }
+
+            return NextResponse.next({
+                request: {
+                    headers: requestHeaders,
+                },
+            });
+        }
+
+        return NextResponse.next();
+
+    } catch (error) {
+        console.error('🚨 MIDDLEWARE: Database error during session validation:', error);
+
+        // On database error, redirect to login for safety
+        if (pathname.startsWith('/api')) {
+            return NextResponse.json(
+                {error: 'Authentication error'},
+                {status: 500}
+            );
+        }
+
+        return NextResponse.redirect(new URL('/login', request.url));
     }
-
-    // Add user info to request headers for API routes (without reading body)
-    if (pathname.startsWith('/api')) {
-        const requestHeaders = new Headers(request.headers);
-        requestHeaders.set('x-user-id', payload.userId);
-        requestHeaders.set('x-user-email', payload.email);
-        requestHeaders.set('x-user-role', payload.role);
-
-        return NextResponse.next({
-            request: {
-                headers: requestHeaders,
-            },
-        });
-    }
-
-    return NextResponse.next();
 }
 
 export const config = {

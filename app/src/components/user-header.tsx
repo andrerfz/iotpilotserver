@@ -1,106 +1,149 @@
 'use client';
 
-import { useState } from 'react';
-import { useAuth } from '@/contexts/auth-context';
-import { User, LogOut, Settings, Shield, ChevronDown } from 'lucide-react';
+import {useAuth} from '@/contexts/auth-context';
+import {useRouter} from 'next/navigation';
+import {ChevronDown, LogOut, Settings, Shield, User} from 'lucide-react';
+import {
+    Avatar,
+    Button,
+    Chip,
+    Dropdown,
+    DropdownItem,
+    DropdownMenu,
+    DropdownSection,
+    DropdownTrigger
+} from '@heroui/react';
 
 export default function UserHeader() {
-    const { user, logout } = useAuth();
-    const [dropdownOpen, setDropdownOpen] = useState(false);
+    const {
+        user,
+        logout
+    } = useAuth();
+    const router = useRouter();
 
     if (!user) return null;
 
     const getRoleColor = (role: string) => {
         switch (role) {
-            case 'ADMIN': return 'bg-red-100 text-red-800';
-            case 'USER': return 'bg-blue-100 text-blue-800';
-            case 'READONLY': return 'bg-gray-100 text-gray-800';
-            default: return 'bg-gray-100 text-gray-800';
+            case 'ADMIN':
+                return 'danger';
+            case 'USER':
+                return 'primary';
+            case 'READONLY':
+                return 'default';
+            default:
+                return 'default';
         }
     };
 
     const getRoleIcon = (role: string) => {
         switch (role) {
-            case 'ADMIN': return <Shield className="w-3 h-3" />;
-            case 'USER': return <User className="w-3 h-3" />;
-            case 'READONLY': return <User className="w-3 h-3" />;
-            default: return <User className="w-3 h-3" />;
+            case 'ADMIN':
+                return <Shield className="w-3 h-3"/>;
+            case 'USER':
+                return <User className="w-3 h-3"/>;
+            case 'READONLY':
+                return <User className="w-3 h-3"/>;
+            default:
+                return <User className="w-3 h-3"/>;
         }
     };
 
     return (
-        <div className="relative">
-            <button
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-                className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 transition-colors"
-            >
-                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                    <User className="w-4 h-4 text-white" />
-                </div>
-                <div className="hidden md:block text-left">
-                    <p className="text-sm font-medium text-gray-900">{user.username}</p>
-                    <div className="flex items-center space-x-1">
-            <span className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-xs font-medium ${getRoleColor(user.role)}`}>
-              {getRoleIcon(user.role)}
-                <span>{user.role}</span>
-            </span>
-                    </div>
-                </div>
-                <ChevronDown className="w-4 h-4 text-gray-500" />
-            </button>
-
-            {dropdownOpen && (
-                <>
-                    {/* Backdrop */}
-                    <div
-                        className="fixed inset-0 z-10"
-                        onClick={() => setDropdownOpen(false)}
-                    />
-
-                    {/* Dropdown */}
-                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-20">
-                        <div className="p-4 border-b border-gray-100">
-                            <p className="text-sm font-medium text-gray-900">{user.username}</p>
-                            <p className="text-sm text-gray-500">{user.email}</p>
-                            <div className="mt-2">
-                <span className={`inline-flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium ${getRoleColor(user.role)}`}>
-                  {getRoleIcon(user.role)}
-                    <span>{user.role}</span>
-                </span>
+        <Dropdown placement="bottom-end">
+            <DropdownTrigger>
+                <Button
+                    variant="ghost"
+                    className="h-auto p-2 data-[hover=true]:bg-default-100"
+                >
+                    <div className="flex items-center gap-3">
+                        <Avatar
+                            size="sm"
+                            src={user?.profileImage ?? undefined}
+                            className="bg-default-200 text-default-600"
+                            fallback={<User className="w-4 h-4"/>}
+                        />
+                        <div className="hidden md:block text-left">
+                            <p className="text-sm font-medium text-foreground">
+                                {user.username}
+                            </p>
+                            <div className="flex items-center gap-1">
+                                <Chip
+                                    size="sm"
+                                    color={getRoleColor(user.role)}
+                                    variant="flat"
+                                    startContent={getRoleIcon(user.role)}
+                                >
+                                    {user.role}
+                                </Chip>
                             </div>
-                            {user._count && (
-                                <div className="mt-2 text-xs text-gray-500">
-                                    <p>{user._count.devices} devices • {user._count.alerts} alerts</p>
-                                </div>
-                            )}
                         </div>
-
-                        <div className="py-1">
-                            <button
-                                onClick={() => {
-                                    setDropdownOpen(false);
-                                    // Navigate to profile/settings
-                                }}
-                                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                            >
-                                <Settings className="w-4 h-4 mr-3" />
-                                Account Settings
-                            </button>
-
-                            <button
-                                onClick={() => {
-                                    setDropdownOpen(false);
-                                    logout();
-                                }}
-                                className="flex items-center w-full px-4 py-2 text-sm text-red-700 hover:bg-red-50"
-                            >
-                                <LogOut className="w-4 h-4 mr-3" />
-                                Sign Out
-                            </button>
-                        </div>
+                        <ChevronDown className="w-4 h-4 text-default-500"/>
                     </div>
-                </>
-            )}
-        </div>
+                </Button>
+            </DropdownTrigger>
+
+            <DropdownMenu aria-label="User menu" className="w-56">
+                <DropdownSection showDivider>
+                    <DropdownItem
+                        key="profile"
+                        isReadOnly
+                        className="h-auto gap-2 opacity-100"
+                    >
+                        <div className="flex items-center gap-3">
+                            <Avatar
+                                size="md"
+                                src={user?.profileImage ?? undefined}
+                                className="bg-default-200 text-default-600"
+                                fallback={<User className="w-5 h-5"/>}
+                            />
+                            <div className="flex flex-col">
+                                <p className="text-sm font-medium text-foreground">
+                                    {user.username}
+                                </p>
+                                <p className="text-xs text-default-500">
+                                    {user.email}
+                                </p>
+                                <div className="mt-1">
+                                    <Chip
+                                        size="sm"
+                                        color={getRoleColor(user.role)}
+                                        variant="flat"
+                                        startContent={getRoleIcon(user.role)}
+                                    >
+                                        {user.role}
+                                    </Chip>
+                                </div>
+                                {user._count && (
+                                    <div className="mt-2 flex gap-4 text-xs text-default-500">
+                                        <span>{user._count.devices} devices</span>
+                                        <span>{user._count.alerts} alerts</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </DropdownItem>
+                </DropdownSection>
+
+                <DropdownSection>
+                    <DropdownItem
+                        key="settings"
+                        startContent={<Settings className="w-4 h-4"/>}
+                        onPress={() => router.push('/settings/profile')}
+                    >
+                        Account Settings
+                    </DropdownItem>
+
+                    <DropdownItem
+                        key="logout"
+                        color="danger"
+                        startContent={<LogOut className="w-4 h-4"/>}
+                        onPress={() => logout()}
+                    >
+                        Sign Out
+                    </DropdownItem>
+                </DropdownSection>
+            </DropdownMenu>
+        </Dropdown>
     );
 }

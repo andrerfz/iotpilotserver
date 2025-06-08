@@ -76,10 +76,10 @@ app.prepare().then(() => {
                     "ws:",
                     "wss:",
                     // CloudFlare tunnel URL
-                    process.env.DOMAIN_TUNEL,
-                    // Local development URLs only
+                    process.env.NEXT_PUBLIC_DOMAIN_TUNEL ? `https://${process.env.NEXT_PUBLIC_DOMAIN_TUNEL}` : null,
+                    // Local development URLs - use same protocol
                     process.env.NODE_ENV !== 'production' ? 'https://iotpilotserver.test:9443' : null,
-                    process.env.NODE_ENV !== 'production' ? 'http://iotpilotserver.test:3001' : null,
+                    // Remove HTTP port 3001 for HTTPS connections
                 ].filter(Boolean),
                 fontSrc: ["'self'"],
                 objectSrc: ["'none'"],
@@ -210,6 +210,20 @@ app.prepare().then(() => {
     server.all('*', (req, res) => {
         return handle(req, res);
     });
+
+    // Initialize command queue for device commands
+    try {
+        // Import the command queue
+        const { commandQueue } = require('./src/lib/command-executor');
+
+        // Start processing the command queue with a 60-second interval
+        commandQueue.startQueueProcessing(60000);
+
+        logger.info('Command queue processing started');
+    } catch (error) {
+        logger.error('Failed to initialize command queue:', error);
+        // Continue server startup even if command queue fails
+    }
 
     // Start the server
     httpServer.listen(port, (err) => {

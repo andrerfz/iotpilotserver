@@ -1,4 +1,3 @@
-// app/src/lib/env.ts
 import { environment as prodEnvironment } from '../environment';
 import { environment as devEnvironment } from '../environment.local';
 
@@ -53,26 +52,31 @@ function getCurrentEnvironment(): Environment {
   // Client-side: detect based on hostname
   const hostname = window.location.hostname;
 
-  // If accessing via local development domain, use dev environment
+  // Local development
   if (hostname === 'iotpilotserver.test' || hostname === 'localhost') {
     return devEnvironment;
   }
 
-  // If accessing via CloudFlare tunnel or production domain, use appropriate environment
-  if (hostname.includes('iotpilot.app')) {
-    return isProd ? prodEnvironment : devEnvironment;
+  // Development CloudFlare tunnel (check for "dashboarddev" first)
+  if (hostname.includes('dashboarddev')) {
+    return devEnvironment;
   }
 
-  // Default fallback
+  // Production CloudFlare tunnel
+  if (hostname.includes('iotpilot.app')) {
+    return prodEnvironment;
+  }
+
   return isProd ? prodEnvironment : devEnvironment;
 }
 
 // Select appropriate environment
 export const environment = getCurrentEnvironment();
 
-// Dynamic URL builders that respect current origin
+// Dynamic URL builders that respect the current origin
 export function getApiUrl(endpoint?: string): string {
   if (typeof window !== 'undefined') {
+    // Always use current window origin for consistency
     const baseUrl = `${window.location.origin}/api`;
     if (!endpoint) return baseUrl;
     const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
@@ -107,16 +111,16 @@ export function getBaseUrl(): string {
   return environment.baseUrl;
 }
 
+function getServiceUrl(localUrl: string, cloudflareUrl?: string): string {
+  const isCloudFlareAccess = typeof window !== 'undefined' &&
+      window.location.hostname.includes('iotpilot.app');
+  const shouldUseCloudflare = isCloudFlareAccess && cloudflareUrl;
+  return shouldUseCloudflare ? cloudflareUrl : localUrl;
+}
+
 export function isCloudFlareAccess(): boolean {
   if (typeof window === 'undefined') return false;
   return window.location.hostname.includes('iotpilot.app');
-}
-
-function getServiceUrl(localUrl: string, cloudflareUrl?: string): string {
-  if (isCloudFlareAccess() && cloudflareUrl) {
-    return cloudflareUrl;
-  }
-  return localUrl;
 }
 
 export function getGrafanaUrl(path?: string): string {

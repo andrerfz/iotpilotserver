@@ -667,7 +667,7 @@ EOF
     info "Attempting to register with: $SERVER_URL"
 
     HTTP_STATUS=$(curl -w "%{http_code}" -o /tmp/registration_response.json -s \
-         -X POST "$SERVER_URL/devices/register" \
+         -X POST "$SERVER_URL/devices" \
          -H "Content-Type: application/json" \
          -H "X-API-Key: $DEVICE_API_KEY" \
          -H "User-Agent: IotPilot-Agent/1.0.0" \

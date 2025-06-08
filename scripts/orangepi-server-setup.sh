@@ -166,14 +166,14 @@ install_tailscale() {
         # Get Tailscale IP
         sleep 5
         TAILSCALE_IP=$(tailscale ip -4)
-        TAILSCALE_DOMAIN=$(tailscale status --json | jq -r '.Self.DNSName' | sed 's/\.$//')
+        NEXT_PUBLIC_TAILSCALE_DOMAIN=$(tailscale status --json | jq -r '.Self.DNSName' | sed 's/\.$//')
 
         info "Tailscale IP: $TAILSCALE_IP"
-        info "Tailscale domain: $TAILSCALE_DOMAIN"
+        info "Tailscale domain: $NEXT_PUBLIC_TAILSCALE_DOMAIN"
 
         # Save for later use
         echo "TAILSCALE_IP=$TAILSCALE_IP" >> /opt/iotpilot/.env
-        echo "TAILSCALE_DOMAIN=$TAILSCALE_DOMAIN" >> /opt/iotpilot/.env
+        echo "NEXT_PUBLIC_TAILSCALE_DOMAIN=$NEXT_PUBLIC_TAILSCALE_DOMAIN" >> /opt/iotpilot/.env
     else
         warn "No Tailscale auth key provided. You'll need to configure it manually."
         info "Run: sudo tailscale up --authkey=YOUR_KEY --hostname=iotpilot-server"
@@ -399,8 +399,8 @@ show_final_information() {
     echo "  • Grafana:        https://$DOMAIN/grafana"
     echo "  • Traefik:        http://$DOMAIN:8080"
 
-    if [ -n "$TAILSCALE_DOMAIN" ]; then
-        echo "  • Tailscale:      https://$TAILSCALE_DOMAIN"
+    if [ -n "$NEXT_PUBLIC_TAILSCALE_DOMAIN" ]; then
+        echo "  • Tailscale:      https://$NEXT_PUBLIC_TAILSCALE_DOMAIN"
     fi
 
     echo ""

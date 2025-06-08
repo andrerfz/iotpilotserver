@@ -7,6 +7,7 @@
 .PHONY: fresh-setup local-start-with-migration
 .PHONY: fresh-setup local-start-with-migration
 .PHONY: test lint test-api test-ci test-db test-influxdb test-integration test-unit test-fresh test-file test-debug test-watch test-coverage test-env-check test-integration-full test-performance test-security test-clean test-db-with-data test-influxdb-connection test-services test-smoke test-all
+.PHONY: create-superadmin list-superadmins reset-superadmin-password delete-superadmin
 
 # Variables - Using .env for both production and local
 COMPOSE_FILE = docker/docker-compose.yml --env-file .env
@@ -103,6 +104,12 @@ help:
 	@echo "  tailscale-ip         - Show Tailscale IPs"
 	@echo "  tailscale-devices    - List connected devices"
 	@echo "  tailscale-logs       - Show Tailscale logs"
+	@echo ""
+	@echo "👑 SUPERADMIN Management:"
+	@echo "  create-superadmin    - Create a new SUPERADMIN user"
+	@echo "  list-superadmins     - List all SUPERADMIN users"
+	@echo "  reset-superadmin-password - Reset a SUPERADMIN user's password"
+	@echo "  delete-superadmin    - Delete a SUPERADMIN user"
 	@echo ""
 	@echo "⚡ Quick Commands:"
 	@echo "  quick-dev            - Quick development setup"
@@ -572,6 +579,29 @@ tailscale-devices:
 tailscale-logs:
 	@echo "📋 Tailscale Logs:"
 	@docker logs iotpilot-tailscale --tail=50
+
+# =============================================================================
+# SUPERADMIN MANAGEMENT COMMANDS
+# =============================================================================
+
+create-superadmin:
+	@echo "👑 Creating new SUPERADMIN user..."
+	@cd app && npx ts-node ../scripts/create-superadmin.ts
+	@echo "✅ SUPERADMIN creation process complete!"
+
+list-superadmins:
+	@echo "👑 Listing SUPERADMIN users..."
+	@cd app && npx ts-node ../scripts/list-superadmins.ts
+
+reset-superadmin-password:
+	@echo "🔑 Resetting SUPERADMIN password..."
+	@cd app && npx ts-node ../scripts/reset-superadmin-password.ts
+	@echo "✅ Password reset process complete!"
+
+delete-superadmin:
+	@echo "⚠️ Deleting SUPERADMIN user..."
+	@cd app && npx ts-node ../scripts/delete-superadmin.ts
+	@echo "✅ SUPERADMIN deletion process complete!"
 
 # =============================================================================
 # UTILITY COMMANDS

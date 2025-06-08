@@ -1,28 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import {useEffect, useState} from 'react';
 import Link from 'next/link';
-import {
-    Server,
-    Thermometer,
-    Cpu,
-    HardDrive,
-    AlertTriangle,
-    Wifi,
-    WifiOff,
-    Clock,
-    Search,
-    RefreshCw
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import {
-    getApiUrl,
-    getApiTimeout,
-    getRefreshInterval,
-    getLimit,
-    isDevelopment,
-    getFetchConfig
-} from '@/lib/env';
+import {AlertTriangle, Clock, Cpu, RefreshCw, Search, Server, Settings, Thermometer, Wifi, WifiOff} from 'lucide-react';
+import {getApiTimeout, getApiUrl, getLimit, getRefreshInterval, isDevelopment} from '@/lib/env';
+import {useAuth} from '@/contexts/auth-context'; // Add this import
+import {Button, Card, CardBody, Chip, Divider, Input, Progress, Spinner} from '@heroui/react';
 
 interface Device {
     id: string;
@@ -52,9 +35,14 @@ interface DeviceStats {
 }
 
 export default function DeviceList() {
+    const {apiCall} = useAuth(); // Add this line
     const [devices, setDevices] = useState<Device[]>([]);
     const [stats, setStats] = useState<DeviceStats>({
-        total: 0, online: 0, offline: 0, maintenance: 0, error: 0
+        total: 0,
+        online: 0,
+        offline: 0,
+        maintenance: 0,
+        error: 0
     });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -73,9 +61,9 @@ export default function DeviceList() {
         // Set up auto-refresh with environment-specific interval
         const interval = setInterval(fetchDevices, refreshInterval);
         return () => clearInterval(interval);
-    }, [refreshInterval]);
+    }, [refreshInterval]); // Remove apiCall from dependencies to avoid unnecessary re-renders
 
-    // Fetch devices from API with environment configuration
+    // Fetch devices from API with environment configuration - UPDATED
     const fetchDevices = async () => {
         try {
             const url = new URL(getApiUrl('/devices'));
@@ -85,16 +73,12 @@ export default function DeviceList() {
                 url.searchParams.append('status', filterStatus);
             }
 
-            // Create AbortController for timeout
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), getApiTimeout());
-
-            const response = await fetch(url.toString(), {
-                ...getFetchConfig(),
-                signal: controller.signal
+            // CHANGED: Use apiCall instead of fetch with custom timeout
+            // Note: apiCall handles credentials and 401 responses automatically
+            const response = await apiCall(url.toString(), {
+                // Remove signal/timeout handling as apiCall may handle this internally
+                // If you need custom timeout, you can wrap apiCall with your own AbortController
             });
-
-            clearTimeout(timeoutId);
 
             if (!response.ok) throw new Error('Failed to fetch devices');
 
@@ -166,22 +150,32 @@ export default function DeviceList() {
     // Get status icon based on device status
     const getStatusIcon = (status: string) => {
         switch (status) {
-            case 'ONLINE': return <Wifi className="w-5 h-5 text-green-500" />;
-            case 'OFFLINE': return <WifiOff className="w-5 h-5 text-red-500" />;
-            case 'MAINTENANCE': return <Clock className="w-5 h-5 text-yellow-500" />;
-            case 'ERROR': return <AlertTriangle className="w-5 h-5 text-red-600" />;
-            default: return <WifiOff className="w-5 h-5 text-gray-400" />;
+            case 'ONLINE':
+                return <Wifi className="w-5 h-5 text-green-500"/>;
+            case 'OFFLINE':
+                return <WifiOff className="w-5 h-5 text-red-500"/>;
+            case 'MAINTENANCE':
+                return <Clock className="w-5 h-5 text-yellow-500"/>;
+            case 'ERROR':
+                return <AlertTriangle className="w-5 h-5 text-red-600"/>;
+            default:
+                return <WifiOff className="w-5 h-5 text-gray-400"/>;
         }
     };
 
     // Get status color
     const getStatusColor = (status: string) => {
         switch (status) {
-            case 'ONLINE': return 'bg-green-100 text-green-800 border-green-200';
-            case 'OFFLINE': return 'bg-red-100 text-red-800 border-red-200';
-            case 'MAINTENANCE': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-            case 'ERROR': return 'bg-red-100 text-red-800 border-red-200';
-            default: return 'bg-gray-100 text-gray-800 border-gray-200';
+            case 'ONLINE':
+                return 'bg-green-100 text-green-800 border-green-200';
+            case 'OFFLINE':
+                return 'bg-red-100 text-red-800 border-red-200';
+            case 'MAINTENANCE':
+                return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+            case 'ERROR':
+                return 'bg-red-100 text-red-800 border-red-200';
+            default:
+                return 'bg-gray-100 text-gray-800 border-gray-200';
         }
     };
 
@@ -189,7 +183,7 @@ export default function DeviceList() {
         return (
             <div className="flex items-center justify-center p-8">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                    <Spinner size="lg" color="primary" className="mx-auto"/>
                     <p className="mt-4 text-gray-600">Loading devices...</p>
                     {isDevelopment() && (
                         <p className="text-xs text-gray-400 mt-2">
@@ -204,240 +198,350 @@ export default function DeviceList() {
     return (
         <div>
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm font-medium text-gray-600">Total Devices</p>
-                            <p className="text-3xl font-bold text-gray-900">
-                                {stats.total}
-                                {devices.length >= maxDevices && (
-                                    <span className="text-xs text-amber-600 ml-1">
-                                        (limit: {maxDevices})
-                                    </span>
-                                )}
-                            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-6">
+                {/* Total Devices */}
+                <Card className="mb-0">
+                    <CardBody className="p-6 flex flex-col justify-between">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex-1">
+                                <p className="text-sm font-medium text-default-600 mb-1">Total Devices</p>
+                                <p className="text-3xl font-bold text-foreground">
+                                    {stats.total}
+                                </p>
+                            </div>
+                            <div className="p-3 bg-primary-100 rounded-xl">
+                                <Server className="w-6 h-6 text-primary-600"/>
+                            </div>
                         </div>
-                        <Server className="w-8 h-8 text-gray-400" />
-                    </div>
-                </div>
+                        {devices.length >= maxDevices && (
+                            <div className="flex justify-center">
+                                <Chip size="sm" color="warning" variant="flat">
+                                    Limit: {maxDevices}
+                                </Chip>
+                            </div>
+                        )}
+                    </CardBody>
+                </Card>
 
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm font-medium text-gray-600">Online</p>
-                            <p className="text-3xl font-bold text-green-600">{stats.online}</p>
+                {/* Online Devices */}
+                <Card className="mb-0">
+                    <CardBody className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex-1">
+                                <p className="text-sm font-medium text-default-600 mb-1">Online</p>
+                                <p className="text-3xl font-bold text-success-600">
+                                    {stats.online}
+                                </p>
+                            </div>
+                            <div className="p-3 bg-success-100 rounded-xl">
+                                <Wifi className="w-6 h-6 text-success-600"/>
+                            </div>
                         </div>
-                        <Wifi className="w-8 h-8 text-green-400" />
-                    </div>
-                </div>
+                        {stats.total > 0 && (
+                            <div className="space-y-2">
+                                <div className="flex justify-between text-xs">
+                                    <span className="text-default-500">Percentage</span>
+                                    <span
+                                        className="font-medium">{((stats.online / stats.total) * 100).toFixed(1)}%</span>
+                                </div>
+                                <Progress
+                                    value={(stats.online / stats.total) * 100}
+                                    color="success"
+                                    size="sm"
+                                    className="w-full"
+                                />
+                            </div>
+                        )}
+                    </CardBody>
+                </Card>
 
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm font-medium text-gray-600">Offline</p>
-                            <p className="text-3xl font-bold text-red-600">{stats.offline}</p>
+                {/* Offline Devices */}
+                <Card className="mb-0">
+                    <CardBody className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex-1">
+                                <p className="text-sm font-medium text-default-600 mb-1">Offline</p>
+                                <p className="text-3xl font-bold text-default-600">
+                                    {stats.offline}
+                                </p>
+                            </div>
+                            <div className="p-3 bg-default-100 rounded-xl">
+                                <WifiOff className="w-6 h-6 text-default-600"/>
+                            </div>
                         </div>
-                        <WifiOff className="w-8 h-8 text-red-400" />
-                    </div>
-                </div>
+                        {stats.total > 0 && (
+                            <div className="space-y-2">
+                                <div className="flex justify-between text-xs">
+                                    <span className="text-default-500">Percentage</span>
+                                    <span
+                                        className="font-medium">{((stats.offline / stats.total) * 100).toFixed(1)}%</span>
+                                </div>
+                                <Progress
+                                    value={(stats.offline / stats.total) * 100}
+                                    color="default"
+                                    size="sm"
+                                    className="w-full"
+                                />
+                            </div>
+                        )}
+                    </CardBody>
+                </Card>
 
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm font-medium text-gray-600">Maintenance</p>
-                            <p className="text-3xl font-bold text-yellow-600">{stats.maintenance}</p>
+                {/* Maintenance Devices */}
+                <Card className="mb-0">
+                    <CardBody className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex-1">
+                                <p className="text-sm font-medium text-default-600 mb-1">Maintenance</p>
+                                <p className="text-3xl font-bold text-warning-600">
+                                    {stats.maintenance}
+                                </p>
+                            </div>
+                            <div className="p-3 bg-warning-100 rounded-xl">
+                                <Settings className="w-6 h-6 text-warning-600"/>
+                            </div>
                         </div>
-                        <Clock className="w-8 h-8 text-yellow-400" />
-                    </div>
-                </div>
+                        {stats.total > 0 && (
+                            <div className="space-y-2">
+                                <div className="flex justify-between text-xs">
+                                    <span className="text-default-500">Percentage</span>
+                                    <span
+                                        className="font-medium">{((stats.maintenance / stats.total) * 100).toFixed(1)}%</span>
+                                </div>
+                                <Progress
+                                    value={(stats.maintenance / stats.total) * 100}
+                                    color="warning"
+                                    size="sm"
+                                    className="w-full"
+                                />
+                            </div>
+                        )}
+                    </CardBody>
+                </Card>
 
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm font-medium text-gray-600">Errors</p>
-                            <p className="text-3xl font-bold text-red-600">{stats.error}</p>
+                {/* Error Devices */}
+                <Card className="mb-0">
+                    <CardBody className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex-1">
+                                <p className="text-sm font-medium text-default-600 mb-1">Errors</p>
+                                <p className="text-3xl font-bold text-danger-600">
+                                    {stats.error}
+                                </p>
+                            </div>
+                            <div className="p-3 bg-danger-100 rounded-xl">
+                                <AlertTriangle className="w-6 h-6 text-danger-600"/>
+                            </div>
                         </div>
-                        <AlertTriangle className="w-8 h-8 text-red-400" />
-                    </div>
-                </div>
+                        {stats.total > 0 && (
+                            <div className="space-y-2">
+                                <div className="flex justify-between text-xs">
+                                    <span className="text-default-500">Percentage</span>
+                                    <span
+                                        className="font-medium">{((stats.error / stats.total) * 100).toFixed(1)}%</span>
+                                </div>
+                                <Progress
+                                    value={(stats.error / stats.total) * 100}
+                                    color="danger"
+                                    size="sm"
+                                    className="w-full"
+                                />
+                            </div>
+                        )}
+                    </CardBody>
+                </Card>
             </div>
 
             {/* Search and Filters */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-                <div className="flex flex-col md:flex-row gap-4">
-                    <div className="relative flex-grow">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <Search className="h-5 w-5 text-gray-400" />
+            <Card className="mb-6">
+                <CardBody>
+                    <div className="flex flex-col md:flex-row gap-4">
+                        <div className="flex-grow">
+                            <Input
+                                type="text"
+                                placeholder="Search devices..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                startContent={<Search className="h-5 w-5 text-default-400"/>}
+                                className="w-full"
+                            />
                         </div>
-                        <input
-                            type="text"
-                            placeholder="Search devices..."
-                            className="pl-10 pr-4 py-2 border border-gray-300 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
+
+                        <div className="flex space-x-2">
+                            <Button
+                                onClick={() => setFilterStatus(null)}
+                                color={filterStatus === null ? "primary" : "default"}
+                                variant={filterStatus === null ? "flat" : "light"}
+                                size="sm"
+                            >
+                                All
+                            </Button>
+                            <Button
+                                onClick={() => setFilterStatus('ONLINE')}
+                                color={filterStatus === 'ONLINE' ? "success" : "default"}
+                                variant={filterStatus === 'ONLINE' ? "flat" : "light"}
+                                size="sm"
+                            >
+                                Online
+                            </Button>
+                            <Button
+                                onClick={() => setFilterStatus('OFFLINE')}
+                                color={filterStatus === 'OFFLINE' ? "danger" : "default"}
+                                variant={filterStatus === 'OFFLINE' ? "flat" : "light"}
+                                size="sm"
+                            >
+                                Offline
+                            </Button>
+                            <Button
+                                onClick={fetchDevices}
+                                color="default"
+                                variant="light"
+                                size="sm"
+                                startContent={<RefreshCw className="w-4 h-4"/>}
+                            >
+                                Refresh
+                            </Button>
+                        </div>
                     </div>
 
-                    <div className="flex space-x-2">
-                        <button
-                            onClick={() => setFilterStatus(null)}
-                            className={cn(
-                                "px-3 py-2 text-sm rounded-md",
-                                filterStatus === null
-                                    ? "bg-blue-100 text-blue-800"
-                                    : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-                            )}
-                        >
-                            All
-                        </button>
-                        <button
-                            onClick={() => setFilterStatus('ONLINE')}
-                            className={cn(
-                                "px-3 py-2 text-sm rounded-md",
-                                filterStatus === 'ONLINE'
-                                    ? "bg-green-100 text-green-800"
-                                    : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-                            )}
-                        >
-                            Online
-                        </button>
-                        <button
-                            onClick={() => setFilterStatus('OFFLINE')}
-                            className={cn(
-                                "px-3 py-2 text-sm rounded-md",
-                                filterStatus === 'OFFLINE'
-                                    ? "bg-red-100 text-red-800"
-                                    : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-                            )}
-                        >
-                            Offline
-                        </button>
-                        <button
-                            onClick={fetchDevices}
-                            className="px-3 py-2 text-sm bg-gray-100 text-gray-800 rounded-md hover:bg-gray-200 flex items-center"
-                        >
-                            <RefreshCw className="w-4 h-4 mr-1" />
-                            Refresh
-                        </button>
+                    <div className="mt-2 text-sm text-default-500">
+                        Last updated: {lastUpdate.toLocaleTimeString()} •
+                        Showing {filteredDevices.length} of {devices.length} devices
+                        {isDevelopment() && (
+                            <Chip size="sm" color="primary" variant="flat" className="ml-2">
+                                Auto-refresh: {refreshInterval / 1000}s
+                            </Chip>
+                        )}
                     </div>
-                </div>
-
-                <div className="mt-2 text-sm text-gray-500">
-                    Last updated: {lastUpdate.toLocaleTimeString()} •
-                    Showing {filteredDevices.length} of {devices.length} devices
-                    {isDevelopment() && (
-                        <span className="ml-2 text-blue-600">
-                            • Auto-refresh: {refreshInterval / 1000}s
-                        </span>
-                    )}
-                </div>
-            </div>
+                </CardBody>
+            </Card>
 
             {/* Device Grid */}
             {error && (
-                <div className="mb-6 bg-red-50 border border-red-200 rounded-md p-4">
-                    <div className="flex">
-                        <AlertTriangle className="w-5 h-5 text-red-400 mr-2" />
-                        <p className="text-red-800">{error}</p>
-                    </div>
-                </div>
+                <Card className="mb-6 bg-danger-50 border-danger">
+                    <CardBody>
+                        <div className="flex items-center">
+                            <AlertTriangle className="w-5 h-5 text-danger mr-2"/>
+                            <p className="text-danger">{error}</p>
+                        </div>
+                    </CardBody>
+                </Card>
             )}
 
             {filteredDevices.length > 0 ? (
                 <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                     {filteredDevices.map((device) => (
-                        <Link
+                        <Card
                             key={device.id}
+                            isPressable
+                            as={Link}
                             href={`/devices/${device.id}`}
-                            className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
+                            className="p-0"
                         >
-                            {/* Device Header */}
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="flex items-center">
-                                    {getStatusIcon(device.status)}
-                                    <div className="ml-3">
-                                        <h3 className="text-lg font-semibold text-gray-900">{device.hostname}</h3>
-                                        <p className="text-sm text-gray-500">{device.deviceType} {device.deviceModel ? `• ${device.deviceModel}` : ''}</p>
+                            <CardBody className="p-6">
+                                {/* Device Header */}
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="flex items-center">
+                                        {getStatusIcon(device.status)}
+                                        <div className="ml-3">
+                                            <h3 className="text-lg font-semibold text-foreground">{device.hostname}</h3>
+                                            <p className="text-sm text-default-500">{device.deviceType} {device.deviceModel ? `• ${device.deviceModel}` : ''}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex flex-col items-end">
+                                        <Chip
+                                            size="sm"
+                                            color={
+                                                device.status === 'ONLINE' ? 'success' :
+                                                    device.status === 'OFFLINE' ? 'danger' :
+                                                        device.status === 'MAINTENANCE' ? 'warning' : 'danger'
+                                            }
+                                            variant="flat"
+                                        >
+                                            {device.status}
+                                        </Chip>
+                                        {device.alertCount > 0 && (
+                                            <Chip
+                                                size="sm"
+                                                color="danger"
+                                                variant="flat"
+                                                className="mt-1"
+                                            >
+                                                {device.alertCount} alerts
+                                            </Chip>
+                                        )}
                                     </div>
                                 </div>
 
-                                <div className="flex flex-col items-end">
-                  <span className={`px-2 py-1 text-xs font-medium rounded-full border ${getStatusColor(device.status)}`}>
-                    {device.status}
-                  </span>
-                                    {device.alertCount > 0 && (
-                                        <span className="mt-1 px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800 border border-red-200">
-                      {device.alertCount} alerts
-                    </span>
-                                    )}
-                                </div>
-                            </div>
+                                {/* Device Info */}
+                                <div className="space-y-3">
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-default-500">Location:</span>
+                                        <span className="text-foreground">{device.location || 'Unknown'}</span>
+                                    </div>
 
-                            {/* Device Info */}
-                            <div className="space-y-3">
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-gray-500">Location:</span>
-                                    <span className="text-gray-900">{device.location || 'Unknown'}</span>
-                                </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-default-500">IP Address:</span>
+                                        <span className="text-foreground font-mono text-xs">
+                                            {device.tailscaleIp || device.ipAddress || 'Unknown'}
+                                        </span>
+                                    </div>
 
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-gray-500">IP Address:</span>
-                                    <span className="text-gray-900 font-mono text-xs">
-                    {device.tailscaleIp || device.ipAddress || 'Unknown'}
-                  </span>
-                                </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-default-500">Last Seen:</span>
+                                        <span className="text-foreground">{formatTimeAgo(device.lastSeen)}</span>
+                                    </div>
 
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-gray-500">Last Seen:</span>
-                                    <span className="text-gray-900">{formatTimeAgo(device.lastSeen)}</span>
-                                </div>
-
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-gray-500">Uptime:</span>
-                                    <span className="text-gray-900">{formatUptime(device.uptime)}</span>
-                                </div>
-                            </div>
-
-                            {/* Metrics */}
-                            {device.status === 'ONLINE' && (
-                                <div className="mt-4 pt-4 border-t border-gray-100">
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="flex items-center">
-                                            <Cpu className="w-4 h-4 text-blue-500 mr-2" />
-                                            <div>
-                                                <p className="text-xs text-gray-500">CPU</p>
-                                                <p className="text-sm font-medium text-gray-900">
-                                                    {device.cpuUsage?.toFixed(1) || '0'}%
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex items-center">
-                                            <Thermometer className="w-4 h-4 text-red-500 mr-2" />
-                                            <div>
-                                                <p className="text-xs text-gray-500">Temp</p>
-                                                <p className="text-sm font-medium text-gray-900">
-                                                    {device.cpuTemp?.toFixed(1) || '0'}°C
-                                                </p>
-                                            </div>
-                                        </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-default-500">Uptime:</span>
+                                        <span className="text-foreground">{formatUptime(device.uptime)}</span>
                                     </div>
                                 </div>
-                            )}
-                        </Link>
+
+                                {/* Metrics */}
+                                {device.status === 'ONLINE' && (
+                                    <>
+                                        <Divider className="my-4"/>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="flex items-center">
+                                                <Cpu className="w-4 h-4 text-primary mr-2"/>
+                                                <div>
+                                                    <p className="text-xs text-default-500">CPU</p>
+                                                    <p className="text-sm font-medium text-foreground">
+                                                        {device.cpuUsage?.toFixed(1) || '0'}%
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-center">
+                                                <Thermometer className="w-4 h-4 text-danger mr-2"/>
+                                                <div>
+                                                    <p className="text-xs text-default-500">Temp</p>
+                                                    <p className="text-sm font-medium text-foreground">
+                                                        {device.cpuTemp?.toFixed(1) || '0'}°C
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+                            </CardBody>
+                        </Card>
                     ))}
                 </div>
             ) : (
-                <div className="text-center py-12 bg-white rounded-lg shadow-sm border border-gray-200">
-                    <Server className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No devices found</h3>
-                    <p className="text-gray-500">
-                        {searchTerm || filterStatus
-                            ? 'Try adjusting your search or filters.'
-                            : 'Start by registering your first IoT device using the device agent installer.'}
-                    </p>
-                </div>
+                <Card>
+                    <CardBody className="py-12 text-center">
+                        <Server className="w-16 h-16 text-default-400 mx-auto mb-4"/>
+                        <h3 className="text-lg font-medium text-foreground mb-2">No devices found</h3>
+                        <p className="text-default-500">
+                            {searchTerm || filterStatus
+                                ? 'Try adjusting your search or filters.'
+                                : 'Start by registering your first IoT device using the device agent installer.'}
+                        </p>
+                    </CardBody>
+                </Card>
             )}
         </div>
     );

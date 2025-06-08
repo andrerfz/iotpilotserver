@@ -1,144 +1,174 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient, DeviceType, DeviceStatus, AlertType, AlertSeverity } from '@prisma/client';
-import { z } from 'zod';
-import { authenticate, validateApiKey } from '@/lib/auth';
+import {NextRequest, NextResponse} from 'next/server';
+import {AlertSeverity, AlertType, DeviceStatus, DeviceType, PrismaClient} from '@prisma/client';
+import {z} from 'zod';
+import {authenticate, validateApiKey} from '@/lib/auth';
 
 const prisma = new PrismaClient();
 
-// Device registration schema
 const deviceRegistrationSchema = z.object({
     device_id: z.string(),
     hostname: z.string(),
-    device_type: z.enum(['PI_ZERO', 'PI_3', 'PI_4', 'PI_5', 'ORANGE_PI', 'GENERIC']),
+    device_type: z.string(),
     device_model: z.string().optional(),
     architecture: z.string(),
     location: z.string().optional(),
     ip_address: z.string().optional(),
     tailscale_ip: z.string().optional(),
-    mac_address: z.string().optional(),
-    auto_registered: z.boolean().default(false),
-    registration_time: z.string().optional()
+    mac_address: z.string().optional()
 });
 
-// GET /api/devices - List all devices (requires authentication)
+// GET /api/devices - List all devices
 export async function GET(request: NextRequest) {
     try {
-        // Authenticate user
-        const { user, error } = await authenticate(request);
+        const {
+            user,
+            error
+        } = await authenticate(request);
         if (error || !user) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+            return NextResponse.json({error: 'Unauthorized'}, {status: 401});
         }
 
-        const { searchParams } = new URL(request.url);
-        const status = searchParams.get('status') as DeviceStatus | null;
-        const type = searchParams.get('type') as DeviceType | null;
-        const location = searchParams.get('location');
+        const searchParams = new URL(request.url).searchParams;
+        const status = searchParams.get('status');
+        const limit = parseInt(searchParams.get('limit') || '50', 10);
 
-        const where: any = {};
+        // Build where clause
+        const whereClause: any = {};
 
-        // Users can only see their own devices unless they're admin
+        // Filter by user (non-admin users only see their devices)
         if (user.role !== 'ADMIN') {
-            where.userId = user.id;
+            whereClause.userId = user.id;
         }
 
-        if (status) where.status = status;
-        if (type) where.deviceType = type;
-        if (location) where.location = location;
+        // Filter by status if provided
+        if (status) {
+            whereClause.status = status;
+        }
 
+        // Fetch devices with alert counts
         const devices = await prisma.device.findMany({
-            where,
+            where: whereClause,
+            orderBy: {lastSeen: 'desc'},
+            take: limit,
             include: {
                 _count: {
                     select: {
                         alerts: {
-                            where: { resolved: false }
+                            where: {resolved: false}
                         }
                     }
-                },
-                user: {
-                    select: {
-                        username: true,
-                        email: true
-                    }
                 }
-            },
-            orderBy: { lastSeen: 'desc' }
+            }
         });
 
-        // Calculate device statistics
+        // Format devices for response
+        const formattedDevices = devices.map((device: {
+            _count: {
+                alerts: any;
+            };
+        }) => ({
+            ...device,
+            alertCount: device._count.alerts
+        }));
+
+        // Calculate stats
         const stats = {
             total: devices.length,
-            online: devices.filter(d => d.status === 'ONLINE').length,
-            offline: devices.filter(d => d.status === 'OFFLINE').length,
-            maintenance: devices.filter(d => d.status === 'MAINTENANCE').length,
-            error: devices.filter(d => d.status === 'ERROR').length
+            online: devices.filter((d: {
+                status: string;
+            }) => d.status === 'ONLINE').length,
+            offline: devices.filter((d: {
+                status: string;
+            }) => d.status === 'OFFLINE').length,
+            maintenance: devices.filter((d: {
+                status: string;
+            }) => d.status === 'MAINTENANCE').length,
+            error: devices.filter((d: {
+                status: string;
+            }) => d.status === 'ERROR').length
         };
 
         return NextResponse.json({
-            devices: devices.map(device => ({
-                ...device,
-                alertCount: device._count.alerts
-            })),
+            devices: formattedDevices,
             stats
         });
 
     } catch (error) {
         console.error('Failed to fetch devices:', error);
         return NextResponse.json(
-            { error: 'Failed to fetch devices' },
-            { status: 500 }
+            {error: 'Failed to fetch devices'},
+            {status: 500}
         );
     }
 }
 
-// POST /api/devices - Register a new device (requires API key or user auth)
+// POST /api/devices - Register new device
 export async function POST(request: NextRequest) {
     try {
         let userId: string | null = null;
+        let authUser: any = null;
 
         // Try API key authentication first
         const apiKey = request.headers.get('x-api-key') ||
             request.headers.get('authorization')?.replace('ApiKey ', '');
 
         if (apiKey) {
-            const { valid, user } = await validateApiKey(apiKey);
+            const {
+                valid,
+                user
+            } = await validateApiKey(apiKey);
             if (valid && user) {
                 userId = user.id;
+                authUser = user;
             } else {
-                return NextResponse.json({ error: 'Invalid API key' }, { status: 401 });
+                return NextResponse.json({error: 'Invalid API key'}, {status: 401});
             }
         } else {
             // Try user authentication
-            const { user, error } = await authenticate(request);
+            const {
+                user,
+                error
+            } = await authenticate(request);
             if (error || !user) {
-                return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+                return NextResponse.json({error: 'Unauthorized'}, {status: 401});
             }
             userId = user.id;
+            authUser = user;
         }
 
         const body = await request.json();
         const data = deviceRegistrationSchema.parse(body);
-
-        // Map string device type to enum
         const deviceTypeEnum = data.device_type as DeviceType;
+
+        // Check if user has a customerId
+        if (!authUser.customerId) {
+            return NextResponse.json(
+                {error: 'User is not associated with a customer'},
+                {status: 400}
+            );
+        }
 
         // Check if device already exists
         const existingDevice = await prisma.device.findUnique({
-            where: { deviceId: data.device_id }
+            where: {deviceId: data.device_id}
         });
 
         if (existingDevice) {
-            // Update existing device (only if owned by user or user is admin)
-            const { user: authUser } = await authenticate(request);
-            if (authUser?.role !== 'ADMIN' && existingDevice.userId !== userId) {
+            // STRICT OWNERSHIP CHECK - prevent duplicates across users
+            if (existingDevice.userId !== userId && authUser?.role !== 'ADMIN') {
                 return NextResponse.json(
-                    { error: 'Device belongs to another user' },
-                    { status: 403 }
+                    {
+                        error: 'Device already registered by another user',
+                        action: 'duplicate_rejected',
+                        existing_owner: true
+                    },
+                    {status: 409} // Conflict status
                 );
             }
 
+            // SAME USER - update existing device (this is expected behavior)
             const updatedDevice = await prisma.device.update({
-                where: { deviceId: data.device_id },
+                where: {deviceId: data.device_id},
                 data: {
                     hostname: data.hostname,
                     deviceType: deviceTypeEnum,
@@ -156,11 +186,12 @@ export async function POST(request: NextRequest) {
 
             return NextResponse.json({
                 device: updatedDevice,
-                message: 'Device updated successfully'
+                message: 'Device updated successfully',
+                action: 'updated'
             });
         }
 
-        // Create new device
+        // CREATE NEW DEVICE
         const newDevice = await prisma.device.create({
             data: {
                 deviceId: data.device_id,
@@ -175,11 +206,12 @@ export async function POST(request: NextRequest) {
                 status: DeviceStatus.ONLINE,
                 lastSeen: new Date(),
                 registeredAt: new Date(),
-                userId: userId
+                userId: userId,
+                customerId: authUser.customerId
             }
         });
 
-        // Create welcome alert
+        // Create welcome alert only for new devices
         await prisma.alert.create({
             data: {
                 deviceId: newDevice.id,
@@ -193,21 +225,37 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({
             device: newDevice,
-            message: 'Device registered successfully'
-        }, { status: 201 });
+            message: 'Device registered successfully',
+            action: 'created'
+        }, {status: 201});
 
-    } catch (error) {
+    } catch (error: any) {
+        // Handle Prisma unique constraint violations
+        if (error?.code === 'P2002') {
+            return NextResponse.json(
+                {
+                    error: 'Device ID already exists',
+                    action: 'duplicate_rejected',
+                    constraint_violation: true
+                },
+                {status: 409}
+            );
+        }
+
         if (error instanceof z.ZodError) {
             return NextResponse.json(
-                { error: 'Invalid device data', details: error.errors },
-                { status: 400 }
+                {
+                    error: 'Invalid device data',
+                    details: error.errors
+                },
+                {status: 400}
             );
         }
 
         console.error('Failed to register device:', error);
         return NextResponse.json(
-            { error: 'Failed to register device' },
-            { status: 500 }
+            {error: 'Failed to register device'},
+            {status: 500}
         );
     }
 }
