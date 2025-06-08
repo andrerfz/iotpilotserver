@@ -90,7 +90,7 @@ REGISTRATION_DATA=$(cat << JSON_EOF
 {
   "device_id": "$DEVICE_ID",
   "hostname": "$DEVICE_NAME",
-  "device_type": "DOCKER_CONTAINER",
+  "device_type": "GENERIC",
   "architecture": "$(uname -m)",
   "location": "$DEVICE_LOCATION",
   "auto_registered": true,
@@ -100,7 +100,7 @@ JSON_EOF
 )
 
 HTTP_STATUS=$(curl -w "%{http_code}" -o /tmp/registration_response.json -s \
-  -X POST "https://$IOTPILOT_SERVER/api/devices/register" \
+  -X POST "https://$IOTPILOT_SERVER/api/devices" \
   -H "Content-Type: application/json" \
   -H "X-API-Key: $DEVICE_API_KEY" \
   -d "$REGISTRATION_DATA" \
