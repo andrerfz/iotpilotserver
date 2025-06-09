@@ -30,7 +30,6 @@ FOUND_SERVER=""
 # Test order: internal containers first, then external
 SERVER_ENDPOINTS=(
     "http://iotpilot-server-app:3000"
-    "https://iotpilotserver.test:9443"
 )
 
 for endpoint in "${SERVER_ENDPOINTS[@]}"; do
