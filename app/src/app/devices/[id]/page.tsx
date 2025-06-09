@@ -517,7 +517,7 @@ export default function DeviceDetailPage({ params }: { params: { id: string } })
                                 <Cpu className="w-5 h-5 text-blue-600 mr-2" />
                                 <h3 className="font-medium text-gray-700">CPU Usage</h3>
                             </div>
-                            <p className="text-2xl font-bold">{device.cpuUsage !== undefined ? `${device.cpuUsage.toFixed(1)}%` : 'N/A'}</p>
+                            <p className="text-2xl font-bold">{device.cpuUsage != null ? `${device.cpuUsage.toFixed(1)}%` : 'N/A'}</p>
                             <p className="text-sm text-gray-500">Load: {device.loadAverage || 'N/A'}</p>
                         </div>
                         <div className="bg-gray-50 rounded-lg p-4">
@@ -525,7 +525,7 @@ export default function DeviceDetailPage({ params }: { params: { id: string } })
                                 <Thermometer className="w-5 h-5 text-red-500 mr-2" />
                                 <h3 className="font-medium text-gray-700">CPU Temperature</h3>
                             </div>
-                            <p className="text-2xl font-bold">{device.cpuTemp !== undefined ? `${device.cpuTemp.toFixed(1)}°C` : 'N/A'}</p>
+                            <p className="text-2xl font-bold">{device.cpuTemp != null ? `${device.cpuTemp.toFixed(1)}°C` : 'N/A'}</p>
                         </div>
                         <div className="bg-gray-50 rounded-lg p-4">
                             <div className="flex items-center mb-2">
@@ -533,7 +533,7 @@ export default function DeviceDetailPage({ params }: { params: { id: string } })
                                 <h3 className="font-medium text-gray-700">Memory</h3>
                             </div>
                             <p className="text-2xl font-bold">
-                                {device.memoryUsage !== undefined ? `${device.memoryUsage.toFixed(1)}%` : 'N/A'}
+                                {device.memoryUsage != null ? `${device.memoryUsage.toFixed(1)}%` : 'N/A'}
                             </p>
                             {device.memoryTotal && (
                                 <p className="text-sm text-gray-500">
@@ -546,7 +546,7 @@ export default function DeviceDetailPage({ params }: { params: { id: string } })
                                 <HardDrive className="w-5 h-5 text-purple-600 mr-2" />
                                 <h3 className="font-medium text-gray-700">Disk</h3>
                             </div>
-                            <p className="text-2xl font-bold">{device.diskUsage !== undefined ? `${device.diskUsage.toFixed(1)}%` : 'N/A'}</p>
+                            <p className="text-2xl font-bold">{device.diskUsage != null ? `${device.diskUsage.toFixed(1)}%` : 'N/A'}</p>
                             <p className="text-sm text-gray-500">Total: {device.diskTotal || 'N/A'}</p>
                         </div>
                     </div>
