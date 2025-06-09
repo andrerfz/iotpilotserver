@@ -31,7 +31,6 @@ FOUND_SERVER=""
 SERVER_ENDPOINTS=(
     "http://iotpilot-server-app:3000"
     "https://iotpilotserver.test:9443"
-    "http://iotpilotserver.test:9080"
 )
 
 for endpoint in "${SERVER_ENDPOINTS[@]}"; do
