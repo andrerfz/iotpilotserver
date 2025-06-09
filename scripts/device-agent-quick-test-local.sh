@@ -14,6 +14,23 @@ apt-get update -qq && apt-get install -y -qq curl jq cron procps
 DEVICE_ID="test-device-$(cat /proc/sys/kernel/random/uuid | cut -d'-' -f1)"
 echo "📱 Device ID: $DEVICE_ID"
 
+# Determine protocol based on server URL
+if [[ "$IOTPILOT_SERVER" == *"://"* ]]; then
+    # URL already includes protocol
+    SERVER_URL="$IOTPILOT_SERVER"
+else
+    # No protocol specified, determine based on server name
+    if [[ "$IOTPILOT_SERVER" == *":3000" ]] || [[ "$IOTPILOT_SERVER" == "iotpilot-server-app"* ]]; then
+        # Internal container communication - use HTTP
+        SERVER_URL="http://$IOTPILOT_SERVER"
+    else
+        # External communication - use HTTPS
+        SERVER_URL="https://$IOTPILOT_SERVER"
+    fi
+fi
+
+echo "🌐 Using server URL: $SERVER_URL"
+
 # Create heartbeat script
 echo "📝 Creating heartbeat script..."
 cat > /usr/local/bin/heartbeat.sh << 'EOF'
@@ -21,15 +38,15 @@ cat > /usr/local/bin/heartbeat.sh << 'EOF'
 
 # Collect system metrics
 get_cpu_usage() {
-    top -bn1 | grep 'Cpu(s)' | awk '{print $2}' | awk -F'%' '{print $1}' | head -1
+    top -bn1 | grep 'Cpu(s)' | awk '{print $2}' | awk -F'%' '{print $1}' | head -1 2>/dev/null || echo "15.5"
 }
 
 get_memory_info() {
-    free -m | awk 'NR==2{printf "%.1f,%.1f,%.1f", $3*100/$2, $3, $2}'
+    free -m | awk 'NR==2{printf "%.1f,%.1f,%.1f", $3*100/$2, $3, $2}' 2>/dev/null || echo "35.2,512,1024"
 }
 
 get_disk_info() {
-    df -h / | awk 'NR==2{printf "%s,%s,%s", $5, $3, $2}'
+    df -h / | awk 'NR==2{printf "%s,%s,%s", $5, $3, $2}' 2>/dev/null || echo "25%,1.2G,5.0G"
 }
 
 # Get metrics
@@ -57,7 +74,7 @@ DEVICE_DATA=$(cat << JSON_EOF
   "memory_usage_percent": ${MEM_PERCENT:-35.2},
   "memory_used_mb": ${MEM_USED:-512},
   "memory_total_mb": ${MEM_TOTAL:-1024},
-  "disk_usage_percent": ${DISK_PERCENT:-25.1},
+  "disk_usage_percent": ${DISK_PERCENT:-25},
   "disk_used": "${DISK_USED:-1.2G}",
   "disk_total": "${DISK_TOTAL:-5.0G}",
   "app_status": "running",
@@ -67,10 +84,17 @@ DEVICE_DATA=$(cat << JSON_EOF
 JSON_EOF
 )
 
-# Send heartbeat
-echo "$(date): Sending heartbeat for $DEVICE_ID"
-HTTP_STATUS=$(curl -w "%{http_code}" -o /tmp/heartbeat_response.json -s \
-  -X POST "https://$IOTPILOT_SERVER/api/heartbeat" \
+# Send heartbeat - use SERVER_URL with proper protocol
+echo "$(date): Sending heartbeat for $DEVICE_ID to $SERVER_URL"
+
+# Add insecure flag for HTTPS with self-signed certs
+CURL_OPTS=""
+if [[ "$SERVER_URL" == "https://"* ]]; then
+    CURL_OPTS="-k --insecure"
+fi
+
+HTTP_STATUS=$(curl $CURL_OPTS -w "%{http_code}" -o /tmp/heartbeat_response.json -s \
+  -X POST "$SERVER_URL/api/heartbeat" \
   -H "Content-Type: application/json" \
   -H "X-API-Key: $DEVICE_API_KEY" \
   -d "$DEVICE_DATA" \
@@ -101,8 +125,15 @@ REGISTRATION_DATA=$(cat << JSON_EOF
 JSON_EOF
 )
 
-HTTP_STATUS=$(curl -w "%{http_code}" -o /tmp/registration_response.json -s \
-  -X POST "https://$IOTPILOT_SERVER/api/devices/register" \
+# Add insecure flag for HTTPS with self-signed certs
+CURL_OPTS=""
+if [[ "$SERVER_URL" == "https://"* ]]; then
+    CURL_OPTS="-k --insecure"
+fi
+
+echo "🔗 Registering at: $SERVER_URL/api/devices/register"
+HTTP_STATUS=$(curl $CURL_OPTS -w "%{http_code}" -o /tmp/registration_response.json -s \
+  -X POST "$SERVER_URL/api/devices/register" \
   -H "Content-Type: application/json" \
   -H "X-API-Key: $DEVICE_API_KEY" \
   -d "$REGISTRATION_DATA" \
@@ -110,9 +141,13 @@ HTTP_STATUS=$(curl -w "%{http_code}" -o /tmp/registration_response.json -s \
 
 if [ "$HTTP_STATUS" = "200" ] || [ "$HTTP_STATUS" = "201" ]; then
   echo "✅ Device registered successfully"
+  cat /tmp/registration_response.json 2>/dev/null | jq . 2>/dev/null || cat /tmp/registration_response.json
 else
-  echo "⚠️  Registration failed ($HTTP_STATUS), continuing anyway..."
+  echo "⚠️  Registration failed ($HTTP_STATUS)"
+  echo "Response:"
   cat /tmp/registration_response.json 2>/dev/null
+  echo ""
+  echo "Continuing with heartbeat anyway..."
 fi
 
 # Send initial heartbeat
@@ -127,7 +162,7 @@ service cron start
 echo "✅ Test device started successfully"
 echo "📊 Heartbeat every 2 minutes"
 echo "📋 View logs: docker logs iotpilot-test-device"
-echo "🌐 Server: $IOTPILOT_SERVER"
+echo "🌐 Server: $SERVER_URL"
 echo "📱 Device: $DEVICE_ID"
 
 # Keep container running and show periodic status
