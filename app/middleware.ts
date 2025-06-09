@@ -8,7 +8,7 @@ const PUBLIC_ROUTES = [
     '/api/auth/register',
     '/api/health',
     '/api/devices/heartbeat', // Device heartbeat should use API key
-    '/api/devices/register',  // Device registration should use API key
+    '/api/devices',  // Device registration should use API key
     '/login',
     '/register',
     '/terms',
@@ -19,7 +19,7 @@ const PUBLIC_ROUTES = [
 // API routes that allow API key authentication (handled in route handlers)
 const API_KEY_ROUTES = [
     '/api/devices/heartbeat',
-    '/api/devices/register',
+    '/api/devices',
     '/api/devices/tailscale-register'
 ];
 
