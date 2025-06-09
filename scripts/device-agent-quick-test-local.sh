@@ -131,9 +131,9 @@ if [[ "$SERVER_URL" == "https://"* ]]; then
     CURL_OPTS="-k --insecure"
 fi
 
-echo "🔗 Registering at: $SERVER_URL/api/devices/register"
+echo "🔗 Registering at: $SERVER_URL/api/devices"
 HTTP_STATUS=$(curl $CURL_OPTS -w "%{http_code}" -o /tmp/registration_response.json -s \
-  -X POST "$SERVER_URL/api/devices/register" \
+  -X POST "$SERVER_URL/api/devices" \
   -H "Content-Type: application/json" \
   -H "X-API-Key: $DEVICE_API_KEY" \
   -d "$REGISTRATION_DATA" \
