@@ -66,7 +66,7 @@ DEVICE_DATA=$(cat << JSON_EOF
 {
   "device_id": "$DEVICE_ID",
   "hostname": "$DEVICE_NAME",
-  "device_type": "DOCKER_CONTAINER",
+  "device_type": "GENERIC",
   "architecture": "$(uname -m)",
   "location": "$DEVICE_LOCATION",
   "uptime": "$(uptime -p)",
