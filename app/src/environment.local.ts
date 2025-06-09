@@ -2,19 +2,19 @@ export const environment = {
   production: false,
   appIdentify: 1,
 
-  // Main URLs - Dynamic based on access method
-  baseUrl: 'https://iotpilotserver.test:9443',
-  apiUrl: 'https://iotpilotserver.test:9443/api',
-  wsUrl: 'wss://iotpilotserver.test:9443',
+  // Main URLs - CloudFlare Tunnel in production
+  baseUrl: process.env.DOMAIN_TUNEL || 'https://iotpilotserver.test:9443',
+  apiUrl: `${process.env.DOMAIN_TUNEL || 'https://iotpilotserver.test:9443'}/api`,
+  wsUrl: `wss://${(process.env.DOMAIN_TUNEL || 'https://iotpilotserver.test:9443').replace('https://', '')}`,
 
-  // External Services - FIX: Use CloudFlare subdomains
-  grafanaUrl: 'http://iotpilotserver.test:3002',
-  influxdbUrl: 'http://iotpilotserver.test:8087',
+  // External Services - Subdomains for production
+  grafanaUrl: process.env.GRAFANA_DOMAIN || 'http://iotpilotserver.test:3002',
+  influxdbUrl: process.env.INFLUXDB_DOMAIN || 'http://iotpilotserver.test:8087',
 
-  // Network Configuration - ADD THESE
-  cloudflareUrl: 'https://dashboarddev.iotpilot.app',
-  grafanaCloudflareUrl: 'https://dashboarddev-grafana.iotpilot.app',
-  influxdbCloudflareUrl: 'https://dashboarddev-influxdb.iotpilot.app',
+  // Network Configuration
+  cloudflareUrl: process.env.DOMAIN_TUNEL || 'https://dashboarddev.iotpilot.app',
+  grafanaCloudflareUrl: process.env.GRAFANA_DOMAIN || 'https://dashboarddev-grafana.iotpilot.app',
+  influxdbCloudflareUrl: process.env.INFLUXDB_DOMAIN || 'https://dashboarddev-influxdb.iotpilot.app',
   tailscaleDomain: process.env.TAILSCALE_DOMAIN,
 
   // Feature Flags - More permissive in development
