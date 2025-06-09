@@ -11,7 +11,7 @@ echo "📦 Installing dependencies..."
 apt-get update -qq && apt-get install -y -qq curl jq cron procps
 
 # Generate unique device ID
-DEVICE_ID="test-device-$(cat /proc/sys/kernel/random/uuid | cut -d'-' -f1)"
+DEVICE_ID="test-device-$(hostname)"
 echo "📱 Device ID: $DEVICE_ID"
 
 # Determine protocol based on server URL
