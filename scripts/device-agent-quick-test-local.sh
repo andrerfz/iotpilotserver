@@ -174,9 +174,9 @@ if [[ "$SERVER_URL" == "https://"* ]]; then
     CURL_OPTS="-k --insecure"
 fi
 
-# FIXED: Use /api/devices/heartbeat instead of /api/heartbeat
+# FIXED: Use existing /api/heartbeat endpoint
 HTTP_STATUS=$(curl $CURL_OPTS -w "%{http_code}" -o /tmp/heartbeat_response.json -s \
-  -X POST "$SERVER_URL/api/devices/heartbeat" \
+  -X POST "$SERVER_URL/api/heartbeat" \
   -H "Content-Type: application/json" \
   -H "X-API-Key: $DEVICE_API_KEY" \
   -d "$DEVICE_DATA" \
