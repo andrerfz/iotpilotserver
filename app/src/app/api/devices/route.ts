@@ -122,13 +122,16 @@ export async function POST(request: NextRequest) {
         // Map string device type to enum
         const deviceTypeEnum = data.device_type as DeviceType;
 
-        // Check if device already exists
+        // FIXED: Check if device already exists with better duplicate handling
         const existingDevice = await prisma.device.findUnique({
             where: { deviceId: data.device_id }
         });
 
         if (existingDevice) {
-            // Update existing device (only if owned by user or user is admin)
+            // Device already exists - update it instead of creating duplicate
+            console.log(`Device ${data.device_id} already exists, updating...`);
+
+            // Check ownership if not admin
             const { user: authUser } = await authenticate(request);
             if (authUser?.role !== 'ADMIN' && existingDevice.userId !== userId) {
                 return NextResponse.json(
@@ -156,11 +159,14 @@ export async function POST(request: NextRequest) {
 
             return NextResponse.json({
                 device: updatedDevice,
-                message: 'Device updated successfully'
+                message: 'Device updated successfully',
+                action: 'updated'
             });
         }
 
-        // Create new device
+        // FIXED: Create new device only if it doesn't exist
+        console.log(`Creating new device: ${data.device_id}`);
+
         const newDevice = await prisma.device.create({
             data: {
                 deviceId: data.device_id,
@@ -179,7 +185,7 @@ export async function POST(request: NextRequest) {
             }
         });
 
-        // Create welcome alert
+        // Create welcome alert only for new devices
         await prisma.alert.create({
             data: {
                 deviceId: newDevice.id,
@@ -193,7 +199,8 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({
             device: newDevice,
-            message: 'Device registered successfully'
+            message: 'Device registered successfully',
+            action: 'created'
         }, { status: 201 });
 
     } catch (error) {
