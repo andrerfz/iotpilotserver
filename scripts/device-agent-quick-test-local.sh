@@ -8,7 +8,21 @@ echo "🚀 Starting IoT test device..."
 
 # Install dependencies
 echo "📦 Installing dependencies..."
-apt-get update -qq && apt-get install -y -qq curl jq cron procps
+export DEBIAN_FRONTEND=noninteractive
+
+echo "  Updating package lists..."
+if ! apt-get update -qq; then
+    echo "❌ Package update failed"
+    exit 1
+fi
+
+echo "  Installing curl jq cron procps..."
+if ! apt-get install -y curl jq cron procps --no-install-recommends; then
+    echo "❌ Package installation failed"
+    exit 1
+fi
+
+echo "✅ Dependencies installed"
 
 # Use passed environment variables or generate fallback
 if [ -n "$DEVICE_ID" ]; then
