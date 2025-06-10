@@ -16,8 +16,8 @@ if ! apt-get update -qq; then
     exit 1
 fi
 
-echo "  Installing curl jq cron procps..."
-if ! apt-get install -y curl jq cron procps --no-install-recommends; then
+echo "  Installing curl jq cron procps ca-certificates..."
+if ! apt-get install -y curl jq cron procps ca-certificates --no-install-recommends; then
     echo "❌ Package installation failed"
     exit 1
 fi
