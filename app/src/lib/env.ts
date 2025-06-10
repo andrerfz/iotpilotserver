@@ -46,41 +46,43 @@ function getCurrentEnvironment(): Environment {
 
   // Server-side: use NODE_ENV
   if (typeof window === 'undefined') {
+    console.log('Server-side env detection:', { isProd, env: isProd ? 'prod' : 'dev' });
     return isProd ? prodEnvironment : devEnvironment;
   }
 
   // Client-side: detect based on hostname
   const hostname = window.location.hostname;
 
-  // DEBUG: Log the detection logic
-  console.log('Environment Detection:', {
+  console.log('Client-side env detection:', {
     hostname,
     NODE_ENV: process.env.NODE_ENV,
-    isDashboardDev: hostname.includes('dashboarddev'),
-    isIotPilotApp: hostname.includes('iotpilot.app'),
-    isLocalTest: hostname === 'iotpilotserver.test' || hostname === 'localhost'
+    checks: {
+      isLocal: hostname === 'iotpilotserver.test' || hostname === 'localhost',
+      isDashboardDev: hostname.includes('dashboarddev'),
+      isIotPilotApp: hostname.includes('iotpilot.app')
+    }
   });
 
   // Local development
   if (hostname === 'iotpilotserver.test' || hostname === 'localhost') {
-    console.log('Using devEnvironment (local)');
+    console.log('→ Using devEnvironment (local)');
     return devEnvironment;
   }
 
   // FIXED: Development CloudFlare tunnel (check for "dashboarddev" first)
   if (hostname.includes('dashboarddev')) {
-    console.log('Using devEnvironment (tunnel-dev)');
+    console.log('→ Using devEnvironment (tunnel-dev)');
     return devEnvironment;
   }
 
-  // Production CloudFlare tunnel (general iotpilot.app without "dev")
+  // Production CloudFlare tunnel
   if (hostname.includes('iotpilot.app')) {
-    console.log('Using prodEnvironment (tunnel-prod)');
+    console.log('→ Using prodEnvironment (tunnel-prod)');
     return prodEnvironment;
   }
 
   // Default fallback
-  console.log('Using fallback environment');
+  console.log('→ Using fallback environment');
   return isProd ? prodEnvironment : devEnvironment;
 }
 
@@ -90,6 +92,17 @@ export const environment = getCurrentEnvironment();
 // Dynamic URL builders that respect the current origin
 export function getApiUrl(endpoint?: string): string {
   if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+
+    // For local development, use HTTP instead of HTTPS to avoid SSL issues
+    if (hostname === 'iotpilotserver.test') {
+      const baseUrl = `http://${window.location.host.replace('9443', '3001')}/api`;
+      if (!endpoint) return baseUrl;
+      const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+      return `${baseUrl}${cleanEndpoint}`;
+    }
+
+    // For tunnel access, use current origin
     const baseUrl = `${window.location.origin}/api`;
     if (!endpoint) return baseUrl;
     const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
@@ -100,28 +113,6 @@ export function getApiUrl(endpoint?: string): string {
   if (!endpoint) return environment.apiUrl;
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
   return `${environment.apiUrl}${cleanEndpoint}`;
-}
-
-export function getWebSocketUrl(endpoint?: string): string {
-  if (typeof window !== 'undefined') {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const baseUrl = `${protocol}//${window.location.host}`;
-    if (!endpoint) return baseUrl;
-    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-    return `${baseUrl}${cleanEndpoint}`;
-  }
-
-  // Server-side fallback
-  if (!endpoint) return environment.wsUrl;
-  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-  return `${environment.wsUrl}${cleanEndpoint}`;
-}
-
-export function getBaseUrl(): string {
-  if (typeof window !== 'undefined') {
-    return window.location.origin;
-  }
-  return environment.baseUrl;
 }
 
 // Add debug logging to getServiceUrl
