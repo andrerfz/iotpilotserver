@@ -112,16 +112,16 @@ export function getBaseUrl(): string {
   return environment.baseUrl;
 }
 
-export function isCloudFlareAccess(): boolean {
-  if (typeof window === 'undefined') return false;
-  return window.location.hostname.includes('iotpilot.app');
-}
-
 function getServiceUrl(localUrl: string, cloudflareUrl?: string): string {
-  if (isCloudFlareAccess() && cloudflareUrl) {
+  if (typeof window !== 'undefined' && window.location.hostname.includes('iotpilot.app') && cloudflareUrl) {
     return cloudflareUrl;
   }
   return localUrl;
+}
+
+export function isCloudFlareAccess(): boolean {
+  if (typeof window === 'undefined') return false;
+  return window.location.hostname.includes('iotpilot.app');
 }
 
 export function getGrafanaUrl(path?: string): string {
