@@ -10,11 +10,20 @@ echo "🚀 Starting IoT test device..."
 echo "📦 Installing dependencies..."
 apt-get update -qq && apt-get install -y -qq curl jq cron procps
 
-# Generate unique device ID
-DEVICE_ID="test-device-$(hostname)"
+# Use passed environment variables or generate fallback
+if [ -n "$DEVICE_ID" ]; then
+    echo "📱 Using provided Device ID: $DEVICE_ID"
+else
+    # Fallback: Generate device ID if not provided
+    DEVICE_ID="test-device-$(hostname)"
+    echo "📱 Generated Device ID: $DEVICE_ID"
+fi
+
 DEVICE_NAME="${DEVICE_NAME:-$DEVICE_ID}"
-echo "📱 Device ID: $DEVICE_ID"
-echo "📱 Device Name: $DEVICE_NAME"
+echo "📛 Device Name: $DEVICE_NAME"
+echo "📍 Location: ${DEVICE_LOCATION:-unknown}"
+echo "🔑 API Key: ${DEVICE_API_KEY:0:8}... (${#DEVICE_API_KEY} chars)"
+echo "🏷️  InfluxDB Token: ${INFLUXDB_TOKEN:0:8}... (${#INFLUXDB_TOKEN} chars)"
 
 # Determine protocol based on server URL
 if [[ "$IOTPILOT_SERVER" == *"://"* ]]; then

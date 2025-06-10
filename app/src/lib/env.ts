@@ -76,17 +76,7 @@ export const environment = getCurrentEnvironment();
 // Dynamic URL builders that respect the current origin
 export function getApiUrl(endpoint?: string): string {
   if (typeof window !== 'undefined') {
-    const hostname = window.location.hostname;
-
-    // For local development, use HTTP instead of HTTPS to avoid SSL issues
-    if (hostname === 'iotpilotserver.test') {
-      const baseUrl = `http://${window.location.host.replace('9443', '3001')}/api`;
-      if (!endpoint) return baseUrl;
-      const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-      return `${baseUrl}${cleanEndpoint}`;
-    }
-
-    // For tunnel access, use current origin
+    // Always use current window origin for consistency
     const baseUrl = `${window.location.origin}/api`;
     if (!endpoint) return baseUrl;
     const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;

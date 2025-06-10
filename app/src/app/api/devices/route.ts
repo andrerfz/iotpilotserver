@@ -1,3 +1,93 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { PrismaClient, DeviceType, DeviceStatus, AlertType, AlertSeverity } from '@prisma/client';
+import { z } from 'zod';
+import { authenticate, validateApiKey } from '@/lib/auth';
+
+const prisma = new PrismaClient();
+
+const deviceRegistrationSchema = z.object({
+    device_id: z.string(),
+    hostname: z.string(),
+    device_type: z.string(),
+    device_model: z.string().optional(),
+    architecture: z.string(),
+    location: z.string().optional(),
+    ip_address: z.string().optional(),
+    tailscale_ip: z.string().optional(),
+    mac_address: z.string().optional()
+});
+
+// GET /api/devices - List all devices
+export async function GET(request: NextRequest) {
+    try {
+        const { user, error } = await authenticate(request);
+        if (error || !user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const searchParams = new URL(request.url).searchParams;
+        const status = searchParams.get('status');
+        const limit = parseInt(searchParams.get('limit') || '50', 10);
+
+        // Build where clause
+        const whereClause: any = {};
+
+        // Filter by user (non-admin users only see their devices)
+        if (user.role !== 'ADMIN') {
+            whereClause.userId = user.id;
+        }
+
+        // Filter by status if provided
+        if (status) {
+            whereClause.status = status;
+        }
+
+        // Fetch devices with alert counts
+        const devices = await prisma.device.findMany({
+            where: whereClause,
+            orderBy: { lastSeen: 'desc' },
+            take: limit,
+            include: {
+                _count: {
+                    select: {
+                        alerts: {
+                            where: { resolved: false }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Format devices for response
+        const formattedDevices = devices.map((device: { _count: { alerts: any; }; }) => ({
+            ...device,
+            alertCount: device._count.alerts
+        }));
+
+        // Calculate stats
+        const stats = {
+            total: devices.length,
+            online: devices.filter((d: { status: string; }) => d.status === 'ONLINE').length,
+            offline: devices.filter((d: { status: string; }) => d.status === 'OFFLINE').length,
+            maintenance: devices.filter((d: { status: string; }) => d.status === 'MAINTENANCE').length,
+            error: devices.filter((d: { status: string; }) => d.status === 'ERROR').length
+        };
+
+        return NextResponse.json({
+            devices: formattedDevices,
+            stats
+        });
+
+    } catch (error) {
+        console.error('Failed to fetch devices:', error);
+        return NextResponse.json(
+            { error: 'Failed to fetch devices' },
+            { status: 500 }
+        );
+    }
+}
+
+// POST /api/devices - Register new device
 export async function POST(request: NextRequest) {
     try {
         let userId: string | null = null;
@@ -109,9 +199,9 @@ export async function POST(request: NextRequest) {
             action: 'created'
         }, { status: 201 });
 
-    } catch (error) {
+    } catch (error: any) {
         // Handle Prisma unique constraint violations
-        if (error.code === 'P2002') {
+        if (error?.code === 'P2002') {
             return NextResponse.json(
                 {
                     error: 'Device ID already exists',

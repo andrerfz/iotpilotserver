@@ -38,7 +38,7 @@ services:
       - DEVICE_API_KEY=${DEVICE_API_KEY}
       - DOMAIN=iotpilotserver.test
       - DOMAIN_TUNEL=dashboarddev.iotpilot.app
-      - TAILSCALE_DOMAIN=${TAILSCALE_DOMAIN}
+      - TAILSCALE_DOMAIN=${NEXT_PUBLIC_TAILSCALE_DOMAIN}
     ports:
       - "3001:3000"
     volumes:

@@ -76,10 +76,10 @@ app.prepare().then(() => {
                     "ws:",
                     "wss:",
                     // CloudFlare tunnel URL
-                    process.env.DOMAIN_TUNEL,
-                    // Local development URLs only
+                    process.env.NEXT_PUBLIC_DOMAIN_TUNEL ? `https://${process.env.NEXT_PUBLIC_DOMAIN_TUNEL}` : null,
+                    // Local development URLs - use same protocol
                     process.env.NODE_ENV !== 'production' ? 'https://iotpilotserver.test:9443' : null,
-                    process.env.NODE_ENV !== 'production' ? 'http://iotpilotserver.test:3001' : null,
+                    // Remove HTTP port 3001 for HTTPS connections
                 ].filter(Boolean),
                 fontSrc: ["'self'"],
                 objectSrc: ["'none'"],
