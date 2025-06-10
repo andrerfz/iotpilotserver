@@ -28,15 +28,15 @@ export const environment = {
   // Network Configuration
   cloudflareUrl: process.env.NEXT_PUBLIC_DOMAIN_TUNEL
       ? `https://${process.env.NEXT_PUBLIC_DOMAIN_TUNEL}`
-      : undefined,
+      : 'htttp://dashboarddev.iotpilot.app',
 
   grafanaCloudflareUrl: process.env.NEXT_PUBLIC_GRAFANA_CLOUDFLARE_URL
       ? `https://${process.env.NEXT_PUBLIC_GRAFANA_CLOUDFLARE_URL}`
-      : undefined,
+      : 'htttp://dashboarddev-grafana.iotpilot.app',
 
   influxdbCloudflareUrl: process.env.NEXT_PUBLIC_INFLUXDB_CLOUDFLARE_URL
       ? `https://${process.env.NEXT_PUBLIC_INFLUXDB_CLOUDFLARE_URL}`
-      : undefined,
+      : 'htttp://dashboarddev-influxdb.iotpilot.app',
 
   tailscaleDomain: process.env.NEXT_PUBLIC_TAILSCALE_DOMAIN,
 

@@ -111,12 +111,10 @@ export function getBaseUrl(): string {
   return environment.baseUrl;
 }
 
-// Add debug logging to getServiceUrl
 function getServiceUrl(localUrl: string, cloudflareUrl?: string): string {
-  const shouldUseCloudflare = typeof window !== 'undefined' &&
-      window.location.hostname.includes('iotpilot.app') &&
-      cloudflareUrl;
-
+  const isCloudFlareAccess = typeof window !== 'undefined' &&
+      window.location.hostname.includes('iotpilot.app');
+  const shouldUseCloudflare = isCloudFlareAccess && cloudflareUrl;
   return shouldUseCloudflare ? cloudflareUrl : localUrl;
 }
 
