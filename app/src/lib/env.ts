@@ -58,7 +58,12 @@ function getCurrentEnvironment(): Environment {
     return devEnvironment;
   }
 
-  // CloudFlare tunnel - use production URLs even in dev mode
+  // FIXED: Development CloudFlare tunnel (check for "dashboarddev" first)
+  if (hostname.includes('dashboarddev')) {
+    return devEnvironment;
+  }
+
+  // Production CloudFlare tunnel (general iotpilot.app without "dev")
   if (hostname.includes('iotpilot.app')) {
     return prodEnvironment;
   }

@@ -2,22 +2,22 @@ export const environment = {
   production: false,
   appIdentify: 1,
 
-  // Main URLs - CloudFlare Tunnel in production
-  baseUrl: process.env.DOMAIN_TUNEL || 'https://iotpilotserver.test:9443',
-  apiUrl: `${process.env.DOMAIN_TUNEL || 'https://iotpilotserver.test:9443'}/api`,
-  wsUrl: `wss://${(process.env.DOMAIN_TUNEL || 'https://iotpilotserver.test:9443').replace('https://', '')}`,
+  // Main URLs - Dynamic based on access method
+  baseUrl: 'https://iotpilotserver.test:9443',
+  apiUrl: 'https://iotpilotserver.test:9443/api',
+  wsUrl: 'wss://iotpilotserver.test:9443',
 
-  // External Services - Subdomains for production
-  grafanaUrl: process.env.GRAFANA_DOMAIN || 'http://iotpilotserver.test:3002',
-  influxdbUrl: process.env.INFLUXDB_DOMAIN || 'http://iotpilotserver.test:8087',
+  // External Services - Local direct access
+  grafanaUrl: 'http://iotpilotserver.test:3002',
+  influxdbUrl: 'http://iotpilotserver.test:8087',
 
-  // Network Configuration
-  cloudflareUrl: process.env.DOMAIN_TUNEL || 'https://dashboarddev.iotpilot.app',
-  grafanaCloudflareUrl: process.env.GRAFANA_DOMAIN || 'https://dashboarddev-grafana.iotpilot.app',
-  influxdbCloudflareUrl: process.env.INFLUXDB_DOMAIN || 'https://dashboarddev-influxdb.iotpilot.app',
+  // Network Configuration - READ FROM EXISTING ENV VARS
+  cloudflareUrl: process.env.DOMAIN_TUNEL ? `https://${process.env.DOMAIN_TUNEL}` : undefined,
+  grafanaCloudflareUrl: process.env.GRAFANA_DOMAIN ? `https://${process.env.GRAFANA_DOMAIN}` : undefined,
+  influxdbCloudflareUrl: process.env.INFLUXDB_DOMAIN ? `https://${process.env.INFLUXDB_DOMAIN}` : undefined,
   tailscaleDomain: process.env.TAILSCALE_DOMAIN,
 
-  // Feature Flags - More permissive in development
+  // Rest of your config...
   features: {
     sshTerminal: true,
     tailscaleIntegration: true,
@@ -26,21 +26,18 @@ export const environment = {
     advancedMetrics: true,
   },
 
-  // Timeouts (more lenient for development)
   timeouts: {
-    api: 30000,           // 30 seconds
-    websocket: 10000,     // 10 seconds
-    deviceHeartbeat: 600000, // 10 minutes
+    api: 30000,
+    websocket: 10000,
+    deviceHeartbeat: 600000,
   },
 
-  // Polling Intervals (faster for development)
   intervals: {
-    deviceRefresh: 10000,    // 10 seconds
-    metricsRefresh: 30000,   // 30 seconds
-    alertsRefresh: 5000,     // 5 seconds
+    deviceRefresh: 10000,
+    metricsRefresh: 30000,
+    alertsRefresh: 5000,
   },
 
-  // Limits (smaller for development)
   limits: {
     maxDevices: 50,
     maxConcurrentSSH: 5,
