@@ -133,11 +133,6 @@ export default function UserMenu() {
 
         // Open in new tab
         window.open(url, '_blank', 'noopener,noreferrer');
-
-        // Log access in development
-        if (isDevelopment()) {
-            console.log(`Opened ${serviceName}: ${url}`);
-        }
     };
 
     return (

@@ -46,46 +46,29 @@ function getCurrentEnvironment(): Environment {
 
   // Server-side: use NODE_ENV
   if (typeof window === 'undefined') {
-    console.log('Server-side env detection:', { isProd, env: isProd ? 'prod' : 'dev' });
     return isProd ? prodEnvironment : devEnvironment;
   }
 
   // Client-side: detect based on hostname
   const hostname = window.location.hostname;
 
-  console.log('Client-side env detection:', {
-    hostname,
-    NODE_ENV: process.env.NODE_ENV,
-    checks: {
-      isLocal: hostname === 'iotpilotserver.test' || hostname === 'localhost',
-      isDashboardDev: hostname.includes('dashboarddev'),
-      isIotPilotApp: hostname.includes('iotpilot.app')
-    }
-  });
-
   // Local development
   if (hostname === 'iotpilotserver.test' || hostname === 'localhost') {
-    console.log('→ Using devEnvironment (local)');
     return devEnvironment;
   }
 
-  // FIXED: Development CloudFlare tunnel (check for "dashboarddev" first)
+  // Development CloudFlare tunnel (check for "dashboarddev" first)
   if (hostname.includes('dashboarddev')) {
-    console.log('→ Using devEnvironment (tunnel-dev)');
     return devEnvironment;
   }
 
   // Production CloudFlare tunnel
   if (hostname.includes('iotpilot.app')) {
-    console.log('→ Using prodEnvironment (tunnel-prod)');
     return prodEnvironment;
   }
 
-  // Default fallback
-  console.log('→ Using fallback environment');
   return isProd ? prodEnvironment : devEnvironment;
 }
-
 
 // Select appropriate environment
 export const environment = getCurrentEnvironment();
@@ -143,14 +126,6 @@ function getServiceUrl(localUrl: string, cloudflareUrl?: string): string {
   const shouldUseCloudflare = typeof window !== 'undefined' &&
       window.location.hostname.includes('iotpilot.app') &&
       cloudflareUrl;
-
-  console.log('getServiceUrl:', {
-    localUrl,
-    cloudflareUrl,
-    hostname: typeof window !== 'undefined' ? window.location.hostname : 'server',
-    shouldUseCloudflare,
-    result: shouldUseCloudflare ? cloudflareUrl : localUrl
-  });
 
   return shouldUseCloudflare ? cloudflareUrl : localUrl;
 }

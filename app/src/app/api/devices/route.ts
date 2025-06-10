@@ -118,19 +118,12 @@ export async function POST(request: NextRequest) {
 
         const body = await request.json();
         const data = deviceRegistrationSchema.parse(body);
-
-        // Map string device type to enum
         const deviceTypeEnum = data.device_type as DeviceType;
-
-        // FIXED: Check if device already exists with better duplicate handling
         const existingDevice = await prisma.device.findUnique({
             where: { deviceId: data.device_id }
         });
 
         if (existingDevice) {
-            // Device already exists - update it instead of creating duplicate
-            console.log(`Device ${data.device_id} already exists, updating...`);
-
             // Check ownership if not admin
             const { user: authUser } = await authenticate(request);
             if (authUser?.role !== 'ADMIN' && existingDevice.userId !== userId) {
@@ -163,9 +156,6 @@ export async function POST(request: NextRequest) {
                 action: 'updated'
             });
         }
-
-        // FIXED: Create new device only if it doesn't exist
-        console.log(`Creating new device: ${data.device_id}`);
 
         const newDevice = await prisma.device.create({
             data: {
