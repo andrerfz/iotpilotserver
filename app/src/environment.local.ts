@@ -2,14 +2,14 @@ export const environment = {
   production: false,
   appIdentify: 1,
 
-  // Main URLs - Dynamic based on access method
-  baseUrl: 'https://iotpilotserver.test:9443',
-  apiUrl: 'https://iotpilotserver.test:9443/api',
-  wsUrl: 'wss://iotpilotserver.test:9443',
+  // Main URLs - READ FROM EXISTING ENV VARS
+  baseUrl: process.env.DOMAIN_TUNEL ? `https://${process.env.DOMAIN_TUNEL}` : 'https://iotpilotserver.test:9443',
+  apiUrl: process.env.DOMAIN_TUNEL ? `https://${process.env.DOMAIN_TUNEL}/api` : 'https://iotpilotserver.test:9443/api',
+  wsUrl: process.env.DOMAIN_TUNEL ? `wss://${process.env.DOMAIN_TUNEL}` : 'wss://iotpilotserver.test:9443',
 
-  // External Services - Local direct access
-  grafanaUrl: 'http://iotpilotserver.test:3002',
-  influxdbUrl: 'http://iotpilotserver.test:8087',
+  // External Services - READ FROM EXISTING ENV VARS
+  grafanaUrl: process.env.GRAFANA_DOMAIN ? `https://${process.env.GRAFANA_DOMAIN}` : 'https://dashboard-grafana.iotpilot.app',
+  influxdbUrl: process.env.INFLUXDB_DOMAIN ? `https://${process.env.INFLUXDB_DOMAIN}` : 'https://dashboard-influxdb.iotpilot.app',
 
   // Network Configuration - READ FROM EXISTING ENV VARS
   cloudflareUrl: process.env.DOMAIN_TUNEL ? `https://${process.env.DOMAIN_TUNEL}` : undefined,
