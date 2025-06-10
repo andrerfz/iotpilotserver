@@ -2,22 +2,43 @@ export const environment = {
   production: false,
   appIdentify: 1,
 
-  // Main URLs - READ FROM EXISTING ENV VARS
-  baseUrl: process.env.DOMAIN_TUNEL ? `https://${process.env.DOMAIN_TUNEL}` : 'https://iotpilotserver.test:9443',
-  apiUrl: process.env.DOMAIN_TUNEL ? `https://${process.env.DOMAIN_TUNEL}/api` : 'https://iotpilotserver.test:9443/api',
-  wsUrl: process.env.DOMAIN_TUNEL ? `wss://${process.env.DOMAIN_TUNEL}` : 'wss://iotpilotserver.test:9443',
+  // Main URLs - Use NEXT_PUBLIC_ for client access
+  baseUrl: process.env.NEXT_PUBLIC_DOMAIN_TUNEL
+      ? `https://${process.env.NEXT_PUBLIC_DOMAIN_TUNEL}`
+      : 'https://iotpilotserver.test:9443',
 
-  // External Services - READ FROM EXISTING ENV VARS
-  grafanaUrl: process.env.NEXT_PUBLIC_GRAFANA_CLOUDFLARE_URL ? `https://${process.env.NEXT_PUBLIC_GRAFANA_CLOUDFLARE_URL}` : 'https://dashboard-grafana.iotpilot.app',
-  influxdbUrl: process.env.NEXT_PUBLIC_INFLUXDB_CLOUDFLARE_URL ? `https://${process.env.NEXT_PUBLIC_INFLUXDB_CLOUDFLARE_URL}` : 'https://dashboard-influxdb.iotpilot.app',
+  apiUrl: process.env.NEXT_PUBLIC_DOMAIN_TUNEL
+      ? `https://${process.env.NEXT_PUBLIC_DOMAIN_TUNEL}/api`
+      : 'https://iotpilotserver.test:9443/api',
 
-  // Network Configuration - READ FROM EXISTING ENV VARS
-  cloudflareUrl: process.env.DOMAIN_TUNEL ? `https://${process.env.DOMAIN_TUNEL}` : undefined,
-  grafanaCloudflareUrl: process.env.NEXT_PUBLIC_GRAFANA_CLOUDFLARE_URL ? `https://${process.env.NEXT_PUBLIC_GRAFANA_CLOUDFLARE_URL}` : undefined,
-  influxdbCloudflareUrl: process.env.NEXT_PUBLIC_INFLUXDB_CLOUDFLARE_URL ? `https://${process.env.NEXT_PUBLIC_INFLUXDB_CLOUDFLARE_URL}` : undefined,
-  tailscaleDomain: process.env.TAILSCALE_DOMAIN,
+  wsUrl: process.env.NEXT_PUBLIC_DOMAIN_TUNEL
+      ? `wss://${process.env.NEXT_PUBLIC_DOMAIN_TUNEL}`
+      : 'wss://iotpilotserver.test:9443',
 
-  // Rest of your config...
+  // External Services - These should work now
+  grafanaUrl: process.env.NEXT_PUBLIC_GRAFANA_CLOUDFLARE_URL
+      ? `https://${process.env.NEXT_PUBLIC_GRAFANA_CLOUDFLARE_URL}`
+      : 'http://localhost:3002',
+
+  influxdbUrl: process.env.NEXT_PUBLIC_INFLUXDB_CLOUDFLARE_URL
+      ? `https://${process.env.NEXT_PUBLIC_INFLUXDB_CLOUDFLARE_URL}`
+      : 'http://localhost:8087',
+
+  // Network Configuration
+  cloudflareUrl: process.env.NEXT_PUBLIC_DOMAIN_TUNEL
+      ? `https://${process.env.NEXT_PUBLIC_DOMAIN_TUNEL}`
+      : undefined,
+
+  grafanaCloudflareUrl: process.env.NEXT_PUBLIC_GRAFANA_CLOUDFLARE_URL
+      ? `https://${process.env.NEXT_PUBLIC_GRAFANA_CLOUDFLARE_URL}`
+      : undefined,
+
+  influxdbCloudflareUrl: process.env.NEXT_PUBLIC_INFLUXDB_CLOUDFLARE_URL
+      ? `https://${process.env.NEXT_PUBLIC_INFLUXDB_CLOUDFLARE_URL}`
+      : undefined,
+
+  tailscaleDomain: process.env.NEXT_PUBLIC_TAILSCALE_DOMAIN,
+
   features: {
     sshTerminal: true,
     tailscaleIntegration: true,
