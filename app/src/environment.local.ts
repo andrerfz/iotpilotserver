@@ -8,13 +8,13 @@ export const environment = {
   wsUrl: process.env.DOMAIN_TUNEL ? `wss://${process.env.DOMAIN_TUNEL}` : 'wss://iotpilotserver.test:9443',
 
   // External Services - READ FROM EXISTING ENV VARS
-  grafanaUrl: process.env.GRAFANA_DOMAIN ? `https://${process.env.GRAFANA_DOMAIN}` : 'https://dashboard-grafana.iotpilot.app',
-  influxdbUrl: process.env.INFLUXDB_DOMAIN ? `https://${process.env.INFLUXDB_DOMAIN}` : 'https://dashboard-influxdb.iotpilot.app',
+  grafanaUrl: process.env.NEXT_PUBLIC_GRAFANA_CLOUDFLARE_URL ? `https://${process.env.NEXT_PUBLIC_GRAFANA_CLOUDFLARE_URL}` : 'https://dashboard-grafana.iotpilot.app',
+  influxdbUrl: process.env.NEXT_PUBLIC_INFLUXDB_CLOUDFLARE_URL ? `https://${process.env.NEXT_PUBLIC_INFLUXDB_CLOUDFLARE_URL}` : 'https://dashboard-influxdb.iotpilot.app',
 
   // Network Configuration - READ FROM EXISTING ENV VARS
   cloudflareUrl: process.env.DOMAIN_TUNEL ? `https://${process.env.DOMAIN_TUNEL}` : undefined,
-  grafanaCloudflareUrl: process.env.GRAFANA_DOMAIN ? `https://${process.env.GRAFANA_DOMAIN}` : undefined,
-  influxdbCloudflareUrl: process.env.INFLUXDB_DOMAIN ? `https://${process.env.INFLUXDB_DOMAIN}` : undefined,
+  grafanaCloudflareUrl: process.env.NEXT_PUBLIC_GRAFANA_CLOUDFLARE_URL ? `https://${process.env.NEXT_PUBLIC_GRAFANA_CLOUDFLARE_URL}` : undefined,
+  influxdbCloudflareUrl: process.env.NEXT_PUBLIC_INFLUXDB_CLOUDFLARE_URL ? `https://${process.env.NEXT_PUBLIC_INFLUXDB_CLOUDFLARE_URL}` : undefined,
   tailscaleDomain: process.env.TAILSCALE_DOMAIN,
 
   // Rest of your config...

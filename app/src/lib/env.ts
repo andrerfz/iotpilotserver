@@ -1,4 +1,3 @@
-// app/src/lib/env.ts
 import { environment as prodEnvironment } from '../environment';
 import { environment as devEnvironment } from '../environment.local';
 
@@ -53,22 +52,35 @@ function getCurrentEnvironment(): Environment {
   // Client-side: detect based on hostname
   const hostname = window.location.hostname;
 
+  // DEBUG: Log the detection logic
+  console.log('Environment Detection:', {
+    hostname,
+    NODE_ENV: process.env.NODE_ENV,
+    isDashboardDev: hostname.includes('dashboarddev'),
+    isIotPilotApp: hostname.includes('iotpilot.app'),
+    isLocalTest: hostname === 'iotpilotserver.test' || hostname === 'localhost'
+  });
+
   // Local development
   if (hostname === 'iotpilotserver.test' || hostname === 'localhost') {
+    console.log('Using devEnvironment (local)');
     return devEnvironment;
   }
 
   // FIXED: Development CloudFlare tunnel (check for "dashboarddev" first)
   if (hostname.includes('dashboarddev')) {
+    console.log('Using devEnvironment (tunnel-dev)');
     return devEnvironment;
   }
 
   // Production CloudFlare tunnel (general iotpilot.app without "dev")
   if (hostname.includes('iotpilot.app')) {
+    console.log('Using prodEnvironment (tunnel-prod)');
     return prodEnvironment;
   }
 
   // Default fallback
+  console.log('Using fallback environment');
   return isProd ? prodEnvironment : devEnvironment;
 }
 
@@ -112,11 +124,21 @@ export function getBaseUrl(): string {
   return environment.baseUrl;
 }
 
+// Add debug logging to getServiceUrl
 function getServiceUrl(localUrl: string, cloudflareUrl?: string): string {
-  if (typeof window !== 'undefined' && window.location.hostname.includes('iotpilot.app') && cloudflareUrl) {
-    return cloudflareUrl;
-  }
-  return localUrl;
+  const shouldUseCloudflare = typeof window !== 'undefined' &&
+      window.location.hostname.includes('iotpilot.app') &&
+      cloudflareUrl;
+
+  console.log('getServiceUrl:', {
+    localUrl,
+    cloudflareUrl,
+    hostname: typeof window !== 'undefined' ? window.location.hostname : 'server',
+    shouldUseCloudflare,
+    result: shouldUseCloudflare ? cloudflareUrl : localUrl
+  });
+
+  return shouldUseCloudflare ? cloudflareUrl : localUrl;
 }
 
 export function isCloudFlareAccess(): boolean {
