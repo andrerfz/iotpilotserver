@@ -86,6 +86,7 @@ function getCurrentEnvironment(): Environment {
   return isProd ? prodEnvironment : devEnvironment;
 }
 
+
 // Select appropriate environment
 export const environment = getCurrentEnvironment();
 
@@ -113,6 +114,28 @@ export function getApiUrl(endpoint?: string): string {
   if (!endpoint) return environment.apiUrl;
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
   return `${environment.apiUrl}${cleanEndpoint}`;
+}
+
+export function getWebSocketUrl(endpoint?: string): string {
+  if (typeof window !== 'undefined') {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const baseUrl = `${protocol}//${window.location.host}`;
+    if (!endpoint) return baseUrl;
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    return `${baseUrl}${cleanEndpoint}`;
+  }
+
+  // Server-side fallback
+  if (!endpoint) return environment.wsUrl;
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  return `${environment.wsUrl}${cleanEndpoint}`;
+}
+
+export function getBaseUrl(): string {
+  if (typeof window !== 'undefined') {
+    return window.location.origin;
+  }
+  return environment.baseUrl;
 }
 
 // Add debug logging to getServiceUrl
