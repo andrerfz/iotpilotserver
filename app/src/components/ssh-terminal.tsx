@@ -10,6 +10,13 @@ import {
     isDevelopment,
     getEnvironmentInfo
 } from '@/lib/env';
+import {
+    Card,
+    CardBody,
+    Button,
+    Badge,
+    Chip
+} from '@heroui/react';
 
 interface SSHTerminalProps {
     deviceId: string;
@@ -36,19 +43,22 @@ export default function SSHTerminal({ deviceId, hostname, onClose }: SSHTerminal
     // Check if SSH feature is enabled
     if (!isFeatureEnabled('sshTerminal')) {
         return (
-            <div className="bg-gray-900 rounded-lg overflow-hidden shadow-lg p-6 text-center">
-                <AlertTriangle className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
-                <h3 className="text-white text-lg font-medium mb-2">SSH Terminal Disabled</h3>
-                <p className="text-gray-400 mb-4">
-                    SSH terminal feature is not available in the {envInfo.name} environment.
-                </p>
-                <button
-                    onClick={onClose}
-                    className="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-600"
-                >
-                    Close
-                </button>
-            </div>
+            <Card className="bg-default-900 text-center">
+                <CardBody className="p-6">
+                    <AlertTriangle className="w-12 h-12 text-warning mx-auto mb-4" />
+                    <h3 className="text-white text-lg font-medium mb-2">SSH Terminal Disabled</h3>
+                    <p className="text-default-400 mb-4">
+                        SSH terminal feature is not available in the {envInfo.name} environment.
+                    </p>
+                    <Button
+                        onClick={onClose}
+                        color="default"
+                        variant="flat"
+                    >
+                        Close
+                    </Button>
+                </CardBody>
+            </Card>
         );
     }
 
@@ -312,23 +322,29 @@ export default function SSHTerminal({ deviceId, hostname, onClose }: SSHTerminal
             {hostname} - Terminal
           </span>
                     {isDevelopment() && (
-                        <span className="ml-2 text-xs text-blue-400">
-              ({envInfo.name})
-            </span>
+                        <Chip size="sm" color="primary" variant="flat" className="ml-2">
+                            {envInfo.name}
+                        </Chip>
                     )}
                 </div>
                 <div className="flex items-center space-x-2">
-                    <button
+                    <Button
                         onClick={handleReconnect}
-                        className="text-gray-400 hover:text-white p-1 rounded hover:bg-gray-700"
+                        isIconOnly
+                        size="sm"
+                        variant="light"
+                        color="default"
                         title="Reconnect"
-                        disabled={socketStatus === 'connecting'}
+                        isDisabled={socketStatus === 'connecting'}
                     >
                         <RefreshCw className={`w-4 h-4 ${socketStatus === 'connecting' ? 'animate-spin' : ''}`} />
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                         onClick={toggleFullscreen}
-                        className="text-gray-400 hover:text-white p-1 rounded hover:bg-gray-700"
+                        isIconOnly
+                        size="sm"
+                        variant="light"
+                        color="default"
                         title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
                     >
                         {isFullscreen ? (
@@ -336,45 +352,51 @@ export default function SSHTerminal({ deviceId, hostname, onClose }: SSHTerminal
                         ) : (
                             <Maximize className="w-4 h-4" />
                         )}
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                         onClick={onClose}
-                        className="text-gray-400 hover:text-red-400 p-1 rounded hover:bg-gray-700"
+                        isIconOnly
+                        size="sm"
+                        variant="light"
+                        color="danger"
                         title="Close"
                     >
                         <X className="w-4 h-4" />
-                    </button>
+                    </Button>
                 </div>
             </div>
 
             {/* Status Bar */}
-            <div className="bg-gray-800 px-4 py-1 border-t border-gray-700 flex items-center justify-between text-xs">
+            <div className="bg-default-800 px-4 py-1 border-t border-default-700 flex items-center justify-between text-xs">
                 <div className="flex items-center">
-          <span className={`
-            w-2 h-2 rounded-full mr-2
-            ${socketStatus === 'connected' ? 'bg-green-500' :
-              socketStatus === 'connecting' ? 'bg-yellow-500' : 'bg-red-500'}
-          `}></span>
-                    <span className="text-gray-300">
-            {socketStatus === 'connected' ? 'Connected' :
-                socketStatus === 'connecting' ? 'Connecting...' : 'Disconnected'}
-          </span>
+                    <Badge 
+                        color={
+                            socketStatus === 'connected' ? 'success' :
+                            socketStatus === 'connecting' ? 'warning' : 'danger'
+                        } 
+                        variant="dot"
+                        className="mr-2"
+                    />
+                    <span className="text-default-300">
+                        {socketStatus === 'connected' ? 'Connected' :
+                            socketStatus === 'connecting' ? 'Connecting...' : 'Disconnected'}
+                    </span>
                     {reconnectAttempts > 0 && (
-                        <span className="ml-2 text-yellow-400">
-              (Attempt {reconnectAttempts}/5)
-            </span>
+                        <Chip size="sm" color="warning" variant="flat" className="ml-2">
+                            Attempt {reconnectAttempts}/5
+                        </Chip>
                     )}
                 </div>
-                <div className="flex items-center space-x-4 text-gray-400">
+                <div className="flex items-center space-x-4 text-default-400">
                     <span>
-            Timeout: {wsTimeout / 1000}s
-          </span>
+                        Timeout: {wsTimeout / 1000}s
+                    </span>
                     <span>
-            Limit: {maxSSHConnections}
-          </span>
+                        Limit: {maxSSHConnections}
+                    </span>
                     <span>
-            {deviceId}
-          </span>
+                        {deviceId}
+                    </span>
                 </div>
             </div>
 
@@ -386,15 +408,17 @@ export default function SSHTerminal({ deviceId, hostname, onClose }: SSHTerminal
 
             {/* Error Message */}
             {error && (
-                <div className="bg-red-900 text-white text-sm px-4 py-2 flex items-center justify-between">
+                <div className="bg-danger-900 text-white text-sm px-4 py-2 flex items-center justify-between">
                     <span>{error}</span>
                     {socketStatus === 'disconnected' && (
-                        <button
+                        <Button
                             onClick={handleReconnect}
-                            className="ml-2 text-xs bg-red-700 hover:bg-red-600 px-2 py-1 rounded"
+                            size="sm"
+                            color="danger"
+                            variant="flat"
                         >
                             Retry
-                        </button>
+                        </Button>
                     )}
                 </div>
             )}

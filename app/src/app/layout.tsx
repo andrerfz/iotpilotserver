@@ -1,6 +1,6 @@
-import type { Metadata } from 'next';
+import type {Metadata} from 'next';
 import './globals.css';
-import { AuthProvider } from '@/contexts/auth-context';
+import {AuthProvider} from '@/contexts/auth-context';
 import {Providers} from "./providers";
 
 export const metadata: Metadata = {
@@ -16,14 +16,14 @@ export default function RootLayout({
     return (
         <html lang="en">
         <head>
-            <meta charSet="utf-8" />
-            <meta name="viewport" content="width=device-width, initial-scale=1" />
+            <meta charSet="utf-8"/>
+            <meta name="viewport" content="width=device-width, initial-scale=1"/>
         </head>
         <body className="bg-gray-50">
         <Providers>
-        <AuthProvider>
-            {children}
-        </AuthProvider>
+            <AuthProvider>
+                {children}
+            </AuthProvider>
         </Providers>
         </body>
         </html>

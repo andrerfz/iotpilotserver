@@ -46,6 +46,7 @@ export default function UserHeader() {
 
     return (
         <Dropdown placement="bottom-end">
+        <Dropdown placement="bottom-end">
             <DropdownTrigger>
                 <Button
                     variant="ghost"
