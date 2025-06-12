@@ -358,7 +358,7 @@ export default function DeviceList() {
 
             {/* Device Grid */}
             {error && (
-                <Card className="mb-6" color="danger" variant="flat">
+                <Card className="mb-6 bg-danger-50 border-danger">
                     <CardBody>
                         <div className="flex items-center">
                             <AlertTriangle className="w-5 h-5 text-danger mr-2"/>
@@ -370,21 +370,7 @@ export default function DeviceList() {
 
             {filteredDevices.length > 0 ? (
                 <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                    {filteredDevices.map((device: {
-                        id: any;
-                        status: string;
-                        hostname: any;
-                        deviceType: any;
-                        deviceModel: any;
-                        alertCount: number;
-                        location: any;
-                        tailscaleIp: any;
-                        ipAddress: any;
-                        lastSeen: string | undefined;
-                        uptime: string | undefined;
-                        cpuUsage: number;
-                        cpuTemp: number;
-                    }) => (
+                    {filteredDevices.map((device) => (
                         <Card
                             key={device.id}
                             isPressable

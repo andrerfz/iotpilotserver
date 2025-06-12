@@ -16,7 +16,7 @@ export default function AppLogo({
         md: 'w-10 h-10',
         lg: 'w-12 h-12'
     };
-    
+
     const titleSizes = {
         sm: 'text-xl',
         md: 'text-2xl',
@@ -25,11 +25,13 @@ export default function AppLogo({
 
     return (
         <div className="flex items-center">
-            <Server className={`${iconSizes[size]} text-blue-600 mr-3`} />
+            <Server className={`${iconSizes[size]} text-primary-600 mr-3`} />
             <div>
-                <h1 className={`${titleSizes[size]} font-bold text-gray-900`}>IoT Pilot</h1>
+                <h1 className={`${titleSizes[size]} font-bold text-foreground`}>
+                    IoT Pilot
+                </h1>
                 {showSubtitle && (
-                    <p className="text-sm text-gray-500">Device Management</p>
+                    <p className="text-sm text-default-500">Device Management</p>
                 )}
             </div>
         </div>

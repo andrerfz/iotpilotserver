@@ -248,7 +248,7 @@ export default function DeviceNav({ deviceId, hostname, status, alertCount }: De
 
                                     {item.badge && (
                                         <Badge
-                                            color={item.badgeColor || "primary"}
+                                            color={(item.badgeColor as "default" | "success" | "primary" | "secondary" | "warning" | "danger" | undefined) || "primary"}
                                             variant="flat"
                                             className="absolute -top-1 -right-1"
                                             size="sm"

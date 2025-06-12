@@ -7,6 +7,7 @@ import {
     getTailscaleDomain, 
     getBaseUrl 
 } from '@/lib/env';
+import { Card, CardBody, CardHeader, Chip, Code, Divider } from '@heroui/react';
 
 export default function NetworkStatus() {
     if (!isDevelopment()) return null;
@@ -16,46 +17,48 @@ export default function NetworkStatus() {
     const baseUrl = getBaseUrl();
 
     return (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-            <h3 className="text-sm font-medium text-gray-900 mb-3">Network Configuration</h3>
-
-            <div className="space-y-3">
-                <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Base URL:</span>
-                    <span className="font-mono text-xs text-gray-900">{baseUrl}</span>
+        <Card className="mb-6">
+            <CardHeader className="py-3">
+                <span className="text-sm font-medium">Network Configuration</span>
+            </CardHeader>
+            <Divider />
+            <CardBody className="space-y-3">
+                <div className="flex items-center justify-between">
+                    <span className="text-sm text-default-600">Base URL:</span>
+                    <Code size="sm">{baseUrl}</Code>
                 </div>
 
                 {cloudflareUrl && (
-                    <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600 flex items-center">
+                    <div className="flex items-center justify-between">
+                        <span className="text-sm text-default-600 flex items-center">
                             <Globe className="w-3 h-3 mr-1"/>
                             CloudFlare Tunnel:
                         </span>
-                        <span className="font-mono text-xs text-gray-900">{cloudflareUrl}</span>
+                        <Code size="sm">{cloudflareUrl}</Code>
                     </div>
                 )}
 
                 {tailscaleDomain && (
-                    <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600 flex items-center">
+                    <div className="flex items-center justify-between">
+                        <span className="text-sm text-default-600 flex items-center">
                             <Network className="w-3 h-3 mr-1"/>
                             Tailscale Domain:
                         </span>
-                        <span className="font-mono text-xs text-gray-900">{tailscaleDomain}</span>
+                        <Code size="sm">{tailscaleDomain}</Code>
                     </div>
                 )}
 
-                <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Environment:</span>
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                        isDevelopment()
-                            ? 'bg-blue-100 text-blue-800'
-                            : 'bg-green-100 text-green-800'
-                    }`}>
+                <div className="flex items-center justify-between">
+                    <span className="text-sm text-default-600">Environment:</span>
+                    <Chip 
+                        size="sm" 
+                        variant="flat" 
+                        color={isDevelopment() ? "primary" : "success"}
+                    >
                         {isDevelopment() ? 'Development' : 'Production'}
-                    </span>
+                    </Chip>
                 </div>
-            </div>
-        </div>
+            </CardBody>
+        </Card>
     );
 }

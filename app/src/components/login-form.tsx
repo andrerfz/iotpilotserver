@@ -6,6 +6,16 @@ import Link from 'next/link';
 import { LogIn } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 import PasswordInput from './password-input';
+import { 
+    Input, 
+    Button, 
+    Checkbox, 
+    Alert, 
+    Link as HeroLink, 
+    Spacer, 
+    Form, 
+    FormItem 
+} from '@heroui/react';
 
 export default function LoginForm() {
     const [email, setEmail] = useState('');
@@ -39,82 +49,68 @@ export default function LoginForm() {
     };
 
     return (
-        <form className="space-y-6" onSubmit={handleSubmit}>
+        <Form className="space-y-6" onSubmit={handleSubmit}>
             {error && (
-                <div className="bg-red-50 border border-red-200 rounded-md p-4">
-                    <p className="text-sm text-red-600">{error}</p>
-                </div>
+                <Alert color="danger" variant="flat" className="mb-4">
+                    {error}
+                </Alert>
             )}
 
-            <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                    Email address
-                </label>
-                <div className="mt-1">
-                    <input
-                        id="email"
-                        name="email"
-                        type="email"
-                        autoComplete="email"
-                        required
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                        placeholder="Enter your email"
-                    />
-                </div>
-            </div>
+            <FormItem>
+                <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    label="Email address"
+                    placeholder="Enter your email"
+                    variant="bordered"
+                    fullWidth
+                />
+            </FormItem>
 
-            <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                    Password
-                </label>
-                <div className="mt-1">
-                    <PasswordInput
-                        id="password"
-                        name="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        autoComplete="current-password"
-                        placeholder="Enter your password"
-                    />
-                </div>
-            </div>
+            <FormItem>
+                <PasswordInput
+                    id="password"
+                    name="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="current-password"
+                    placeholder="Enter your password"
+                />
+            </FormItem>
 
             <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                    <input
-                        id="remember"
-                        name="remember"
-                        type="checkbox"
-                        checked={remember}
-                        onChange={(e) => setRemember(e.target.checked)}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                    <label htmlFor="remember" className="ml-2 block text-sm text-gray-900">
-                        Remember me for 7 days
-                    </label>
-                </div>
-
-                <div className="text-sm">
-                    <Link href="/forgot-password" className="font-medium text-blue-600 hover:text-blue-500">
-                        Forgot your password?
-                    </Link>
-                </div>
-            </div>
-
-            <div>
-                <button
-                    type="submit"
-                    disabled={loading}
-                    className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                <Checkbox
+                    id="remember"
+                    name="remember"
+                    isSelected={remember}
+                    onValueChange={setRemember}
+                    color="primary"
                 >
-                    <span className="absolute left-0 inset-y-0 flex items-center pl-3">
-                        <LogIn className="h-5 w-5 text-blue-500 group-hover:text-blue-400" />
-                    </span>
-                    {loading ? 'Signing in...' : 'Sign in'}
-                </button>
+                    Remember me for 7 days
+                </Checkbox>
+
+                <HeroLink as={Link} href="/forgot-password" color="primary" size="sm">
+                    Forgot your password?
+                </HeroLink>
             </div>
-        </form>
+
+            <Spacer y={2} />
+
+            <Button
+                type="submit"
+                color="primary"
+                isLoading={loading}
+                isDisabled={loading}
+                fullWidth
+                startContent={<LogIn className="h-5 w-5" />}
+            >
+                {loading ? 'Signing in...' : 'Sign in'}
+            </Button>
+        </Form>
     );
 }

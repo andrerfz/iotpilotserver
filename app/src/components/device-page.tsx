@@ -20,6 +20,21 @@ import {
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import DeviceNav from '@/components/device-nav';
 import SSHTerminal from '@/components/ssh-terminal';
+import { 
+    Spinner, 
+    Card, 
+    CardBody, 
+    CardFooter, 
+    Button, 
+    Text, 
+    Chip,
+    Badge,
+    Progress,
+    Grid,
+    Divider,
+    Tabs,
+    Tab
+} from '@heroui/react';
 
 interface DeviceDetail {
     id: string;
@@ -313,12 +328,13 @@ export default function DeviceDetailPage({ params }: { params: { id: string } })
         }
     };
 
+
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+            <div className="min-h-screen bg-default-50 flex items-center justify-center">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                    <p className="mt-4 text-gray-600">Loading device details...</p>
+                    <Spinner size="lg" color="primary" className="mx-auto" />
+                    <Text className="mt-4" color="default-600">Loading device details...</Text>
                 </div>
             </div>
         );
@@ -326,49 +342,50 @@ export default function DeviceDetailPage({ params }: { params: { id: string } })
 
     if (error) {
         return (
-            <div className="p-6">
-                <div className="max-w-6xl mx-auto">
-                    <div className="bg-white rounded-lg shadow-md p-6 text-center">
-                        <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-                        <h2 className="text-2xl font-bold text-red-600 mb-2">Error Loading Device</h2>
-                        <p className="text-gray-600 mb-4">{error}</p>
+            <div className="max-w-md mx-auto px-4 sm:px-6 py-6">
+                <Card className="max-w-6xl mx-auto">
+                    <CardBody className="text-center py-6">
+                        <AlertTriangle className="w-16 h-16 text-danger mx-auto mb-4" />
+                        <Text h2 size="xl" color="danger" weight="bold" className="mb-2">Error Loading Device</Text>
+                        <Text color="default-600" className="mb-4">{error}</Text>
                         <div className="flex gap-2 justify-center">
-                            <button
+                            <Button
                                 onClick={handleRefresh}
-                                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+                                color="primary"
+                                startContent={<RefreshCw className="w-4 h-4" />}
                             >
-                                <RefreshCw className="w-4 h-4 inline mr-2" />
                                 Retry
-                            </button>
-                            <button
+                            </Button>
+                            <Button
                                 onClick={() => router.push('/')}
-                                className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition"
+                                color="default"
+                                variant="flat"
                             >
                                 Back to Dashboard
-                            </button>
+                            </Button>
                         </div>
-                    </div>
-                </div>
+                    </CardBody>
+                </Card>
             </div>
         );
     }
 
     if (!device) {
         return (
-            <div className="p-6">
-                <div className="max-w-6xl mx-auto">
-                    <div className="bg-white rounded-lg shadow-md p-6 text-center">
-                        <AlertTriangle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
-                        <h2 className="text-2xl font-bold text-gray-800 mb-2">Device Not Found</h2>
-                        <p className="text-gray-600 mb-4">The requested device could not be found.</p>
-                        <button
+            <div className="max-w-md mx-auto px-4 sm:px-6 py-6">
+                <Card className="max-w-6xl mx-auto">
+                    <CardBody className="text-center py-6">
+                        <AlertTriangle className="w-16 h-16 text-warning mx-auto mb-4" />
+                        <Text h2 size="xl" weight="bold" className="mb-2">Device Not Found</Text>
+                        <Text color="default-600" className="mb-4">The requested device could not be found.</Text>
+                        <Button
                             onClick={() => router.push('/')}
-                            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+                            color="primary"
                         >
                             View All Devices
-                        </button>
-                    </div>
-                </div>
+                        </Button>
+                    </CardBody>
+                </Card>
             </div>
         );
     }
@@ -385,44 +402,52 @@ export default function DeviceDetailPage({ params }: { params: { id: string } })
 
             <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
                 <div className="flex items-center mb-4 md:mb-0">
-                    <h1 className="text-2xl md:text-3xl font-bold text-gray-800 flex items-center">
+                    <Text h1 size="2xl" weight="bold" className="flex items-center">
                         {device.hostname}
-                        <span className={`ml-3 text-sm px-3 py-1 rounded-full border ${getStatusColor(device.status)}`}>
-                            <span className="flex items-center">
-                                {getStatusIcon(device.status)}
-                                <span className="ml-1">{device.status}</span>
-                            </span>
-                        </span>
-                    </h1>
+                        <Chip
+                            className="ml-3"
+                            startContent={getStatusIcon(device.status)}
+                            variant="bordered"
+                            color={
+                                device.status === 'ONLINE' ? 'success' :
+                                device.status === 'OFFLINE' ? 'danger' :
+                                device.status === 'MAINTENANCE' ? 'warning' : 'default'
+                            }
+                        >
+                            {device.status}
+                        </Chip>
+                    </Text>
                 </div>
-                <div className="flex space-x-2">
-                    <button
+                <div className="flex flex-wrap gap-2">
+                    <Button
                         onClick={handleRefresh}
-                        className="bg-white text-gray-700 border border-gray-300 px-3 py-2 rounded hover:bg-gray-50 transition flex items-center"
-                        disabled={loading}
+                        variant="bordered"
+                        color="default"
+                        startContent={<RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />}
+                        isDisabled={loading}
                     >
-                        <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
                         Refresh
-                    </button>
+                    </Button>
 
                     {device.status === 'ONLINE' && (
                         <>
-                            <button
+                            <Button
                                 onClick={() => setShowTerminal(true)}
-                                className="bg-gray-800 text-white px-3 py-2 rounded hover:bg-gray-900 transition flex items-center"
+                                color="default"
+                                variant="solid"
+                                startContent={<Terminal className="w-4 h-4" />}
                             >
-                                <Terminal className="w-4 h-4 mr-2" />
                                 Terminal
-                            </button>
+                            </Button>
 
-                            <button
+                            <Button
                                 onClick={() => issueCommand('reboot')}
-                                className="bg-amber-600 text-white px-3 py-2 rounded hover:bg-amber-700 transition flex items-center"
-                                disabled={issuingCommand}
+                                color="warning"
+                                startContent={<ArrowUpCircle className="w-4 h-4" />}
+                                isDisabled={issuingCommand}
                             >
-                                <ArrowUpCircle className="w-4 h-4 mr-2" />
                                 {issuingCommand ? 'Issuing...' : 'Reboot'}
-                            </button>
+                            </Button>
                         </>
                     )}
                 </div>

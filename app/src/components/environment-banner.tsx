@@ -10,6 +10,7 @@ import {
     getTailscaleDomain,
     getBaseUrl
 } from '@/lib/env';
+import { Navbar, NavbarContent, Chip, Badge } from '@heroui/react';
 
 export default function EnvironmentBanner() {
     const [mounted, setMounted] = useState(false);
@@ -25,35 +26,41 @@ export default function EnvironmentBanner() {
     const hasTailscale = !!getTailscaleDomain();
 
     return (
-        <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
+        <Navbar className="bg-gradient-to-r from-primary-500 to-primary-600 text-white py-0 min-h-0">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+                <NavbarContent className="py-1 flex justify-between overflow-visible">
+                    <div className="flex items-center gap-4">
                         <div className="flex items-center">
                             <Wrench className="w-4 h-4 mr-2"/>
-                            <span className="text-sm font-medium"> Development Environment </span>
+                            <span className="text-sm font-medium">Development Environment</span>
                         </div>
 
-                        <div className="hidden md:flex items-center space-x-4 text-xs">
+                        <div className="hidden md:flex items-center gap-4">
                             <div className="flex items-center">
                                 <Globe className="w-3 h-3 mr-1"/>
-                                <span>CF: {hasCloudFlare ? 'Active' : 'Inactive'}</span>
+                                <span className="text-xs">CF: {hasCloudFlare ? 
+                                    <Badge color="success" variant="flat" size="sm">Active</Badge> : 
+                                    <Badge color="default" variant="flat" size="sm">Inactive</Badge>}
+                                </span>
                             </div>
                             <div className="flex items-center">
                                 <Network className="w-3 h-3 mr-1"/>
-                                <span>TS: {hasTailscale ? 'Active' : 'Inactive'}</span>
+                                <span className="text-xs">TS: {hasTailscale ? 
+                                    <Badge color="success" variant="flat" size="sm">Active</Badge> : 
+                                    <Badge color="default" variant="flat" size="sm">Inactive</Badge>}
+                                </span>
                             </div>
-                            <div>
+                            <span className="text-xs">
                                 Features: {envInfo.features.length}
-                            </div>
+                            </span>
                         </div>
                     </div>
 
-                    <div className="text-xs font-mono bg-blue-700 px-2 py-1 rounded">
-                        {mounted ? window.location.origin : getBaseUrl()}
-                    </div>
-                </div>
+                    <Chip size="sm" variant="solid" color="primary" className="bg-primary-700">
+                        <code>{mounted ? window.location.origin : getBaseUrl()}</code>
+                    </Chip>
+                </NavbarContent>
             </div>
-        </div>
+        </Navbar>
     );
 }
