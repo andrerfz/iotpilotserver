@@ -25,7 +25,6 @@ import {
     DropdownTrigger
 } from '@heroui/react';
 import {
-    getCloudFlareUrl,
     getEnvironmentInfo,
     getGrafanaUrl,
     getInfluxUrl,
@@ -37,42 +36,32 @@ import {
 } from '@/lib/env';
 
 export default function UserMenu() {
-    const {
-        user,
-        logout
-    } = useAuth();
+    const { user, logout } = useAuth();
+
+    if (!user) return null;
 
     // Environment configuration
     const envInfo = getEnvironmentInfo();
     const serviceUrls = getServiceUrls();
-    const hasCloudFlare = !!getCloudFlareUrl();
     const hasTailscale = !!getTailscaleDomain();
-
-    if (!user) return null;
 
     const getRoleBadgeColor = (role: string) => {
         switch (role) {
-            case 'ADMIN':
-                return 'danger';
-            case 'USER':
-                return 'primary';
-            case 'READONLY':
-                return 'default';
-            default:
-                return 'default';
+            case 'ADMIN': return 'danger';
+            case 'USER': return 'primary';
+            case 'READONLY': return 'default';
+            default: return 'default';
         }
     };
 
     const getRoleIcon = (role: string) => {
         switch (role) {
-            case 'ADMIN':
-                return <Shield className="w-3 h-3"/>;
-            default:
-                return <User className="w-3 h-3"/>;
+            case 'ADMIN': return <Shield className="w-3 h-3"/>;
+            default: return <User className="w-3 h-3"/>;
         }
     };
 
-    // External service links with new URL structure
+    // External service links
     const externalServices = [
         {
             name: 'Grafana Dashboards',
@@ -94,7 +83,7 @@ export default function UserMenu() {
         },
     ];
 
-    // Network information with current URLs
+    // Network information
     const networkInfo = [
         {
             name: 'Current Access',
@@ -124,15 +113,30 @@ export default function UserMenu() {
         },
         {
             name: 'Tailscale Network',
-            value: getTailscaleDomain(),
+            value: getTailscaleDomain() || 'Not configured',
             icon: <Network className="w-4 h-4"/>,
             enabled: hasTailscale && isFeatureEnabled('tailscaleIntegration'),
         },
     ];
 
-    const handleExternalLink = (url: string, serviceName: string) => {
-        // Open in new tab
+    const handleExternalLink = (url: string) => {
         window.open(url, '_blank', 'noopener,noreferrer');
+    };
+
+    const handleSettings = () => {
+        // TODO: Navigate to settings page
+        console.log('Navigate to settings');
+    };
+
+    const handleAdmin = () => {
+        // TODO: Navigate to admin panel
+        console.log('Navigate to admin panel');
+    };
+
+    const handleDebug = () => {
+        console.log('Environment Info:', envInfo);
+        console.log('Service URLs:', serviceUrls);
+        console.log('User:', user);
     };
 
     return (
@@ -145,7 +149,7 @@ export default function UserMenu() {
                     <div className="flex items-center gap-3">
                         <Avatar
                             size="sm"
-                            src={user?.profileImage ?? undefined}
+                            src={user.profileImage || undefined}
                             className="bg-default-200 text-default-600"
                             fallback={<User className="w-4 h-4"/>}
                         />
@@ -175,7 +179,7 @@ export default function UserMenu() {
                         <div className="flex items-center gap-3">
                             <Avatar
                                 size="lg"
-                                src={user?.profileImage ?? undefined}
+                                src={user.profileImage || undefined}
                                 className="bg-default-200 text-default-600"
                                 fallback={<User className="w-6 h-6"/>}
                             />
@@ -210,8 +214,8 @@ export default function UserMenu() {
                     </DropdownItem>
                 </DropdownSection>
 
-                {/* Stats Section (Only shown if user has counts) */}
-                {user._count && (
+                {/* Stats Section */}
+                {user._count ? (
                     <DropdownSection showDivider title="Stats">
                         <DropdownItem
                             key="stats"
@@ -221,36 +225,36 @@ export default function UserMenu() {
                             <div className="grid grid-cols-2 gap-4 text-center">
                                 <div>
                                     <div className="text-lg font-semibold text-foreground">
-                                        {user._count.devices}
+                                        {user._count.devices || 0}
                                     </div>
                                     <div className="text-xs text-default-500">Devices</div>
                                 </div>
                                 <div>
                                     <div className="text-lg font-semibold text-foreground">
-                                        {user._count.alerts}
+                                        {user._count.alerts || 0}
                                     </div>
                                     <div className="text-xs text-default-500">Alerts</div>
                                 </div>
                             </div>
                         </DropdownItem>
                     </DropdownSection>
-                )}
+                ) : null}
 
                 {/* External Services */}
                 <DropdownSection showDivider title="External Services">
-                    {externalServices.filter(service => service.enabled).map((service) => (
-                        <DropdownItem
-                            key={service.name}
-                            startContent={service.icon}
-                            endContent={<ExternalLink className="w-3 h-3 text-default-400"/>}
-                            onPress={() => handleExternalLink(service.url, service.name)}
-                            description={service.description}
-                        >
-                            {service.name}
-                        </DropdownItem>
-                    ))}
-
-                    {externalServices.filter(service => service.enabled).length === 0 && (
+                    {externalServices.filter(service => service.enabled).length > 0 ? (
+                        externalServices.filter(service => service.enabled).map((service) => (
+                            <DropdownItem
+                                key={service.name}
+                                startContent={service.icon}
+                                endContent={<ExternalLink className="w-3 h-3 text-default-400"/>}
+                                onPress={() => handleExternalLink(service.url)}
+                                description={service.description}
+                            >
+                                {service.name}
+                            </DropdownItem>
+                        ))
+                    ) : (
                         <DropdownItem
                             key="no-services"
                             isReadOnly
@@ -287,7 +291,7 @@ export default function UserMenu() {
                 </DropdownSection>
 
                 {/* Environment Info (Development Only) */}
-                {isDevelopment() && (
+                {isDevelopment() ? (
                     <DropdownSection showDivider title="Environment Info">
                         <DropdownItem
                             key="env-info"
@@ -326,52 +330,44 @@ export default function UserMenu() {
                             </div>
                         </DropdownItem>
                     </DropdownSection>
-                )}
+                ) : null}
 
                 {/* Menu Items */}
                 <DropdownSection>
                     <DropdownItem
                         key="settings"
                         startContent={<Settings className="w-4 h-4"/>}
-                        onPress={() => {
-                            // Navigate to profile/settings
-                        }}
+                        onPress={handleSettings}
                     >
                         Settings
                     </DropdownItem>
 
-                    {user.role === 'ADMIN' && (
+                    {user.role === 'ADMIN' ? (
                         <DropdownItem
                             key="admin"
                             startContent={<Shield className="w-4 h-4"/>}
-                            onPress={() => {
-                                // Navigate to admin panel
-                            }}
+                            onPress={handleAdmin}
                         >
                             Admin Panel
                         </DropdownItem>
-                    )}
+                    ) : null}
 
-                    {isDevelopment() && (
+                    {isDevelopment() ? (
                         <DropdownItem
                             key="debug"
                             startContent={<Monitor className="w-4 h-4"/>}
                             color="secondary"
-                            onPress={() => {
-                                console.log('Environment Info:', envInfo);
-                                console.log('Service URLs:', serviceUrls);
-                                console.log('User:', user);
-                            }}
+                            onPress={handleDebug}
                         >
                             Debug Info
                         </DropdownItem>
-                    )}
+                    ) : null}
 
                     <DropdownItem
                         key="logout"
                         color="danger"
                         startContent={<LogOut className="w-4 h-4"/>}
-                        onPress={() => logout()}
+                        onPress={logout}
                     >
                         Sign out
                     </DropdownItem>

@@ -101,7 +101,7 @@ export function AuthProvider({children}: AuthProviderProps) {
         } catch (error) {
             console.error('Logout error:', error);
         } finally {
-            // Always clear state and redirect, even if API call fails
+            // Always clear the state and redirect, even if the API call fails
             setUser(null);
             setLoading(false);
 
