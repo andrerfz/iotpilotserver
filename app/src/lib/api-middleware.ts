@@ -51,7 +51,7 @@ export function withAuth(
 
             // Check role requirements
             if (options?.requiredRole) {
-                const roleHierarchy = { READONLY: 0, USER: 1, ADMIN: 2 };
+                const roleHierarchy = { READONLY: 0, USER: 1, ADMIN: 2, SUPERADMIN: 3};
                 const userLevel = roleHierarchy[user.role];
                 const requiredLevel = roleHierarchy[options.requiredRole];
 
