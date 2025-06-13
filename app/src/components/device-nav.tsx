@@ -1,42 +1,33 @@
 'use client';
 
-import { useState } from 'react';
+import {useState} from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import {usePathname} from 'next/navigation';
 import {
-    Server,
-    BarChart,
-    Terminal,
-    Settings,
-    AlertTriangle,
-    Clock,
-    HardDrive,
-    Wifi,
-    WifiOff,
-    Network,
     Activity,
+    AlertTriangle,
+    BarChart,
+    Clock,
+    ExternalLink,
     FileText,
-    Shield,
-    ExternalLink
+    HardDrive,
+    Network,
+    Server,
+    Settings,
+    Terminal,
+    Wifi,
+    WifiOff
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import {cn} from '@/lib/utils';
 import {
-    isFeatureEnabled,
-    isDevelopment,
+    getEnvironmentInfo,
     getGrafanaUrl,
     getInfluxUrl,
-    getEnvironmentInfo,
-    getTailscaleDomain
+    getTailscaleDomain,
+    isDevelopment,
+    isFeatureEnabled
 } from '@/lib/env';
-import {
-    Card,
-    CardBody,
-    Button,
-    Chip,
-    Divider,
-    Badge,
-    Tooltip
-} from '@heroui/react';
+import {Badge, Button, Chip, Divider, Tooltip} from '@heroui/react';
 
 interface DeviceNavProps {
     deviceId: string;
@@ -45,7 +36,12 @@ interface DeviceNavProps {
     alertCount: number;
 }
 
-export default function DeviceNav({ deviceId, hostname, status, alertCount }: DeviceNavProps) {
+export default function DeviceNav({
+    deviceId,
+    hostname,
+    status,
+    alertCount
+}: DeviceNavProps) {
     const pathname = usePathname();
     const [externalLinksExpanded, setExternalLinksExpanded] = useState(false);
 
@@ -56,22 +52,32 @@ export default function DeviceNav({ deviceId, hostname, status, alertCount }: De
     // Get status color based on device status
     const getStatusColor = (status: string) => {
         switch (status) {
-            case 'ONLINE': return 'text-success';
-            case 'OFFLINE': return 'text-danger';
-            case 'MAINTENANCE': return 'text-warning';
-            case 'ERROR': return 'text-danger';
-            default: return 'text-default-400';
+            case 'ONLINE':
+                return 'text-success';
+            case 'OFFLINE':
+                return 'text-danger';
+            case 'MAINTENANCE':
+                return 'text-warning';
+            case 'ERROR':
+                return 'text-danger';
+            default:
+                return 'text-default-400';
         }
     };
 
     // Get status icon based on device status
     const getStatusIcon = (status: string) => {
         switch (status) {
-            case 'ONLINE': return <Wifi className="w-5 h-5" />;
-            case 'OFFLINE': return <WifiOff className="w-5 h-5" />;
-            case 'MAINTENANCE': return <Clock className="w-5 h-5" />;
-            case 'ERROR': return <AlertTriangle className="w-5 h-5" />;
-            default: return <WifiOff className="w-5 h-5" />;
+            case 'ONLINE':
+                return <Wifi className="w-5 h-5"/>;
+            case 'OFFLINE':
+                return <WifiOff className="w-5 h-5"/>;
+            case 'MAINTENANCE':
+                return <Clock className="w-5 h-5"/>;
+            case 'ERROR':
+                return <AlertTriangle className="w-5 h-5"/>;
+            default:
+                return <WifiOff className="w-5 h-5"/>;
         }
     };
 
@@ -79,7 +85,7 @@ export default function DeviceNav({ deviceId, hostname, status, alertCount }: De
     const navItems = [
         {
             title: 'Overview',
-            icon: <Server className="w-5 h-5" />,
+            icon: <Server className="w-5 h-5"/>,
             href: `/devices/${deviceId}`,
             exact: true,
             enabled: true,
@@ -87,7 +93,7 @@ export default function DeviceNav({ deviceId, hostname, status, alertCount }: De
         },
         {
             title: 'Metrics',
-            icon: <BarChart className="w-5 h-5" />,
+            icon: <BarChart className="w-5 h-5"/>,
             href: `/devices/${deviceId}/metrics`,
             enabled: isFeatureEnabled('advancedMetrics'),
             description: 'Performance metrics and historical data',
@@ -95,7 +101,7 @@ export default function DeviceNav({ deviceId, hostname, status, alertCount }: De
         },
         {
             title: 'Terminal',
-            icon: <Terminal className="w-5 h-5" />,
+            icon: <Terminal className="w-5 h-5"/>,
             href: `/devices/${deviceId}/terminal`,
             enabled: isFeatureEnabled('sshTerminal') && status === 'ONLINE',
             description: 'Remote SSH terminal access',
@@ -104,7 +110,7 @@ export default function DeviceNav({ deviceId, hostname, status, alertCount }: De
         },
         {
             title: 'Commands',
-            icon: <Activity className="w-5 h-5" />,
+            icon: <Activity className="w-5 h-5"/>,
             href: `/devices/${deviceId}/commands`,
             enabled: isFeatureEnabled('deviceCommands'),
             description: 'Execute remote commands',
@@ -112,21 +118,21 @@ export default function DeviceNav({ deviceId, hostname, status, alertCount }: De
         },
         {
             title: 'Storage',
-            icon: <HardDrive className="w-5 h-5" />,
+            icon: <HardDrive className="w-5 h-5"/>,
             href: `/devices/${deviceId}/storage`,
             enabled: true,
             description: 'File system and storage management'
         },
         {
             title: 'Logs',
-            icon: <FileText className="w-5 h-5" />,
+            icon: <FileText className="w-5 h-5"/>,
             href: `/devices/${deviceId}/logs`,
             enabled: isFeatureEnabled('advancedMetrics'),
             description: 'System and application logs'
         },
         {
             title: 'Network',
-            icon: <Network className="w-5 h-5" />,
+            icon: <Network className="w-5 h-5"/>,
             href: `/devices/${deviceId}/network`,
             enabled: isFeatureEnabled('tailscaleIntegration') && hasTailscale,
             description: 'Network configuration and Tailscale status',
@@ -135,7 +141,7 @@ export default function DeviceNav({ deviceId, hostname, status, alertCount }: De
         },
         {
             title: 'Alerts',
-            icon: <AlertTriangle className="w-5 h-5" />,
+            icon: <AlertTriangle className="w-5 h-5"/>,
             href: `/devices/${deviceId}/alerts`,
             enabled: true,
             description: 'Device alerts and notifications',
@@ -144,7 +150,7 @@ export default function DeviceNav({ deviceId, hostname, status, alertCount }: De
         },
         {
             title: 'Settings',
-            icon: <Settings className="w-5 h-5" />,
+            icon: <Settings className="w-5 h-5"/>,
             href: `/devices/${deviceId}/settings`,
             enabled: true,
             description: 'Device configuration and preferences'
@@ -155,14 +161,14 @@ export default function DeviceNav({ deviceId, hostname, status, alertCount }: De
     const externalLinks = [
         {
             title: 'Grafana Dashboard',
-            icon: <BarChart className="w-4 h-4" />,
+            icon: <BarChart className="w-4 h-4"/>,
             url: `${getGrafanaUrl()}/d/device-overview?var-device=${deviceId}`,
             enabled: isFeatureEnabled('advancedMetrics'),
             description: 'View detailed metrics in Grafana'
         },
         {
             title: 'InfluxDB Data',
-            icon: <Activity className="w-4 h-4" />,
+            icon: <Activity className="w-4 h-4"/>,
             url: `${getInfluxUrl()}/orgs/iotpilot/data-explorer?query=from(bucket:"devices")|>filter(fn:(r)=>r.device_id=="${deviceId}")`,
             enabled: isDevelopment(), // Only show in development
             description: 'Raw metrics data in InfluxDB'
@@ -200,17 +206,17 @@ export default function DeviceNav({ deviceId, hostname, status, alertCount }: De
                     <p className="text-sm text-default-500">{deviceId}</p>
                     {hasTailscale && (
                         <p className="text-xs text-primary flex items-center mt-1">
-                            <Network className="w-3 h-3 mr-1" />
+                            <Network className="w-3 h-3 mr-1"/>
                             Tailscale connected
                         </p>
                     )}
                 </div>
-                <Chip 
+                <Chip
                     size="sm"
                     color={
-                        status === 'ONLINE' ? 'success' : 
-                        status === 'OFFLINE' ? 'danger' :
-                        status === 'MAINTENANCE' ? 'warning' : 'danger'
+                        status === 'ONLINE' ? 'success' :
+                            status === 'OFFLINE' ? 'danger' :
+                                status === 'MAINTENANCE' ? 'warning' : 'danger'
                     }
                     variant="flat"
                 >
@@ -218,7 +224,7 @@ export default function DeviceNav({ deviceId, hostname, status, alertCount }: De
                 </Chip>
             </div>
 
-            <Divider className="mb-4" />
+            <Divider className="mb-4"/>
 
             {/* Main Navigation */}
             <div className="mb-4">
@@ -266,7 +272,7 @@ export default function DeviceNav({ deviceId, hostname, status, alertCount }: De
             {/* External Links Section */}
             {enabledExternalLinks.length > 0 && (
                 <div>
-                    <Divider className="mb-4" />
+                    <Divider className="mb-4"/>
                     <div className="flex items-center justify-between mb-3">
                         <h3 className="text-xs font-medium text-default-500 uppercase tracking-wide">
                             External Services
@@ -289,7 +295,7 @@ export default function DeviceNav({ deviceId, hostname, status, alertCount }: De
                                     onClick={() => handleExternalLink(link.url, link.title)}
                                     variant="bordered"
                                     className="w-full justify-start"
-                                    endContent={<ExternalLink className="w-3 h-3 text-default-400" />}
+                                    endContent={<ExternalLink className="w-3 h-3 text-default-400"/>}
                                     startContent={<span className="text-default-400">{link.icon}</span>}
                                 >
                                     <div className="flex-1 text-left">
@@ -306,25 +312,30 @@ export default function DeviceNav({ deviceId, hostname, status, alertCount }: De
             {/* Feature Status (Development Only) */}
             {isDevelopment() && (
                 <div>
-                    <Divider className="my-4" />
+                    <Divider className="my-4"/>
                     <h3 className="text-xs font-medium text-default-500 uppercase tracking-wide mb-2">
                         Feature Status
                     </h3>
                     <div className="grid grid-cols-2 gap-2 text-xs">
                         <div className="flex items-center">
-                            <Badge color={isFeatureEnabled('sshTerminal') ? "success" : "danger"} variant="dot" className="mr-2" />
+                            <Badge color={isFeatureEnabled('sshTerminal') ? "success" : "danger"} variant="flat"
+                                   size="sm" className="mr-2 w-2 h-2 min-w-unit-2 p-0 rounded-full">{""}</Badge>
                             <span className="text-default-600">SSH Terminal</span>
                         </div>
                         <div className="flex items-center">
-                            <Badge color={isFeatureEnabled('deviceCommands') ? "success" : "danger"} variant="dot" className="mr-2" />
+                            <Badge color={isFeatureEnabled('deviceCommands') ? "success" : "danger"} variant="flat"
+                                   size="sm" className="mr-2 w-2 h-2 min-w-unit-2 p-0 rounded-full">{""}</Badge>
                             <span className="text-default-600">Commands</span>
                         </div>
                         <div className="flex items-center">
-                            <Badge color={isFeatureEnabled('advancedMetrics') ? "success" : "danger"} variant="dot" className="mr-2" />
+                            <Badge color={isFeatureEnabled('advancedMetrics') ? "success" : "danger"} variant="flat"
+                                   size="sm" className="mr-2 w-2 h-2 min-w-unit-2 p-0 rounded-full">{""}</Badge>
                             <span className="text-default-600">Metrics</span>
                         </div>
                         <div className="flex items-center">
-                            <Badge color={isFeatureEnabled('tailscaleIntegration') ? "success" : "danger"} variant="dot" className="mr-2" />
+                            <Badge color={isFeatureEnabled('tailscaleIntegration') ? "success" : "danger"}
+                                   variant="flat" size="sm"
+                                   className="mr-2 w-2 h-2 min-w-unit-2 p-0 rounded-full">{""}</Badge>
                             <span className="text-default-600">Tailscale</span>
                         </div>
                     </div>
@@ -332,7 +343,7 @@ export default function DeviceNav({ deviceId, hostname, status, alertCount }: De
             )}
 
             {/* Quick Stats */}
-            <Divider className="my-4" />
+            <Divider className="my-4"/>
             <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
                     <div className="text-lg font-semibold text-foreground">

@@ -1,16 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Wrench, Globe, Network } from 'lucide-react';
-import {
-    isDevelopment,
-    isProduction,
-    getEnvironmentInfo,
-    getCloudFlareUrl,
-    getTailscaleDomain,
-    getBaseUrl
-} from '@/lib/env';
-import { Navbar, NavbarContent, Chip, Badge } from '@heroui/react';
+import {useEffect, useState} from 'react';
+import {Globe, Network, Wrench} from 'lucide-react';
+import {getBaseUrl, getCloudFlareUrl, getEnvironmentInfo, getTailscaleDomain, isProduction} from '@/lib/env';
+import {Badge, Chip, Navbar, NavbarContent} from '@heroui/react';
 
 export default function EnvironmentBanner() {
     const [mounted, setMounted] = useState(false);
@@ -38,15 +31,15 @@ export default function EnvironmentBanner() {
                         <div className="hidden md:flex items-center gap-4">
                             <div className="flex items-center">
                                 <Globe className="w-3 h-3 mr-1"/>
-                                <span className="text-xs">CF: {hasCloudFlare ? 
-                                    <Badge color="success" variant="flat" size="sm">Active</Badge> : 
+                                <span className="text-xs">CF: {hasCloudFlare ?
+                                    <Badge color="success" variant="flat" size="sm">Active</Badge> :
                                     <Badge color="default" variant="flat" size="sm">Inactive</Badge>}
                                 </span>
                             </div>
                             <div className="flex items-center">
                                 <Network className="w-3 h-3 mr-1"/>
-                                <span className="text-xs">TS: {hasTailscale ? 
-                                    <Badge color="success" variant="flat" size="sm">Active</Badge> : 
+                                <span className="text-xs">TS: {hasTailscale ?
+                                    <Badge color="success" variant="flat" size="sm">Active</Badge> :
                                     <Badge color="default" variant="flat" size="sm">Inactive</Badge>}
                                 </span>
                             </div>

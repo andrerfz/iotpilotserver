@@ -1,7 +1,7 @@
 'use client';
 
-import { isDevelopment, isFeatureEnabled } from '@/lib/env';
-import { Card, CardBody, CardHeader, Chip, Divider } from '@heroui/react';
+import {isDevelopment, isFeatureEnabled} from '@/lib/env';
+import {Card, CardBody, CardHeader, Chip, Divider} from '@heroui/react';
 
 export default function FeatureStatus() {
     if (!isDevelopment()) return null;
@@ -25,7 +25,7 @@ export default function FeatureStatus() {
                     {enabledFeatures.length}/{Object.keys(features).length} enabled
                 </Chip>
             </CardHeader>
-            <Divider />
+            <Divider/>
             <CardBody>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="w-full">

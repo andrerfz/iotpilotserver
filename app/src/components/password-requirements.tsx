@@ -1,6 +1,6 @@
 'use client';
 
-import { Check, X } from 'lucide-react';
+import {Check, X} from 'lucide-react';
 
 interface PasswordRequirement {
     test: (pwd: string) => boolean;
@@ -12,13 +12,25 @@ interface PasswordRequirementsProps {
     requirements?: PasswordRequirement[];
 }
 
-export default function PasswordRequirements({ 
-    password, 
+export default function PasswordRequirements({
+    password,
     requirements = [
-        { test: (pwd: string) => pwd.length >= 8, text: 'At least 8 characters' },
-        { test: (pwd: string) => /[A-Z]/.test(pwd), text: 'One uppercase letter' },
-        { test: (pwd: string) => /[a-z]/.test(pwd), text: 'One lowercase letter' },
-        { test: (pwd: string) => /\d/.test(pwd), text: 'One number' }
+        {
+            test: (pwd: string) => pwd.length >= 8,
+            text: 'At least 8 characters'
+        },
+        {
+            test: (pwd: string) => /[A-Z]/.test(pwd),
+            text: 'One uppercase letter'
+        },
+        {
+            test: (pwd: string) => /[a-z]/.test(pwd),
+            text: 'One lowercase letter'
+        },
+        {
+            test: (pwd: string) => /\d/.test(pwd),
+            text: 'One number'
+        }
     ]
 }: PasswordRequirementsProps) {
     if (!password) return null;
@@ -30,11 +42,11 @@ export default function PasswordRequirements({
                 return (
                     <div key={index} className="flex items-center">
                         {isValid ? (
-                            <Check className="w-3 h-3 text-success mr-1" />
+                            <Check className="w-3 h-3 text-success mr-1"/>
                         ) : (
-                            <X className="w-3 h-3 text-danger mr-1" />
+                            <X className="w-3 h-3 text-danger mr-1"/>
                         )}
-                        <span 
+                        <span
                             className={`text-xs ${isValid ? "text-success" : "text-danger"}`}
                         >
                             {req.text}

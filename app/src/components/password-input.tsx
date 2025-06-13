@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
-import { Input, Button } from '@heroui/react';
+import {useState} from 'react';
+import {Eye, EyeOff} from 'lucide-react';
+import {Button, Input} from '@heroui/react';
 
 interface PasswordInputProps {
     id: string;
@@ -48,9 +48,9 @@ export default function PasswordInput({
                     onClick={() => setShowPassword(!showPassword)}
                 >
                     {showPassword ? (
-                        <EyeOff className="h-4 w-4 text-default-400" />
+                        <EyeOff className="h-4 w-4 text-default-400"/>
                     ) : (
-                        <Eye className="h-4 w-4 text-default-400" />
+                        <Eye className="h-4 w-4 text-default-400"/>
                     )}
                 </Button>
             }

@@ -1,15 +1,15 @@
 'use client';
 
-import { Server } from 'lucide-react';
+import {Server} from 'lucide-react';
 
 interface AppLogoProps {
     size?: 'sm' | 'md' | 'lg';
     showSubtitle?: boolean;
 }
 
-export default function AppLogo({ 
+export default function AppLogo({
     size = 'md',
-    showSubtitle = true 
+    showSubtitle = true
 }: AppLogoProps) {
     const iconSizes = {
         sm: 'w-8 h-8',
@@ -25,7 +25,7 @@ export default function AppLogo({
 
     return (
         <div className="flex items-center">
-            <Server className={`${iconSizes[size]} text-primary-600 mr-3`} />
+            <Server className={`${iconSizes[size]} text-primary-600 mr-3`}/>
             <div>
                 <h1 className={`${titleSizes[size]} font-bold text-foreground`}>
                     IoT Pilot

@@ -1,21 +1,12 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import {useState} from 'react';
+import {useRouter} from 'next/navigation';
 import Link from 'next/link';
-import { UserPlus, Check, X } from 'lucide-react';
+import {Check, UserPlus, X} from 'lucide-react';
 import PasswordInput from './password-input';
 import PasswordRequirements from './password-requirements';
-import {
-    Input,
-    Button,
-    Alert,
-    Link as HeroLink,
-    Spacer,
-    Form,
-    FormItem,
-    Text
-} from '@heroui/react';
+import {Alert, Button, Form, Input, Link as HeroLink, Spacer} from '@heroui/react';
 
 export default function RegistrationForm() {
     const [formData, setFormData] = useState({
@@ -31,10 +22,22 @@ export default function RegistrationForm() {
 
     // Password validation
     const passwordRequirements = [
-        { test: (pwd: string) => pwd.length >= 8, text: 'At least 8 characters' },
-        { test: (pwd: string) => /[A-Z]/.test(pwd), text: 'One uppercase letter' },
-        { test: (pwd: string) => /[a-z]/.test(pwd), text: 'One lowercase letter' },
-        { test: (pwd: string) => /\d/.test(pwd), text: 'One number' }
+        {
+            test: (pwd: string) => pwd.length >= 8,
+            text: 'At least 8 characters'
+        },
+        {
+            test: (pwd: string) => /[A-Z]/.test(pwd),
+            text: 'One uppercase letter'
+        },
+        {
+            test: (pwd: string) => /[a-z]/.test(pwd),
+            text: 'One lowercase letter'
+        },
+        {
+            test: (pwd: string) => /\d/.test(pwd),
+            text: 'One number'
+        }
     ];
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -101,7 +104,7 @@ export default function RegistrationForm() {
                 </Alert>
             )}
 
-            <FormItem>
+            <div className="mb-4">
                 <Input
                     id="email"
                     name="email"
@@ -115,9 +118,9 @@ export default function RegistrationForm() {
                     variant="bordered"
                     fullWidth
                 />
-            </FormItem>
+            </div>
 
-            <FormItem>
+            <div className="mb-4">
                 <Input
                     id="username"
                     name="username"
@@ -131,9 +134,9 @@ export default function RegistrationForm() {
                     variant="bordered"
                     fullWidth
                 />
-            </FormItem>
+            </div>
 
-            <FormItem>
+            <div className="mb-4">
                 <PasswordInput
                     id="password"
                     name="password"
@@ -145,13 +148,13 @@ export default function RegistrationForm() {
                 />
 
                 {/* Password requirements */}
-                <PasswordRequirements 
-                    password={formData.password} 
+                <PasswordRequirements
+                    password={formData.password}
                     requirements={passwordRequirements}
                 />
-            </FormItem>
+            </div>
 
-            <FormItem>
+            <div className="mb-4">
                 <PasswordInput
                     id="confirmPassword"
                     name="confirmPassword"
@@ -167,20 +170,20 @@ export default function RegistrationForm() {
                     <div className="mt-1 flex items-center">
                         {passwordsMatch ? (
                             <>
-                                <Check className="w-3 h-3 text-success mr-1" />
-                                <Text size="xs" color="success">Passwords match</Text>
+                                <Check className="w-3 h-3 text-success mr-1"/>
+                                <span className="text-xs text-success">Passwords match</span>
                             </>
                         ) : (
                             <>
-                                <X className="w-3 h-3 text-danger mr-1" />
-                                <Text size="xs" color="danger">Passwords do not match</Text>
+                                <X className="w-3 h-3 text-danger mr-1"/>
+                                <span className="text-xs text-danger">Passwords do not match</span>
                             </>
                         )}
                     </div>
                 )}
-            </FormItem>
+            </div>
 
-            <Spacer y={2} />
+            <Spacer y={2}/>
 
             <Button
                 type="submit"
@@ -188,22 +191,22 @@ export default function RegistrationForm() {
                 isLoading={loading}
                 isDisabled={loading || !isPasswordValid || !passwordsMatch}
                 fullWidth
-                startContent={<UserPlus className="h-5 w-5" />}
+                startContent={<UserPlus className="h-5 w-5"/>}
             >
                 {loading ? 'Creating account...' : 'Create account'}
             </Button>
 
             <div className="text-center">
-                <Text size="xs" color="default-500">
+                <p className="text-xs text-default-500">
                     By creating an account, you agree to our{' '}
-                    <HeroLink as={Link} href="/terms" color="primary" size="xs">
+                    <HeroLink as={Link} href="/terms" color="primary" size="sm">
                         Terms of Service
                     </HeroLink>{' '}
                     and{' '}
-                    <HeroLink as={Link} href="/privacy" color="primary" size="xs">
+                    <HeroLink as={Link} href="/privacy" color="primary" size="sm">
                         Privacy Policy
                     </HeroLink>
-                </Text>
+                </p>
             </div>
         </Form>
     );

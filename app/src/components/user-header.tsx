@@ -1,51 +1,53 @@
 'use client';
 
-import { useState } from 'react';
-import { useAuth } from '@/contexts/auth-context';
+import {useAuth} from '@/contexts/auth-context';
+import {ChevronDown, LogOut, Settings, Shield, User} from 'lucide-react';
 import {
-    User,
-    LogOut,
-    Settings,
-    Shield,
-    ChevronDown
-} from 'lucide-react';
-import {
-    Button,
-    Dropdown,
-    DropdownTrigger,
-    DropdownMenu,
-    DropdownItem,
-    DropdownSection,
     Avatar,
+    Button,
     Chip,
-    Divider
+    Dropdown,
+    DropdownItem,
+    DropdownMenu,
+    DropdownSection,
+    DropdownTrigger
 } from '@heroui/react';
 
 export default function UserHeader() {
-    const { user, logout } = useAuth();
+    const {
+        user,
+        logout
+    } = useAuth();
 
     if (!user) return null;
 
     const getRoleColor = (role: string) => {
         switch (role) {
-            case 'ADMIN': return 'danger';
-            case 'USER': return 'primary';
-            case 'READONLY': return 'default';
-            default: return 'default';
+            case 'ADMIN':
+                return 'danger';
+            case 'USER':
+                return 'primary';
+            case 'READONLY':
+                return 'default';
+            default:
+                return 'default';
         }
     };
 
     const getRoleIcon = (role: string) => {
         switch (role) {
-            case 'ADMIN': return <Shield className="w-3 h-3" />;
-            case 'USER': return <User className="w-3 h-3" />;
-            case 'READONLY': return <User className="w-3 h-3" />;
-            default: return <User className="w-3 h-3" />;
+            case 'ADMIN':
+                return <Shield className="w-3 h-3"/>;
+            case 'USER':
+                return <User className="w-3 h-3"/>;
+            case 'READONLY':
+                return <User className="w-3 h-3"/>;
+            default:
+                return <User className="w-3 h-3"/>;
         }
     };
 
     return (
-        <Dropdown placement="bottom-end">
         <Dropdown placement="bottom-end">
             <DropdownTrigger>
                 <Button
@@ -55,9 +57,9 @@ export default function UserHeader() {
                     <div className="flex items-center gap-3">
                         <Avatar
                             size="sm"
-                            src={user.profileImage}
+                            src={user?.profileImage ?? undefined}
                             className="bg-default-200 text-default-600"
-                            fallback={<User className="w-4 h-4" />}
+                            fallback={<User className="w-4 h-4"/>}
                         />
                         <div className="hidden md:block text-left">
                             <p className="text-sm font-medium text-foreground">
@@ -74,7 +76,7 @@ export default function UserHeader() {
                                 </Chip>
                             </div>
                         </div>
-                        <ChevronDown className="w-4 h-4 text-default-500" />
+                        <ChevronDown className="w-4 h-4 text-default-500"/>
                     </div>
                 </Button>
             </DropdownTrigger>
@@ -89,9 +91,9 @@ export default function UserHeader() {
                         <div className="flex items-center gap-3">
                             <Avatar
                                 size="md"
-                                src={user.profileImage}
+                                src={user?.profileImage ?? undefined}
                                 className="bg-default-200 text-default-600"
-                                fallback={<User className="w-5 h-5" />}
+                                fallback={<User className="w-5 h-5"/>}
                             />
                             <div className="flex flex-col">
                                 <p className="text-sm font-medium text-foreground">
@@ -124,7 +126,7 @@ export default function UserHeader() {
                 <DropdownSection>
                     <DropdownItem
                         key="settings"
-                        startContent={<Settings className="w-4 h-4" />}
+                        startContent={<Settings className="w-4 h-4"/>}
                         onPress={() => {
                             // Navigate to profile/settings
                         }}
@@ -135,7 +137,7 @@ export default function UserHeader() {
                     <DropdownItem
                         key="logout"
                         color="danger"
-                        startContent={<LogOut className="w-4 h-4" />}
+                        startContent={<LogOut className="w-4 h-4"/>}
                         onPress={() => logout()}
                     >
                         Sign Out

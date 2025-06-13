@@ -1,22 +1,16 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { Terminal as TerminalIcon, X, Maximize, Minimize, RefreshCw, AlertTriangle } from 'lucide-react';
+import {useEffect, useRef, useState} from 'react';
+import {AlertTriangle, Maximize, Minimize, RefreshCw, Terminal as TerminalIcon, X} from 'lucide-react';
 import {
-    getWebSocketUrl,
-    getWebSocketTimeout,
-    isFeatureEnabled,
+    getEnvironmentInfo,
     getLimit,
+    getWebSocketTimeout,
+    getWebSocketUrl,
     isDevelopment,
-    getEnvironmentInfo
+    isFeatureEnabled
 } from '@/lib/env';
-import {
-    Card,
-    CardBody,
-    Button,
-    Badge,
-    Chip
-} from '@heroui/react';
+import {Badge, Button, Card, CardBody, Chip} from '@heroui/react';
 
 interface SSHTerminalProps {
     deviceId: string;
@@ -24,7 +18,11 @@ interface SSHTerminalProps {
     onClose: () => void;
 }
 
-export default function SSHTerminal({ deviceId, hostname, onClose }: SSHTerminalProps) {
+export default function SSHTerminal({
+    deviceId,
+    hostname,
+    onClose
+}: SSHTerminalProps) {
     const terminalRef = useRef<HTMLDivElement>(null);
     const [connected, setConnected] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -45,7 +43,7 @@ export default function SSHTerminal({ deviceId, hostname, onClose }: SSHTerminal
         return (
             <Card className="bg-default-900 text-center">
                 <CardBody className="p-6">
-                    <AlertTriangle className="w-12 h-12 text-warning mx-auto mb-4" />
+                    <AlertTriangle className="w-12 h-12 text-warning mx-auto mb-4"/>
                     <h3 className="text-white text-lg font-medium mb-2">SSH Terminal Disabled</h3>
                     <p className="text-default-400 mb-4">
                         SSH terminal feature is not available in the {envInfo.name} environment.
@@ -67,9 +65,9 @@ export default function SSHTerminal({ deviceId, hostname, onClose }: SSHTerminal
         const initializeTerminal = async () => {
             try {
                 // Dynamically import the terminal library
-                const { Terminal } = await import('xterm');
-                const { FitAddon } = await import('xterm-addon-fit');
-                const { WebLinksAddon } = await import('xterm-addon-web-links');
+                const {Terminal} = await import('xterm');
+                const {FitAddon} = await import('xterm-addon-fit');
+                const {WebLinksAddon} = await import('xterm-addon-web-links');
 
                 // Create terminal instance with environment-aware config
                 const terminal = new Terminal({
@@ -113,7 +111,10 @@ export default function SSHTerminal({ deviceId, hostname, onClose }: SSHTerminal
                             fitAddon.fit();
                             // Send dimensions to server if connected
                             if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
-                                const { rows, cols } = terminal;
+                                const {
+                                    rows,
+                                    cols
+                                } = terminal;
                                 socketRef.current.send(JSON.stringify({
                                     type: 'resize',
                                     rows,
@@ -178,7 +179,10 @@ export default function SSHTerminal({ deviceId, hostname, onClose }: SSHTerminal
                 setReconnectAttempts(0);
 
                 // Initial resize
-                const { rows, cols } = terminal;
+                const {
+                    rows,
+                    cols
+                } = terminal;
                 socket.send(JSON.stringify({
                     type: 'resize',
                     rows,
@@ -317,7 +321,7 @@ export default function SSHTerminal({ deviceId, hostname, onClose }: SSHTerminal
             {/* Terminal Header */}
             <div className="bg-gray-800 px-4 py-2 flex items-center justify-between">
                 <div className="flex items-center">
-                    <TerminalIcon className="w-5 h-5 text-green-400 mr-2" />
+                    <TerminalIcon className="w-5 h-5 text-green-400 mr-2"/>
                     <span className="text-white font-mono text-sm">
             {hostname} - Terminal
           </span>
@@ -337,7 +341,7 @@ export default function SSHTerminal({ deviceId, hostname, onClose }: SSHTerminal
                         title="Reconnect"
                         isDisabled={socketStatus === 'connecting'}
                     >
-                        <RefreshCw className={`w-4 h-4 ${socketStatus === 'connecting' ? 'animate-spin' : ''}`} />
+                        <RefreshCw className={`w-4 h-4 ${socketStatus === 'connecting' ? 'animate-spin' : ''}`}/>
                     </Button>
                     <Button
                         onClick={toggleFullscreen}
@@ -348,9 +352,9 @@ export default function SSHTerminal({ deviceId, hostname, onClose }: SSHTerminal
                         title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
                     >
                         {isFullscreen ? (
-                            <Minimize className="w-4 h-4" />
+                            <Minimize className="w-4 h-4"/>
                         ) : (
-                            <Maximize className="w-4 h-4" />
+                            <Maximize className="w-4 h-4"/>
                         )}
                     </Button>
                     <Button
@@ -361,22 +365,26 @@ export default function SSHTerminal({ deviceId, hostname, onClose }: SSHTerminal
                         color="danger"
                         title="Close"
                     >
-                        <X className="w-4 h-4" />
+                        <X className="w-4 h-4"/>
                     </Button>
                 </div>
             </div>
 
             {/* Status Bar */}
-            <div className="bg-default-800 px-4 py-1 border-t border-default-700 flex items-center justify-between text-xs">
+            <div
+                className="bg-default-800 px-4 py-1 border-t border-default-700 flex items-center justify-between text-xs">
                 <div className="flex items-center">
-                    <Badge 
+                    <Badge
                         color={
                             socketStatus === 'connected' ? 'success' :
-                            socketStatus === 'connecting' ? 'warning' : 'danger'
-                        } 
-                        variant="dot"
-                        className="mr-2"
-                    />
+                                socketStatus === 'connecting' ? 'warning' : 'danger'
+                        }
+                        variant="flat"
+                        size="sm"
+                        className="mr-2 w-2 h-2 min-w-unit-2 p-0 rounded-full"
+                    >
+                        &nbsp;
+                    </Badge>
                     <span className="text-default-300">
                         {socketStatus === 'connected' ? 'Connected' :
                             socketStatus === 'connecting' ? 'Connecting...' : 'Disconnected'}

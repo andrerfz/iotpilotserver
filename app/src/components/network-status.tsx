@@ -1,13 +1,8 @@
 'use client';
 
-import { Globe, Network } from 'lucide-react';
-import { 
-    isDevelopment, 
-    getCloudFlareUrl, 
-    getTailscaleDomain, 
-    getBaseUrl 
-} from '@/lib/env';
-import { Card, CardBody, CardHeader, Chip, Code, Divider } from '@heroui/react';
+import {Globe, Network} from 'lucide-react';
+import {getBaseUrl, getCloudFlareUrl, getTailscaleDomain, isDevelopment} from '@/lib/env';
+import {Card, CardBody, CardHeader, Chip, Code, Divider} from '@heroui/react';
 
 export default function NetworkStatus() {
     if (!isDevelopment()) return null;
@@ -21,7 +16,7 @@ export default function NetworkStatus() {
             <CardHeader className="py-3">
                 <span className="text-sm font-medium">Network Configuration</span>
             </CardHeader>
-            <Divider />
+            <Divider/>
             <CardBody className="space-y-3">
                 <div className="flex items-center justify-between">
                     <span className="text-sm text-default-600">Base URL:</span>
@@ -50,9 +45,9 @@ export default function NetworkStatus() {
 
                 <div className="flex items-center justify-between">
                     <span className="text-sm text-default-600">Environment:</span>
-                    <Chip 
-                        size="sm" 
-                        variant="flat" 
+                    <Chip
+                        size="sm"
+                        variant="flat"
                         color={isDevelopment() ? "primary" : "success"}
                     >
                         {isDevelopment() ? 'Development' : 'Production'}

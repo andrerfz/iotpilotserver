@@ -1,21 +1,12 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import {useState} from 'react';
+import {useRouter, useSearchParams} from 'next/navigation';
 import Link from 'next/link';
-import { LogIn } from 'lucide-react';
-import { useAuth } from '@/contexts/auth-context';
+import {LogIn} from 'lucide-react';
+import {useAuth} from '@/contexts/auth-context';
 import PasswordInput from './password-input';
-import { 
-    Input, 
-    Button, 
-    Checkbox, 
-    Alert, 
-    Link as HeroLink, 
-    Spacer, 
-    Form, 
-    FormItem 
-} from '@heroui/react';
+import {Alert, Button, Checkbox, Form, Input, Link as HeroLink, Spacer} from '@heroui/react';
 
 export default function LoginForm() {
     const [email, setEmail] = useState('');
@@ -27,7 +18,7 @@ export default function LoginForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const redirectTo = searchParams.get('redirect') || '/';
-    const { login } = useAuth();
+    const {login} = useAuth();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -56,7 +47,7 @@ export default function LoginForm() {
                 </Alert>
             )}
 
-            <FormItem>
+            <div className="mb-4">
                 <Input
                     id="email"
                     name="email"
@@ -70,9 +61,9 @@ export default function LoginForm() {
                     variant="bordered"
                     fullWidth
                 />
-            </FormItem>
+            </div>
 
-            <FormItem>
+            <div className="mb-4">
                 <PasswordInput
                     id="password"
                     name="password"
@@ -81,7 +72,7 @@ export default function LoginForm() {
                     autoComplete="current-password"
                     placeholder="Enter your password"
                 />
-            </FormItem>
+            </div>
 
             <div className="flex items-center justify-between">
                 <Checkbox
@@ -99,7 +90,7 @@ export default function LoginForm() {
                 </HeroLink>
             </div>
 
-            <Spacer y={2} />
+            <Spacer y={2}/>
 
             <Button
                 type="submit"
@@ -107,7 +98,7 @@ export default function LoginForm() {
                 isLoading={loading}
                 isDisabled={loading}
                 fullWidth
-                startContent={<LogIn className="h-5 w-5" />}
+                startContent={<LogIn className="h-5 w-5"/>}
             >
                 {loading ? 'Signing in...' : 'Sign in'}
             </Button>

@@ -1,48 +1,46 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { useAuth } from '@/contexts/auth-context';
+import {useAuth} from '@/contexts/auth-context';
 import {
-    User,
-    Settings,
-    LogOut,
-    Shield,
-    ChevronDown,
     BarChart3,
+    ChevronDown,
     Database,
-    Monitor,
     ExternalLink,
     Globe,
-    Network
+    LogOut,
+    Monitor,
+    Network,
+    Settings,
+    Shield,
+    User
 } from 'lucide-react';
 import {
-    Button,
-    Dropdown,
-    DropdownTrigger,
-    DropdownMenu,
-    DropdownItem,
-    DropdownSection,
     Avatar,
+    Button,
     Chip,
-    Divider,
-    Card,
-    CardBody
+    Dropdown,
+    DropdownItem,
+    DropdownMenu,
+    DropdownSection,
+    DropdownTrigger
 } from '@heroui/react';
 import {
+    getCloudFlareUrl,
+    getEnvironmentInfo,
     getGrafanaUrl,
     getInfluxUrl,
-    getBaseUrl,
-    getCloudFlareUrl,
-    getTailscaleDomain,
-    isFeatureEnabled,
-    isDevelopment,
-    getEnvironmentInfo,
     getServiceUrls,
-    isCloudFlareAccess
+    getTailscaleDomain,
+    isCloudFlareAccess,
+    isDevelopment,
+    isFeatureEnabled
 } from '@/lib/env';
 
 export default function UserMenu() {
-    const { user, logout } = useAuth();
+    const {
+        user,
+        logout
+    } = useAuth();
 
     // Environment configuration
     const envInfo = getEnvironmentInfo();
@@ -54,17 +52,23 @@ export default function UserMenu() {
 
     const getRoleBadgeColor = (role: string) => {
         switch (role) {
-            case 'ADMIN': return 'danger';
-            case 'USER': return 'primary';
-            case 'READONLY': return 'default';
-            default: return 'default';
+            case 'ADMIN':
+                return 'danger';
+            case 'USER':
+                return 'primary';
+            case 'READONLY':
+                return 'default';
+            default:
+                return 'default';
         }
     };
 
     const getRoleIcon = (role: string) => {
         switch (role) {
-            case 'ADMIN': return <Shield className="w-3 h-3" />;
-            default: return <User className="w-3 h-3" />;
+            case 'ADMIN':
+                return <Shield className="w-3 h-3"/>;
+            default:
+                return <User className="w-3 h-3"/>;
         }
     };
 
@@ -73,7 +77,7 @@ export default function UserMenu() {
         {
             name: 'Grafana Dashboards',
             url: getGrafanaUrl(),
-            icon: <BarChart3 className="w-4 h-4" />,
+            icon: <BarChart3 className="w-4 h-4"/>,
             description: isDevelopment()
                 ? 'View monitoring dashboards (Direct Port)'
                 : 'View monitoring dashboards (Subdomain)',
@@ -82,7 +86,7 @@ export default function UserMenu() {
         {
             name: 'InfluxDB Admin',
             url: getInfluxUrl(),
-            icon: <Database className="w-4 h-4" />,
+            icon: <Database className="w-4 h-4"/>,
             description: isDevelopment()
                 ? 'Database administration (Direct Port)'
                 : 'Database administration (Subdomain)',
@@ -97,31 +101,31 @@ export default function UserMenu() {
             value: typeof window !== 'undefined' && isCloudFlareAccess()
                 ? 'CloudFlare Tunnel'
                 : 'Direct/Local',
-            icon: <Globe className="w-4 h-4" />,
+            icon: <Globe className="w-4 h-4"/>,
             enabled: true,
         },
         {
             name: 'Main Dashboard',
             value: serviceUrls.main,
-            icon: <Monitor className="w-4 h-4" />,
+            icon: <Monitor className="w-4 h-4"/>,
             enabled: true,
         },
         {
             name: 'Grafana URL',
             value: serviceUrls.grafana,
-            icon: <BarChart3 className="w-4 h-4" />,
+            icon: <BarChart3 className="w-4 h-4"/>,
             enabled: isFeatureEnabled('advancedMetrics'),
         },
         {
             name: 'InfluxDB URL',
             value: serviceUrls.influxdb,
-            icon: <Database className="w-4 h-4" />,
+            icon: <Database className="w-4 h-4"/>,
             enabled: user.role === 'ADMIN',
         },
         {
             name: 'Tailscale Network',
             value: getTailscaleDomain(),
-            icon: <Network className="w-4 h-4" />,
+            icon: <Network className="w-4 h-4"/>,
             enabled: hasTailscale && isFeatureEnabled('tailscaleIntegration'),
         },
     ];
@@ -141,9 +145,9 @@ export default function UserMenu() {
                     <div className="flex items-center gap-3">
                         <Avatar
                             size="sm"
-                            src={user.profileImage}
+                            src={user?.profileImage ?? undefined}
                             className="bg-default-200 text-default-600"
-                            fallback={<User className="w-4 h-4" />}
+                            fallback={<User className="w-4 h-4"/>}
                         />
                         <div className="hidden md:block text-left">
                             <div className="text-sm font-medium">
@@ -156,14 +160,13 @@ export default function UserMenu() {
                             </div>
                             <div className="text-xs text-default-500">{user.email}</div>
                         </div>
-                        <ChevronDown className="w-4 h-4 text-default-400" />
+                        <ChevronDown className="w-4 h-4 text-default-400"/>
                     </div>
                 </Button>
             </DropdownTrigger>
 
             <DropdownMenu aria-label="User menu" className="w-80">
-                {/* User Info */}
-                <DropdownSection showDivider>
+                <DropdownSection showDivider title="User Info">
                     <DropdownItem
                         key="profile"
                         isReadOnly
@@ -172,9 +175,9 @@ export default function UserMenu() {
                         <div className="flex items-center gap-3">
                             <Avatar
                                 size="lg"
-                                src={user.profileImage}
+                                src={user?.profileImage ?? undefined}
                                 className="bg-default-200 text-default-600"
-                                fallback={<User className="w-6 h-6" />}
+                                fallback={<User className="w-6 h-6"/>}
                             />
                             <div className="flex-1 min-w-0">
                                 <div className="text-sm font-medium text-foreground truncate">
@@ -207,9 +210,9 @@ export default function UserMenu() {
                     </DropdownItem>
                 </DropdownSection>
 
-                {/* Stats */}
+                {/* Stats Section (Only shown if user has counts) */}
                 {user._count && (
-                    <DropdownSection showDivider>
+                    <DropdownSection showDivider title="Stats">
                         <DropdownItem
                             key="stats"
                             isReadOnly
@@ -239,7 +242,7 @@ export default function UserMenu() {
                         <DropdownItem
                             key={service.name}
                             startContent={service.icon}
-                            endContent={<ExternalLink className="w-3 h-3 text-default-400" />}
+                            endContent={<ExternalLink className="w-3 h-3 text-default-400"/>}
                             onPress={() => handleExternalLink(service.url, service.name)}
                             description={service.description}
                         >
@@ -329,7 +332,7 @@ export default function UserMenu() {
                 <DropdownSection>
                     <DropdownItem
                         key="settings"
-                        startContent={<Settings className="w-4 h-4" />}
+                        startContent={<Settings className="w-4 h-4"/>}
                         onPress={() => {
                             // Navigate to profile/settings
                         }}
@@ -340,7 +343,7 @@ export default function UserMenu() {
                     {user.role === 'ADMIN' && (
                         <DropdownItem
                             key="admin"
-                            startContent={<Shield className="w-4 h-4" />}
+                            startContent={<Shield className="w-4 h-4"/>}
                             onPress={() => {
                                 // Navigate to admin panel
                             }}
@@ -352,7 +355,7 @@ export default function UserMenu() {
                     {isDevelopment() && (
                         <DropdownItem
                             key="debug"
-                            startContent={<Monitor className="w-4 h-4" />}
+                            startContent={<Monitor className="w-4 h-4"/>}
                             color="secondary"
                             onPress={() => {
                                 console.log('Environment Info:', envInfo);
@@ -367,7 +370,7 @@ export default function UserMenu() {
                     <DropdownItem
                         key="logout"
                         color="danger"
-                        startContent={<LogOut className="w-4 h-4" />}
+                        startContent={<LogOut className="w-4 h-4"/>}
                         onPress={() => logout()}
                     >
                         Sign out

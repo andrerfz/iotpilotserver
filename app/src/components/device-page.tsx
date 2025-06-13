@@ -1,40 +1,26 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import {useEffect, useState} from 'react';
+import {useRouter} from 'next/navigation';
 import {
-    Server,
     Activity,
-    Thermometer,
+    AlertTriangle,
+    ArrowUpCircle,
+    Clock,
     Cpu,
     HardDrive,
-    RefreshCw,
     Power,
-    ArrowUpCircle,
+    RefreshCw,
+    Server,
     Terminal,
-    Clock,
-    AlertTriangle,
+    Thermometer,
     Wifi,
     WifiOff
 } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import {CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis} from 'recharts';
 import DeviceNav from '@/components/device-nav';
 import SSHTerminal from '@/components/ssh-terminal';
-import { 
-    Spinner, 
-    Card, 
-    CardBody, 
-    CardFooter, 
-    Button, 
-    Text, 
-    Chip,
-    Badge,
-    Progress,
-    Grid,
-    Divider,
-    Tabs,
-    Tab
-} from '@heroui/react';
+import {Button, Card, CardBody, Chip, Spinner} from '@heroui/react';
 
 interface DeviceDetail {
     id: string;
@@ -86,10 +72,15 @@ interface DeviceDetail {
 interface MetricData {
     timestamp: string;
     value: number;
+
     [key: string]: any;
 }
 
-export default function DeviceDetailPage({ params }: { params: { id: string } }) {
+export default function DeviceDetailPage({params}: {
+    params: {
+        id: string
+    }
+}) {
     const [device, setDevice] = useState<DeviceDetail | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -168,7 +159,7 @@ export default function DeviceDetailPage({ params }: { params: { id: string } })
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ command }),
+                body: JSON.stringify({command}),
             });
 
             if (!response.ok) {
@@ -258,45 +249,66 @@ export default function DeviceDetailPage({ params }: { params: { id: string } })
     // Get status color based on device status
     const getStatusColor = (status: string) => {
         switch (status) {
-            case 'ONLINE': return 'bg-green-100 text-green-800 border-green-200';
-            case 'OFFLINE': return 'bg-red-100 text-red-800 border-red-200';
-            case 'MAINTENANCE': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-            case 'ERROR': return 'bg-red-100 text-red-800 border-red-200';
-            default: return 'bg-gray-100 text-gray-800 border-gray-200';
+            case 'ONLINE':
+                return 'bg-green-100 text-green-800 border-green-200';
+            case 'OFFLINE':
+                return 'bg-red-100 text-red-800 border-red-200';
+            case 'MAINTENANCE':
+                return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+            case 'ERROR':
+                return 'bg-red-100 text-red-800 border-red-200';
+            default:
+                return 'bg-gray-100 text-gray-800 border-gray-200';
         }
     };
 
     // Get status icon based on device status
     const getStatusIcon = (status: string) => {
         switch (status) {
-            case 'ONLINE': return <Wifi className="w-5 h-5 text-green-500" />;
-            case 'OFFLINE': return <WifiOff className="w-5 h-5 text-red-500" />;
-            case 'MAINTENANCE': return <Clock className="w-5 h-5 text-yellow-500" />;
-            case 'ERROR': return <AlertTriangle className="w-5 h-5 text-red-600" />;
-            default: return <WifiOff className="w-5 h-5 text-gray-400" />;
+            case 'ONLINE':
+                return <Wifi className="w-5 h-5 text-green-500"/>;
+            case 'OFFLINE':
+                return <WifiOff className="w-5 h-5 text-red-500"/>;
+            case 'MAINTENANCE':
+                return <Clock className="w-5 h-5 text-yellow-500"/>;
+            case 'ERROR':
+                return <AlertTriangle className="w-5 h-5 text-red-600"/>;
+            default:
+                return <WifiOff className="w-5 h-5 text-gray-400"/>;
         }
     };
 
     // Get alert severity color
     const getAlertSeverityColor = (severity: string) => {
         switch (severity) {
-            case 'INFO': return 'bg-blue-100 text-blue-800 border-blue-200';
-            case 'WARNING': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-            case 'ERROR': return 'bg-red-100 text-red-800 border-red-200';
-            case 'CRITICAL': return 'bg-red-700 text-white border-red-800';
-            default: return 'bg-gray-100 text-gray-800 border-gray-200';
+            case 'INFO':
+                return 'bg-blue-100 text-blue-800 border-blue-200';
+            case 'WARNING':
+                return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+            case 'ERROR':
+                return 'bg-red-100 text-red-800 border-red-200';
+            case 'CRITICAL':
+                return 'bg-red-700 text-white border-red-800';
+            default:
+                return 'bg-gray-100 text-gray-800 border-gray-200';
         }
     };
 
     // Get command status color
     const getCommandStatusColor = (status: string) => {
         switch (status) {
-            case 'COMPLETED': return 'bg-green-100 text-green-800 border-green-200';
-            case 'PENDING': return 'bg-blue-100 text-blue-800 border-blue-200';
-            case 'RUNNING': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-            case 'FAILED': return 'bg-red-100 text-red-800 border-red-200';
-            case 'TIMEOUT': return 'bg-orange-100 text-orange-800 border-orange-200';
-            default: return 'bg-gray-100 text-gray-800 border-gray-200';
+            case 'COMPLETED':
+                return 'bg-green-100 text-green-800 border-green-200';
+            case 'PENDING':
+                return 'bg-blue-100 text-blue-800 border-blue-200';
+            case 'RUNNING':
+                return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+            case 'FAILED':
+                return 'bg-red-100 text-red-800 border-red-200';
+            case 'TIMEOUT':
+                return 'bg-orange-100 text-orange-800 border-orange-200';
+            default:
+                return 'bg-gray-100 text-gray-800 border-gray-200';
         }
     };
 
@@ -333,8 +345,8 @@ export default function DeviceDetailPage({ params }: { params: { id: string } })
         return (
             <div className="min-h-screen bg-default-50 flex items-center justify-center">
                 <div className="text-center">
-                    <Spinner size="lg" color="primary" className="mx-auto" />
-                    <Text className="mt-4" color="default-600">Loading device details...</Text>
+                    <Spinner size="lg" color="primary" className="mx-auto"/>
+                    <p className="mt-4 text-default-600">Loading device details...</p>
                 </div>
             </div>
         );
@@ -345,14 +357,14 @@ export default function DeviceDetailPage({ params }: { params: { id: string } })
             <div className="max-w-md mx-auto px-4 sm:px-6 py-6">
                 <Card className="max-w-6xl mx-auto">
                     <CardBody className="text-center py-6">
-                        <AlertTriangle className="w-16 h-16 text-danger mx-auto mb-4" />
-                        <Text h2 size="xl" color="danger" weight="bold" className="mb-2">Error Loading Device</Text>
-                        <Text color="default-600" className="mb-4">{error}</Text>
+                        <AlertTriangle className="w-16 h-16 text-danger mx-auto mb-4"/>
+                        <h2 className="text-xl font-bold text-danger mb-2">Error Loading Device</h2>
+                        <p className="text-default-600 mb-4">{error}</p>
                         <div className="flex gap-2 justify-center">
                             <Button
                                 onClick={handleRefresh}
                                 color="primary"
-                                startContent={<RefreshCw className="w-4 h-4" />}
+                                startContent={<RefreshCw className="w-4 h-4"/>}
                             >
                                 Retry
                             </Button>
@@ -375,9 +387,9 @@ export default function DeviceDetailPage({ params }: { params: { id: string } })
             <div className="max-w-md mx-auto px-4 sm:px-6 py-6">
                 <Card className="max-w-6xl mx-auto">
                     <CardBody className="text-center py-6">
-                        <AlertTriangle className="w-16 h-16 text-warning mx-auto mb-4" />
-                        <Text h2 size="xl" weight="bold" className="mb-2">Device Not Found</Text>
-                        <Text color="default-600" className="mb-4">The requested device could not be found.</Text>
+                        <AlertTriangle className="w-16 h-16 text-warning mx-auto mb-4"/>
+                        <h2 className="text-xl font-bold mb-2">Device Not Found</h2>
+                        <p className="text-default-600 mb-4">The requested device could not be found.</p>
                         <Button
                             onClick={() => router.push('/')}
                             color="primary"
@@ -402,7 +414,7 @@ export default function DeviceDetailPage({ params }: { params: { id: string } })
 
             <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
                 <div className="flex items-center mb-4 md:mb-0">
-                    <Text h1 size="2xl" weight="bold" className="flex items-center">
+                    <h1 className="text-2xl font-bold flex items-center">
                         {device.hostname}
                         <Chip
                             className="ml-3"
@@ -410,20 +422,20 @@ export default function DeviceDetailPage({ params }: { params: { id: string } })
                             variant="bordered"
                             color={
                                 device.status === 'ONLINE' ? 'success' :
-                                device.status === 'OFFLINE' ? 'danger' :
-                                device.status === 'MAINTENANCE' ? 'warning' : 'default'
+                                    device.status === 'OFFLINE' ? 'danger' :
+                                        device.status === 'MAINTENANCE' ? 'warning' : 'default'
                             }
                         >
                             {device.status}
                         </Chip>
-                    </Text>
+                    </h1>
                 </div>
                 <div className="flex flex-wrap gap-2">
                     <Button
                         onClick={handleRefresh}
                         variant="bordered"
                         color="default"
-                        startContent={<RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />}
+                        startContent={<RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`}/>}
                         isDisabled={loading}
                     >
                         Refresh
@@ -435,7 +447,7 @@ export default function DeviceDetailPage({ params }: { params: { id: string } })
                                 onClick={() => setShowTerminal(true)}
                                 color="default"
                                 variant="solid"
-                                startContent={<Terminal className="w-4 h-4" />}
+                                startContent={<Terminal className="w-4 h-4"/>}
                             >
                                 Terminal
                             </Button>
@@ -443,7 +455,7 @@ export default function DeviceDetailPage({ params }: { params: { id: string } })
                             <Button
                                 onClick={() => issueCommand('reboot')}
                                 color="warning"
-                                startContent={<ArrowUpCircle className="w-4 h-4" />}
+                                startContent={<ArrowUpCircle className="w-4 h-4"/>}
                                 isDisabled={issuingCommand}
                             >
                                 {issuingCommand ? 'Issuing...' : 'Reboot'}
@@ -458,7 +470,7 @@ export default function DeviceDetailPage({ params }: { params: { id: string } })
                 {/* Device Info */}
                 <div className="bg-white rounded-lg shadow-md p-6 lg:col-span-1">
                     <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
-                        <Server className="w-5 h-5 mr-2 text-blue-600" />
+                        <Server className="w-5 h-5 mr-2 text-blue-600"/>
                         Device Information
                     </h2>
                     <div className="space-y-3">
@@ -515,7 +527,7 @@ export default function DeviceDetailPage({ params }: { params: { id: string } })
                 <div className="bg-white rounded-lg shadow-md p-6 lg:col-span-2">
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-xl font-semibold text-gray-800 flex items-center">
-                            <Activity className="w-5 h-5 mr-2 text-blue-600" />
+                            <Activity className="w-5 h-5 mr-2 text-blue-600"/>
                             System Metrics
                         </h2>
                         <div className="flex space-x-2">
@@ -539,7 +551,7 @@ export default function DeviceDetailPage({ params }: { params: { id: string } })
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                         <div className="bg-gray-50 rounded-lg p-4">
                             <div className="flex items-center mb-2">
-                                <Cpu className="w-5 h-5 text-blue-600 mr-2" />
+                                <Cpu className="w-5 h-5 text-blue-600 mr-2"/>
                                 <h3 className="font-medium text-gray-700">CPU Usage</h3>
                             </div>
                             <p className="text-2xl font-bold">{device.cpuUsage != null ? `${device.cpuUsage.toFixed(1)}%` : 'N/A'}</p>
@@ -547,14 +559,14 @@ export default function DeviceDetailPage({ params }: { params: { id: string } })
                         </div>
                         <div className="bg-gray-50 rounded-lg p-4">
                             <div className="flex items-center mb-2">
-                                <Thermometer className="w-5 h-5 text-red-500 mr-2" />
+                                <Thermometer className="w-5 h-5 text-red-500 mr-2"/>
                                 <h3 className="font-medium text-gray-700">CPU Temperature</h3>
                             </div>
                             <p className="text-2xl font-bold">{device.cpuTemp != null ? `${device.cpuTemp.toFixed(1)}°C` : 'N/A'}</p>
                         </div>
                         <div className="bg-gray-50 rounded-lg p-4">
                             <div className="flex items-center mb-2">
-                                <HardDrive className="w-5 h-5 text-green-600 mr-2" />
+                                <HardDrive className="w-5 h-5 text-green-600 mr-2"/>
                                 <h3 className="font-medium text-gray-700">Memory</h3>
                             </div>
                             <p className="text-2xl font-bold">
@@ -568,7 +580,7 @@ export default function DeviceDetailPage({ params }: { params: { id: string } })
                         </div>
                         <div className="bg-gray-50 rounded-lg p-4">
                             <div className="flex items-center mb-2">
-                                <HardDrive className="w-5 h-5 text-purple-600 mr-2" />
+                                <HardDrive className="w-5 h-5 text-purple-600 mr-2"/>
                                 <h3 className="font-medium text-gray-700">Disk</h3>
                             </div>
                             <p className="text-2xl font-bold">{device.diskUsage != null ? `${device.diskUsage.toFixed(1)}%` : 'N/A'}</p>
@@ -585,11 +597,12 @@ export default function DeviceDetailPage({ params }: { params: { id: string } })
                                 <div className="h-64">
                                     <ResponsiveContainer width="100%" height="100%">
                                         <LineChart data={formatMetricsForChart('cpu_usage')}>
-                                            <CartesianGrid strokeDasharray="3 3" />
-                                            <XAxis dataKey="timestamp" />
-                                            <YAxis domain={[0, 100]} />
-                                            <Tooltip />
-                                            <Line type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={2} dot={false} />
+                                            <CartesianGrid strokeDasharray="3 3"/>
+                                            <XAxis dataKey="timestamp"/>
+                                            <YAxis domain={[0, 100]}/>
+                                            <Tooltip/>
+                                            <Line type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={2}
+                                                  dot={false}/>
                                         </LineChart>
                                     </ResponsiveContainer>
                                 </div>
@@ -603,11 +616,12 @@ export default function DeviceDetailPage({ params }: { params: { id: string } })
                                 <div className="h-64">
                                     <ResponsiveContainer width="100%" height="100%">
                                         <LineChart data={formatMetricsForChart('memory_usage')}>
-                                            <CartesianGrid strokeDasharray="3 3" />
-                                            <XAxis dataKey="timestamp" />
-                                            <YAxis domain={[0, 100]} />
-                                            <Tooltip />
-                                            <Line type="monotone" dataKey="value" stroke="#10b981" strokeWidth={2} dot={false} />
+                                            <CartesianGrid strokeDasharray="3 3"/>
+                                            <XAxis dataKey="timestamp"/>
+                                            <YAxis domain={[0, 100]}/>
+                                            <Tooltip/>
+                                            <Line type="monotone" dataKey="value" stroke="#10b981" strokeWidth={2}
+                                                  dot={false}/>
                                         </LineChart>
                                     </ResponsiveContainer>
                                 </div>
@@ -621,11 +635,12 @@ export default function DeviceDetailPage({ params }: { params: { id: string } })
                                 <div className="h-64">
                                     <ResponsiveContainer width="100%" height="100%">
                                         <LineChart data={formatMetricsForChart('cpu_temperature')}>
-                                            <CartesianGrid strokeDasharray="3 3" />
-                                            <XAxis dataKey="timestamp" />
-                                            <YAxis />
-                                            <Tooltip />
-                                            <Line type="monotone" dataKey="value" stroke="#ef4444" strokeWidth={2} dot={false} />
+                                            <CartesianGrid strokeDasharray="3 3"/>
+                                            <XAxis dataKey="timestamp"/>
+                                            <YAxis/>
+                                            <Tooltip/>
+                                            <Line type="monotone" dataKey="value" stroke="#ef4444" strokeWidth={2}
+                                                  dot={false}/>
                                         </LineChart>
                                     </ResponsiveContainer>
                                 </div>
@@ -641,7 +656,7 @@ export default function DeviceDetailPage({ params }: { params: { id: string } })
                 <div className="bg-white rounded-lg shadow-md p-6">
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-xl font-semibold text-gray-800 flex items-center">
-                            <Terminal className="w-5 h-5 mr-2 text-blue-600" />
+                            <Terminal className="w-5 h-5 mr-2 text-blue-600"/>
                             Commands
                         </h2>
                         {device.commands && device.commands.length > 3 && (
@@ -661,7 +676,7 @@ export default function DeviceDetailPage({ params }: { params: { id: string } })
                                 className="bg-amber-100 text-amber-800 px-3 py-1 rounded hover:bg-amber-200 transition flex items-center text-sm"
                                 disabled={issuingCommand}
                             >
-                                <Power className="w-4 h-4 mr-1" />
+                                <Power className="w-4 h-4 mr-1"/>
                                 Reboot
                             </button>
                             <button
@@ -669,7 +684,7 @@ export default function DeviceDetailPage({ params }: { params: { id: string } })
                                 className="bg-blue-100 text-blue-800 px-3 py-1 rounded hover:bg-blue-200 transition flex items-center text-sm"
                                 disabled={issuingCommand}
                             >
-                                <RefreshCw className="w-4 h-4 mr-1" />
+                                <RefreshCw className="w-4 h-4 mr-1"/>
                                 Update Agent
                             </button>
                             <button
@@ -677,7 +692,7 @@ export default function DeviceDetailPage({ params }: { params: { id: string } })
                                 className="bg-green-100 text-green-800 px-3 py-1 rounded hover:bg-green-200 transition flex items-center text-sm"
                                 disabled={issuingCommand}
                             >
-                                <ArrowUpCircle className="w-4 h-4 mr-1" />
+                                <ArrowUpCircle className="w-4 h-4 mr-1"/>
                                 Restart
                             </button>
                         </div>
@@ -689,15 +704,16 @@ export default function DeviceDetailPage({ params }: { params: { id: string } })
                                 <div key={cmd.id} className="border rounded-lg p-3">
                                     <div className="flex justify-between items-start">
                                         <div className="flex items-center">
-                                            <Terminal className="w-4 h-4 text-gray-600 mr-2" />
+                                            <Terminal className="w-4 h-4 text-gray-600 mr-2"/>
                                             <span className="font-medium">{cmd.command}</span>
                                         </div>
-                                        <span className={`text-xs px-2 py-1 rounded-full border ${getCommandStatusColor(cmd.status)}`}>
+                                        <span
+                                            className={`text-xs px-2 py-1 rounded-full border ${getCommandStatusColor(cmd.status)}`}>
                                             {cmd.status}
                                         </span>
                                     </div>
                                     <div className="mt-2 text-sm text-gray-500 flex items-center">
-                                        <Clock className="w-3 h-3 mr-1" />
+                                        <Clock className="w-3 h-3 mr-1"/>
                                         {formatDate(cmd.createdAt)}
                                         {cmd.executedAt && (
                                             <span className="ml-3">
@@ -717,7 +733,7 @@ export default function DeviceDetailPage({ params }: { params: { id: string } })
                 <div className="bg-white rounded-lg shadow-md p-6">
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-xl font-semibold text-gray-800 flex items-center">
-                            <AlertTriangle className="w-5 h-5 mr-2 text-amber-500" />
+                            <AlertTriangle className="w-5 h-5 mr-2 text-amber-500"/>
                             Alerts
                             {device.alertCount > 0 && (
                                 <span className="ml-2 bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">
@@ -742,17 +758,18 @@ export default function DeviceDetailPage({ params }: { params: { id: string } })
                                     <div className="flex justify-between items-start">
                                         <div>
                                             <div className="flex items-center">
-                                                <AlertTriangle className="w-4 h-4 text-amber-500 mr-2" />
+                                                <AlertTriangle className="w-4 h-4 text-amber-500 mr-2"/>
                                                 <span className="font-medium">{alert.title}</span>
                                             </div>
                                             <p className="mt-1 text-sm text-gray-600">{alert.message}</p>
                                         </div>
-                                        <span className={`text-xs px-2 py-1 rounded-full border ${getAlertSeverityColor(alert.severity)}`}>
+                                        <span
+                                            className={`text-xs px-2 py-1 rounded-full border ${getAlertSeverityColor(alert.severity)}`}>
                                             {alert.severity}
                                         </span>
                                     </div>
                                     <div className="mt-2 text-sm text-gray-500 flex items-center">
-                                        <Clock className="w-3 h-3 mr-1" />
+                                        <Clock className="w-3 h-3 mr-1"/>
                                         {formatDate(alert.createdAt)}
                                     </div>
                                 </div>

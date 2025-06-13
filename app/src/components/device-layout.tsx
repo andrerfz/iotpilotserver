@@ -1,22 +1,18 @@
 'use client';
 
-import { Server, ChevronLeft } from 'lucide-react';
+import {ChevronLeft, Server} from 'lucide-react';
 import Link from 'next/link';
-import { Suspense } from 'react';
-import { 
-    Navbar, 
-    NavbarContent, 
-    NavbarBrand,
-    Button,
-    Spinner
-} from '@heroui/react';
+import {Suspense} from 'react';
+import {Button, Navbar, NavbarBrand, NavbarContent, Spinner} from '@heroui/react';
 
 export default function DeviceLayout({
     children,
     params
 }: {
     children: React.ReactNode;
-    params: { id: string };
+    params: {
+        id: string
+    };
 }) {
     return (
         <div className="min-h-screen bg-default-50">
@@ -26,7 +22,7 @@ export default function DeviceLayout({
                     <NavbarContent className="py-2 flex justify-between">
                         <NavbarBrand>
                             <div className="flex items-center">
-                                <Server className="w-8 h-8 text-primary-600 mr-3" />
+                                <Server className="w-8 h-8 text-primary-600 mr-3"/>
                                 <div>
                                     <h1 className="text-xl font-bold">IoT Pilot</h1>
                                     <p className="text-sm text-default-500">Device Management Dashboard</p>
@@ -38,7 +34,7 @@ export default function DeviceLayout({
                             href="/"
                             variant="light"
                             color="primary"
-                            startContent={<ChevronLeft className="w-4 h-4" />}
+                            startContent={<ChevronLeft className="w-4 h-4"/>}
                             size="sm"
                         >
                             Back to Dashboard
@@ -50,7 +46,7 @@ export default function DeviceLayout({
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <Suspense fallback={
                     <div className="flex justify-center items-center p-8">
-                        <Spinner color="primary" />
+                        <Spinner color="primary"/>
                         <p className="ml-2">Loading device details...</p>
                     </div>
                 }>

@@ -1,13 +1,14 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import {createContext, useContext, useEffect, useState} from 'react';
+import {useRouter} from 'next/navigation';
 
 interface User {
     id: string;
     email: string;
     username: string;
     role: 'ADMIN' | 'USER' | 'READONLY';
+    profileImage: null | string;
     createdAt: string;
     _count?: {
         devices: number;
@@ -37,7 +38,7 @@ interface AuthProviderProps {
     children: React.ReactNode;
 }
 
-export function AuthProvider({ children }: AuthProviderProps) {
+export function AuthProvider({children}: AuthProviderProps) {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
@@ -73,7 +74,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ email, password, remember }),
+            body: JSON.stringify({
+                email,
+                password,
+                remember
+            }),
             credentials: 'include'
         });
 

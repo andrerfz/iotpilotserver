@@ -1,37 +1,10 @@
 'use client';
 
-import {useState, useEffect} from 'react';
+import {useEffect, useState} from 'react';
 import Link from 'next/link';
-import {
-    Server,
-    Thermometer,
-    Cpu,
-    HardDrive,
-    AlertTriangle,
-    Wifi,
-    WifiOff,
-    Clock,
-    Search,
-    RefreshCw
-} from 'lucide-react';
-import {
-    getApiUrl,
-    getApiTimeout,
-    getRefreshInterval,
-    getLimit,
-    isDevelopment,
-    getFetchConfig
-} from '@/lib/env';
-import {
-    Card,
-    CardBody,
-    Button,
-    Input,
-    Chip,
-    Spinner,
-    Divider,
-    Badge
-} from '@heroui/react';
+import {AlertTriangle, Clock, Cpu, RefreshCw, Search, Server, Thermometer, Wifi, WifiOff} from 'lucide-react';
+import {getApiTimeout, getApiUrl, getFetchConfig, getLimit, getRefreshInterval, isDevelopment} from '@/lib/env';
+import {Button, Card, CardBody, Chip, Divider, Input, Spinner} from '@heroui/react';
 
 interface Device {
     id: string;
@@ -63,7 +36,11 @@ interface DeviceStats {
 export default function DeviceList() {
     const [devices, setDevices] = useState<Device[]>([]);
     const [stats, setStats] = useState<DeviceStats>({
-        total: 0, online: 0, offline: 0, maintenance: 0, error: 0
+        total: 0,
+        online: 0,
+        offline: 0,
+        maintenance: 0,
+        error: 0
     });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);

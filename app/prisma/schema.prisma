@@ -11,14 +11,27 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Company {
+  id           String   @id @default(cuid())
+  profileImage String
+  name         String   @unique
+  tradeName    String   @unique
+  phone        String   @unique
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("company")
+}
+
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  username  String   @unique
-  password  String
-  role      UserRole @default(USER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(cuid())
+  email        String   @unique
+  username     String   @unique
+  password     String
+  role         UserRole @default(USER)
+  profileImage String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   // Relations
   sessions Session[]
@@ -190,6 +203,7 @@ model SystemConfig {
 
 // Enums
 enum UserRole {
+  SUPERADMIN
   ADMIN
   USER
   READONLY
@@ -254,7 +268,3 @@ enum AlertSeverity {
   ERROR
   CRITICAL
 }
-
-
-
-

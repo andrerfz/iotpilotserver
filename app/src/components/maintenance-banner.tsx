@@ -1,8 +1,8 @@
 'use client';
 
-import { AlertTriangle } from 'lucide-react';
-import { isDevelopment } from '@/lib/env';
-import { Alert, Text } from '@heroui/react';
+import {AlertTriangle} from 'lucide-react';
+import {isDevelopment} from '@/lib/env';
+import {Alert} from '@heroui/react';
 
 export default function MaintenanceBanner() {
     // This could be controlled by an environment variable or feature flag
@@ -10,17 +10,17 @@ export default function MaintenanceBanner() {
     if (!isDevelopment()) return null;
 
     return (
-        <Alert 
-            variant="bordered" 
-            color="warning" 
-            startContent={<AlertTriangle className="h-5 w-5" />}
+        <Alert
+            variant="bordered"
+            color="warning"
+            startContent={<AlertTriangle className="h-5 w-5"/>}
             className="border-l-4 rounded-none"
         >
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-                <Text size="sm">
-                    <Text b span>Development Mode:</Text> Some features may behave differently than in production.
+                <p className="text-sm">
+                    <strong>Development Mode:</strong> Some features may behave differently than in production.
                     Real device connections and external services are active.
-                </Text>
+                </p>
             </div>
         </Alert>
     );
