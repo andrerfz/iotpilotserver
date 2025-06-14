@@ -162,20 +162,27 @@ get_disk_info() {
 
 # Enhanced Temperature Monitoring
 get_temperature_info() {
-    local cpu_temp=0
-    local gpu_temp=0
-    local soc_temp=0
-    local max_temp=0
+    local cpu_temp="0.0"
+    local gpu_temp="0.0"
+    local soc_temp="0.0"
+    local max_temp="0.0"
 
     # Method 1: lm-sensors (most accurate)
     if command -v sensors &> /dev/null; then
         local sensor_output=$(sensors 2>/dev/null)
-        cpu_temp=$(echo "$sensor_output" | grep -i "core\|cpu\|temp1" | head -1 | grep -o "+[0-9]*\.[0-9]*°C" | tr -d '+°C' || echo "0")
-        gpu_temp=$(echo "$sensor_output" | grep -i "gpu\|temp2" | head -1 | grep -o "+[0-9]*\.[0-9]*°C" | tr -d '+°C' || echo "0")
+        local cpu_reading=$(echo "$sensor_output" | grep -i "core\|cpu\|temp1" | head -1 | grep -o "+[0-9]*\.[0-9]*°C" | tr -d '+°C' || echo "")
+        local gpu_reading=$(echo "$sensor_output" | grep -i "gpu\|temp2" | head -1 | grep -o "+[0-9]*\.[0-9]*°C" | tr -d '+°C' || echo "")
+
+        if [[ -n "$cpu_reading" && "$cpu_reading" != "0" ]]; then
+            cpu_temp="$cpu_reading"
+        fi
+        if [[ -n "$gpu_reading" && "$gpu_reading" != "0" ]]; then
+            gpu_temp="$gpu_reading"
+        fi
     fi
 
     # Method 2: thermal_zone files
-    if [[ "$cpu_temp" == "0" ]] && [[ -f /sys/class/thermal/thermal_zone0/temp ]]; then
+    if [[ "$cpu_temp" == "0.0" ]] && [[ -f /sys/class/thermal/thermal_zone0/temp ]]; then
         local temp_millicelsius=$(cat /sys/class/thermal/thermal_zone0/temp 2>/dev/null)
         if [[ -n "$temp_millicelsius" && "$temp_millicelsius" =~ ^[0-9]+$ ]]; then
             cpu_temp=$(echo "scale=1; $temp_millicelsius / 1000" | bc -l 2>/dev/null || echo "45.0")
@@ -186,19 +193,26 @@ get_temperature_info() {
     if [[ -f /sys/devices/virtual/thermal/thermal_zone0/temp ]]; then
         local soc_millicelsius=$(cat /sys/devices/virtual/thermal/thermal_zone0/temp 2>/dev/null)
         if [[ -n "$soc_millicelsius" && "$soc_millicelsius" =~ ^[0-9]+$ ]]; then
-            soc_temp=$(echo "scale=1; $soc_millicelsius / 1000" | bc -l 2>/dev/null || echo "0")
+            soc_temp=$(echo "scale=1; $soc_millicelsius / 1000" | bc -l 2>/dev/null || echo "0.0")
         fi
     fi
 
-    # Find maximum temperature
-    max_temp=$(echo "$cpu_temp $gpu_temp $soc_temp" | tr ' ' '\n' | sort -nr | head -1)
+    # Find maximum temperature (ensure numeric values)
+    max_temp=$(printf "%.1f\n" "$cpu_temp" "$gpu_temp" "$soc_temp" | sort -nr | head -1)
 
-    # Fallback to realistic simulation
-    if [[ "$cpu_temp" == "0" ]]; then
+    # Fallback to realistic simulation if all readings are 0
+    if [[ "$cpu_temp" == "0.0" ]] && [[ "$gpu_temp" == "0.0" ]] && [[ "$soc_temp" == "0.0" ]]; then
         cpu_temp="$(echo $((RANDOM % 20 + 40))).$(echo $((RANDOM % 9 + 1)))"
+        max_temp="$cpu_temp"
     fi
 
-    echo "${cpu_temp},${gpu_temp},${soc_temp},${max_temp:-$cpu_temp}"
+    # Ensure all values are properly formatted numbers
+    cpu_temp=$(printf "%.1f" "$cpu_temp" 2>/dev/null || echo "45.0")
+    gpu_temp=$(printf "%.1f" "$gpu_temp" 2>/dev/null || echo "0.0")
+    soc_temp=$(printf "%.1f" "$soc_temp" 2>/dev/null || echo "0.0")
+    max_temp=$(printf "%.1f" "$max_temp" 2>/dev/null || echo "$cpu_temp")
+
+    echo "${cpu_temp},${gpu_temp},${soc_temp},${max_temp}"
 }
 
 # Network Information
