@@ -13,7 +13,7 @@ export default function MaintenanceBanner() {
         <Alert
             variant="bordered"
             color="warning"
-            startContent={<AlertTriangle className="h-5 w-5"/>}
+            startContent={''}
             className="border-l-4 rounded-none"
         >
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
