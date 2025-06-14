@@ -18,7 +18,7 @@ export default function FeatureStatus() {
     const disabledFeatures = Object.entries(features).filter(([, enabled]) => !enabled);
 
     return (
-        <Card className="mb-6">
+        <Card>
             <CardHeader className="flex justify-between py-3">
                 <span className="text-sm font-medium">Feature Status</span>
                 <Chip size="sm" variant="flat" color="primary">

@@ -12,7 +12,7 @@ export default function NetworkStatus() {
     const baseUrl = getBaseUrl();
 
     return (
-        <Card className="mb-6">
+        <Card>
             <CardHeader className="py-3">
                 <span className="text-sm font-medium">Network Configuration</span>
             </CardHeader>
