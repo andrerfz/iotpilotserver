@@ -1,12 +1,20 @@
 'use client';
 
-import {useState} from 'react';
-import {useRouter, useSearchParams} from 'next/navigation';
+import { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import {LogIn} from 'lucide-react';
-import {useAuth} from '@/contexts/auth-context';
+import { LogIn } from 'lucide-react';
+import { useAuth } from '@/contexts/auth-context';
 import PasswordInput from './password-input';
-import {Alert, Button, Checkbox, Form, Input, Link as HeroLink, Spacer} from '@heroui/react';
+import {
+    Alert,
+    Button,
+    Checkbox,
+    Form,
+    Input,
+    Link as HeroLink,
+    Spacer
+} from '@heroui/react';
 
 export default function LoginForm() {
     const [email, setEmail] = useState('');
@@ -18,7 +26,7 @@ export default function LoginForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const redirectTo = searchParams.get('redirect') || '/';
-    const {login} = useAuth();
+    const { login } = useAuth();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -26,12 +34,8 @@ export default function LoginForm() {
         setError('');
 
         try {
-            // Use the AuthProvider login method
             await login(email, password, remember);
-
-            // Navigate immediately after successful login
             router.push(redirectTo);
-
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Login failed');
         } finally {
@@ -42,65 +46,84 @@ export default function LoginForm() {
     return (
         <Form className="space-y-6" onSubmit={handleSubmit}>
             {error && (
-                <Alert color="danger" variant="flat" className="mb-4">
-                    {error}
-                </Alert>
+                <Alert
+                    color="danger"
+                    variant="flat"
+                    className="mb-4"
+                    title="Login Failed"
+                    description={error}
+                />
             )}
 
-            <div className="mb-4">
-                <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    label="Email address"
-                    placeholder="Enter your email"
-                    variant="bordered"
-                    fullWidth
-                    className="min-w-full"
-                />
+            <Input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                label="Email address"
+                placeholder=""
+                variant="bordered"
+                size="lg"
+                fullWidth
+                classNames={{
+                    input: "text-base pt-8 pb-2",
+                    inputWrapper: "h-16",
+                    label: "text-sm"
+                }}
+            />
+
+            <PasswordInput
+                id="password"
+                name="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+                placeholder=""
+                size="lg"
+            />
+
+            <div className="space-y-4 w-full">
+                <div className="w-full flex items-center justify-center">
+                    <Checkbox
+                        id="remember"
+                        name="remember"
+                        isSelected={remember}
+                        onValueChange={setRemember}
+                        color="primary"
+                        size="sm"
+                    >
+                        Remember me
+                    </Checkbox>
+                </div>
+
+                <div className="w-full flex items-center justify-center">
+                    <HeroLink
+                        as={Link}
+                        href="/forgot-password"
+                        color="primary"
+                        size="sm"
+                        className="font-medium"
+                    >
+                        Forgot password?
+                    </HeroLink>
+                </div>
             </div>
 
-            <div className="mb-4">
-                <PasswordInput
-                    id="password"
-                    name="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    autoComplete="current-password"
-                    placeholder="Enter your password"
-                    label="Password"
-                />
-            </div>
-
-            <div className="flex items-center justify-between">
-                <Checkbox
-                    id="remember"
-                    name="remember"
-                    isSelected={remember}
-                    onValueChange={setRemember}
-                    color="primary"
-                >
-                    Remember me for 7 days
-                </Checkbox>
-
-                <HeroLink as={Link} href="/forgot-password" color="primary" size="sm">
-                    Forgot your password?
-                </HeroLink>
-            </div>
-
-            <Spacer y={2}/>
+            <Spacer y={2} />
 
             <Button
                 type="submit"
                 color="primary"
+                variant="solid"
+                size="lg"
                 isLoading={loading}
                 isDisabled={loading}
                 fullWidth
-                startContent={<LogIn className="h-5 w-5"/>}
+                startContent={!loading && <LogIn className="h-5 w-5" />}
+                className="font-medium"
             >
                 {loading ? 'Signing in...' : 'Sign in'}
             </Button>

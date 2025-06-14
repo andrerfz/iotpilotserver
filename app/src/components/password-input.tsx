@@ -1,8 +1,8 @@
 'use client';
 
-import {useState} from 'react';
-import {Eye, EyeOff} from 'lucide-react';
-import {Button, Input} from '@heroui/react';
+import { useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
+import { Button, Input } from '@heroui/react';
 
 interface PasswordInputProps {
     id: string;
@@ -13,6 +13,7 @@ interface PasswordInputProps {
     autoComplete?: string;
     required?: boolean;
     label?: string;
+    size?: "sm" | "md" | "lg";
 }
 
 export default function PasswordInput({
@@ -23,9 +24,16 @@ export default function PasswordInput({
     placeholder = "Enter your password",
     autoComplete = "current-password",
     required = true,
-    label
+    label = "Password",
+    size = "md"
 }: PasswordInputProps) {
     const [showPassword, setShowPassword] = useState(false);
+
+    const sizeClasses = {
+        sm: { input: "text-sm pt-6 pb-2", inputWrapper: "h-12" },
+        md: { input: "text-base pt-6 pb-2", inputWrapper: "h-12" },
+        lg: { input: "text-base pt-8 pb-2", inputWrapper: "h-16" }
+    };
 
     return (
         <Input
@@ -36,22 +44,28 @@ export default function PasswordInput({
             required={required}
             value={value}
             onChange={onChange}
-            label={label || "Password"}
+            label={label}
             placeholder={placeholder}
             variant="bordered"
+            size={size}
             fullWidth
-            className="min-w-full"
+            classNames={{
+                input: sizeClasses[size].input,
+                inputWrapper: sizeClasses[size].inputWrapper
+            }}
             endContent={
                 <Button
                     isIconOnly
                     variant="light"
                     size="sm"
-                    onClick={() => setShowPassword(!showPassword)}
+                    className="text-default-400 hover:text-default-600"
+                    onPress={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                     {showPassword ? (
-                        <EyeOff className="h-4 w-4 text-default-400"/>
+                        <EyeOff className="h-4 w-4" />
                     ) : (
-                        <Eye className="h-4 w-4 text-default-400"/>
+                        <Eye className="h-4 w-4" />
                     )}
                 </Button>
             }
