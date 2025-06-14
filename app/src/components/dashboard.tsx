@@ -22,33 +22,33 @@ export default function Dashboard() {
 
                 {/* Header */}
                 <Navbar className="border-b border-divider">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-                        <NavbarContent className="py-2">
-                            <NavbarBrand>
-                                <div className="flex items-center">
-                                    <Server className="w-8 h-8 text-primary-600 mr-3"/>
-                                    <div>
-                                        <div className="flex items-center">
-                                            <h1 className="text-xl font-bold">IoT Pilot</h1>
-                                            {isDevelopment() && (
-                                                <Chip color="primary" variant="flat" size="sm" className="ml-2">
-                                                    Development
-                                                </Chip>
-                                            )}
-                                        </div>
-                                        <p className="text-sm text-default-500">
-                                            Device Management Dashboard
-                                            {isDevelopment() && (
-                                                <span
-                                                    className="ml-2">• {envInfo.features.length} features active</span>
-                                            )}
-                                        </p>
+                    <NavbarContent justify="start">
+                        <NavbarBrand>
+                            <div className="flex items-center">
+                                <Server className="w-8 h-8 text-primary-600 mr-3"/>
+                                <div>
+                                    <div className="flex items-center">
+                                        <h1 className="text-xl font-bold">IoT Pilot</h1>
+                                        {isDevelopment() && (
+                                            <Chip color="primary" variant="flat" size="sm" className="ml-2">
+                                                Development
+                                            </Chip>
+                                        )}
                                     </div>
+                                    <p className="text-sm text-default-500">
+                                        Device Management Dashboard
+                                        {isDevelopment() && (
+                                            <span className="ml-2">• {envInfo.features.length} features active</span>
+                                        )}
+                                    </p>
                                 </div>
-                            </NavbarBrand>
-                            <UserMenu/>
-                        </NavbarContent>
-                    </div>
+                            </div>
+                        </NavbarBrand>
+                    </NavbarContent>
+
+                    <NavbarContent justify="end">
+                        <UserMenu/>
+                    </NavbarContent>
                 </Navbar>
 
                 {/* Maintenance Banner */}

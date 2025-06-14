@@ -2,9 +2,9 @@
 
 import {useEffect, useState} from 'react';
 import Link from 'next/link';
-import {AlertTriangle, Clock, Cpu, RefreshCw, Search, Server, Thermometer, Wifi, WifiOff} from 'lucide-react';
+import {AlertTriangle, Clock, Cpu, RefreshCw, Search, Server, Settings, Thermometer, Wifi, WifiOff} from 'lucide-react';
 import {getApiTimeout, getApiUrl, getFetchConfig, getLimit, getRefreshInterval, isDevelopment} from '@/lib/env';
-import {Button, Card, CardBody, Chip, Divider, Input, Spinner} from '@heroui/react';
+import {Button, Card, CardBody, Chip, Divider, Input, Progress, Spinner} from '@heroui/react';
 
 interface Device {
     id: string;
@@ -198,73 +198,154 @@ export default function DeviceList() {
     }
 
     return (
-        <div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-                <Card>
-                    <CardBody>
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm font-medium text-default-600">Total Devices</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+                {/* Total Devices */}
+                <Card className="border-0 shadow-sm h-full">
+                    <CardBody className="p-6 flex flex-col justify-between">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex-1">
+                                <p className="text-sm font-medium text-default-600 mb-1">Total Devices</p>
                                 <p className="text-3xl font-bold text-foreground">
                                     {stats.total}
-                                    {devices.length >= maxDevices && (
-                                        <Chip size="sm" color="warning" variant="flat" className="ml-1">
-                                            limit: {maxDevices}
-                                        </Chip>
-                                    )}
                                 </p>
                             </div>
-                            <Server className="w-8 h-8 text-default-400"/>
+                            <div className="p-3 bg-primary-100 rounded-xl">
+                                <Server className="w-6 h-6 text-primary-600"/>
+                            </div>
                         </div>
+                        {devices.length >= maxDevices && (
+                            <div className="flex justify-center">
+                                <Chip size="sm" color="warning" variant="flat">
+                                    Limit: {maxDevices}
+                                </Chip>
+                            </div>
+                        )}
                     </CardBody>
                 </Card>
 
-                <Card>
-                    <CardBody>
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm font-medium text-default-600">Online</p>
-                                <p className="text-3xl font-bold text-success">{stats.online}</p>
+                {/* Online Devices */}
+                <Card className="border-0 shadow-sm h-full">
+                    <CardBody className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex-1">
+                                <p className="text-sm font-medium text-default-600 mb-1">Online</p>
+                                <p className="text-3xl font-bold text-success-600">
+                                    {stats.online}
+                                </p>
                             </div>
-                            <Wifi className="w-8 h-8 text-green-500"/>
+                            <div className="p-3 bg-success-100 rounded-xl">
+                                <Wifi className="w-6 h-6 text-success-600"/>
+                            </div>
                         </div>
+                        {stats.total > 0 && (
+                            <div className="space-y-2">
+                                <div className="flex justify-between text-xs">
+                                    <span className="text-default-500">Percentage</span>
+                                    <span className="font-medium">{((stats.online / stats.total) * 100).toFixed(1)}%</span>
+                                </div>
+                                <Progress
+                                    value={(stats.online / stats.total) * 100}
+                                    color="success"
+                                    size="sm"
+                                    className="w-full"
+                                />
+                            </div>
+                        )}
                     </CardBody>
                 </Card>
 
-                <Card>
-                    <CardBody>
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm font-medium text-default-600">Offline</p>
-                                <p className="text-3xl font-bold text-danger">{stats.offline}</p>
+                {/* Offline Devices */}
+                <Card className="border-0 shadow-sm h-full">
+                    <CardBody className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex-1">
+                                <p className="text-sm font-medium text-default-600 mb-1">Offline</p>
+                                <p className="text-3xl font-bold text-default-600">
+                                    {stats.offline}
+                                </p>
                             </div>
-                            <WifiOff className="w-8 h-8 text-red-500"/>
+                            <div className="p-3 bg-default-100 rounded-xl">
+                                <WifiOff className="w-6 h-6 text-default-600"/>
+                            </div>
                         </div>
+                        {stats.total > 0 && (
+                            <div className="space-y-2">
+                                <div className="flex justify-between text-xs">
+                                    <span className="text-default-500">Percentage</span>
+                                    <span className="font-medium">{((stats.offline / stats.total) * 100).toFixed(1)}%</span>
+                                </div>
+                                <Progress
+                                    value={(stats.offline / stats.total) * 100}
+                                    color="default"
+                                    size="sm"
+                                    className="w-full"
+                                />
+                            </div>
+                        )}
                     </CardBody>
                 </Card>
 
-                <Card>
-                    <CardBody>
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm font-medium text-default-600">Maintenance</p>
-                                <p className="text-3xl font-bold text-warning">{stats.maintenance}</p>
+                {/* Maintenance Devices */}
+                <Card className="border-0 shadow-sm h-full">
+                    <CardBody className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex-1">
+                                <p className="text-sm font-medium text-default-600 mb-1">Maintenance</p>
+                                <p className="text-3xl font-bold text-warning-600">
+                                    {stats.maintenance}
+                                </p>
                             </div>
-                            <Clock className="w-8 h-8 text-yellow-500"/>
+                            <div className="p-3 bg-warning-100 rounded-xl">
+                                <Settings className="w-6 h-6 text-warning-600"/>
+                            </div>
                         </div>
+                        {stats.total > 0 && (
+                            <div className="space-y-2">
+                                <div className="flex justify-between text-xs">
+                                    <span className="text-default-500">Percentage</span>
+                                    <span className="font-medium">{((stats.maintenance / stats.total) * 100).toFixed(1)}%</span>
+                                </div>
+                                <Progress
+                                    value={(stats.maintenance / stats.total) * 100}
+                                    color="warning"
+                                    size="sm"
+                                    className="w-full"
+                                />
+                            </div>
+                        )}
                     </CardBody>
                 </Card>
 
-                <Card>
-                    <CardBody>
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm font-medium text-default-600">Errors</p>
-                                <p className="text-3xl font-bold text-danger">{stats.error}</p>
+                {/* Error Devices */}
+                <Card className="border-0 shadow-sm h-full">
+                    <CardBody className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex-1">
+                                <p className="text-sm font-medium text-default-600 mb-1">Errors</p>
+                                <p className="text-3xl font-bold text-danger-600">
+                                    {stats.error}
+                                </p>
                             </div>
-                            <AlertTriangle className="w-8 h-8 text-red-500"/>
+                            <div className="p-3 bg-danger-100 rounded-xl">
+                                <AlertTriangle className="w-6 h-6 text-danger-600"/>
+                            </div>
                         </div>
+                        {stats.total > 0 && (
+                            <div className="space-y-2">
+                                <div className="flex justify-between text-xs">
+                                    <span className="text-default-500">Percentage</span>
+                                    <span className="font-medium">{((stats.error / stats.total) * 100).toFixed(1)}%</span>
+                                </div>
+                                <Progress
+                                    value={(stats.error / stats.total) * 100}
+                                    color="danger"
+                                    size="sm"
+                                    className="w-full"
+                                />
+                            </div>
+                        )}
                     </CardBody>
                 </Card>
             </div>

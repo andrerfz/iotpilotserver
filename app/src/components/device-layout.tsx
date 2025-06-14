@@ -16,31 +16,43 @@ export default function DeviceLayout({
 }) {
     return (
         <div className="min-h-screen bg-default-50">
-            {/* Header */}
+            {/* Header - Fixed alignment */}
             <Navbar className="border-b border-divider">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-                    <NavbarContent className="py-2 flex justify-between">
-                        <NavbarBrand>
-                            <div className="flex items-center">
-                                <Server className="w-8 h-8 text-primary-600 mr-3"/>
-                                <div>
-                                    <h1 className="text-xl font-bold">IoT Pilot</h1>
-                                    <p className="text-sm text-default-500">Device Management Dashboard</p>
-                                </div>
+                <NavbarContent justify="start">
+                    <NavbarBrand>
+                        <div className="flex items-center">
+                            <Server className="w-8 h-8 text-primary-600 mr-3"/>
+                            <div>
+                                <h1 className="text-xl font-bold">IoT Pilot</h1>
+                                <p className="text-sm text-default-500">Device Management Dashboard</p>
                             </div>
-                        </NavbarBrand>
-                        <Button
-                            as={Link}
-                            href="/"
-                            variant="light"
-                            color="primary"
-                            startContent={<ChevronLeft className="w-4 h-4"/>}
-                            size="sm"
-                        >
-                            Back to Dashboard
-                        </Button>
-                    </NavbarContent>
-                </div>
+                        </div>
+                    </NavbarBrand>
+                </NavbarContent>
+
+                <NavbarContent justify="center">
+                    <div className="text-center">
+                        <p className="text-sm font-medium text-default-700">
+                            Device Details
+                        </p>
+                        <p className="text-xs text-default-500">
+                            {params.id}
+                        </p>
+                    </div>
+                </NavbarContent>
+
+                <NavbarContent justify="end">
+                    <Button
+                        as={Link}
+                        href="/"
+                        variant="light"
+                        color="primary"
+                        startContent={<ChevronLeft className="w-4 h-4"/>}
+                        size="sm"
+                    >
+                        Back to Dashboard
+                    </Button>
+                </NavbarContent>
             </Navbar>
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
