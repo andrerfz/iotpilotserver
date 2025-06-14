@@ -18,16 +18,19 @@ export default function Dashboard() {
             <div className="min-h-screen bg-default-50">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     {/* Header */}
-                    <Navbar className="border-b border-divider">
+                    <Navbar
+                        className="border-b border-divider bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+                        maxWidth="full"
+                    >
                         <NavbarContent justify="start">
                             <NavbarBrand>
-                                <div className="flex items-center">
-                                    <Server className="w-8 h-8 text-primary-600 mr-3"/>
+                                <div className="flex items-center gap-3">
+                                    <Server className="w-8 h-8 text-primary-600"/>
                                     <div>
-                                        <div className="flex items-center">
+                                        <div className="flex items-center gap-2">
                                             <h1 className="text-xl font-bold">IoT Pilot</h1>
                                             {isDevelopment() && (
-                                                <Chip color="primary" variant="flat" size="sm" className="ml-2">
+                                                <Chip color="primary" variant="flat" size="sm">
                                                     Development
                                                 </Chip>
                                             )}
@@ -35,8 +38,7 @@ export default function Dashboard() {
                                         <p className="text-sm text-default-500">
                                             Device Management Dashboard
                                             {isDevelopment() && (
-                                                <span
-                                                    className="ml-2">• {envInfo.features.length} features active</span>
+                                                <span className="ml-2">• {envInfo.features.length} features active</span>
                                             )}
                                         </p>
                                     </div>
