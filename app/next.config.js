@@ -1,7 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     images: {
-        domains: ['localhost', 'iotpilot.app', 'iotpilotserver.test'],
+        domains: ['localhost', 'iotpilot.app', 'iotpilotserver.test', 'dashboarddev.iotpilot.app'],
+        unoptimized: true,
     },
     async rewrites() {
         return [

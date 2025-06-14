@@ -40,6 +40,7 @@ export default function PasswordInput({
             placeholder={placeholder}
             variant="bordered"
             fullWidth
+            className="min-w-full"
             endContent={
                 <Button
                     isIconOnly

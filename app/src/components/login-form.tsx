@@ -60,6 +60,7 @@ export default function LoginForm() {
                     placeholder="Enter your email"
                     variant="bordered"
                     fullWidth
+                    className="min-w-full"
                 />
             </div>
 
@@ -71,6 +72,7 @@ export default function LoginForm() {
                     onChange={(e) => setPassword(e.target.value)}
                     autoComplete="current-password"
                     placeholder="Enter your password"
+                    label="Password"
                 />
             </div>
 

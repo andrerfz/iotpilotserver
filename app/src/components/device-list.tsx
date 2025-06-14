@@ -243,7 +243,8 @@ export default function DeviceList() {
                             <div className="space-y-2">
                                 <div className="flex justify-between text-xs">
                                     <span className="text-default-500">Percentage</span>
-                                    <span className="font-medium">{((stats.online / stats.total) * 100).toFixed(1)}%</span>
+                                    <span
+                                        className="font-medium">{((stats.online / stats.total) * 100).toFixed(1)}%</span>
                                 </div>
                                 <Progress
                                     value={(stats.online / stats.total) * 100}
@@ -274,7 +275,8 @@ export default function DeviceList() {
                             <div className="space-y-2">
                                 <div className="flex justify-between text-xs">
                                     <span className="text-default-500">Percentage</span>
-                                    <span className="font-medium">{((stats.offline / stats.total) * 100).toFixed(1)}%</span>
+                                    <span
+                                        className="font-medium">{((stats.offline / stats.total) * 100).toFixed(1)}%</span>
                                 </div>
                                 <Progress
                                     value={(stats.offline / stats.total) * 100}
@@ -305,7 +307,8 @@ export default function DeviceList() {
                             <div className="space-y-2">
                                 <div className="flex justify-between text-xs">
                                     <span className="text-default-500">Percentage</span>
-                                    <span className="font-medium">{((stats.maintenance / stats.total) * 100).toFixed(1)}%</span>
+                                    <span
+                                        className="font-medium">{((stats.maintenance / stats.total) * 100).toFixed(1)}%</span>
                                 </div>
                                 <Progress
                                     value={(stats.maintenance / stats.total) * 100}
@@ -336,7 +339,8 @@ export default function DeviceList() {
                             <div className="space-y-2">
                                 <div className="flex justify-between text-xs">
                                     <span className="text-default-500">Percentage</span>
-                                    <span className="font-medium">{((stats.error / stats.total) * 100).toFixed(1)}%</span>
+                                    <span
+                                        className="font-medium">{((stats.error / stats.total) * 100).toFixed(1)}%</span>
                                 </div>
                                 <Progress
                                     value={(stats.error / stats.total) * 100}

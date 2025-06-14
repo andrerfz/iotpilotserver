@@ -4,9 +4,8 @@ import {Suspense} from 'react';
 import Link from 'next/link';
 import AppLogo from '@/components/app-logo';
 import LoginForm from '@/components/login-form';
-import {Button, Card, Chip, CardBody, Link as HeroLink, Spacer, Spinner} from '@heroui/react';
+import {Card, CardBody, Chip, Link as HeroLink, Spinner} from '@heroui/react';
 import {isDevelopment} from '@/lib/env';
-import {Server} from 'lucide-react';
 
 export function LoginPage() {
     return (
@@ -15,14 +14,8 @@ export function LoginPage() {
             <div className="w-full max-w-md">
                 {/* Logo Section - Centered */}
                 <div className="text-center mb-8">
-                    <div className="flex items-center justify-center gap-3 mb-4">
-                        <div className="p-3 bg-primary-100 rounded-xl">
-                            <Server className="w-8 h-8 text-primary-600"/>
-                        </div>
-                        <div>
-                            <h1 className="text-2xl font-bold text-gray-900">IoT Pilot</h1>
-                            <p className="text-sm text-gray-500">Device Management</p>
-                        </div>
+                    <div className="flex justify-center mb-4">
+                        <AppLogo size="lg" showSubtitle={true}/>
                     </div>
 
                     {isDevelopment() && (
@@ -57,32 +50,6 @@ export function LoginPage() {
 
                             <LoginForm/>
 
-                            {/* Development Helper - Centered */}
-                            {isDevelopment() && (
-                                <div className="mt-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
-                                    <div className="flex items-center justify-center gap-2 mb-2">
-                                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                                        <p className="text-xs font-medium text-gray-700">
-                                            Development Login
-                                        </p>
-                                    </div>
-                                    <div className="space-y-1 text-xs text-gray-600 mb-3 text-center">
-                                        <div>Email: admin@iotpilot.local</div>
-                                        <div>Password: admin</div>
-                                    </div>
-                                    <Button
-                                        size="sm"
-                                        variant="flat"
-                                        color="secondary"
-                                        className="w-full"
-                                        onPress={() => {
-                                            console.log('Fill dev credentials clicked');
-                                        }}
-                                    >
-                                        Quick Fill Dev Login
-                                    </Button>
-                                </div>
-                            )}
                         </CardBody>
                     </Card>
                 </div>

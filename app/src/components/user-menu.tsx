@@ -36,7 +36,10 @@ import {
 } from '@/lib/env';
 
 export default function UserMenu() {
-    const { user, logout } = useAuth();
+    const {
+        user,
+        logout
+    } = useAuth();
 
     if (!user) return null;
 
@@ -47,17 +50,23 @@ export default function UserMenu() {
 
     const getRoleBadgeColor = (role: string) => {
         switch (role) {
-            case 'ADMIN': return 'danger';
-            case 'USER': return 'primary';
-            case 'READONLY': return 'default';
-            default: return 'default';
+            case 'ADMIN':
+                return 'danger';
+            case 'USER':
+                return 'primary';
+            case 'READONLY':
+                return 'default';
+            default:
+                return 'default';
         }
     };
 
     const getRoleIcon = (role: string) => {
         switch (role) {
-            case 'ADMIN': return <Shield className="w-3 h-3"/>;
-            default: return <User className="w-3 h-3"/>;
+            case 'ADMIN':
+                return <Shield className="w-3 h-3"/>;
+            default:
+                return <User className="w-3 h-3"/>;
         }
     };
 

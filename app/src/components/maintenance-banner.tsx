@@ -1,6 +1,5 @@
 'use client';
 
-import {AlertTriangle} from 'lucide-react';
 import {isDevelopment} from '@/lib/env';
 import {Alert} from '@heroui/react';
 

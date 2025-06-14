@@ -8,7 +8,7 @@ import MaintenanceBanner from '@/components/maintenance-banner';
 import FeatureStatus from '@/components/feature-status';
 import NetworkStatus from '@/components/network-status';
 import {getBaseUrl, getEnvironmentInfo, isDevelopment} from '@/lib/env';
-import {Chip, Code, Divider, Navbar, NavbarBrand, NavbarContent} from '@heroui/react';
+import {Chip, Code, Divider, Navbar, NavbarBrand} from '@heroui/react';
 
 export default function Dashboard() {
     const envInfo = getEnvironmentInfo();
