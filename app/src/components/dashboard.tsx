@@ -16,12 +16,9 @@ export default function Dashboard() {
     return (
         <ProtectedRoute>
             <div className="min-h-screen bg-default-50">
+
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    {/* Header */}
-                    <Navbar
-                        className="border-b border-divider bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
-                        maxWidth="full"
-                    >
+                    <Navbar className="border-b border-divider bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60" maxWidth="full">
                         <NavbarContent justify="start">
                             <NavbarBrand>
                                 <div className="flex items-center gap-3">
