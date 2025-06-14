@@ -200,9 +200,9 @@ export default function DeviceList() {
     return (
         <div>
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-6">
                 {/* Total Devices */}
-                <Card className="border-0 shadow-sm h-full">
+                <Card className="mb-0">
                     <CardBody className="p-6 flex flex-col justify-between">
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex-1">
@@ -226,7 +226,7 @@ export default function DeviceList() {
                 </Card>
 
                 {/* Online Devices */}
-                <Card className="border-0 shadow-sm h-full">
+                <Card className="mb-0">
                     <CardBody className="p-6">
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex-1">
@@ -257,7 +257,7 @@ export default function DeviceList() {
                 </Card>
 
                 {/* Offline Devices */}
-                <Card className="border-0 shadow-sm h-full">
+                <Card className="mb-0">
                     <CardBody className="p-6">
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex-1">
@@ -288,7 +288,7 @@ export default function DeviceList() {
                 </Card>
 
                 {/* Maintenance Devices */}
-                <Card className="border-0 shadow-sm h-full">
+                <Card className="mb-0">
                     <CardBody className="p-6">
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex-1">
@@ -319,7 +319,7 @@ export default function DeviceList() {
                 </Card>
 
                 {/* Error Devices */}
-                <Card className="border-0 shadow-sm h-full">
+                <Card className="mb-0">
                     <CardBody className="p-6">
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex-1">

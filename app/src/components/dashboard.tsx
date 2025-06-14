@@ -18,7 +18,7 @@ export default function Dashboard() {
             <div className="min-h-screen bg-default-50">
 
                 <Navbar
-                    className="border-b border-divider bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+                    className="border-b border-divider bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 py-1"
                     maxWidth="full"
                 >
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex justify-between items-center">
@@ -49,14 +49,14 @@ export default function Dashboard() {
                 </Navbar>
 
                 {/* Maintenance Banner */}
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
                     <MaintenanceBanner/>
                 </div>
 
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                     {/* Development Info Panels */}
                     {isDevelopment() && (
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                             <FeatureStatus/>
                             <NetworkStatus/>
                         </div>
