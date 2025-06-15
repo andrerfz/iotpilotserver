@@ -929,6 +929,11 @@ echo ""
 
 # Keep container running with enhanced monitoring
 echo "🔄 Keeping enhanced monitoring active..."
+
+# Create a success marker for the wrapper script
+echo "ENHANCED_AGENT_SUCCESS" > /tmp/enhanced_success_marker
+
+# Monitor and report status
 while true; do
     sleep 30
     current_time=$(date '+%H:%M:%S')
@@ -942,4 +947,15 @@ while true; do
         echo "$(date): ⚠️  Cron stopped, restarting..."
         service cron start
     fi
+
+    # Check if we have recent successful heartbeats
+    if [ -f /var/log/enhanced-heartbeat.log ]; then
+        recent_success=$(tail -20 /var/log/enhanced-heartbeat.log | grep -c "✅.*successful" || echo "0")
+        if [ "$recent_success" -gt 0 ]; then
+            echo "$(date): ✅ Enhanced heartbeats are working (${recent_success} recent successes)"
+        fi
+    fi
 done
+
+# Exit with success to indicate enhanced monitoring is working
+exit 0
