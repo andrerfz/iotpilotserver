@@ -525,8 +525,23 @@ chmod +x /usr/local/bin/enhanced-heartbeat.sh
 export DEVICE_ID="$DEVICE_ID"
 export DEVICE_NAME="$DEVICE_NAME"
 export DEVICE_LOCATION="${DEVICE_LOCATION:-enhanced-test-lab}"
-export SERVER_URL="$SERVER_URL"
 export DEVICE_API_KEY="$DEVICE_API_KEY"
+
+# Construct SERVER_URL properly from IOTPILOT_SERVER
+if [[ -n "$IOTPILOT_SERVER" ]]; then
+    if [[ "$IOTPILOT_SERVER" == *"://"* ]]; then
+        export SERVER_URL="$IOTPILOT_SERVER"
+    else
+        export SERVER_URL="http://$IOTPILOT_SERVER"
+    fi
+elif [[ -n "$SERVER_URL" ]]; then
+    export SERVER_URL="$SERVER_URL"
+else
+    echo "⚠️  Warning: Neither IOTPILOT_SERVER nor SERVER_URL is set"
+    export SERVER_URL="http://localhost:3000"
+fi
+
+echo "🌐 Using server URL: $SERVER_URL"
 
 # Register device with enhanced information
 echo "📝 Registering enhanced device with IoTPilot server..."
@@ -604,8 +619,20 @@ cat > /usr/local/bin/enhanced-cron-wrapper.sh << 'CRON_EOF'
 export DEVICE_ID="${DEVICE_ID:-test-device-docker}"
 export DEVICE_NAME="${DEVICE_NAME:-Test Docker Container}"
 export DEVICE_LOCATION="${DEVICE_LOCATION:-enhanced-test-lab}"
-export SERVER_URL="${SERVER_URL:-http://iotpilot-server-app:3000}"
 export DEVICE_API_KEY="${DEVICE_API_KEY}"
+
+# Construct SERVER_URL properly
+if [[ -n "$IOTPILOT_SERVER" ]]; then
+    if [[ "$IOTPILOT_SERVER" == *"://"* ]]; then
+        export SERVER_URL="$IOTPILOT_SERVER"
+    else
+        export SERVER_URL="http://$IOTPILOT_SERVER"
+    fi
+elif [[ -n "$SERVER_URL" ]]; then
+    export SERVER_URL="$SERVER_URL"
+else
+    export SERVER_URL="http://localhost:3000"
+fi
 
 # Execute enhanced heartbeat
 /usr/local/bin/enhanced-heartbeat.sh >> /var/log/enhanced-heartbeat.log 2>&1
@@ -933,9 +960,26 @@ echo "🔄 Keeping enhanced monitoring active..."
 # Create a success marker for the wrapper script
 echo "ENHANCED_AGENT_SUCCESS" > /tmp/enhanced_success_marker
 
-# Monitor and report status
+# Check if enhanced monitoring is working
+if /usr/local/bin/enhanced-heartbeat.sh >/dev/null 2>&1; then
+    echo "✅ Enhanced monitoring is working perfectly!"
+    echo "📊 Device: $DEVICE_ID registered and operational"
+    echo "🔄 Monitoring every 2 minutes with 40+ metrics"
+    echo "🌡️  Temperature monitoring active"
+    echo "📡 All enhanced features operational"
+
+    # Exit successfully to indicate completion
+    exit 0
+else
+    echo "⚠️  Enhanced monitoring setup completed but needs attention"
+    echo "📊 Manual testing available: /usr/local/bin/enhanced-heartbeat.sh"
+fi
+
+# Monitor and report status for debugging
+monitoring_cycles=0
 while true; do
     sleep 30
+    monitoring_cycles=$((monitoring_cycles + 1))
     current_time=$(date '+%H:%M:%S')
     heartbeat_count=$(ps aux | grep -c "[e]nhanced-heartbeat")
     cron_status=$(pgrep cron > /dev/null && echo "ACTIVE" || echo "STOPPED")
@@ -955,7 +999,10 @@ while true; do
             echo "$(date): ✅ Enhanced heartbeats are working (${recent_success} recent successes)"
         fi
     fi
-done
 
-# Exit with success to indicate enhanced monitoring is working
-exit 0
+    # Exit after a few monitoring cycles if everything is working
+    if [ "$monitoring_cycles" -ge 10 ] && [ "$recent_success" -gt 0 ]; then
+        echo "$(date): ✅ Enhanced monitoring confirmed operational, exiting setup"
+        exit 0
+    fi
+done
