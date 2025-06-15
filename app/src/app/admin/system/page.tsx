@@ -15,17 +15,17 @@ import {
   Users,
   Bell
 } from 'lucide-react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import {
+import { 
+  Card,
+  Button,
+  Progress,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+  TableRow
+} from '@heroui/react';
 
 // System health types
 interface SystemHealth {
@@ -88,41 +88,41 @@ export default function SystemHealth() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  
+
   // Format bytes to human-readable format
   const formatBytes = (bytes: number, decimals = 2) => {
     if (bytes === 0) return '0 Bytes';
-    
+
     const k = 1024;
     const dm = decimals < 0 ? 0 : decimals;
     const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-    
+
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    
+
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
   };
-  
+
   // Format seconds to human-readable duration
   const formatUptime = (seconds: number) => {
     const days = Math.floor(seconds / (3600 * 24));
     const hours = Math.floor((seconds % (3600 * 24)) / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
-    
+
     return `${days}d ${hours}h ${minutes}m`;
   };
-  
+
   // Fetch system health
   const fetchSystemHealth = async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const response = await fetch('/api/admin/system');
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch system health');
       }
-      
+
       const data = await response.json();
       setHealth(data);
       setLastUpdated(new Date());
@@ -133,19 +133,19 @@ export default function SystemHealth() {
       setLoading(false);
     }
   };
-  
+
   // Initial load
   useEffect(() => {
     fetchSystemHealth();
-    
+
     // Set up auto-refresh every 30 seconds
     const interval = setInterval(() => {
       fetchSystemHealth();
     }, 30000);
-    
+
     return () => clearInterval(interval);
   }, []);
-  
+
   // Get status indicator
   const getStatusIndicator = (status: string) => {
     switch (status) {
@@ -159,7 +159,7 @@ export default function SystemHealth() {
         return <span className="flex items-center text-gray-600">Unknown</span>;
     }
   };
-  
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -171,19 +171,19 @@ export default function SystemHealth() {
               Last updated: {lastUpdated.toLocaleTimeString()}
             </span>
           )}
-          <Button onClick={fetchSystemHealth} variant="outline" size="sm">
+          <Button onClick={fetchSystemHealth} variant="flat" size="sm">
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
         </div>
       </div>
-      
+
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-md mb-6">
           {error}
         </div>
       )}
-      
+
       {loading && !health ? (
         <div className="text-center py-12">
           <RefreshCw className="h-8 w-8 mx-auto mb-4 animate-spin text-blue-600" />
@@ -216,7 +216,7 @@ export default function SystemHealth() {
                 </div>
               </div>
             </Card>
-            
+
             <Card className="p-6 shadow-md">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold flex items-center">
@@ -246,7 +246,7 @@ export default function SystemHealth() {
                 </div>
               </div>
             </Card>
-            
+
             <Card className="p-6 shadow-md">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold flex items-center">
@@ -271,7 +271,7 @@ export default function SystemHealth() {
               </div>
             </Card>
           </div>
-          
+
           {/* Resource Usage */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card className="p-6 shadow-md">
@@ -307,7 +307,7 @@ export default function SystemHealth() {
                 </div>
               </div>
             </Card>
-            
+
             <Card className="p-6 shadow-md">
               <h3 className="text-lg font-semibold flex items-center mb-4">
                 <Memory className="mr-2 h-5 w-5 text-green-600" />
@@ -349,7 +349,7 @@ export default function SystemHealth() {
               </div>
             </Card>
           </div>
-          
+
           {/* Recent Activity */}
           <Card className="p-6 shadow-md">
             <h3 className="text-lg font-semibold flex items-center mb-4">
@@ -381,7 +381,7 @@ export default function SystemHealth() {
               </TableBody>
             </Table>
           </Card>
-          
+
           {/* Feature Status */}
           <Card className="p-6 shadow-md">
             <h3 className="text-lg font-semibold flex items-center mb-4">

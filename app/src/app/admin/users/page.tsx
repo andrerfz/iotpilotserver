@@ -11,32 +11,28 @@ import {
   UserX,
   Filter
 } from 'lucide-react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { 
+  Card,
+  Button,
+  Input,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+  DialogTitle
+} from '@heroui/react';
 
 // User type definition
 interface User {
@@ -61,24 +57,24 @@ export default function UserManagement() {
   const [approvalDialogOpen, setApprovalDialogOpen] = useState(false);
   const [approvalAction, setApprovalAction] = useState<'approve' | 'reject'>('approve');
   const [actionLoading, setActionLoading] = useState(false);
-  
+
   // Fetch users
   const fetchUsers = async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       let url = `/api/admin/users?page=${currentPage}`;
       if (statusFilter) {
         url += `&status=${statusFilter}`;
       }
-      
+
       const response = await fetch(url);
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch users');
       }
-      
+
       const data = await response.json();
       setUsers(data.users);
       setTotalPages(data.pagination.pages);
@@ -89,18 +85,18 @@ export default function UserManagement() {
       setLoading(false);
     }
   };
-  
+
   // Initial load and when filters/pagination change
   useEffect(() => {
     fetchUsers();
   }, [currentPage, statusFilter]);
-  
+
   // Handle approval/rejection
   const handleUserAction = async () => {
     if (!selectedUser) return;
-    
+
     setActionLoading(true);
-    
+
     try {
       const response = await fetch(`/api/admin/users/${selectedUser.id}/approve`, {
         method: 'POST',
@@ -111,14 +107,14 @@ export default function UserManagement() {
           action: approvalAction,
         }),
       });
-      
+
       if (!response.ok) {
         throw new Error(`Failed to ${approvalAction} user`);
       }
-      
+
       // Refresh user list
       fetchUsers();
-      
+
       // Close dialog
       setApprovalDialogOpen(false);
     } catch (err) {
@@ -128,20 +124,20 @@ export default function UserManagement() {
       setActionLoading(false);
     }
   };
-  
+
   // Open approval dialog
   const openApprovalDialog = (user: User, action: 'approve' | 'reject') => {
     setSelectedUser(user);
     setApprovalAction(action);
     setApprovalDialogOpen(true);
   };
-  
+
   // Filter users by search query
   const filteredUsers = users.filter(user => 
     user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.username.toLowerCase().includes(searchQuery.toLowerCase())
   );
-  
+
   // Get status badge
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -155,19 +151,19 @@ export default function UserManagement() {
         return <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs">{status}</span>;
     }
   };
-  
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">User Management</h1>
       </div>
-      
+
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-md mb-6">
           {error}
         </div>
       )}
-      
+
       <Card className="mb-6">
         <div className="p-4 flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
@@ -179,7 +175,7 @@ export default function UserManagement() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          
+
           <div className="w-full sm:w-48">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger>
@@ -195,7 +191,7 @@ export default function UserManagement() {
           </div>
         </div>
       </Card>
-      
+
       <Card>
         <div className="overflow-x-auto">
           <Table>
@@ -239,7 +235,7 @@ export default function UserManagement() {
                         <div className="flex justify-end gap-2">
                           <Button
                             size="sm"
-                            variant="outline"
+                            variant="flat"
                             className="text-green-600 border-green-200 hover:bg-green-50"
                             onClick={() => openApprovalDialog(user, 'approve')}
                           >
@@ -248,7 +244,7 @@ export default function UserManagement() {
                           </Button>
                           <Button
                             size="sm"
-                            variant="outline"
+                            variant="flat"
                             className="text-red-600 border-red-200 hover:bg-red-50"
                             onClick={() => openApprovalDialog(user, 'reject')}
                           >
@@ -260,7 +256,7 @@ export default function UserManagement() {
                       {user.status === 'ACTIVE' && (
                         <Button
                           size="sm"
-                          variant="outline"
+                          variant="flat"
                           className="text-red-600 border-red-200 hover:bg-red-50"
                           onClick={() => openApprovalDialog(user, 'reject')}
                         >
@@ -271,7 +267,7 @@ export default function UserManagement() {
                       {user.status === 'SUSPENDED' && (
                         <Button
                           size="sm"
-                          variant="outline"
+                          variant="flat"
                           className="text-green-600 border-green-200 hover:bg-green-50"
                           onClick={() => openApprovalDialog(user, 'approve')}
                         >
@@ -286,12 +282,12 @@ export default function UserManagement() {
             </TableBody>
           </Table>
         </div>
-        
+
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex justify-between items-center p-4 border-t">
             <Button
-              variant="outline"
+              variant="flat"
               size="sm"
               onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
               disabled={currentPage === 1}
@@ -302,7 +298,7 @@ export default function UserManagement() {
               Page {currentPage} of {totalPages}
             </span>
             <Button
-              variant="outline"
+              variant="flat"
               size="sm"
               onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
@@ -312,7 +308,7 @@ export default function UserManagement() {
           </div>
         )}
       </Card>
-      
+
       {/* Approval/Rejection Dialog */}
       <Dialog open={approvalDialogOpen} onOpenChange={setApprovalDialogOpen}>
         <DialogContent>
@@ -326,17 +322,17 @@ export default function UserManagement() {
                 : 'This will prevent the user from accessing the platform.'}
             </DialogDescription>
           </DialogHeader>
-          
+
           {selectedUser && (
             <div className="py-4">
               <p className="mb-2"><strong>Username:</strong> {selectedUser.username}</p>
               <p><strong>Email:</strong> {selectedUser.email}</p>
             </div>
           )}
-          
+
           <DialogFooter>
             <Button
-              variant="outline"
+              variant="flat"
               onClick={() => setApprovalDialogOpen(false)}
               disabled={actionLoading}
             >

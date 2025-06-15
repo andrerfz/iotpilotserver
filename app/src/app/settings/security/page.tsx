@@ -149,7 +149,7 @@ export default function SecuritySettings() {
                   </p>
                   <Button
                     type="button"
-                    variant="outline"
+                    variant="flat"
                     size="sm"
                     onClick={() => {
                       // In a real implementation, this would open a modal to set up 2FA

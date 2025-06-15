@@ -1,7 +1,7 @@
 import { getServerSession, sessionIsSuperAdmin } from '@/lib/auth';
 import { tenantPrisma } from '@/lib/tenant-middleware';
 import { getCurrentTenant } from '@/lib/tenant-middleware';
-import { Card } from '@/components/ui/card';
+import { Card } from '@heroui/react';
 import { 
   Users, 
   HardDrive, 

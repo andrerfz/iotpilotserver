@@ -12,32 +12,26 @@ import {
   RefreshCw,
   Power
 } from 'lucide-react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Button, Card, Input } from '@heroui/react';
 import { 
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
+} from '@heroui/react';
 
 // Device type definition
 interface Device {
@@ -71,24 +65,24 @@ export default function DeviceManagement() {
   const [actionDialogOpen, setActionDialogOpen] = useState(false);
   const [deviceAction, setDeviceAction] = useState<'restart' | 'maintenance' | 'reset'>('restart');
   const [actionLoading, setActionLoading] = useState(false);
-  
+
   // Fetch devices
   const fetchDevices = async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       let url = `/api/devices`;
       if (statusFilter) {
         url += `?status=${statusFilter}`;
       }
-      
+
       const response = await fetch(url);
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch devices');
       }
-      
+
       const data = await response.json();
       setDevices(data.devices);
       setStats(data.stats);
@@ -99,29 +93,29 @@ export default function DeviceManagement() {
       setLoading(false);
     }
   };
-  
+
   // Initial load and when filters change
   useEffect(() => {
     fetchDevices();
   }, [statusFilter]);
-  
+
   // Handle device action
   const handleDeviceAction = async () => {
     if (!selectedDevice) return;
-    
+
     setActionLoading(true);
-    
+
     try {
       // This is a placeholder - in a real implementation, you would call an API endpoint
       // to perform the action on the device
       console.log(`Performing ${deviceAction} on device ${selectedDevice.hostname}`);
-      
+
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       // Refresh device list
       fetchDevices();
-      
+
       // Close dialog
       setActionDialogOpen(false);
     } catch (err) {
@@ -131,21 +125,21 @@ export default function DeviceManagement() {
       setActionLoading(false);
     }
   };
-  
+
   // Open action dialog
   const openActionDialog = (device: Device, action: 'restart' | 'maintenance' | 'reset') => {
     setSelectedDevice(device);
     setDeviceAction(action);
     setActionDialogOpen(true);
   };
-  
+
   // Filter devices by search query
   const filteredDevices = devices.filter(device => 
     device.hostname.toLowerCase().includes(searchQuery.toLowerCase()) ||
     device.deviceId.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (device.ipAddress && device.ipAddress.toLowerCase().includes(searchQuery.toLowerCase()))
   );
-  
+
   // Get status badge
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -161,28 +155,28 @@ export default function DeviceManagement() {
         return <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs">{status}</span>;
     }
   };
-  
+
   // Get device type badge
   const getDeviceTypeBadge = (type: string) => {
     return <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs">{type.replace('_', ' ')}</span>;
   };
-  
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Device Management</h1>
-        <Button onClick={fetchDevices} variant="outline" size="sm">
+        <Button onClick={fetchDevices} variant="flat" size="sm">
           <RefreshCw className="h-4 w-4 mr-2" />
           Refresh
         </Button>
       </div>
-      
+
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-md mb-6">
           {error}
         </div>
       )}
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <Card className="p-4 shadow-sm">
           <div className="flex items-center justify-between">
@@ -195,7 +189,7 @@ export default function DeviceManagement() {
             </div>
           </div>
         </Card>
-        
+
         <Card className="p-4 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
@@ -207,7 +201,7 @@ export default function DeviceManagement() {
             </div>
           </div>
         </Card>
-        
+
         <Card className="p-4 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
@@ -219,7 +213,7 @@ export default function DeviceManagement() {
             </div>
           </div>
         </Card>
-        
+
         <Card className="p-4 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
@@ -232,7 +226,7 @@ export default function DeviceManagement() {
           </div>
         </Card>
       </div>
-      
+
       <Card className="mb-6">
         <div className="p-4 flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
@@ -244,7 +238,7 @@ export default function DeviceManagement() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          
+
           <div className="w-full sm:w-48">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger>
@@ -261,7 +255,7 @@ export default function DeviceManagement() {
           </div>
         </div>
       </Card>
-      
+
       <Card>
         <div className="overflow-x-auto">
           <Table>
@@ -317,17 +311,17 @@ export default function DeviceManagement() {
                       <div className="flex justify-end gap-2">
                         <Button
                           size="sm"
-                          variant="outline"
+                          variant="flat"
                           className="text-blue-600 border-blue-200 hover:bg-blue-50"
                           onClick={() => router.push(`/devices/${device.id}`)}
                         >
                           View
                         </Button>
-                        
+
                         {device.status === 'ONLINE' && (
                           <Button
                             size="sm"
-                            variant="outline"
+                            variant="flat"
                             className="text-amber-600 border-amber-200 hover:bg-amber-50"
                             onClick={() => openActionDialog(device, 'restart')}
                           >
@@ -335,11 +329,11 @@ export default function DeviceManagement() {
                             Restart
                           </Button>
                         )}
-                        
+
                         {device.status !== 'MAINTENANCE' ? (
                           <Button
                             size="sm"
-                            variant="outline"
+                            variant="flat"
                             className="text-blue-600 border-blue-200 hover:bg-blue-50"
                             onClick={() => openActionDialog(device, 'maintenance')}
                           >
@@ -349,7 +343,7 @@ export default function DeviceManagement() {
                         ) : (
                           <Button
                             size="sm"
-                            variant="outline"
+                            variant="flat"
                             className="text-green-600 border-green-200 hover:bg-green-50"
                             onClick={() => openActionDialog(device, 'reset')}
                           >
@@ -366,7 +360,7 @@ export default function DeviceManagement() {
           </Table>
         </div>
       </Card>
-      
+
       {/* Device Action Dialog */}
       <Dialog open={actionDialogOpen} onOpenChange={setActionDialogOpen}>
         <DialogContent>
@@ -382,17 +376,17 @@ export default function DeviceManagement() {
               {deviceAction === 'reset' && 'This will reactivate the device from maintenance mode.'}
             </DialogDescription>
           </DialogHeader>
-          
+
           {selectedDevice && (
             <div className="py-4">
               <p className="mb-2"><strong>Device:</strong> {selectedDevice.hostname}</p>
               <p><strong>ID:</strong> {selectedDevice.deviceId}</p>
             </div>
           )}
-          
+
           <DialogFooter>
             <Button
-              variant="outline"
+              variant="flat"
               onClick={() => setActionDialogOpen(false)}
               disabled={actionLoading}
             >
