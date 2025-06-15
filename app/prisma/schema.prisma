@@ -12,14 +12,19 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  username     String   @unique
+  id           String     @id @default(cuid())
+  email        String     @unique
+  username     String     @unique
   password     String
-  role         UserRole @default(USER)
+  role         UserRole   @default(USER)
+  status       UserStatus @default(ACTIVE)
   profileImage String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  // Customer relationship - nullable for SUPERADMIN
+  customerId   String?
+  customer     Customer?  @relation(fields: [customerId], references: [id])
 
   // Relations
   sessions Session[]
@@ -27,6 +32,7 @@ model User {
   alerts   Alert[]
   apiKeys  ApiKey[]
 
+  @@index([customerId])
   @@map("users")
 }
 
@@ -95,6 +101,10 @@ model Device {
   // Ownership
   userId String?
 
+  // Customer relationship - NOT NULL
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+
   // Timestamps
   registeredAt DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -106,6 +116,7 @@ model Device {
   alerts   Alert[]
   commands DeviceCommand[]
 
+  @@index([customerId])
   @@map("devices")
 }
 
@@ -189,12 +200,44 @@ model SystemConfig {
   @@map("system_config")
 }
 
+// Customer model
+model Customer {
+  id              String         @id @default(cuid())
+  name            String
+  slug            String         @unique
+  domain          String?        @unique
+  status          CustomerStatus @default(ACTIVE)
+  subscriptionTier String        @default("FREE")
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  // Relations
+  users    User[]
+  devices  Device[]
+
+  @@map("customers")
+}
+
 // Enums
 enum UserRole {
   SUPERADMIN
   ADMIN
   USER
   READONLY
+}
+
+enum UserStatus {
+  ACTIVE
+  PENDING
+  SUSPENDED
+  INACTIVE
+}
+
+enum CustomerStatus {
+  ACTIVE
+  PENDING
+  SUSPENDED
+  INACTIVE
 }
 
 enum DeviceType {
