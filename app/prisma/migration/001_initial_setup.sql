@@ -230,10 +230,10 @@ ALTER TABLE "alerts"
 ALTER TABLE "alerts"
     ADD CONSTRAINT "alerts_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users" ("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
--- Insert default admin user
+-- Insert default superadmin user
 INSERT INTO "users" ("id", "email", "username", "password", "role", "createdAt", "updatedAt")
 VALUES ('default-admin-user',
-        'manager@iotpilot.local',
+        'manager@iotpilot.app',
         'manager',
         '$2a$12$6AqdbjYxNrBnTRJ6wlTIgO/.h4FpO5YCOPtVEHEiMvaOgR.JHiWJq',
         'SUPERADMIN',
