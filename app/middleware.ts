@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { verifyToken } from '@/lib/auth';
+import prisma from '@/lib/db';
 
 // Public routes that don't require authentication
 const PUBLIC_ROUTES = [
@@ -107,6 +108,26 @@ export async function middleware(request: NextRequest) {
         requestHeaders.set('x-user-id', payload.userId);
         requestHeaders.set('x-user-email', payload.email);
         requestHeaders.set('x-user-role', payload.role);
+
+        // For API routes, fetch customer context if not already in headers
+        // Only do this if we don't already have a customer ID header
+        if (!requestHeaders.has('x-customer-id')) {
+            try {
+                // Get user with customer info
+                const user = await prisma.user.findUnique({
+                    where: { id: payload.userId },
+                    select: { customerId: true }
+                });
+
+                // Add customer ID to headers if available
+                if (user?.customerId) {
+                    requestHeaders.set('x-customer-id', user.customerId);
+                }
+            } catch (error) {
+                console.error('Error fetching customer context:', error);
+                // Continue without customer context - will be handled by API route
+            }
+        }
 
         return NextResponse.next({
             request: {

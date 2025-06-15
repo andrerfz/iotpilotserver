@@ -1,6 +1,14 @@
 import jwt from 'jsonwebtoken';
 import { NextRequest } from 'next/server';
 import { PrismaClient, UserRole } from '@prisma/client';
+import { 
+    hasRole, 
+    isAdmin, 
+    isSuperAdmin, 
+    sessionHasRole, 
+    sessionIsAdmin, 
+    sessionIsSuperAdmin 
+} from './permissions';
 
 const prisma = new PrismaClient();
 
@@ -142,3 +150,13 @@ export async function validateApiKey(apiKey: string) {
         return { valid: false, user: null };
     }
 }
+
+// Re-export permission service functions
+export {
+    hasRole,
+    isAdmin,
+    isSuperAdmin,
+    sessionHasRole,
+    sessionIsAdmin,
+    sessionIsSuperAdmin
+};

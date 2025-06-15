@@ -211,6 +211,20 @@ app.prepare().then(() => {
         return handle(req, res);
     });
 
+    // Initialize command queue for device commands
+    try {
+        // Import the command queue
+        const { commandQueue } = require('./src/lib/command-executor');
+
+        // Start processing the command queue with a 60-second interval
+        commandQueue.startQueueProcessing(60000);
+
+        logger.info('Command queue processing started');
+    } catch (error) {
+        logger.error('Failed to initialize command queue:', error);
+        // Continue server startup even if command queue fails
+    }
+
     // Start the server
     httpServer.listen(port, (err) => {
         if (err) {

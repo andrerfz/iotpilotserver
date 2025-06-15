@@ -1,6 +1,7 @@
 'use client';
 
 import {useAuth} from '@/contexts/auth-context';
+import {useRouter} from 'next/navigation';
 import {ChevronDown, LogOut, Settings, Shield, User} from 'lucide-react';
 import {
     Avatar,
@@ -18,6 +19,7 @@ export default function UserHeader() {
         user,
         logout
     } = useAuth();
+    const router = useRouter();
 
     if (!user) return null;
 
@@ -127,9 +129,7 @@ export default function UserHeader() {
                     <DropdownItem
                         key="settings"
                         startContent={<Settings className="w-4 h-4"/>}
-                        onPress={() => {
-                            // Navigate to profile/settings
-                        }}
+                        onPress={() => router.push('/settings/profile')}
                     >
                         Account Settings
                     </DropdownItem>

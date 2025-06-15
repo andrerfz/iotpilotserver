@@ -1,6 +1,7 @@
 'use client';
 
 import {useAuth} from '@/contexts/auth-context';
+import {useRouter} from 'next/navigation';
 import {
     BarChart3,
     ChevronDown,
@@ -40,6 +41,7 @@ export default function UserMenu() {
         user,
         logout
     } = useAuth();
+    const router = useRouter();
 
     if (!user) return null;
 
@@ -133,8 +135,7 @@ export default function UserMenu() {
     };
 
     const handleSettings = () => {
-        // TODO: Navigate to settings page
-        console.log('Navigate to settings');
+        router.push('/settings/profile');
     };
 
     const handleAdmin = () => {

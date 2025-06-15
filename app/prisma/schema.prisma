@@ -27,10 +27,11 @@ model User {
   customer     Customer?  @relation(fields: [customerId], references: [id])
 
   // Relations
-  sessions Session[]
-  devices  Device[]
-  alerts   Alert[]
-  apiKeys  ApiKey[]
+  sessions     Session[]
+  devices      Device[]
+  alerts       Alert[]
+  apiKeys      ApiKey[]
+  preferences  UserPreference[]
 
   @@index([customerId])
   @@map("users")
@@ -200,6 +201,23 @@ model SystemConfig {
   @@map("system_config")
 }
 
+model UserPreference {
+  id        String             @id @default(cuid())
+  userId    String
+  category  PreferenceCategory
+  key       String
+  value     String
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, category, key])
+  @@index([userId, category])
+  @@map("user_preferences")
+}
+
 // Customer model
 model Customer {
   id              String         @id @default(cuid())
@@ -219,6 +237,15 @@ model Customer {
 }
 
 // Enums
+enum PreferenceCategory {
+  PROFILE
+  NOTIFICATIONS
+  SECURITY
+  SYSTEM
+  APPEARANCE
+  ACCESSIBILITY
+}
+
 enum UserRole {
   SUPERADMIN
   ADMIN
