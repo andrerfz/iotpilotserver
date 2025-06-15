@@ -613,21 +613,21 @@ echo "⏰ Setting up enhanced periodic monitoring (every 2 minutes)..."
 # Create a cron-friendly wrapper script that preserves environment
 cat > /usr/local/bin/enhanced-cron-wrapper.sh << CRON_EOF
 #!/bin/bash
-# Enhanced heartbeat cron wrapper with environment preservation
+# Enhanced heartbeat cron wrapper with explicit environment
 
-# Use container environment variables directly
-export DEVICE_ID="\${DEVICE_ID:-test-device-docker}"
-export DEVICE_NAME="\${DEVICE_NAME:-Test Docker Container}"
-export DEVICE_LOCATION="\${DEVICE_LOCATION:-enhanced-test-lab}"
-export DEVICE_API_KEY="\${DEVICE_API_KEY}"
-export IOTPILOT_SERVER="\${IOTPILOT_SERVER:-iotpilot-server-app:3000}"
+# Set environment variables explicitly from container environment
+export DEVICE_ID="${DEVICE_ID:-test-device-docker}"
+export DEVICE_NAME="${DEVICE_NAME:-Test Docker Container}"
+export DEVICE_LOCATION="${DEVICE_LOCATION:-enhanced-test-lab}"
+export DEVICE_API_KEY="${DEVICE_API_KEY}"
+export IOTPILOT_SERVER="${IOTPILOT_SERVER:-iotpilot-server-app:3000}"
 
 # Construct SERVER_URL properly from IOTPILOT_SERVER
-if [[ -n "\$IOTPILOT_SERVER" ]]; then
-    if [[ "\$IOTPILOT_SERVER" == *"://"* ]]; then
-        export SERVER_URL="\$IOTPILOT_SERVER"
+if [[ -n "${IOTPILOT_SERVER}" ]]; then
+    if [[ "${IOTPILOT_SERVER}" == *"://"* ]]; then
+        export SERVER_URL="${IOTPILOT_SERVER}"
     else
-        export SERVER_URL="http://\$IOTPILOT_SERVER"
+        export SERVER_URL="http://${IOTPILOT_SERVER}"
     fi
 else
     export SERVER_URL="http://localhost:3000"
@@ -639,8 +639,29 @@ CRON_EOF
 
 chmod +x /usr/local/bin/enhanced-cron-wrapper.sh
 
+# Debug: Show what environment variables are being set
+echo "🔍 Debug: Environment variables for cron wrapper:"
+echo "  DEVICE_ID: ${DEVICE_ID}"
+echo "  DEVICE_API_KEY: ${DEVICE_API_KEY:0:10}..."
+echo "  IOTPILOT_SERVER: ${IOTPILOT_SERVER}"
+echo ""
+
+# Verify the cron wrapper was created correctly
+echo "📋 Created cron wrapper:"
+cat /usr/local/bin/enhanced-cron-wrapper.sh
+echo ""
+
 # Set up cron with the wrapper script (correct syntax: minute hour day month weekday)
 echo "*/2 * * * * /usr/local/bin/enhanced-cron-wrapper.sh" | crontab -
+
+# Verify cron job was set up
+echo "✅ Cron job installed:"
+crontab -l
+echo ""
+
+# Test the cron wrapper immediately
+echo "🔧 Testing cron wrapper..."
+/usr/local/bin/enhanced-cron-wrapper.sh
 
 # Start cron service
 service cron start
