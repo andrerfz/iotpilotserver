@@ -615,21 +615,20 @@ cat > /usr/local/bin/enhanced-cron-wrapper.sh << 'CRON_EOF'
 #!/bin/bash
 # Enhanced heartbeat cron wrapper with environment preservation
 
-# Set environment variables for cron context
+# Use container environment variables directly
 export DEVICE_ID="${DEVICE_ID:-test-device-docker}"
 export DEVICE_NAME="${DEVICE_NAME:-Test Docker Container}"
 export DEVICE_LOCATION="${DEVICE_LOCATION:-enhanced-test-lab}"
 export DEVICE_API_KEY="${DEVICE_API_KEY}"
+export IOTPILOT_SERVER="${IOTPILOT_SERVER:-iotpilot-server-app:3000}"
 
-# Construct SERVER_URL properly
+# Construct SERVER_URL properly from IOTPILOT_SERVER
 if [[ -n "$IOTPILOT_SERVER" ]]; then
     if [[ "$IOTPILOT_SERVER" == *"://"* ]]; then
         export SERVER_URL="$IOTPILOT_SERVER"
     else
         export SERVER_URL="http://$IOTPILOT_SERVER"
     fi
-elif [[ -n "$SERVER_URL" ]]; then
-    export SERVER_URL="$SERVER_URL"
 else
     export SERVER_URL="http://localhost:3000"
 fi
