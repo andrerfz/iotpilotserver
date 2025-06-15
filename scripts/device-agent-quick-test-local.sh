@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Enhanced IoT Device Agent - Comprehensive System Monitoring
-# https://raw.githubusercontent.com/andrerfz/iotpilotserver/main/scripts/device-agent-quick-test-enhanced.sh
+# https://raw.githubusercontent.com/andrerfz/iotpilotserver/main/scripts/device-agent-quick-test-local.sh
 
 set -e
 
