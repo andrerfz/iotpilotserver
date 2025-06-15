@@ -574,7 +574,8 @@ export default function DeviceDetailPage({params}: {
                             </p>
                             {device.memoryTotal && (
                                 <p className="text-sm text-gray-500">
-                                    {(device.memoryTotal / 1024 / 1024).toFixed(1)} GB Total
+                                    {/* FIXED: memoryTotal is already in MB, just convert to GB */}
+                                    {(device.memoryTotal / 1024).toFixed(1)} GB Total
                                 </p>
                             )}
                         </div>

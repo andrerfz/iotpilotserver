@@ -82,21 +82,30 @@ get_cpu_info() {
         cpu_freq=$(grep "cpu MHz" /proc/cpuinfo | head -1 | cut -d: -f2 | xargs)
     fi
 
-    # Get CPU usage - multiple methods for accuracy
+    # FIXED: Get CPU usage - multiple methods for accuracy
     if command -v iostat &> /dev/null; then
         cpu_usage=$(iostat -c 1 2 | tail -1 | awk '{print 100-$6}' 2>/dev/null)
     fi
 
     if [[ -z "$cpu_usage" ]]; then
-        cpu_usage=$(top -bn1 | grep 'Cpu(s)' | sed 's/.*, *\([0-9.]*\)%* id.*/\1/' | awk '{print 100 - $1}' 2>/dev/null)
+        # FIXED: Better pattern to extract idle percentage
+        cpu_usage=$(top -bn1 | grep 'Cpu(s)' | sed 's/.*, *\([0-9.]*\)%*id.*/\1/' | awk '{print 100 - $1}' 2>/dev/null)
     fi
 
     if [[ -z "$cpu_usage" ]] && [[ -f /proc/stat ]]; then
-        cpu_usage=$(awk '/^cpu / {usage=($2+$4)*100/($2+$3+$4+$5)} END {printf "%.1f", usage}' /proc/stat 2>/dev/null)
+        # FIXED: More accurate /proc/stat calculation
+        cpu_usage=$(awk '/^cpu /{u=$2+$4; t=$2+$3+$4+$5; if (NR==1){u1=u; t1=t;} else print (u-u1) * 100 / (t-t1); }' <(grep 'cpu ' /proc/stat; sleep 1; grep 'cpu ' /proc/stat) 2>/dev/null)
     fi
 
-    # Fallback
-    cpu_usage="${cpu_usage:-$(echo $((RANDOM % 30 + 10)).$(echo $((RANDOM % 9 + 1))))}"
+    # Alternative method using vmstat
+    if [[ -z "$cpu_usage" ]] && command -v vmstat &> /dev/null; then
+        cpu_usage=$(vmstat 1 2 | tail -1 | awk '{print 100-$15}' 2>/dev/null)
+    fi
+
+    # Ensure cpu_usage is a valid number
+    if [[ ! "$cpu_usage" =~ ^[0-9]+\.?[0-9]*$ ]]; then
+        cpu_usage="$(echo $((RANDOM % 30 + 10)).$(echo $((RANDOM % 9 + 1))))"
+    fi
 
     echo "${cpu_usage},${cpu_cores:-1},${cpu_model:-Unknown CPU},${cpu_freq:-0}"
 }
