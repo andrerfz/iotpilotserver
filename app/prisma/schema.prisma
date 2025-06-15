@@ -11,18 +11,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Company {
-  id           String   @id @default(cuid())
-  profileImage String
-  name         String   @unique
-  tradeName    String   @unique
-  phone        String   @unique
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  @@map("company")
-}
-
 model User {
   id           String   @id @default(cuid())
   email        String   @unique

@@ -23,23 +23,6 @@ CREATE TYPE "AlertType" AS ENUM ('DEVICE_OFFLINE', 'HIGH_CPU', 'HIGH_MEMORY', 'H
 CREATE TYPE "AlertSeverity" AS ENUM ('INFO', 'WARNING', 'ERROR', 'CRITICAL');
 
 -- CreateTable
-CREATE TABLE "companys"
-(
-    "id"        TEXT         NOT NULL,
-    "name"      TEXT         NOT NULL,
-    "tradeName" TEXT NULL,
-    "email"     TEXT,
-    "address"   TEXT NULL,
-    "city"      TEXT NULL,
-    "state"     TEXT NULL,
-    "zipCode"   TEXT NULL,
-    "country"   TEXT NULL,
-    "phone"     TEXT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-)
-
--- CreateTable
 CREATE TABLE "users"
 (
     "id"           TEXT         NOT NULL,
