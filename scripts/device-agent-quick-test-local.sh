@@ -594,7 +594,27 @@ echo "📊 Sending initial enhanced heartbeat..."
 
 # Set up cron for regular heartbeats (every 2 minutes)
 echo "⏰ Setting up enhanced periodic monitoring (every 2 minutes)..."
-echo "*/2 * * * * /usr/local/bin/enhanced-heartbeat.sh >> /var/log/enhanced-heartbeat.log 2>&1" | crontab -
+
+# Create a cron-friendly wrapper script that preserves environment
+cat > /usr/local/bin/enhanced-cron-wrapper.sh << 'CRON_EOF'
+#!/bin/bash
+# Enhanced heartbeat cron wrapper with environment preservation
+
+# Set environment variables for cron context
+export DEVICE_ID="${DEVICE_ID:-test-device-docker}"
+export DEVICE_NAME="${DEVICE_NAME:-Test Docker Container}"
+export DEVICE_LOCATION="${DEVICE_LOCATION:-enhanced-test-lab}"
+export SERVER_URL="${SERVER_URL:-http://iotpilot-server-app:3000}"
+export DEVICE_API_KEY="${DEVICE_API_KEY}"
+
+# Execute enhanced heartbeat
+/usr/local/bin/enhanced-heartbeat.sh >> /var/log/enhanced-heartbeat.log 2>&1
+CRON_EOF
+
+chmod +x /usr/local/bin/enhanced-cron-wrapper.sh
+
+# Set up cron with the wrapper script
+echo "*/2 * * * * /usr/local/bin/enhanced-cron-wrapper.sh" | crontab -
 
 # Start cron service
 service cron start
