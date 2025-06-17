@@ -13,23 +13,21 @@ import {
   Download,
   HardDrive
 } from 'lucide-react';
+import { Card } from '@heroui/card';
+import { Button } from '@heroui/button';
+import { Input } from '@heroui/input';
 import { 
-  Card,
-  Button,
-  Input,
   Select,
-  SelectContent,
   SelectItem,
-  SelectTrigger,
-  SelectValue,
+} from '@heroui/select';
+import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
   TableHeader,
   TableRow,
-  Badge
-} from '@heroui/react';
+} from '@heroui/table';
+import { Badge } from '@heroui/badge';
 
 // Log type definition
 interface Log {
@@ -256,52 +254,49 @@ export default function LogsViewer() {
           </div>
 
           <div className="w-full sm:w-40">
-            <Select value={levelFilter} onValueChange={setLevelFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Log Level" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">All Levels</SelectItem>
-                <SelectItem value="DEBUG">Debug</SelectItem>
-                <SelectItem value="INFO">Info</SelectItem>
-                <SelectItem value="WARN">Warning</SelectItem>
-                <SelectItem value="ERROR">Error</SelectItem>
-                <SelectItem value="FATAL">Fatal</SelectItem>
-              </SelectContent>
-            </Select>
+            <select 
+              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              value={levelFilter} 
+              onChange={(e) => setLevelFilter(e.target.value)}
+            >
+              <option value="">All Levels</option>
+              <option value="DEBUG">Debug</option>
+              <option value="INFO">Info</option>
+              <option value="WARN">Warning</option>
+              <option value="ERROR">Error</option>
+              <option value="FATAL">Fatal</option>
+            </select>
           </div>
 
           <div className="w-full sm:w-48">
-            <Select value={deviceFilter} onValueChange={setDeviceFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select Device" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">All Devices</SelectItem>
-                {filters.devices.map((device) => (
-                  <SelectItem key={device.id} value={device.id}>
-                    {device.hostname}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <select 
+              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              value={deviceFilter} 
+              onChange={(e) => setDeviceFilter(e.target.value)}
+            >
+              <option value="">All Devices</option>
+              {filters.devices.map((device) => (
+                <option key={device.id} value={device.id}>
+                  {device.hostname}
+                </option>
+              ))}
+            </select>
           </div>
 
           {filters.sources.length > 0 && (
             <div className="w-full sm:w-40">
-              <Select value={sourceFilter} onValueChange={setSourceFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Log Source" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">All Sources</SelectItem>
-                  {filters.sources.map((source) => (
-                    <SelectItem key={source} value={source}>
-                      {source}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <select 
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                value={sourceFilter} 
+                onChange={(e) => setSourceFilter(e.target.value)}
+              >
+                <option value="">All Sources</option>
+                {filters.sources.map((source) => (
+                  <option key={source} value={source}>
+                    {source}
+                  </option>
+                ))}
+              </select>
             </div>
           )}
         </div>
@@ -312,11 +307,11 @@ export default function LogsViewer() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-40">Timestamp</TableHead>
-                <TableHead className="w-24">Level</TableHead>
-                <TableHead className="w-40">Device</TableHead>
-                <TableHead className="w-32">Source</TableHead>
-                <TableHead>Message</TableHead>
+                <TableCell as="th" className="w-40">Timestamp</TableCell>
+                <TableCell as="th" className="w-24">Level</TableCell>
+                <TableCell as="th" className="w-40">Device</TableCell>
+                <TableCell as="th" className="w-32">Source</TableCell>
+                <TableCell as="th">Message</TableCell>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -395,7 +390,7 @@ export default function LogsViewer() {
                 return (
                   <Button
                     key={pageNum}
-                    variant={currentPage === pageNum ? "default" : "outline"}
+                    variant={currentPage === pageNum ? "solid" : "bordered"}
                     size="sm"
                     className="w-8 h-8 p-0"
                     onClick={() => handlePageChange(pageNum)}

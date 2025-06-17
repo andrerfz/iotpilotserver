@@ -151,6 +151,62 @@ export async function validateApiKey(apiKey: string) {
     }
 }
 
+// Get server session for server components
+export async function getServerSession() {
+    // This is a simplified implementation - in a real app, you would use
+    // the next-auth getServerSession or a similar mechanism
+    try {
+        // Get the session cookie from the request
+        const cookies = require('next/headers').cookies;
+        const token = cookies().get('auth-token')?.value;
+
+        if (!token) {
+            return null;
+        }
+
+        const payload = verifyToken(token);
+        if (!payload) {
+            return null;
+        }
+
+        // Check if session is valid in database
+        const session = await prisma.session.findFirst({
+            where: {
+                token,
+                expiresAt: {
+                    gt: new Date()
+                }
+            },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        email: true,
+                        username: true,
+                        role: true,
+                        customerId: true
+                    }
+                }
+            }
+        });
+
+        if (!session) {
+            return null;
+        }
+
+        // Return session with user data
+        return {
+            user: session.user,
+            role: session.user.role,
+            userId: session.user.id,
+            customerId: session.user.customerId || 'default' // Fallback to 'default' if not set
+        };
+    } catch (error) {
+        console.error('Error getting server session:', error);
+        return null;
+    }
+}
+
 // Re-export permission service functions
 export {
     hasRole,

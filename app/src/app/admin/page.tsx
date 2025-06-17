@@ -1,7 +1,7 @@
 import { getServerSession, sessionIsSuperAdmin } from '@/lib/auth';
-import { tenantPrisma } from '@/lib/tenant-middleware';
+import { tenantPrisma, withTenant } from '@/lib/tenant-middleware';
 import { getCurrentTenant } from '@/lib/tenant-middleware';
-import { Card } from '@heroui/react';
+import { Card } from '@heroui/card';
 import { 
   Users, 
   HardDrive, 
@@ -39,7 +39,7 @@ async function getAdminStats() {
   };
 
   // Run queries with tenant context
-  return await tenantPrisma.withTenant(tenantContext, async () => {
+  return await withTenant(tenantContext, async () => {
     const [userCount, deviceCount, alertCount, activeDevices] = await Promise.all([
       tenantPrisma.client.user.count(),
       tenantPrisma.client.device.count(),

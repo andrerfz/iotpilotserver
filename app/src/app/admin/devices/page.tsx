@@ -12,26 +12,27 @@ import {
   RefreshCw,
   Power
 } from 'lucide-react';
-import { Button, Card, Input } from '@heroui/react';
+import { Button } from '@heroui/button';
+import { Card } from '@heroui/card';
+import { Input } from '@heroui/input';
 import { 
   Select,
-  SelectContent,
   SelectItem,
-  SelectTrigger,
-  SelectValue,
+} from '@heroui/select';
+import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
   TableHeader,
   TableRow,
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@heroui/react';
+} from '@heroui/table';
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from '@heroui/modal';
 
 // Device type definition
 interface Device {
@@ -240,18 +241,17 @@ export default function DeviceManagement() {
           </div>
 
           <div className="w-full sm:w-48">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">All Statuses</SelectItem>
-                <SelectItem value="ONLINE">Online</SelectItem>
-                <SelectItem value="OFFLINE">Offline</SelectItem>
-                <SelectItem value="MAINTENANCE">Maintenance</SelectItem>
-                <SelectItem value="ERROR">Error</SelectItem>
-              </SelectContent>
-            </Select>
+            <select 
+              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              value={statusFilter} 
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="">All Statuses</option>
+              <option value="ONLINE">Online</option>
+              <option value="OFFLINE">Offline</option>
+              <option value="MAINTENANCE">Maintenance</option>
+              <option value="ERROR">Error</option>
+            </select>
           </div>
         </div>
       </Card>
@@ -261,14 +261,14 @@ export default function DeviceManagement() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Hostname</TableHead>
-                <TableHead>Device ID</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>IP Address</TableHead>
-                <TableHead>Last Seen</TableHead>
-                <TableHead>Alerts</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableCell as="th">Hostname</TableCell>
+                <TableCell as="th">Device ID</TableCell>
+                <TableCell as="th">Type</TableCell>
+                <TableCell as="th">Status</TableCell>
+                <TableCell as="th">IP Address</TableCell>
+                <TableCell as="th">Last Seen</TableCell>
+                <TableCell as="th">Alerts</TableCell>
+                <TableCell as="th" className="text-right">Actions</TableCell>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -361,30 +361,32 @@ export default function DeviceManagement() {
         </div>
       </Card>
 
-      {/* Device Action Dialog */}
-      <Dialog open={actionDialogOpen} onOpenChange={setActionDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
+      {/* Device Action Modal */}
+      <Modal isOpen={actionDialogOpen} onClose={() => setActionDialogOpen(false)}>
+        <ModalContent>
+          <ModalHeader>
+            <h3 className="text-lg font-semibold">
               {deviceAction === 'restart' && 'Restart Device'}
               {deviceAction === 'maintenance' && 'Set Maintenance Mode'}
               {deviceAction === 'reset' && 'Activate Device'}
-            </DialogTitle>
-            <DialogDescription>
+            </h3>
+            <p className="text-sm text-gray-500 mt-1">
               {deviceAction === 'restart' && 'This will restart the device. It may be offline for a few minutes.'}
               {deviceAction === 'maintenance' && 'This will put the device in maintenance mode. It will not receive commands.'}
               {deviceAction === 'reset' && 'This will reactivate the device from maintenance mode.'}
-            </DialogDescription>
-          </DialogHeader>
+            </p>
+          </ModalHeader>
 
-          {selectedDevice && (
-            <div className="py-4">
-              <p className="mb-2"><strong>Device:</strong> {selectedDevice.hostname}</p>
-              <p><strong>ID:</strong> {selectedDevice.deviceId}</p>
-            </div>
-          )}
+          <ModalBody>
+            {selectedDevice && (
+              <div className="py-2">
+                <p className="mb-2"><strong>Device:</strong> {selectedDevice.hostname}</p>
+                <p><strong>ID:</strong> {selectedDevice.deviceId}</p>
+              </div>
+            )}
+          </ModalBody>
 
-          <DialogFooter>
+          <ModalFooter>
             <Button
               variant="flat"
               onClick={() => setActionDialogOpen(false)}
@@ -393,15 +395,15 @@ export default function DeviceManagement() {
               Cancel
             </Button>
             <Button
-              variant={deviceAction === 'restart' ? 'default' : deviceAction === 'maintenance' ? 'secondary' : 'default'}
+              variant={deviceAction === 'restart' ? 'solid' : deviceAction === 'maintenance' ? 'bordered' : 'solid'}
               onClick={handleDeviceAction}
               disabled={actionLoading}
             >
               {actionLoading ? 'Processing...' : 'Confirm'}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </div>
   );
 }

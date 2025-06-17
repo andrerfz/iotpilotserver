@@ -11,21 +11,19 @@ import {
   AlertTriangle,
   Clock,
   HardDrive,
-  Memory,
   Users,
   Bell
 } from 'lucide-react';
-import { 
-  Card,
-  Button,
-  Progress,
+import { Card } from '@heroui/card';
+import { Button } from '@heroui/button';
+import { Progress } from '@heroui/progress';
+import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
   TableHeader,
   TableRow
-} from '@heroui/react';
+} from '@heroui/table';
 
 // System health types
 interface SystemHealth {
@@ -310,7 +308,7 @@ export default function SystemHealth() {
 
             <Card className="p-6 shadow-md">
               <h3 className="text-lg font-semibold flex items-center mb-4">
-                <Memory className="mr-2 h-5 w-5 text-green-600" />
+                <HardDrive className="mr-2 h-5 w-5 text-green-600" />
                 Memory Usage
               </h3>
               <div className="space-y-4">
@@ -359,8 +357,8 @@ export default function SystemHealth() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Device</TableHead>
-                  <TableHead>Last Updated</TableHead>
+                  <TableCell as="th">Device</TableCell>
+                  <TableCell as="th">Last Updated</TableCell>
                 </TableRow>
               </TableHeader>
               <TableBody>

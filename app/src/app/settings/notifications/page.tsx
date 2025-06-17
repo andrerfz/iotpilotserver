@@ -4,7 +4,10 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Button, Form, Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, Switch } from '@heroui/react';
+import { Button } from '@heroui/button';
+import { Form } from '@heroui/form';
+import { Card, CardHeader, CardFooter, CardBody } from '@heroui/card';
+import { Switch } from '@heroui/switch';
 import { toast } from 'sonner';
 import { Loader2, Bell, AlertTriangle, Server, Mail } from 'lucide-react';
 
@@ -41,9 +44,9 @@ export default function NotificationsSettings() {
         if (!response.ok) {
           throw new Error('Failed to fetch notification settings');
         }
-        
+
         const data = await response.json();
-        
+
         // Update form values
         form.reset(data);
       } catch (error) {
@@ -60,7 +63,7 @@ export default function NotificationsSettings() {
   // Handle form submission
   const onSubmit = async (values: NotificationsFormValues) => {
     setIsSaving(true);
-    
+
     try {
       const response = await fetch('/api/settings/notifications', {
         method: 'PUT',
@@ -100,18 +103,18 @@ export default function NotificationsSettings() {
   return (
     <div>
       <h2 className="text-xl font-semibold mb-6">Notification Settings</h2>
-      
+
       <Card>
         <CardHeader>
-          <CardTitle>Notification Preferences</CardTitle>
-          <CardDescription>
+          <h3 className="text-lg font-semibold">Notification Preferences</h3>
+          <p className="text-sm text-gray-500">
             Choose how and when you want to be notified about system events
-          </CardDescription>
+          </p>
         </CardHeader>
-        
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
-            <CardContent className="space-y-6">
+            <CardBody className="space-y-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                   <Mail className="h-5 w-5 text-primary" />
@@ -127,7 +130,7 @@ export default function NotificationsSettings() {
                   onCheckedChange={handleSwitchChange('emailNotifications')}
                 />
               </div>
-              
+
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                   <Bell className="h-5 w-5 text-primary" />
@@ -143,7 +146,7 @@ export default function NotificationsSettings() {
                   onCheckedChange={handleSwitchChange('pushNotifications')}
                 />
               </div>
-              
+
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                   <AlertTriangle className="h-5 w-5 text-warning" />
@@ -159,7 +162,7 @@ export default function NotificationsSettings() {
                   onCheckedChange={handleSwitchChange('alertNotifications')}
                 />
               </div>
-              
+
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                   <Server className="h-5 w-5 text-danger" />
@@ -175,8 +178,8 @@ export default function NotificationsSettings() {
                   onCheckedChange={handleSwitchChange('deviceOfflineNotifications')}
                 />
               </div>
-            </CardContent>
-            
+            </CardBody>
+
             <CardFooter className="flex justify-end">
               <Button 
                 type="submit" 

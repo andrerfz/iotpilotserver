@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { withCustomerContext } from '@/lib/api-middleware';
 import { tenantPrisma } from '@/lib/tenant-middleware';
-import { getUserPreferences } from '../route';
+import { getUserPreferences } from '@/lib/user-preferences';
 
 // Validation schema for profile settings
 const profileSettingsSchema = z.object({

@@ -11,28 +11,27 @@ import {
   UserX,
   Filter
 } from 'lucide-react';
+import { Card } from '@heroui/card';
+import { Button } from '@heroui/button';
+import { Input } from '@heroui/input';
 import { 
-  Card,
-  Button,
-  Input,
   Select,
-  SelectContent,
   SelectItem,
-  SelectTrigger,
-  SelectValue,
+} from '@heroui/react';
+import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
   TableHeader,
   TableRow,
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle
-} from '@heroui/react';
+} from '@heroui/table';
+import {
+  Modal,
+  ModalContent,
+  ModalBody,
+  ModalFooter,
+  ModalHeader
+} from '@heroui/modal';
 
 // User type definition
 interface User {
@@ -50,6 +49,14 @@ export default function UserManagement() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('');
+
+  // Status options for filter
+  const statusOptions = [
+    {key: "", label: "All Statuses"},
+    {key: "ACTIVE", label: "Active"},
+    {key: "PENDING", label: "Pending"},
+    {key: "SUSPENDED", label: "Suspended"},
+  ];
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -177,16 +184,15 @@ export default function UserManagement() {
           </div>
 
           <div className="w-full sm:w-48">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">All Statuses</SelectItem>
-                <SelectItem value="ACTIVE">Active</SelectItem>
-                <SelectItem value="PENDING">Pending</SelectItem>
-                <SelectItem value="SUSPENDED">Suspended</SelectItem>
-              </SelectContent>
+            <Select 
+              className="max-w-xs"
+              items={statusOptions}
+              label="Filter by status"
+              placeholder="Filter by status"
+              selectedKeys={[statusFilter]}
+              onChange={(key) => setStatusFilter(key.toString())}
+            >
+              {(status) => <SelectItem key={status.key}>{status.label}</SelectItem>}
             </Select>
           </div>
         </div>
@@ -197,12 +203,12 @@ export default function UserManagement() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Username</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableCell>Username</TableCell>
+                <TableCell>Email</TableCell>
+                <TableCell>Role</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell>Created</TableCell>
+                <TableCell className="text-right">Actions</TableCell>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -309,28 +315,30 @@ export default function UserManagement() {
         )}
       </Card>
 
-      {/* Approval/Rejection Dialog */}
-      <Dialog open={approvalDialogOpen} onOpenChange={setApprovalDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
+      {/* Approval/Rejection Modal */}
+      <Modal isOpen={approvalDialogOpen} onOpenChange={setApprovalDialogOpen}>
+        <ModalContent>
+          <ModalHeader>
+            <h2 className="text-lg font-semibold">
               {approvalAction === 'approve' ? 'Approve User' : 'Reject User'}
-            </DialogTitle>
-            <DialogDescription>
+            </h2>
+            <p className="text-sm text-gray-500">
               {approvalAction === 'approve'
                 ? 'This will grant the user access to the platform.'
                 : 'This will prevent the user from accessing the platform.'}
-            </DialogDescription>
-          </DialogHeader>
+            </p>
+          </ModalHeader>
 
-          {selectedUser && (
-            <div className="py-4">
-              <p className="mb-2"><strong>Username:</strong> {selectedUser.username}</p>
-              <p><strong>Email:</strong> {selectedUser.email}</p>
-            </div>
-          )}
+          <ModalBody>
+            {selectedUser && (
+              <div className="py-2">
+                <p className="mb-2"><strong>Username:</strong> {selectedUser.username}</p>
+                <p><strong>Email:</strong> {selectedUser.email}</p>
+              </div>
+            )}
+          </ModalBody>
 
-          <DialogFooter>
+          <ModalFooter>
             <Button
               variant="flat"
               onClick={() => setApprovalDialogOpen(false)}
@@ -339,15 +347,15 @@ export default function UserManagement() {
               Cancel
             </Button>
             <Button
-              variant={approvalAction === 'approve' ? 'default' : 'destructive'}
+              variant={approvalAction === 'approve' ? 'solid' : 'bordered'}
               onClick={handleUserAction}
               disabled={actionLoading}
             >
               {actionLoading ? 'Processing...' : approvalAction === 'approve' ? 'Approve' : 'Reject'}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </div>
   );
 }

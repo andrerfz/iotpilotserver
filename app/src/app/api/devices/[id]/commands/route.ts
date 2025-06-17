@@ -1,4 +1,3 @@
-// app/src/app/api/devices/[id]/commands/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { CommandStatus } from '@prisma/client';
 import { withCustomerContext } from '@/lib/api-middleware';

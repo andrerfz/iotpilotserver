@@ -4,7 +4,12 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Button, Form, Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, Switch, Input, Slider } from '@heroui/react';
+import { Button } from '@heroui/button';
+import { Form } from '@heroui/form';
+import { Card, CardHeader, CardFooter, CardBody } from '@heroui/card';
+import { Switch } from '@heroui/switch';
+import { Input } from '@heroui/input';
+import { Slider } from '@heroui/slider';
 import { toast } from 'sonner';
 import { Loader2, Shield, Lock, Key, AlertCircle } from 'lucide-react';
 
@@ -40,12 +45,12 @@ export default function SecuritySettings() {
         if (!response.ok) {
           throw new Error('Failed to fetch security settings');
         }
-        
+
         const data = await response.json();
-        
+
         // Update form values
         form.reset(data);
-        
+
         // Update slider value
         setSessionTimeoutValue(parseInt(data.sessionTimeout) || 30);
       } catch (error) {
@@ -62,14 +67,14 @@ export default function SecuritySettings() {
   // Handle form submission
   const onSubmit = async (values: SecurityFormValues) => {
     setIsSaving(true);
-    
+
     try {
       // Validate session timeout
       const sessionTimeout = parseInt(values.sessionTimeout);
       if (isNaN(sessionTimeout) || sessionTimeout < 5 || sessionTimeout > 1440) {
         throw new Error('Session timeout must be between 5 and 1440 minutes');
       }
-      
+
       const response = await fetch('/api/settings/security', {
         method: 'PUT',
         headers: {
@@ -114,18 +119,18 @@ export default function SecuritySettings() {
   return (
     <div>
       <h2 className="text-xl font-semibold mb-6">Security Settings</h2>
-      
+
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Account Security</CardTitle>
-          <CardDescription>
+          <h3 className="text-lg font-semibold">Account Security</h3>
+          <p className="text-sm text-gray-500">
             Manage your account security settings
-          </CardDescription>
+          </p>
         </CardHeader>
-        
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
-            <CardContent className="space-y-6">
+            <CardBody className="space-y-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                   <Key className="h-5 w-5 text-primary" />
@@ -141,7 +146,7 @@ export default function SecuritySettings() {
                   onCheckedChange={handleSwitchChange('twoFactorAuth')}
                 />
               </div>
-              
+
               {form.watch('twoFactorAuth') === 'true' && (
                 <div className="ml-9 pl-4 border-l border-muted">
                   <p className="text-sm mb-2">
@@ -160,7 +165,7 @@ export default function SecuritySettings() {
                   </Button>
                 </div>
               )}
-              
+
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                   <AlertCircle className="h-5 w-5 text-primary" />
@@ -176,7 +181,7 @@ export default function SecuritySettings() {
                   onCheckedChange={handleSwitchChange('loginNotifications')}
                 />
               </div>
-              
+
               <div className="space-y-3">
                 <div className="flex items-center space-x-4">
                   <Lock className="h-5 w-5 text-primary" />
@@ -187,7 +192,7 @@ export default function SecuritySettings() {
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="pl-9 space-y-3">
                   <Slider
                     value={[sessionTimeoutValue]}
@@ -196,12 +201,12 @@ export default function SecuritySettings() {
                     step={5}
                     onValueChange={(values) => handleSliderChange(values[0])}
                   />
-                  
+
                   <div className="flex justify-between items-center">
                     <span className="text-xs text-muted-foreground">
                       {sessionTimeoutValue} minutes
                     </span>
-                    
+
                     <Input
                       type="number"
                       className="w-20 h-8 text-sm"
@@ -218,8 +223,8 @@ export default function SecuritySettings() {
                   </div>
                 </div>
               </div>
-            </CardContent>
-            
+            </CardBody>
+
             <CardFooter className="flex justify-end">
               <Button 
                 type="submit" 
@@ -233,16 +238,16 @@ export default function SecuritySettings() {
           </form>
         </Form>
       </Card>
-      
+
       <Card>
         <CardHeader>
-          <CardTitle>Security Recommendations</CardTitle>
-          <CardDescription>
+          <h3 className="text-lg font-semibold">Security Recommendations</h3>
+          <p className="text-sm text-gray-500">
             Suggestions to improve your account security
-          </CardDescription>
+          </p>
         </CardHeader>
-        
-        <CardContent>
+
+        <CardBody>
           <div className="space-y-4">
             <div className="flex items-start space-x-3">
               <Shield className="h-5 w-5 text-success mt-0.5" />
@@ -253,7 +258,7 @@ export default function SecuritySettings() {
                 </p>
               </div>
             </div>
-            
+
             <div className="flex items-start space-x-3">
               <Shield className={`h-5 w-5 ${form.watch('twoFactorAuth') === 'true' ? 'text-success' : 'text-warning'} mt-0.5`} />
               <div>
@@ -263,7 +268,7 @@ export default function SecuritySettings() {
                 </p>
               </div>
             </div>
-            
+
             <div className="flex items-start space-x-3">
               <Shield className="h-5 w-5 text-warning mt-0.5" />
               <div>
@@ -286,7 +291,7 @@ export default function SecuritySettings() {
               </div>
             </div>
           </div>
-        </CardContent>
+        </CardBody>
       </Card>
     </div>
   );

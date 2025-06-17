@@ -4,7 +4,13 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Button, Form, Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, Select, Switch, RadioGroup, Radio, Separator } from '@heroui/react';
+import { Button } from '@heroui/button';
+import { Form } from '@heroui/form';
+import { Card, CardHeader, CardBody, CardFooter } from '@heroui/card';
+import { Select, SelectItem } from '@heroui/react';
+import { Switch } from '@heroui/switch';
+import { RadioGroup, Radio } from '@heroui/radio';
+import { Separator } from '@heroui/divider';
 import { toast } from 'sonner';
 import { Loader2, Settings, Layout, Palette, Gauge, Sparkles, BarChart } from 'lucide-react';
 
@@ -32,6 +38,28 @@ export default function SystemSettings() {
   const [isSaving, setIsSaving] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
+  // Options for select components
+  const dashboardLayoutOptions = [
+    { key: "default", label: "Default" },
+    { key: "compact", label: "Compact" },
+    { key: "expanded", label: "Expanded" }
+  ];
+
+  const itemsPerPageOptions = [
+    { key: "5", label: "5" },
+    { key: "10", label: "10" },
+    { key: "25", label: "25" },
+    { key: "50", label: "50" },
+    { key: "100", label: "100" }
+  ];
+
+  const logLevelOptions = [
+    { key: "debug", label: "Debug (Verbose)" },
+    { key: "info", label: "Info (Standard)" },
+    { key: "warn", label: "Warning (Minimal)" },
+    { key: "error", label: "Error (Critical Only)" }
+  ];
+
   // Initialize form with basic schema
   const form = useForm<FormValues>({
     resolver: zodResolver(systemFormSchema),
@@ -50,9 +78,9 @@ export default function SystemSettings() {
         if (!response.ok) {
           throw new Error('Failed to fetch system settings');
         }
-        
+
         const data = await response.json();
-        
+
         // Check if user is admin
         if (data.isAdmin === 'true') {
           setIsAdmin(true);
@@ -61,7 +89,7 @@ export default function SystemSettings() {
             resolver: zodResolver(adminSystemFormSchema)
           });
         }
-        
+
         // Update form values
         form.reset(data);
       } catch (error) {
@@ -78,14 +106,14 @@ export default function SystemSettings() {
   // Handle form submission
   const onSubmit = async (values: FormValues) => {
     setIsSaving(true);
-    
+
     try {
       // Validate items per page
       const itemsPerPage = parseInt(values.itemsPerPage);
       if (isNaN(itemsPerPage) || itemsPerPage < 5 || itemsPerPage > 100) {
         throw new Error('Items per page must be between 5 and 100');
       }
-      
+
       const response = await fetch('/api/settings/system', {
         method: 'PUT',
         headers: {
@@ -124,18 +152,18 @@ export default function SystemSettings() {
   return (
     <div>
       <h2 className="text-xl font-semibold mb-6">System Settings</h2>
-      
+
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <Card className="mb-6">
             <CardHeader>
-              <CardTitle>Display Settings</CardTitle>
-              <CardDescription>
+              <h3 className="text-lg font-semibold">Display Settings</h3>
+              <p className="text-sm text-gray-500">
                 Customize your dashboard appearance
-              </CardDescription>
+              </p>
             </CardHeader>
-            
-            <CardContent className="space-y-6">
+
+            <CardBody className="space-y-6">
               <div className="space-y-3">
                 <div className="flex items-center space-x-4">
                   <Palette className="h-5 w-5 text-primary" />
@@ -146,7 +174,7 @@ export default function SystemSettings() {
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="pl-9">
                   <RadioGroup
                     value={form.watch('theme')}
@@ -168,7 +196,7 @@ export default function SystemSettings() {
                   </RadioGroup>
                 </div>
               </div>
-              
+
               <div className="space-y-3">
                 <div className="flex items-center space-x-4">
                   <Layout className="h-5 w-5 text-primary" />
@@ -179,20 +207,21 @@ export default function SystemSettings() {
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="pl-9">
                   <Select
                     id="dashboardLayout"
-                    value={form.watch('dashboardLayout')}
-                    onChange={(e) => form.setValue('dashboardLayout', e.target.value as 'default' | 'compact' | 'expanded', { shouldDirty: true })}
+                    className="max-w-xs"
+                    items={dashboardLayoutOptions}
+                    label="Dashboard Layout"
+                    selectedKeys={[form.watch('dashboardLayout')]}
+                    onChange={(key) => form.setValue('dashboardLayout', key.toString() as 'default' | 'compact' | 'expanded', { shouldDirty: true })}
                   >
-                    <option value="default">Default</option>
-                    <option value="compact">Compact</option>
-                    <option value="expanded">Expanded</option>
+                    {(option) => <SelectItem key={option.key}>{option.label}</SelectItem>}
                   </Select>
                 </div>
               </div>
-              
+
               <div className="space-y-3">
                 <div className="flex items-center space-x-4">
                   <Settings className="h-5 w-5 text-primary" />
@@ -203,34 +232,33 @@ export default function SystemSettings() {
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="pl-9">
                   <Select
                     id="itemsPerPage"
-                    value={form.watch('itemsPerPage')}
-                    onChange={(e) => form.setValue('itemsPerPage', e.target.value, { shouldDirty: true })}
+                    className="max-w-xs"
+                    items={itemsPerPageOptions}
+                    label="Items Per Page"
+                    selectedKeys={[form.watch('itemsPerPage')]}
+                    onChange={(key) => form.setValue('itemsPerPage', key.toString(), { shouldDirty: true })}
                   >
-                    <option value="5">5</option>
-                    <option value="10">10</option>
-                    <option value="25">25</option>
-                    <option value="50">50</option>
-                    <option value="100">100</option>
+                    {(option) => <SelectItem key={option.key}>{option.label}</SelectItem>}
                   </Select>
                 </div>
               </div>
-            </CardContent>
+            </CardBody>
           </Card>
-          
+
           {isAdmin && (
             <Card className="mb-6">
               <CardHeader>
-                <CardTitle>Admin Settings</CardTitle>
-                <CardDescription>
+                <h3 className="text-lg font-semibold">Admin Settings</h3>
+                <p className="text-sm text-gray-500">
                   Advanced system settings (admin only)
-                </CardDescription>
+                </p>
               </CardHeader>
-              
-              <CardContent className="space-y-6">
+
+              <CardBody className="space-y-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     <BarChart className="h-5 w-5 text-primary" />
@@ -246,7 +274,7 @@ export default function SystemSettings() {
                     onCheckedChange={handleSwitchChange('enableAdvancedMetrics')}
                   />
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     <Sparkles className="h-5 w-5 text-primary" />
@@ -262,7 +290,7 @@ export default function SystemSettings() {
                     onCheckedChange={handleSwitchChange('enableBetaFeatures')}
                   />
                 </div>
-                
+
                 <div className="space-y-3">
                   <div className="flex items-center space-x-4">
                     <Gauge className="h-5 w-5 text-primary" />
@@ -273,24 +301,24 @@ export default function SystemSettings() {
                       </p>
                     </div>
                   </div>
-                  
+
                   <div className="pl-9">
                     <Select
                       id="logLevel"
-                      value={form.watch('logLevel')}
-                      onChange={(e) => form.setValue('logLevel', e.target.value as 'debug' | 'info' | 'warn' | 'error', { shouldDirty: true })}
+                      className="max-w-xs"
+                      items={logLevelOptions}
+                      label="Log Level"
+                      selectedKeys={[form.watch('logLevel')]}
+                      onChange={(key) => form.setValue('logLevel', key.toString() as 'debug' | 'info' | 'warn' | 'error', { shouldDirty: true })}
                     >
-                      <option value="debug">Debug (Verbose)</option>
-                      <option value="info">Info (Standard)</option>
-                      <option value="warn">Warning (Minimal)</option>
-                      <option value="error">Error (Critical Only)</option>
+                      {(option) => <SelectItem key={option.key}>{option.label}</SelectItem>}
                     </Select>
                   </div>
                 </div>
-              </CardContent>
+              </CardBody>
             </Card>
           )}
-          
+
           <div className="flex justify-end">
             <Button 
               type="submit" 

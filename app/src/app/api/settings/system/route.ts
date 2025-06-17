@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { withCustomerContext } from '@/lib/api-middleware';
 import { tenantPrisma } from '@/lib/tenant-middleware';
-import { getUserPreferences } from '../route';
+import { getUserPreferences } from '@/lib/user-preferences';
 
 // Validation schema for system settings
 const systemSettingsSchema = z.object({
@@ -90,10 +90,10 @@ export const PUT = withCustomerContext(async (request: NextRequest) => {
 
     // Parse request body
     const body = await request.json();
-    
+
     // Check if user is admin
     const isAdmin = user.role === 'ADMIN' || user.role === 'SUPERADMIN';
-    
+
     // Validate based on user role
     let validatedData;
     if (isAdmin) {
