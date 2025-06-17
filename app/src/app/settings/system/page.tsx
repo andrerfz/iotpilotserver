@@ -36,6 +36,11 @@ export default function SystemSettings() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [formData, setFormData] = useState<FormValues>({
+    theme: 'light',
+    dashboardLayout: 'default',
+    itemsPerPage: '10'
+  });
 
   // Options for select components
   const dashboardLayoutOptions = [
@@ -59,14 +64,10 @@ export default function SystemSettings() {
     { key: "error", label: "Error (Critical Only)" }
   ];
 
-  // Initialize form with basic schema
+  // Initialize form with the appropriate schema based on isAdmin state
   const form = useForm<FormValues>({
-    resolver: zodResolver(systemFormSchema),
-    defaultValues: {
-      theme: 'light',
-      dashboardLayout: 'default',
-      itemsPerPage: '10'
-    }
+    resolver: isAdmin ? zodResolver(adminSystemFormSchema) : zodResolver(systemFormSchema),
+    defaultValues: formData
   });
 
   // Fetch settings on component mount
@@ -83,16 +84,10 @@ export default function SystemSettings() {
         // Check if user is admin
         if (data.isAdmin === 'true') {
           setIsAdmin(true);
-          // Update form resolver for admin schema
-          // Using reset with keepValues: true to update the resolver without losing current values
-          const currentValues = form.getValues();
-          form.reset({
-            ...currentValues
-          }, {
-            keepValues: true,
-            resolver: zodResolver(adminSystemFormSchema)
-          });
         }
+
+        // Update form data state
+        setFormData(data);
 
         // Update form values
         form.reset(data);
@@ -105,7 +100,8 @@ export default function SystemSettings() {
     };
 
     fetchSettings();
-  }, [form]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Handle form submission
   const onSubmit = async (values: FormValues) => {

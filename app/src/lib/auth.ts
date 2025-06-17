@@ -72,7 +72,8 @@ export async function authenticate(request: NextRequest) {
                         id: true,
                         email: true,
                         username: true,
-                        role: true
+                        role: true,
+                        customerId: true
                     }
                 }
             }
@@ -128,7 +129,8 @@ export async function validateApiKey(apiKey: string) {
                         id: true,
                         email: true,
                         username: true,
-                        role: true
+                        role: true,
+                        customerId: true
                     }
                 }
             }
