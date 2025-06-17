@@ -1,15 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Button } from '@heroui/button';
-import { Form } from '@heroui/form';
-import { Card, CardHeader, CardFooter, CardBody } from '@heroui/card';
-import { Switch } from '@heroui/switch';
-import { toast } from 'sonner';
-import { Loader2, Bell, AlertTriangle, Server, Mail } from 'lucide-react';
+import {useEffect, useState} from 'react';
+import {useForm} from 'react-hook-form';
+import {zodResolver} from '@hookform/resolvers/zod';
+import {z} from 'zod';
+import {Button} from '@heroui/button';
+import {Form} from '@heroui/form';
+import {Card, CardBody, CardFooter, CardHeader} from '@heroui/card';
+import {Switch} from '@heroui/switch';
+import {toast} from 'sonner';
+import {AlertTriangle, Bell, Loader2, Mail, Server} from 'lucide-react';
 
 // Validation schema
 const notificationsFormSchema = z.object({
@@ -127,7 +127,7 @@ export default function NotificationsSettings() {
                 </div>
                 <Switch
                   checked={form.watch('emailNotifications') === 'true'}
-                  onCheckedChange={handleSwitchChange('emailNotifications')}
+                  onValueChange={handleSwitchChange('emailNotifications')}
                 />
               </div>
 
@@ -143,7 +143,7 @@ export default function NotificationsSettings() {
                 </div>
                 <Switch
                   checked={form.watch('pushNotifications') === 'true'}
-                  onCheckedChange={handleSwitchChange('pushNotifications')}
+                  onValueChange={handleSwitchChange('pushNotifications')}
                 />
               </div>
 
@@ -159,7 +159,7 @@ export default function NotificationsSettings() {
                 </div>
                 <Switch
                   checked={form.watch('alertNotifications') === 'true'}
-                  onCheckedChange={handleSwitchChange('alertNotifications')}
+                  onValueChange={handleSwitchChange('alertNotifications')}
                 />
               </div>
 
@@ -175,7 +175,7 @@ export default function NotificationsSettings() {
                 </div>
                 <Switch
                   checked={form.watch('deviceOfflineNotifications') === 'true'}
-                  onCheckedChange={handleSwitchChange('deviceOfflineNotifications')}
+                  onValueChange={handleSwitchChange('deviceOfflineNotifications')}
                 />
               </div>
             </CardBody>

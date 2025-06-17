@@ -1,9 +1,16 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient, UserRole, UserStatus } from '@prisma/client';
+import {NextRequest, NextResponse} from 'next/server';
+import {UserRole} from '@prisma/client';
 import bcrypt from 'bcryptjs';
-import { z } from 'zod';
-import { isProduction } from '@/lib/env';
-import prisma from '@/lib/db';
+import {z} from 'zod';
+import {tenantPrisma} from '@/lib/tenant-middleware';
+
+// Define UserStatus enum values directly since there's an issue with importing from @prisma/client
+enum UserStatus {
+    ACTIVE = 'ACTIVE',
+    PENDING = 'PENDING',
+    SUSPENDED = 'SUSPENDED',
+    INACTIVE = 'INACTIVE'
+}
 
 // Registration schema
 const registrationSchema = z.object({
@@ -18,7 +25,7 @@ export async function POST(request: NextRequest) {
         const { email, username, password } = registrationSchema.parse(body);
 
         // Check if user already exists
-        const existingUser = await prisma.user.findFirst({
+        const existingUser = await (tenantPrisma.client as any).user.findFirst({
             where: {
                 OR: [
                     { email },
@@ -47,7 +54,7 @@ export async function POST(request: NextRequest) {
 
         // Check if company exists by email domain
         const emailDomain = email.split('@')[1];
-        const existingCompany = await prisma.customer.findFirst({
+        const existingCompany = await (tenantPrisma.client as any).customer.findFirst({
             where: { domain: emailDomain }
         });
 
@@ -61,7 +68,7 @@ export async function POST(request: NextRequest) {
             const slug = emailDomain.split('.')[0];
 
             // Create new customer
-            const newCustomer = await prisma.customer.create({
+            const newCustomer = await (tenantPrisma.client as any).customer.create({
                 data: {
                     name: `${slug.charAt(0).toUpperCase() + slug.slice(1)} Organization`,
                     slug,
@@ -83,7 +90,7 @@ export async function POST(request: NextRequest) {
         const userRole = isNewCompany ? UserRole.ADMIN : UserRole.USER;
 
         // Create user
-        const user = await prisma.user.create({
+        const user = await (tenantPrisma.client as any).user.create({
             data: {
                 email,
                 username,

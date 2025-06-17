@@ -1,18 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Button } from '@heroui/button';
-import { Form } from '@heroui/form';
-import { Card, CardHeader, CardBody, CardFooter } from '@heroui/card';
-import { Select, SelectItem } from '@heroui/react';
-import { Switch } from '@heroui/switch';
-import { RadioGroup, Radio } from '@heroui/radio';
-import { Separator } from '@heroui/divider';
-import { toast } from 'sonner';
-import { Loader2, Settings, Layout, Palette, Gauge, Sparkles, BarChart } from 'lucide-react';
+import {useEffect, useState} from 'react';
+import {useForm} from 'react-hook-form';
+import {zodResolver} from '@hookform/resolvers/zod';
+import {z} from 'zod';
+import {Button} from '@heroui/button';
+import {Form} from '@heroui/form';
+import {Card, CardBody, CardHeader} from '@heroui/card';
+import {Select, SelectItem} from '@heroui/react';
+import {Switch} from '@heroui/switch';
+import {Radio, RadioGroup} from '@heroui/radio';
+import {toast} from 'sonner';
+import {BarChart, Gauge, Layout, Loader2, Palette, Settings, Sparkles} from 'lucide-react';
 
 // Validation schema for regular users
 const systemFormSchema = z.object({
@@ -85,7 +84,12 @@ export default function SystemSettings() {
         if (data.isAdmin === 'true') {
           setIsAdmin(true);
           // Update form resolver for admin schema
-          form.setOptions({
+          // Using reset with keepValues: true to update the resolver without losing current values
+          const currentValues = form.getValues();
+          form.reset({
+            ...currentValues
+          }, {
+            keepValues: true,
             resolver: zodResolver(adminSystemFormSchema)
           });
         }
@@ -271,7 +275,7 @@ export default function SystemSettings() {
                   </div>
                   <Switch
                     checked={form.watch('enableAdvancedMetrics') === 'true'}
-                    onCheckedChange={handleSwitchChange('enableAdvancedMetrics')}
+                    onValueChange={handleSwitchChange('enableAdvancedMetrics')}
                   />
                 </div>
 
@@ -287,7 +291,7 @@ export default function SystemSettings() {
                   </div>
                   <Switch
                     checked={form.watch('enableBetaFeatures') === 'true'}
-                    onCheckedChange={handleSwitchChange('enableBetaFeatures')}
+                    onValueChange={handleSwitchChange('enableBetaFeatures')}
                   />
                 </div>
 

@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient, DeviceType, DeviceStatus, AlertType, AlertSeverity } from '@prisma/client';
-import { z } from 'zod';
-import { authenticate, validateApiKey } from '@/lib/auth';
+import {NextRequest, NextResponse} from 'next/server';
+import {AlertSeverity, AlertType, DeviceStatus, DeviceType, PrismaClient} from '@prisma/client';
+import {z} from 'zod';
+import {authenticate, validateApiKey} from '@/lib/auth';
 
 const prisma = new PrismaClient();
 
@@ -20,9 +20,12 @@ const deviceRegistrationSchema = z.object({
 // GET /api/devices - List all devices
 export async function GET(request: NextRequest) {
     try {
-        const { user, error } = await authenticate(request);
+        const {
+            user,
+            error
+        } = await authenticate(request);
         if (error || !user) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+            return NextResponse.json({error: 'Unauthorized'}, {status: 401});
         }
 
         const searchParams = new URL(request.url).searchParams;
@@ -45,13 +48,13 @@ export async function GET(request: NextRequest) {
         // Fetch devices with alert counts
         const devices = await prisma.device.findMany({
             where: whereClause,
-            orderBy: { lastSeen: 'desc' },
+            orderBy: {lastSeen: 'desc'},
             take: limit,
             include: {
                 _count: {
                     select: {
                         alerts: {
-                            where: { resolved: false }
+                            where: {resolved: false}
                         }
                     }
                 }
@@ -59,7 +62,11 @@ export async function GET(request: NextRequest) {
         });
 
         // Format devices for response
-        const formattedDevices = devices.map((device: { _count: { alerts: any; }; }) => ({
+        const formattedDevices = devices.map((device: {
+            _count: {
+                alerts: any;
+            };
+        }) => ({
             ...device,
             alertCount: device._count.alerts
         }));
@@ -67,10 +74,18 @@ export async function GET(request: NextRequest) {
         // Calculate stats
         const stats = {
             total: devices.length,
-            online: devices.filter((d: { status: string; }) => d.status === 'ONLINE').length,
-            offline: devices.filter((d: { status: string; }) => d.status === 'OFFLINE').length,
-            maintenance: devices.filter((d: { status: string; }) => d.status === 'MAINTENANCE').length,
-            error: devices.filter((d: { status: string; }) => d.status === 'ERROR').length
+            online: devices.filter((d: {
+                status: string;
+            }) => d.status === 'ONLINE').length,
+            offline: devices.filter((d: {
+                status: string;
+            }) => d.status === 'OFFLINE').length,
+            maintenance: devices.filter((d: {
+                status: string;
+            }) => d.status === 'MAINTENANCE').length,
+            error: devices.filter((d: {
+                status: string;
+            }) => d.status === 'ERROR').length
         };
 
         return NextResponse.json({
@@ -81,8 +96,8 @@ export async function GET(request: NextRequest) {
     } catch (error) {
         console.error('Failed to fetch devices:', error);
         return NextResponse.json(
-            { error: 'Failed to fetch devices' },
-            { status: 500 }
+            {error: 'Failed to fetch devices'},
+            {status: 500}
         );
     }
 }
@@ -98,18 +113,24 @@ export async function POST(request: NextRequest) {
             request.headers.get('authorization')?.replace('ApiKey ', '');
 
         if (apiKey) {
-            const { valid, user } = await validateApiKey(apiKey);
+            const {
+                valid,
+                user
+            } = await validateApiKey(apiKey);
             if (valid && user) {
                 userId = user.id;
                 authUser = user;
             } else {
-                return NextResponse.json({ error: 'Invalid API key' }, { status: 401 });
+                return NextResponse.json({error: 'Invalid API key'}, {status: 401});
             }
         } else {
             // Try user authentication
-            const { user, error } = await authenticate(request);
+            const {
+                user,
+                error
+            } = await authenticate(request);
             if (error || !user) {
-                return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+                return NextResponse.json({error: 'Unauthorized'}, {status: 401});
             }
             userId = user.id;
             authUser = user;
@@ -119,9 +140,17 @@ export async function POST(request: NextRequest) {
         const data = deviceRegistrationSchema.parse(body);
         const deviceTypeEnum = data.device_type as DeviceType;
 
+        // Check if user has a customerId
+        if (!authUser.customerId) {
+            return NextResponse.json(
+                {error: 'User is not associated with a customer'},
+                {status: 400}
+            );
+        }
+
         // Check if device already exists
         const existingDevice = await prisma.device.findUnique({
-            where: { deviceId: data.device_id }
+            where: {deviceId: data.device_id}
         });
 
         if (existingDevice) {
@@ -133,13 +162,13 @@ export async function POST(request: NextRequest) {
                         action: 'duplicate_rejected',
                         existing_owner: true
                     },
-                    { status: 409 } // Conflict status
+                    {status: 409} // Conflict status
                 );
             }
 
             // SAME USER - update existing device (this is expected behavior)
             const updatedDevice = await prisma.device.update({
-                where: { deviceId: data.device_id },
+                where: {deviceId: data.device_id},
                 data: {
                     hostname: data.hostname,
                     deviceType: deviceTypeEnum,
@@ -177,7 +206,8 @@ export async function POST(request: NextRequest) {
                 status: DeviceStatus.ONLINE,
                 lastSeen: new Date(),
                 registeredAt: new Date(),
-                userId: userId
+                userId: userId,
+                customerId: authUser.customerId
             }
         });
 
@@ -197,7 +227,7 @@ export async function POST(request: NextRequest) {
             device: newDevice,
             message: 'Device registered successfully',
             action: 'created'
-        }, { status: 201 });
+        }, {status: 201});
 
     } catch (error: any) {
         // Handle Prisma unique constraint violations
@@ -208,21 +238,24 @@ export async function POST(request: NextRequest) {
                     action: 'duplicate_rejected',
                     constraint_violation: true
                 },
-                { status: 409 }
+                {status: 409}
             );
         }
 
         if (error instanceof z.ZodError) {
             return NextResponse.json(
-                { error: 'Invalid device data', details: error.errors },
-                { status: 400 }
+                {
+                    error: 'Invalid device data',
+                    details: error.errors
+                },
+                {status: 400}
             );
         }
 
         console.error('Failed to register device:', error);
         return NextResponse.json(
-            { error: 'Failed to register device' },
-            { status: 500 }
+            {error: 'Failed to register device'},
+            {status: 500}
         );
     }
 }

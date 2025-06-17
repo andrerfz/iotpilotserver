@@ -1,10 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { CommandStatus } from '@prisma/client';
-import { withCustomerContext } from '@/lib/api-middleware';
-import { tenantPrisma } from '@/lib/tenant-middleware';
-import { commandQueue } from '@/lib/command-executor';
-import { logger } from '@/lib/logger';
-import { isDevelopment } from '@/lib/env';
+import {NextResponse} from 'next/server';
+import {CommandStatus} from '@prisma/client';
+import {AuthenticatedRequest, withCustomerContext} from '@/lib/api-middleware';
+import {tenantPrisma} from '@/lib/tenant-middleware';
+import {commandQueue} from '@/lib/command-executor';
+import {logger} from '@/lib/logger';
 
 // Supported command types and their mappings
 const SUPPORTED_COMMANDS = {
@@ -18,70 +17,77 @@ const SUPPORTED_COMMANDS = {
 };
 
 // GET /api/devices/:id/commands - List device commands
-export const GET = withCustomerContext(async (
-    request: NextRequest,
-    { params }: { params: { id: string } }
-) => {
+export const GET = withCustomerContext(async (request: AuthenticatedRequest) => {
+    // Extract params from the URL
+    const url = new URL(request.url);
+    const pathParts = url.pathname.split('/');
+    const id = pathParts[pathParts.indexOf('devices') + 1];
+
     try {
-        const id = params.id;
-        const searchParams = new URL(request.url).searchParams;
+
+        const searchParams = url.searchParams;
         const limit = parseInt(searchParams.get('limit') || '10', 10);
 
         // Check if device exists - tenant isolation is handled by withCustomerContext
         const device = await tenantPrisma.client.device.findUnique({
-            where: { id },
+            where: {id},
         });
 
         if (!device) {
             return NextResponse.json(
-                { error: 'Device not found' },
-                { status: 404 }
+                {error: 'Device not found'},
+                {status: 404}
             );
         }
 
         // Fetch device commands - tenant isolation is handled by withCustomerContext
         const commands = await tenantPrisma.client.deviceCommand.findMany({
-            where: { deviceId: id },
-            orderBy: { createdAt: 'desc' },
+            where: {deviceId: id},
+            orderBy: {createdAt: 'desc'},
             take: limit,
         });
 
-        return NextResponse.json({ commands });
+        return NextResponse.json({commands});
     } catch (error) {
-        logger.error('Failed to fetch device commands:', { error: error instanceof Error ? error.message : String(error), deviceId: params.id });
+        logger.error('Failed to fetch device commands:', {
+            error: error instanceof Error ? error.message : String(error),
+            deviceId: id
+        });
         return NextResponse.json(
-            { error: 'Failed to fetch device commands' },
-            { status: 500 }
+            {error: 'Failed to fetch device commands'},
+            {status: 500}
         );
     }
 });
 
 // POST /api/devices/:id/commands - Issue a new command to a device
-export const POST = withCustomerContext(async (
-    request: NextRequest,
-    { params }: { params: { id: string } }
-) => {
+export const POST = withCustomerContext(async (request: AuthenticatedRequest) => {
+    // Extract params from the URL
+    const url = new URL(request.url);
+    const pathParts = url.pathname.split('/');
+    const id = pathParts[pathParts.indexOf('devices') + 1];
+
     try {
-        const id = params.id;
+
         const body = await request.json();
 
         // Validate required fields
         if (!body.command) {
             return NextResponse.json(
-                { error: 'Command type is required' },
-                { status: 400 }
+                {error: 'Command type is required'},
+                {status: 400}
             );
         }
 
         // Check if device exists - tenant isolation is handled by withCustomerContext
         const device = await tenantPrisma.client.device.findUnique({
-            where: { id },
+            where: {id},
         });
 
         if (!device) {
             return NextResponse.json(
-                { error: 'Device not found' },
-                { status: 404 }
+                {error: 'Device not found'},
+                {status: 404}
             );
         }
 
@@ -89,8 +95,8 @@ export const POST = withCustomerContext(async (
         const commandType = body.command.toUpperCase();
         if (!Object.keys(SUPPORTED_COMMANDS).includes(commandType)) {
             return NextResponse.json(
-                { error: 'Unsupported command type' },
-                { status: 400 }
+                {error: 'Unsupported command type'},
+                {status: 400}
             );
         }
 
@@ -130,11 +136,11 @@ export const POST = withCustomerContext(async (
     } catch (error) {
         logger.error('Failed to issue command:', {
             error: error instanceof Error ? error.message : String(error),
-            deviceId: params.id,
+            deviceId: id,
         });
         return NextResponse.json(
-            { error: 'Failed to issue command' },
-            { status: 500 }
+            {error: 'Failed to issue command'},
+            {status: 500}
         );
     }
 });

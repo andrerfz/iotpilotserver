@@ -1,17 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Button } from '@heroui/button';
-import { Form } from '@heroui/form';
-import { Card, CardHeader, CardFooter, CardBody } from '@heroui/card';
-import { Switch } from '@heroui/switch';
-import { Input } from '@heroui/input';
-import { Slider } from '@heroui/slider';
-import { toast } from 'sonner';
-import { Loader2, Shield, Lock, Key, AlertCircle } from 'lucide-react';
+import {useEffect, useState} from 'react';
+import {useForm} from 'react-hook-form';
+import {zodResolver} from '@hookform/resolvers/zod';
+import {z} from 'zod';
+import {Button} from '@heroui/button';
+import {Form} from '@heroui/form';
+import {Card, CardBody, CardFooter, CardHeader} from '@heroui/card';
+import {Switch} from '@heroui/switch';
+import {Input} from '@heroui/input';
+import {Slider} from '@heroui/slider';
+import {toast} from 'sonner';
+import {AlertCircle, Key, Loader2, Lock, Shield} from 'lucide-react';
 
 // Validation schema
 const securityFormSchema = z.object({
@@ -143,7 +143,7 @@ export default function SecuritySettings() {
                 </div>
                 <Switch
                   checked={form.watch('twoFactorAuth') === 'true'}
-                  onCheckedChange={handleSwitchChange('twoFactorAuth')}
+                  onValueChange={handleSwitchChange('twoFactorAuth')}
                 />
               </div>
 
@@ -178,7 +178,7 @@ export default function SecuritySettings() {
                 </div>
                 <Switch
                   checked={form.watch('loginNotifications') === 'true'}
-                  onCheckedChange={handleSwitchChange('loginNotifications')}
+                  onValueChange={handleSwitchChange('loginNotifications')}
                 />
               </div>
 
@@ -196,10 +196,10 @@ export default function SecuritySettings() {
                 <div className="pl-9 space-y-3">
                   <Slider
                     value={[sessionTimeoutValue]}
-                    min={5}
-                    max={240}
+                    minValue={5}
+                    maxValue={240}
                     step={5}
-                    onValueChange={(values) => handleSliderChange(values[0])}
+                    onChange={(values) => handleSliderChange(Array.isArray(values) ? values[0] : values)}
                   />
 
                   <div className="flex justify-between items-center">
@@ -212,7 +212,7 @@ export default function SecuritySettings() {
                       className="w-20 h-8 text-sm"
                       min={5}
                       max={1440}
-                      value={sessionTimeoutValue}
+                      value={sessionTimeoutValue.toString()}
                       onChange={(e) => {
                         const value = parseInt(e.target.value);
                         if (!isNaN(value) && value >= 5 && value <= 1440) {
@@ -278,7 +278,7 @@ export default function SecuritySettings() {
                 </p>
                 <Button
                   type="button"
-                  variant="link"
+                  variant="ghost"
                   size="sm"
                   className="p-0 h-auto text-xs mt-1"
                   onClick={() => {

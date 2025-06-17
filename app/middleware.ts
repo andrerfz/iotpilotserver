@@ -1,6 +1,6 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
-import { verifyToken } from '@/lib/auth';
+import type {NextRequest} from 'next/server';
+import {NextResponse} from 'next/server';
+import {verifyToken} from '@/lib/auth';
 import prisma from '@/lib/db';
 
 // Public routes that don't require authentication
@@ -31,7 +31,7 @@ const ADMIN_ROUTES = [
 ];
 
 export async function middleware(request: NextRequest) {
-    const { pathname } = request.nextUrl;
+    const {pathname} = request.nextUrl;
 
     // Skip middleware for static files and _next
     if (
@@ -67,8 +67,8 @@ export async function middleware(request: NextRequest) {
 
         // Return 401 for API routes
         return NextResponse.json(
-            { error: 'Authentication required' },
-            { status: 401 }
+            {error: 'Authentication required'},
+            {status: 401}
         );
     }
 
@@ -78,8 +78,8 @@ export async function middleware(request: NextRequest) {
         // Clear invalid token
         if (pathname.startsWith('/api')) {
             return NextResponse.json(
-                { error: 'Invalid token' },
-                { status: 401 }
+                {error: 'Invalid token'},
+                {status: 401}
             );
         }
 
@@ -93,8 +93,8 @@ export async function middleware(request: NextRequest) {
         if (payload.role !== 'ADMIN') {
             if (pathname.startsWith('/api')) {
                 return NextResponse.json(
-                    { error: 'Admin access required' },
-                    { status: 403 }
+                    {error: 'Admin access required'},
+                    {status: 403}
                 );
             }
 
@@ -115,13 +115,16 @@ export async function middleware(request: NextRequest) {
             try {
                 // Get user with customer info
                 const user = await prisma.user.findUnique({
-                    where: { id: payload.userId },
-                    select: { customerId: true }
+                    where: {id: payload.userId}
                 });
 
                 // Add customer ID to headers if available
-                if (user?.customerId) {
-                    requestHeaders.set('x-customer-id', user.customerId);
+                // Using type assertion to handle potential schema/type mismatch
+                const userWithCustomerId = user as unknown as {
+                    customerId?: string
+                };
+                if (userWithCustomerId?.customerId) {
+                    requestHeaders.set('x-customer-id', userWithCustomerId.customerId);
                 }
             } catch (error) {
                 console.error('Error fetching customer context:', error);
