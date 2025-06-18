@@ -3,13 +3,11 @@ import {NextResponse} from 'next/server';
 import {verifyToken} from '@/lib/auth';
 import prisma from '@/lib/db';
 
-// Public routes that don't require authentication
+// Public routes that don't require any authentication
 const PUBLIC_ROUTES = [
     '/api/auth/login',
     '/api/auth/register',
     '/api/health',
-    '/api/devices/heartbeat', // Device heartbeat should use API key
-    '/api/devices',  // Device registration should use API key
     '/login',
     '/register',
     '/terms',
@@ -17,7 +15,7 @@ const PUBLIC_ROUTES = [
     '/forgot-password'
 ];
 
-// API routes that allow API key authentication (handled in route handlers)
+// API routes that accept EITHER JWT token OR API key (handled in route handlers)
 const API_KEY_ROUTES = [
     '/api/devices/heartbeat',
     '/api/devices',
@@ -43,17 +41,78 @@ export async function middleware(request: NextRequest) {
         return NextResponse.next();
     }
 
-    // Check if route is public
+    // Check if route is public - no authentication required
     if (PUBLIC_ROUTES.some(route => pathname.startsWith(route))) {
         return NextResponse.next();
     }
 
-    // For API key routes, let the route handler validate the API key
+    // For API key routes, check if they have API key OR JWT token
     if (API_KEY_ROUTES.some(route => pathname.startsWith(route))) {
-        return NextResponse.next();
+        const apiKey = request.headers.get('x-api-key') ||
+            request.headers.get('authorization')?.replace('ApiKey ', '');
+
+        const jwtToken = request.cookies.get('auth-token')?.value ||
+            request.headers.get('authorization')?.replace('Bearer ', '');
+
+        // If they have API key, let route handler validate it
+        if (apiKey) {
+            return NextResponse.next();
+        }
+
+        // If they have JWT token, validate session in database (like /api/auth/me)
+        if (jwtToken) {
+            try {
+                const session = await prisma.session.findFirst({
+                    where: {
+                        token: jwtToken,
+                        expiresAt: {
+                            gt: new Date()
+                        }
+                    },
+                    include: {
+                        user: {
+                            select: {
+                                id: true,
+                                email: true,
+                                username: true,
+                                role: true,
+                                customerId: true
+                            }
+                        }
+                    }
+                });
+
+                if (session) {
+                    // Add user info to headers for the route handler
+                    const requestHeaders = new Headers(request.headers);
+                    requestHeaders.set('x-user-id', session.user.id);
+                    requestHeaders.set('x-user-email', session.user.email);
+                    requestHeaders.set('x-user-role', session.user.role);
+
+                    // Add customer context if needed
+                    if (session.user.customerId) {
+                        requestHeaders.set('x-customer-id', session.user.customerId);
+                    }
+
+                    return NextResponse.next({
+                        request: {
+                            headers: requestHeaders,
+                        },
+                    });
+                }
+            } catch (error) {
+                console.error('Session validation error:', error);
+            }
+        }
+
+        // No valid API key or JWT token
+        return NextResponse.json(
+            {error: 'Authentication required - provide API key or JWT token'},
+            {status: 401}
+        );
     }
 
-    // Extract token from cookies or headers (don't read body)
+    // For all other routes, require JWT token
     const token = request.cookies.get('auth-token')?.value ||
         request.headers.get('authorization')?.replace('Bearer ', '');
 
@@ -72,7 +131,7 @@ export async function middleware(request: NextRequest) {
         );
     }
 
-    // Verify token
+    // Verify JWT token
     const payload = verifyToken(token);
     if (!payload) {
         // Clear invalid token
@@ -102,24 +161,20 @@ export async function middleware(request: NextRequest) {
         }
     }
 
-    // Add user info to request headers for API routes (without reading body)
+    // Add user info to request headers for API routes
     if (pathname.startsWith('/api')) {
         const requestHeaders = new Headers(request.headers);
         requestHeaders.set('x-user-id', payload.userId);
         requestHeaders.set('x-user-email', payload.email);
         requestHeaders.set('x-user-role', payload.role);
 
-        // For API routes, fetch customer context if not already in headers
-        // Only do this if we don't already have a customer ID header
+        // Add customer context if needed
         if (!requestHeaders.has('x-customer-id')) {
             try {
-                // Get user with customer info
                 const user = await prisma.user.findUnique({
                     where: {id: payload.userId}
                 });
 
-                // Add customer ID to headers if available
-                // Using type assertion to handle potential schema/type mismatch
                 const userWithCustomerId = user as unknown as {
                     customerId?: string
                 };
@@ -128,7 +183,6 @@ export async function middleware(request: NextRequest) {
                 }
             } catch (error) {
                 console.error('Error fetching customer context:', error);
-                // Continue without customer context - will be handled by API route
             }
         }
 

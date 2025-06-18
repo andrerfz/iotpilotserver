@@ -1,16 +1,15 @@
 'use client';
 
-import {createContext, useContext, useEffect, useState} from 'react';
-import {useRouter} from 'next/navigation';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface User {
     id: string;
     email: string;
     username: string;
-    role: 'ADMIN' | 'USER' | 'READONLY';
-    profileImage: null | string;
+    role: string;
     createdAt: string;
-    _count?: {
+    _count: {
         devices: number;
         alerts: number;
     };
@@ -38,7 +37,7 @@ interface AuthProviderProps {
     children: React.ReactNode;
 }
 
-export function AuthProvider({children}: AuthProviderProps) {
+export function AuthProvider({ children }: AuthProviderProps) {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
@@ -57,9 +56,9 @@ export function AuthProvider({children}: AuthProviderProps) {
             if (response.ok) {
                 const data = await response.json();
                 setUser(data.user);
-            } else {
-                setUser(null);
             }
+
+            setUser(null);
         } catch (error) {
             console.error('Auth check failed:', error);
             setUser(null);
@@ -90,6 +89,14 @@ export function AuthProvider({children}: AuthProviderProps) {
 
         setUser(data.user);
         setLoading(false);
+
+        await new Promise(resolve => {
+            // Use React's batch update mechanism
+            React.startTransition(() => {
+                setUser(data.user);
+                resolve(void 0);
+            });
+        });
     };
 
     const logout = async () => {
@@ -101,11 +108,8 @@ export function AuthProvider({children}: AuthProviderProps) {
         } catch (error) {
             console.error('Logout error:', error);
         } finally {
-            // Always clear the state and redirect, even if the API call fails
             setUser(null);
             setLoading(false);
-
-            // Force reload to clear any cached state
             window.location.href = '/login';
         }
     };

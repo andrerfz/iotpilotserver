@@ -3,7 +3,8 @@
 import {useEffect, useState} from 'react';
 import Link from 'next/link';
 import {AlertTriangle, Clock, Cpu, RefreshCw, Search, Server, Settings, Thermometer, Wifi, WifiOff} from 'lucide-react';
-import {getApiTimeout, getApiUrl, getFetchConfig, getLimit, getRefreshInterval, isDevelopment} from '@/lib/env';
+import {getApiTimeout, getApiUrl, getLimit, getRefreshInterval, isDevelopment} from '@/lib/env';
+import {useAuth} from '@/contexts/auth-context'; // Add this import
 import {Button, Card, CardBody, Chip, Divider, Input, Progress, Spinner} from '@heroui/react';
 
 interface Device {
@@ -34,6 +35,7 @@ interface DeviceStats {
 }
 
 export default function DeviceList() {
+    const {apiCall} = useAuth(); // Add this line
     const [devices, setDevices] = useState<Device[]>([]);
     const [stats, setStats] = useState<DeviceStats>({
         total: 0,
@@ -59,9 +61,9 @@ export default function DeviceList() {
         // Set up auto-refresh with environment-specific interval
         const interval = setInterval(fetchDevices, refreshInterval);
         return () => clearInterval(interval);
-    }, [refreshInterval]);
+    }, [refreshInterval]); // Remove apiCall from dependencies to avoid unnecessary re-renders
 
-    // Fetch devices from API with environment configuration
+    // Fetch devices from API with environment configuration - UPDATED
     const fetchDevices = async () => {
         try {
             const url = new URL(getApiUrl('/devices'));
@@ -71,16 +73,12 @@ export default function DeviceList() {
                 url.searchParams.append('status', filterStatus);
             }
 
-            // Create AbortController for timeout
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), getApiTimeout());
-
-            const response = await fetch(url.toString(), {
-                ...getFetchConfig(),
-                signal: controller.signal
+            // CHANGED: Use apiCall instead of fetch with custom timeout
+            // Note: apiCall handles credentials and 401 responses automatically
+            const response = await apiCall(url.toString(), {
+                // Remove signal/timeout handling as apiCall may handle this internally
+                // If you need custom timeout, you can wrap apiCall with your own AbortController
             });
-
-            clearTimeout(timeoutId);
 
             if (!response.ok) throw new Error('Failed to fetch devices');
 

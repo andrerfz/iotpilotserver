@@ -1,20 +1,12 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import {useState} from 'react';
+import {useRouter, useSearchParams} from 'next/navigation';
 import Link from 'next/link';
-import { LogIn } from 'lucide-react';
-import { useAuth } from '@/contexts/auth-context';
+import {LogIn} from 'lucide-react';
+import {useAuth} from '@/contexts/auth-context';
 import PasswordInput from './password-input';
-import {
-    Alert,
-    Button,
-    Checkbox,
-    Form,
-    Input,
-    Link as HeroLink,
-    Spacer
-} from '@heroui/react';
+import {Alert, Button, Checkbox, Form, Input, Link as HeroLink, Spacer} from '@heroui/react';
 
 export default function LoginForm() {
     const [email, setEmail] = useState('');
@@ -26,7 +18,7 @@ export default function LoginForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const redirectTo = searchParams.get('redirect') || '/';
-    const { login } = useAuth();
+    const {login} = useAuth();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -35,12 +27,21 @@ export default function LoginForm() {
 
         try {
             await login(email, password, remember);
-            router.push(redirectTo);
+
+            // SOLUTION 1: Add small delay to let state propagate
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            // SOLUTION 2: Use window.location instead of router.push for more reliable redirect
+            window.location.href = redirectTo;
+
+            // Alternative: Use router.push but with replace
+            // router.replace(redirectTo);
+
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Login failed');
-        } finally {
-            setLoading(false);
+            setLoading(false); // Only set loading false on error
         }
+        // Don't set loading false on success - let redirect handle it
     };
 
     return (
@@ -112,7 +113,7 @@ export default function LoginForm() {
                 </div>
             </div>
 
-            <Spacer y={2} />
+            <Spacer y={2}/>
 
             <Button
                 type="submit"
@@ -122,7 +123,7 @@ export default function LoginForm() {
                 isLoading={loading}
                 isDisabled={loading}
                 fullWidth
-                startContent={!loading && <LogIn className="h-5 w-5" />}
+                startContent={!loading && <LogIn className="h-5 w-5"/>}
                 className="font-medium"
             >
                 {loading ? 'Signing in...' : 'Sign in'}
