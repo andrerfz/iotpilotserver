@@ -6,7 +6,15 @@ import Link from 'next/link';
 import {LogIn} from 'lucide-react';
 import {useAuth} from '@/contexts/auth-context';
 import PasswordInput from './password-input';
-import {Alert, Button, Checkbox, Form, Input, Link as HeroLink, Spacer} from '@heroui/react';
+import {
+    Alert,
+    Button,
+    Checkbox,
+    Form,
+    Input,
+    Link as HeroLink,
+    Spacer
+} from '@heroui/react';
 
 export default function LoginForm() {
     const [email, setEmail] = useState('');
@@ -18,30 +26,35 @@ export default function LoginForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const redirectTo = searchParams.get('redirect') || '/';
-    const {login} = useAuth();
+    const {
+        login,
+        user
+    } = useAuth();
+
+    console.log('🔐 LOGIN FORM: Current auth state - User:', user?.email, 'Redirect to:', redirectTo);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setError('');
 
+        console.log('🚀 LOGIN FORM: Form submitted, attempting login...');
+
         try {
             await login(email, password, remember);
 
-            // SOLUTION 1: Add small delay to let state propagate
-            await new Promise(resolve => setTimeout(resolve, 100));
+            console.log('✅ LOGIN FORM: Login successful, redirecting to:', redirectTo);
+            console.log('👤 LOGIN FORM: Current user after login:', user?.email);
 
-            // SOLUTION 2: Use window.location instead of router.push for more reliable redirect
+            // Test different redirect methods
+            console.log('🔄 LOGIN FORM: Using window.location.href for redirect');
             window.location.href = redirectTo;
 
-            // Alternative: Use router.push but with replace
-            // router.replace(redirectTo);
-
         } catch (err) {
+            console.log('❌ LOGIN FORM: Login failed:', err);
             setError(err instanceof Error ? err.message : 'Login failed');
-            setLoading(false); // Only set loading false on error
+            setLoading(false);
         }
-        // Don't set loading false on success - let redirect handle it
     };
 
     return (

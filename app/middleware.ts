@@ -1,6 +1,5 @@
 import type {NextRequest} from 'next/server';
 import {NextResponse} from 'next/server';
-import {verifyToken} from '@/lib/auth';
 import prisma from '@/lib/db';
 
 // Public routes that don't require any authentication
@@ -112,7 +111,7 @@ export async function middleware(request: NextRequest) {
         );
     }
 
-    // For all other routes, require JWT token
+    // For all other routes, require JWT token with DATABASE SESSION VALIDATION
     const token = request.cookies.get('auth-token')?.value ||
         request.headers.get('authorization')?.replace('Bearer ', '');
 
@@ -131,69 +130,93 @@ export async function middleware(request: NextRequest) {
         );
     }
 
-    // Verify JWT token
-    const payload = verifyToken(token);
-    if (!payload) {
-        // Clear invalid token
-        if (pathname.startsWith('/api')) {
-            return NextResponse.json(
-                {error: 'Invalid token'},
-                {status: 401}
-            );
-        }
+    // FIXED: Use database session validation instead of just JWT expiration
+    try {
+        const session = await prisma.session.findFirst({
+            where: {
+                token,
+                expiresAt: {
+                    gt: new Date()
+                }
+            },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        email: true,
+                        username: true,
+                        role: true,
+                        customerId: true
+                    }
+                }
+            }
+        });
 
-        const response = NextResponse.redirect(new URL('/login', request.url));
-        response.cookies.delete('auth-token');
-        return response;
-    }
-
-    // Check admin routes
-    if (ADMIN_ROUTES.some(route => pathname.startsWith(route))) {
-        if (payload.role !== 'ADMIN') {
+        if (!session) {
+            console.log('🚨 MIDDLEWARE: Session not found or expired for token');
+            // Session expired or not found - redirect to login
             if (pathname.startsWith('/api')) {
                 return NextResponse.json(
-                    {error: 'Admin access required'},
-                    {status: 403}
+                    {error: 'Session expired'},
+                    {status: 401}
                 );
             }
 
-            return NextResponse.redirect(new URL('/', request.url));
+            const response = NextResponse.redirect(new URL('/login', request.url));
+            response.cookies.delete('auth-token');
+            return response;
         }
-    }
 
-    // Add user info to request headers for API routes
-    if (pathname.startsWith('/api')) {
-        const requestHeaders = new Headers(request.headers);
-        requestHeaders.set('x-user-id', payload.userId);
-        requestHeaders.set('x-user-email', payload.email);
-        requestHeaders.set('x-user-role', payload.role);
+        console.log('✅ MIDDLEWARE: Valid session found for user:', session.user.email);
 
-        // Add customer context if needed
-        if (!requestHeaders.has('x-customer-id')) {
-            try {
-                const user = await prisma.user.findUnique({
-                    where: {id: payload.userId}
-                });
-
-                const userWithCustomerId = user as unknown as {
-                    customerId?: string
-                };
-                if (userWithCustomerId?.customerId) {
-                    requestHeaders.set('x-customer-id', userWithCustomerId.customerId);
+        // Check admin routes
+        if (ADMIN_ROUTES.some(route => pathname.startsWith(route))) {
+            if (session.user.role !== 'ADMIN') {
+                if (pathname.startsWith('/api')) {
+                    return NextResponse.json(
+                        {error: 'Admin access required'},
+                        {status: 403}
+                    );
                 }
-            } catch (error) {
-                console.error('Error fetching customer context:', error);
+
+                return NextResponse.redirect(new URL('/', request.url));
             }
         }
 
-        return NextResponse.next({
-            request: {
-                headers: requestHeaders,
-            },
-        });
-    }
+        // Add user info to request headers for API routes
+        if (pathname.startsWith('/api')) {
+            const requestHeaders = new Headers(request.headers);
+            requestHeaders.set('x-user-id', session.user.id);
+            requestHeaders.set('x-user-email', session.user.email);
+            requestHeaders.set('x-user-role', session.user.role);
 
-    return NextResponse.next();
+            // Add customer context if needed
+            if (session.user.customerId) {
+                requestHeaders.set('x-customer-id', session.user.customerId);
+            }
+
+            return NextResponse.next({
+                request: {
+                    headers: requestHeaders,
+                },
+            });
+        }
+
+        return NextResponse.next();
+
+    } catch (error) {
+        console.error('🚨 MIDDLEWARE: Database error during session validation:', error);
+
+        // On database error, redirect to login for safety
+        if (pathname.startsWith('/api')) {
+            return NextResponse.json(
+                {error: 'Authentication error'},
+                {status: 500}
+            );
+        }
+
+        return NextResponse.redirect(new URL('/login', request.url));
+    }
 }
 
 export const config = {

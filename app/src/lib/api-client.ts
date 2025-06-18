@@ -25,7 +25,7 @@ export class AuthenticatedApiClient {
 
         // Handle 401 Unauthorized responses globally
         if (response.status === 401) {
-            console.warn('Received 401 Unauthorized - triggering logout');
+            console.warn('🚨 API CLIENT: Received 401 Unauthorized - triggering logout');
 
             // Call logout callback to clear auth state
             if (this.logoutCallback) {
