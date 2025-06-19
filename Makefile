@@ -257,7 +257,15 @@ local-install: check-env
 	@echo "🚀 Setting up local development..."
 	@chmod +x scripts/*.sh
 	@./scripts/setup-local.sh
+	@echo "▶️  Starting services for first-time setup..."
+	@docker compose -f $(LOCAL_COMPOSE_FILE) up -d postgres redis influxdb
+	@echo "⏳ Waiting for database..."
+	@sleep 10
+	@echo "🗄️ Applying migrations..."
+	@make db-setup
+	@make apply-migration
 	@echo "✅ Local setup complete!"
+	@echo "💡 Run 'make local-start' to start all services"
 
 local-start: check-env
 	@echo "▶️  Starting local services..."
@@ -275,7 +283,10 @@ local-stop:
 	@docker compose -f $(LOCAL_COMPOSE_FILE) down
 	@echo "✅ Local services stopped!"
 
-local-restart: local-stop local-start
+local-restart:
+	@docker exec iotpilot-server-app rm -rf .next
+	@make local-stop
+	@make local-start
 
 local-restart-app:
 	@docker compose -f $(LOCAL_COMPOSE_FILE) restart iotpilot-app

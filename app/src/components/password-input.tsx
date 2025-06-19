@@ -49,10 +49,6 @@ export default function PasswordInput({
             variant="bordered"
             size={size}
             fullWidth
-            classNames={{
-                input: sizeClasses[size].input,
-                inputWrapper: sizeClasses[size].inputWrapper
-            }}
             endContent={
                 <Button
                     isIconOnly

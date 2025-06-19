@@ -214,10 +214,10 @@ app.prepare().then(() => {
     // Initialize command queue for device commands
     try {
         // Import the command queue
-        const { commandQueue } = require('./src/lib/command-executor');
+        const { CommandQueueManager } = require('./src/lib/command-executor.ts');
 
         // Start processing the command queue with a 60-second interval
-        commandQueue.startQueueProcessing(60000);
+        CommandQueueManager.startQueueProcessing(60000);
 
         logger.info('Command queue processing started');
     } catch (error) {

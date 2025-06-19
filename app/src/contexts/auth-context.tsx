@@ -2,13 +2,14 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { AuthenticatedApiClient } from '@/lib/api-client';
+import {UserRole} from '@prisma/client';
 
 interface User {
     id: string;
     email: string;
     username: string;
-    role: string;
+    role: UserRole;
+    profileImage?: string;
     createdAt: string;
     _count: {
         devices: number;
@@ -43,16 +44,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
-    const apiClient = AuthenticatedApiClient.getInstance();
-
-    // Setup automatic logout on 401 responses
-    useEffect(() => {
-        apiClient.setLogoutCallback(() => {
-            console.log('🚨 AUTH: Auto-logout triggered by 401 response');
-            setUser(null);
-            setLoading(false);
-        });
-    }, [apiClient]);
 
     // Check authentication status on mount
     useEffect(() => {
@@ -122,12 +113,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         console.log('✅ AUTH: Login successful, setting user:', data.user.email);
         setUser(data.user);
         setLoading(false);
-
-        // Give React time to update state
-        console.log('⏳ AUTH: Waiting for state to propagate...');
-        await new Promise(resolve => setTimeout(resolve, 200));
-
-        console.log('🔍 AUTH: Final auth state before redirect - User:', user?.email, 'Loading:', loading);
     };
 
     const logout = async () => {
@@ -153,9 +138,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
         await checkAuth();
     };
 
-    // Authenticated API call method using the interceptor
+    // Simple apiCall function (no interceptor for now)
     const apiCall = (url: string, options?: RequestInit) => {
-        return apiClient.fetch(url, options);
+        return fetch(url, {
+            credentials: 'include',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options?.headers,
+            },
+        });
     };
 
     const value: AuthContextType = {

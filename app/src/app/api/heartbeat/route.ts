@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Check for alerts
-        await checkDeviceAlerts(device.id, data, device.userId);
+        await checkDeviceAlerts(device.id, data, device.userId, device.customerId);
 
         // Send data to InfluxDB for time-series storage
         await sendToInfluxDB(data);
@@ -185,10 +185,11 @@ export async function POST(request: NextRequest) {
 }
 
 // Check for alert conditions
-async function checkDeviceAlerts(deviceId: string, data: any, userId: string | null) {
+async function checkDeviceAlerts(deviceId: string, data: any, userId: string | null, customerId: string) {
     const alerts: Array<{
         deviceId: string;
         userId: string | null;
+        customerId: string;  // Add this field
         type: AlertType;
         severity: AlertSeverity;
         title: string;
@@ -200,6 +201,7 @@ async function checkDeviceAlerts(deviceId: string, data: any, userId: string | n
         alerts.push({
             deviceId,
             userId,
+            customerId,
             type: AlertType.HIGH_CPU,
             severity: data.cpu_usage > 95 ? AlertSeverity.CRITICAL : AlertSeverity.WARNING,
             title: 'High CPU Usage',
@@ -212,6 +214,7 @@ async function checkDeviceAlerts(deviceId: string, data: any, userId: string | n
         alerts.push({
             deviceId,
             userId,
+            customerId,
             type: AlertType.HIGH_MEMORY,
             severity: data.memory_usage_percent > 95 ? AlertSeverity.CRITICAL : AlertSeverity.WARNING,
             title: 'High Memory Usage',
@@ -224,6 +227,7 @@ async function checkDeviceAlerts(deviceId: string, data: any, userId: string | n
         alerts.push({
             deviceId,
             userId,
+            customerId,
             type: AlertType.HIGH_TEMPERATURE,
             severity: data.cpu_temperature > 80 ? AlertSeverity.CRITICAL : AlertSeverity.WARNING,
             title: 'High Temperature',
@@ -236,6 +240,7 @@ async function checkDeviceAlerts(deviceId: string, data: any, userId: string | n
         alerts.push({
             deviceId,
             userId,
+            customerId,
             type: AlertType.LOW_DISK_SPACE,
             severity: data.disk_usage_percent > 95 ? AlertSeverity.CRITICAL : AlertSeverity.WARNING,
             title: 'Low Disk Space',
@@ -248,6 +253,7 @@ async function checkDeviceAlerts(deviceId: string, data: any, userId: string | n
         alerts.push({
             deviceId,
             userId,
+            customerId,
             type: AlertType.APPLICATION_ERROR,
             severity: AlertSeverity.ERROR,
             title: 'Application Error',

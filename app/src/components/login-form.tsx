@@ -1,10 +1,10 @@
 'use client';
 
-import {useState} from 'react';
-import {useRouter, useSearchParams} from 'next/navigation';
+import { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import {LogIn} from 'lucide-react';
-import {useAuth} from '@/contexts/auth-context';
+import { LogIn } from 'lucide-react';
+import { useAuth } from '@/contexts/auth-context';
 import PasswordInput from './password-input';
 import {
     Alert,
@@ -26,10 +26,7 @@ export default function LoginForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const redirectTo = searchParams.get('redirect') || '/';
-    const {
-        login,
-        user
-    } = useAuth();
+    const { login, user } = useAuth();
 
     console.log('🔐 LOGIN FORM: Current auth state - User:', user?.email, 'Redirect to:', redirectTo);
 
@@ -44,11 +41,9 @@ export default function LoginForm() {
             await login(email, password, remember);
 
             console.log('✅ LOGIN FORM: Login successful, redirecting to:', redirectTo);
-            console.log('👤 LOGIN FORM: Current user after login:', user?.email);
 
-            // Test different redirect methods
-            console.log('🔄 LOGIN FORM: Using window.location.href for redirect');
-            window.location.href = redirectTo;
+            // Use router.push instead of window.location for now
+            router.push(redirectTo);
 
         } catch (err) {
             console.log('❌ LOGIN FORM: Login failed:', err);
@@ -83,7 +78,7 @@ export default function LoginForm() {
                 size="lg"
                 fullWidth
                 classNames={{
-                    input: "text-base pt-8 pb-2",
+                    input: "text-base",
                     inputWrapper: "h-16",
                     label: "text-sm"
                 }}
@@ -126,7 +121,7 @@ export default function LoginForm() {
                 </div>
             </div>
 
-            <Spacer y={2}/>
+            <Spacer y={2} />
 
             <Button
                 type="submit"
@@ -136,7 +131,7 @@ export default function LoginForm() {
                 isLoading={loading}
                 isDisabled={loading}
                 fullWidth
-                startContent={!loading && <LogIn className="h-5 w-5"/>}
+                startContent={!loading && <LogIn className="h-5 w-5" />}
                 className="font-medium"
             >
                 {loading ? 'Signing in...' : 'Sign in'}

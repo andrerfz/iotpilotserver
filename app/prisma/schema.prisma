@@ -11,240 +11,9 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id           String     @id @default(cuid())
-  email        String     @unique
-  username     String     @unique
-  password     String
-  role         UserRole   @default(USER)
-  status       UserStatus @default(ACTIVE)
-  profileImage String
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-
-  // Customer relationship - nullable for SUPERADMIN
-  customerId   String?
-  customer     Customer?  @relation(fields: [customerId], references: [id])
-
-  // Relations
-  sessions     Session[]
-  devices      Device[]
-  alerts       Alert[]
-  apiKeys      ApiKey[]
-  preferences  UserPreference[]
-
-  @@index([customerId])
-  @@map("users")
-}
-
-model Session {
-  id        String   @id @default(cuid())
-  userId    String
-  token     String   @unique
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-
-  // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("sessions")
-}
-
-model ApiKey {
-  id        String    @id @default(cuid())
-  userId    String
-  name      String
-  key       String    @unique
-  lastUsed  DateTime?
-  expiresAt DateTime?
-  createdAt DateTime  @default(now())
-
-  // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("api_keys")
-}
-
-model Device {
-  id           String     @id @default(cuid())
-  deviceId     String     @unique // hostname-mac format
-  hostname     String
-  deviceType   DeviceType
-  deviceModel  String?
-  architecture String
-  location     String?
-  description  String?
-
-  // Network information
-  ipAddress   String?
-  tailscaleIp String?
-  macAddress  String?
-
-  // Status
-  status   DeviceStatus @default(OFFLINE)
-  lastSeen DateTime?
-  lastBoot DateTime?
-  uptime   String?
-
-  // System information
-  cpuUsage    Float?
-  cpuTemp     Float?
-  memoryUsage Float?
-  memoryTotal Int?
-  diskUsage   Float?
-  diskTotal   String?
-  loadAverage String?
-
-  // Application status
-  appStatus    AppStatus @default(UNKNOWN)
-  agentVersion String?
-
-  // Ownership
-  userId String?
-
-  // Customer relationship - NOT NULL
-  customerId String
-  customer   Customer @relation(fields: [customerId], references: [id])
-
-  // Timestamps
-  registeredAt DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  // Relations
-  user     User?           @relation(fields: [userId], references: [id])
-  metrics  DeviceMetric[]
-  logs     DeviceLog[]
-  alerts   Alert[]
-  commands DeviceCommand[]
-
-  @@index([customerId])
-  @@map("devices")
-}
-
-model DeviceMetric {
-  id        String   @id @default(cuid())
-  deviceId  String
-  metric    String // cpu_usage, memory_usage, temperature, etc.
-  value     Float
-  unit      String? // %, °C, MB, etc.
-  timestamp DateTime @default(now())
-
-  // Relations
-  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
-
-  @@index([deviceId, metric, timestamp])
-  @@map("device_metrics")
-}
-
-model DeviceLog {
-  id        String   @id @default(cuid())
-  deviceId  String
-  level     LogLevel @default(INFO)
-  message   String
-  source    String? // systemd, application, agent, etc.
-  timestamp DateTime @default(now())
-
-  // Relations
-  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
-
-  @@index([deviceId, level, timestamp])
-  @@map("device_logs")
-}
-
-model DeviceCommand {
-  id         String        @id @default(cuid())
-  deviceId   String
-  command    String
-  arguments  String?
-  status     CommandStatus @default(PENDING)
-  output     String?
-  error      String?
-  exitCode   Int?
-  executedAt DateTime?
-  createdAt  DateTime      @default(now())
-  updatedAt  DateTime      @updatedAt
-
-  // Relations
-  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
-
-  @@map("device_commands")
-}
-
-model Alert {
-  id         String        @id @default(cuid())
-  deviceId   String?
-  userId     String?
-  type       AlertType
-  severity   AlertSeverity @default(INFO)
-  title      String
-  message    String
-  resolved   Boolean       @default(false)
-  resolvedAt DateTime?
-  createdAt  DateTime      @default(now())
-  updatedAt  DateTime      @updatedAt
-
-  // Relations
-  device Device? @relation(fields: [deviceId], references: [id], onDelete: Cascade)
-  user   User?   @relation(fields: [userId], references: [id])
-
-  @@index([deviceId, resolved, createdAt])
-  @@map("alerts")
-}
-
-model SystemConfig {
-  id        String   @id @default(cuid())
-  key       String   @unique
-  value     String
-  category  String?
-  updatedAt DateTime @updatedAt
-
-  @@map("system_config")
-}
-
-model UserPreference {
-  id        String             @id @default(cuid())
-  userId    String
-  category  PreferenceCategory
-  key       String
-  value     String
-  createdAt DateTime           @default(now())
-  updatedAt DateTime           @updatedAt
-
-  // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, category, key])
-  @@index([userId, category])
-  @@map("user_preferences")
-}
-
-// Customer model
-model Customer {
-  id              String         @id @default(cuid())
-  name            String
-  slug            String         @unique
-  domain          String?        @unique
-  status          CustomerStatus @default(ACTIVE)
-  subscriptionTier String        @default("FREE")
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-
-  // Relations
-  users    User[]
-  devices  Device[]
-
-  @@map("customers")
-}
-
-// Enums
-enum PreferenceCategory {
-  PROFILE
-  NOTIFICATIONS
-  SECURITY
-  SYSTEM
-  APPEARANCE
-  ACCESSIBILITY
-}
+// =====================================================
+// ENUMS
+// =====================================================
 
 enum UserRole {
   SUPERADMIN
@@ -310,6 +79,7 @@ enum CommandStatus {
 
 enum AlertType {
   DEVICE_OFFLINE
+  DEVICE_REGISTERED
   HIGH_CPU
   HIGH_MEMORY
   HIGH_TEMPERATURE
@@ -325,4 +95,283 @@ enum AlertSeverity {
   WARNING
   ERROR
   CRITICAL
+}
+
+enum PreferenceCategory {
+  PROFILE
+  NOTIFICATIONS
+  SECURITY
+  SYSTEM
+  APPEARANCE
+  ACCESSIBILITY
+}
+
+// =====================================================
+// CORE MODELS
+// =====================================================
+
+model Customer {
+  id               String         @id @default(cuid())
+  name             String
+  slug             String
+  domain           String?
+  status           CustomerStatus @default(ACTIVE)
+  subscriptionTier String         @default("FREE")
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  deletedAt        DateTime? // Soft delete support
+
+  // Relations
+  users   User[]
+  devices Device[]
+  alerts  Alert[]
+  apiKeys ApiKey[]
+
+  @@unique([slug])
+  @@unique([domain])
+  @@map("customers")
+}
+
+model User {
+  id           String     @id @default(cuid())
+  email        String
+  username     String
+  password     String
+  role         UserRole   @default(USER)
+  status       UserStatus @default(ACTIVE)
+  profileImage String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  deletedAt    DateTime? // Soft delete support
+
+  // Customer relationship - nullable for SUPERADMIN
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id])
+
+  // Relations
+  sessions    Session[]
+  devices     Device[]
+  alerts      Alert[]
+  apiKeys     ApiKey[]
+  preferences UserPreference[]
+
+  @@unique([email])
+  @@unique([username])
+  @@index([customerId])
+  @@map("users")
+}
+
+model Session {
+  id        String    @id @default(cuid())
+  userId    String
+  token     String
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+  deletedAt DateTime? // Soft delete support
+
+  // Relations
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([token])
+  @@map("sessions")
+}
+
+model ApiKey {
+  id         String    @id @default(cuid())
+  userId     String
+  customerId String? // Inherited from user for easier validation
+  name       String
+  key        String
+  lastUsed   DateTime?
+  expiresAt  DateTime?
+  createdAt  DateTime  @default(now())
+  deletedAt  DateTime? // Soft delete support
+
+  // Relations
+  user     User      @relation(fields: [userId], references: [id])
+  customer Customer? @relation(fields: [customerId], references: [id])
+
+  @@unique([key])
+  @@index([customerId])
+  @@map("api_keys")
+}
+
+// =====================================================
+// DEVICE MODELS
+// =====================================================
+
+model Device {
+  id           String     @id @default(cuid())
+  deviceId     String // hostname-mac format
+  hostname     String
+  deviceType   DeviceType
+  deviceModel  String?
+  architecture String
+  location     String?
+  description  String?
+  deletedAt    DateTime? // Soft delete support
+
+  // Network information
+  ipAddress   String?
+  tailscaleIp String?
+  macAddress  String?
+
+  // Status
+  status   DeviceStatus @default(OFFLINE)
+  lastSeen DateTime?
+  lastBoot DateTime?
+  uptime   String?
+
+  // System information
+  cpuUsage    Float?
+  cpuTemp     Float?
+  memoryUsage Float?
+  memoryTotal Int?
+  diskUsage   Float?
+  diskTotal   String?
+  loadAverage String?
+
+  // Application status
+  appStatus    AppStatus @default(UNKNOWN)
+  agentVersion String?
+
+  // Ownership
+  userId String?
+
+  // Customer relationship - NOT NULL
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+
+  // Timestamps
+  registeredAt DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  user     User?           @relation(fields: [userId], references: [id])
+  metrics  DeviceMetric[]
+  logs     DeviceLog[]
+  alerts   Alert[]
+  commands DeviceCommand[]
+
+  @@unique([deviceId])
+  @@index([customerId])
+  @@index([status, customerId])
+  @@map("devices")
+}
+
+model DeviceMetric {
+  id        String    @id @default(cuid())
+  deviceId  String
+  metric    String // cpu_usage, memory_usage, temperature, etc.
+  value     Float
+  unit      String?
+  timestamp DateTime  @default(now())
+  deletedAt DateTime? // Soft delete support
+
+  // Relations
+  device Device @relation(fields: [deviceId], references: [id])
+
+  @@index([deviceId, metric, timestamp])
+  @@map("device_metrics")
+}
+
+model DeviceLog {
+  id        String    @id @default(cuid())
+  deviceId  String
+  level     LogLevel  @default(INFO)
+  message   String
+  source    String?
+  timestamp DateTime  @default(now())
+  deletedAt DateTime? // Soft delete support
+
+  // Relations
+  device Device @relation(fields: [deviceId], references: [id])
+
+  @@index([deviceId, level, timestamp])
+  @@map("device_logs")
+}
+
+model DeviceCommand {
+  id         String        @id @default(cuid())
+  deviceId   String
+  command    String
+  arguments  String?
+  status     CommandStatus @default(PENDING)
+  output     String?
+  error      String?
+  exitCode   Int?
+  executedAt DateTime?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  deletedAt  DateTime? // Soft delete support
+
+  // Relations
+  device Device @relation(fields: [deviceId], references: [id])
+
+  @@map("device_commands")
+}
+
+// =====================================================
+// ALERTING MODELS
+// =====================================================
+
+model Alert {
+  id         String        @id @default(cuid())
+  deviceId   String?
+  userId     String?
+  customerId String // Required for multi-tenant
+  type       AlertType
+  severity   AlertSeverity @default(INFO)
+  title      String
+  message    String
+  source     String?
+  resolved   Boolean       @default(false)
+  resolvedAt DateTime?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  deletedAt  DateTime? // Soft delete support
+
+  // Relations
+  device   Device?  @relation(fields: [deviceId], references: [id])
+  user     User?    @relation(fields: [userId], references: [id])
+  customer Customer @relation(fields: [customerId], references: [id])
+
+  @@index([deviceId, resolved, createdAt])
+  @@index([customerId])
+  @@index([customerId, resolved])
+  @@map("alerts")
+}
+
+// =====================================================
+// PREFERENCES AND SYSTEM MODELS
+// =====================================================
+
+model UserPreference {
+  id        String             @id @default(cuid())
+  userId    String
+  category  PreferenceCategory
+  key       String
+  value     String
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  deletedAt DateTime? // Soft delete support
+
+  // Relations
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, category, key])
+  @@index([userId, category])
+  @@map("user_preferences")
+}
+
+model SystemConfig {
+  id        String    @id @default(cuid())
+  key       String
+  value     String
+  category  String?
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime? // Soft delete support
+
+  @@unique([key])
+  @@map("system_config")
 }
