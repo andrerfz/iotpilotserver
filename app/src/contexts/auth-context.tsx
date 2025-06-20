@@ -2,12 +2,14 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import {UserRole} from '@prisma/client';
 
 interface User {
     id: string;
     email: string;
     username: string;
-    role: string;
+    role: UserRole;
+    profileImage?: string;
     createdAt: string;
     _count: {
         devices: number;
