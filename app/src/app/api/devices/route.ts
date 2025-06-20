@@ -1,3 +1,4 @@
+
 import {NextRequest, NextResponse} from 'next/server';
 import {AlertSeverity, AlertType, DeviceStatus, DeviceType, PrismaClient} from '@prisma/client';
 import {z} from 'zod';
@@ -20,72 +21,81 @@ const deviceRegistrationSchema = z.object({
 // GET /api/devices - List all devices
 export async function GET(request: NextRequest) {
     try {
-        const {
-            user,
-            error
-        } = await authenticate(request);
-        if (error || !user) {
-            return NextResponse.json({error: 'Unauthorized'}, {status: 401});
+        // Get user from middleware headers instead of calling authenticate()
+        const userId = request.headers.get('x-user-id');
+        const userRole = request.headers.get('x-user-role');
+
+        if (!userId) {
+            return NextResponse.json(
+                {error: 'Unauthorized'},
+                {status: 401}
+            );
         }
 
-        const searchParams = new URL(request.url).searchParams;
-        const status = searchParams.get('status');
-        const limit = parseInt(searchParams.get('limit') || '50', 10);
+        const url = new URL(request.url);
+        const status = url.searchParams.get('status');
+        const page = parseInt(url.searchParams.get('page') || '1');
+        const limit = parseInt(url.searchParams.get('limit') || '50');
+        const skip = (page - 1) * limit;
 
-        // Build where clause
-        const whereClause: any = {};
-
-        // Filter by user (non-admin users only see their devices)
-        if (user.role !== 'ADMIN') {
-            whereClause.userId = user.id;
-        }
-
-        // Filter by status if provided
+        const filter: any = {};
         if (status) {
-            whereClause.status = status;
+            filter.status = status;
         }
 
-        // Fetch devices with alert counts
+        // For non-SUPERADMIN users, filter by userId
+        if (userRole !== 'SUPERADMIN') {
+            filter.userId = userId;
+        }
+
         const devices = await prisma.device.findMany({
-            where: whereClause,
-            orderBy: {lastSeen: 'desc'},
-            take: limit,
+            where: filter,
             include: {
                 _count: {
                     select: {
                         alerts: {
-                            where: {resolved: false}
+                            where: {
+                                resolved: false
+                            }
                         }
                     }
                 }
-            }
+            },
+            orderBy: {
+                lastSeen: 'desc'
+            },
+            skip,
+            take: limit
         });
 
-        // Format devices for response
-        const formattedDevices = devices.map((device: {
-            _count: {
-                alerts: any;
-            };
-        }) => ({
-            ...device,
+        // Rest of the function stays the same...
+        const formattedDevices = devices.map(device => ({
+            id: device.id,
+            deviceId: device.deviceId,
+            hostname: device.hostname,
+            status: device.status,
+            deviceType: device.deviceType,
+            ipAddress: device.ipAddress,
+            tailscaleIp: device.tailscaleIp,
+            lastSeen: device.lastSeen,
+            cpuUsage: device.cpuUsage,
+            cpuTemp: device.cpuTemp,
+            memoryUsage: device.memoryUsage,
+            location: device.location,
+            description: device.description,
+            uptime: device.uptime,
+            appStatus: device.appStatus,
+            agentVersion: device.agentVersion,
+            registeredAt: device.registeredAt,
             alertCount: device._count.alerts
         }));
 
-        // Calculate stats
         const stats = {
             total: devices.length,
-            online: devices.filter((d: {
-                status: string;
-            }) => d.status === 'ONLINE').length,
-            offline: devices.filter((d: {
-                status: string;
-            }) => d.status === 'OFFLINE').length,
-            maintenance: devices.filter((d: {
-                status: string;
-            }) => d.status === 'MAINTENANCE').length,
-            error: devices.filter((d: {
-                status: string;
-            }) => d.status === 'ERROR').length
+            online: devices.filter((d: {status: string;}) => d.status === 'ONLINE').length,
+            offline: devices.filter((d: {status: string;}) => d.status === 'OFFLINE').length,
+            maintenance: devices.filter((d: {status: string;}) => d.status === 'MAINTENANCE').length,
+            error: devices.filter((d: {status: string;}) => d.status === 'ERROR').length
         };
 
         return NextResponse.json({

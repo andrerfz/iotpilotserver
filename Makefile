@@ -257,7 +257,14 @@ local-install: check-env
 	@echo "🚀 Setting up local development..."
 	@chmod +x scripts/*.sh
 	@./scripts/setup-local.sh
+	@echo "▶️  Starting services for first-time setup..."
+	@docker compose -f $(LOCAL_COMPOSE_FILE) up -d postgres redis influxdb
+	@echo "⏳ Waiting for database..."
+	@sleep 10
+	@echo "🗄️ Applying migrations..."
+	@make apply-migration || echo "⚠️ Migration failed, will try again on start"
 	@echo "✅ Local setup complete!"
+	@echo "💡 Run 'make local-start' to start all services"
 
 local-start: check-env
 	@echo "▶️  Starting local services..."

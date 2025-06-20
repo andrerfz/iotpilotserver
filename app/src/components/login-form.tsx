@@ -78,7 +78,7 @@ export default function LoginForm() {
                 size="lg"
                 fullWidth
                 classNames={{
-                    input: "text-base pt-8 pb-2",
+                    input: "text-base",
                     inputWrapper: "h-16",
                     label: "text-sm"
                 }}
