@@ -282,7 +282,10 @@ local-stop:
 	@docker compose -f $(LOCAL_COMPOSE_FILE) down
 	@echo "✅ Local services stopped!"
 
-local-restart: local-stop local-start
+local-restart:
+	@docker exec iotpilot-server-app rm -rf .next
+	@make local-stop
+	@make local-start
 
 local-restart-app:
 	@docker compose -f $(LOCAL_COMPOSE_FILE) restart iotpilot-app

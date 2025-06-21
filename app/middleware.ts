@@ -31,6 +31,7 @@ export async function middleware(request: NextRequest) {
     const {pathname} = request.nextUrl;
 
     console.log('🛡️ MIDDLEWARE: Processing request to:', pathname);
+    console.log('🛡️ MIDDLEWARE: API_KEY_ROUTES check:', API_KEY_ROUTES.some(route => pathname.startsWith(route)));
 
     // Skip middleware for static files and _next
     if (
