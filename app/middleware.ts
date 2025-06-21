@@ -31,7 +31,6 @@ export async function middleware(request: NextRequest) {
     const {pathname} = request.nextUrl;
 
     console.log('🛡️ MIDDLEWARE: Processing request to:', pathname);
-    console.log('🛡️ MIDDLEWARE: API_KEY_ROUTES check:', API_KEY_ROUTES.some(route => pathname.startsWith(route)));
 
     // Skip middleware for static files and _next
     if (
@@ -99,9 +98,14 @@ export async function middleware(request: NextRequest) {
                     requestHeaders.set('x-user-email', session.user.email);
                     requestHeaders.set('x-user-role', session.user.role);
 
-                    // Add customer context if needed
+                    // CRITICAL: Always add customer context if available
                     if (session.user.customerId) {
                         requestHeaders.set('x-customer-id', session.user.customerId);
+                        console.log('🏢 MIDDLEWARE: Added customer context:', session.user.customerId);
+                    } else if (session.user.role === 'SUPERADMIN') {
+                        console.log('👑 MIDDLEWARE: SUPERADMIN user - no customer context needed');
+                    } else {
+                        console.log('⚠️ MIDDLEWARE: Non-SUPERADMIN user without customerId!');
                     }
 
                     return NextResponse.next({
@@ -111,11 +115,17 @@ export async function middleware(request: NextRequest) {
                     });
                 } else {
                     console.log('❌ MIDDLEWARE: No valid session found for API route');
-                    // Don't immediately fail - let it continue to check if it's an error
+                    return NextResponse.json(
+                        {error: 'Session expired or invalid'},
+                        {status: 401}
+                    );
                 }
             } catch (error) {
                 console.error('❌ MIDDLEWARE: Session validation error for API route:', error);
-                // Log error but continue to final auth failure
+                return NextResponse.json(
+                    {error: 'Authentication error'},
+                    {status: 500}
+                );
             }
         }
 
@@ -202,7 +212,7 @@ export async function middleware(request: NextRequest) {
         // Check admin routes
         if (ADMIN_ROUTES.some(route => pathname.startsWith(route))) {
             console.log('👮 MIDDLEWARE: Admin route detected, checking role');
-            if (session.user.role !== 'ADMIN') {
+            if (session.user.role !== 'ADMIN' && session.user.role !== 'SUPERADMIN') {
                 console.log('❌ MIDDLEWARE: User lacks admin role, redirecting');
                 if (pathname.startsWith('/api')) {
                     return NextResponse.json(
@@ -227,6 +237,11 @@ export async function middleware(request: NextRequest) {
             // Add customer context if needed
             if (session.user.customerId) {
                 requestHeaders.set('x-customer-id', session.user.customerId);
+                console.log('🏢 MIDDLEWARE: Added customer context for API route:', session.user.customerId);
+            } else if (session.user.role === 'SUPERADMIN') {
+                console.log('👑 MIDDLEWARE: SUPERADMIN user - no customer context required');
+            } else {
+                console.log('⚠️ MIDDLEWARE: Non-SUPERADMIN user without customerId!');
             }
 
             return NextResponse.next({

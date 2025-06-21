@@ -1,13 +1,13 @@
 import jwt from 'jsonwebtoken';
 import { NextRequest } from 'next/server';
 import { PrismaClient, UserRole } from '@prisma/client';
-import { 
-    hasRole, 
-    isAdmin, 
-    isSuperAdmin, 
-    sessionHasRole, 
-    sessionIsAdmin, 
-    sessionIsSuperAdmin 
+import {
+    hasRole,
+    isAdmin,
+    isSuperAdmin,
+    sessionHasRole,
+    sessionIsAdmin,
+    sessionIsSuperAdmin
 } from './permissions';
 
 const prisma = new PrismaClient();
@@ -64,7 +64,8 @@ export async function authenticate(request: NextRequest) {
                 token,
                 expiresAt: {
                     gt: new Date()
-                }
+                },
+                deletedAt: null // Exclude soft deleted sessions
             },
             include: {
                 user: {
@@ -73,13 +74,14 @@ export async function authenticate(request: NextRequest) {
                         email: true,
                         username: true,
                         role: true,
-                        customerId: true
+                        customerId: true,
+                        deletedAt: true
                     }
                 }
             }
         });
 
-        if (!session) {
+        if (!session || session.user.deletedAt) {
             return { user: null, error: 'Session expired' };
         }
 
@@ -113,11 +115,13 @@ export function requireAuth(requiredRole?: UserRole) {
     };
 }
 
+// Updated validateApiKey function with customerId support and apiKeyRecord return
 export async function validateApiKey(apiKey: string) {
     try {
         const key = await prisma.apiKey.findFirst({
             where: {
                 key: apiKey,
+                deletedAt: null, // Exclude soft deleted API keys
                 OR: [
                     { expiresAt: null },
                     { expiresAt: { gt: new Date() } }
@@ -130,26 +134,53 @@ export async function validateApiKey(apiKey: string) {
                         email: true,
                         username: true,
                         role: true,
-                        customerId: true
+                        customerId: true,
+                        deletedAt: true
                     }
                 }
             }
         });
 
-        if (key) {
+        if (key && !key.user.deletedAt) {
             // Update last used (don't await to avoid blocking)
             prisma.apiKey.update({
                 where: { id: key.id },
                 data: { lastUsed: new Date() }
             }).catch(err => console.error('Failed to update API key last used:', err));
 
-            return { valid: true, user: key.user };
+            console.log('✅ API Key validation successful:', {
+                keyId: key.id,
+                keyName: key.name,
+                userId: key.user.id,
+                userRole: key.user.role,
+                userCustomerId: key.user.customerId,
+                keyCustomerId: key.customerId
+            });
+
+            // Return the complete response with apiKeyRecord
+            return {
+                valid: true,
+                user: key.user,
+                apiKeyRecord: {
+                    id: key.id,
+                    name: key.name,
+                    customerId: key.customerId,
+                    lastUsed: key.lastUsed,
+                    expiresAt: key.expiresAt,
+                    createdAt: key.createdAt
+                }
+            };
         }
 
-        return { valid: false, user: null };
+        console.log('❌ API Key validation failed:', {
+            keyExists: !!key,
+            userDeleted: key?.user?.deletedAt ? 'yes' : 'no'
+        });
+
+        return { valid: false, user: null, apiKeyRecord: null };
     } catch (error) {
         console.error('API key validation error:', error);
-        return { valid: false, user: null };
+        return { valid: false, user: null, apiKeyRecord: null };
     }
 }
 
@@ -171,13 +202,14 @@ export async function getServerSession() {
             return null;
         }
 
-        // Check if session is valid in database
+        // Check session is still valid in database
         const session = await prisma.session.findFirst({
             where: {
                 token,
                 expiresAt: {
                     gt: new Date()
-                }
+                },
+                deletedAt: null // Exclude soft deleted sessions
             },
             include: {
                 user: {
@@ -186,35 +218,29 @@ export async function getServerSession() {
                         email: true,
                         username: true,
                         role: true,
-                        customerId: true
+                        customerId: true,
+                        deletedAt: true
                     }
                 }
             }
         });
 
-        if (!session) {
+        if (!session || session.user.deletedAt) {
             return null;
         }
 
-        // Return session with user data
         return {
-            user: session.user,
-            role: session.user.role,
             userId: session.user.id,
-            customerId: session.user.customerId || 'default' // Fallback to 'default' if not set
+            email: session.user.email,
+            username: session.user.username,
+            role: session.user.role,
+            customerId: session.user.customerId
         };
     } catch (error) {
-        console.error('Error getting server session:', error);
+        console.error('Server session check failed:', error);
         return null;
     }
 }
 
-// Re-export permission service functions
-export {
-    hasRole,
-    isAdmin,
-    isSuperAdmin,
-    sessionHasRole,
-    sessionIsAdmin,
-    sessionIsSuperAdmin
-};
+// Helper functions for role checking
+export { hasRole, isAdmin, isSuperAdmin, sessionHasRole, sessionIsAdmin, sessionIsSuperAdmin };

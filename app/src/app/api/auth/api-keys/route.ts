@@ -20,11 +20,15 @@ export async function GET(request: NextRequest) {
         }
 
         const apiKeys = await prisma.apiKey.findMany({
-            where: { userId: user.id },
+            where: {
+                userId: user.id,
+                deletedAt: null
+            },
             select: {
                 id: true,
                 name: true,
                 key: true,
+                customerId: true,
                 lastUsed: true,
                 expiresAt: true,
                 createdAt: true
@@ -63,14 +67,22 @@ export async function POST(request: NextRequest) {
         // Generate API key
         const apiKey = `iot_${crypto.randomBytes(32).toString('hex')}`;
 
-        // Create API key record
+        // Create API key record with customerId inherited from user
         const newApiKey = await prisma.apiKey.create({
             data: {
                 userId: user.id,
+                customerId: user.customerId, // Inherit from user
                 name,
                 key: apiKey,
                 expiresAt: expiresAt ? new Date(expiresAt) : null
             }
+        });
+
+        console.log('✅ API Key created:', {
+            keyId: newApiKey.id,
+            name: newApiKey.name,
+            userId: user.id,
+            customerId: user.customerId
         });
 
         return NextResponse.json({
@@ -78,6 +90,7 @@ export async function POST(request: NextRequest) {
                 id: newApiKey.id,
                 name: newApiKey.name,
                 key: apiKey, // Return full key only on creation
+                customerId: newApiKey.customerId,
                 expiresAt: newApiKey.expiresAt,
                 createdAt: newApiKey.createdAt
             },
@@ -100,7 +113,7 @@ export async function POST(request: NextRequest) {
     }
 }
 
-// DELETE /api/auth/api-keys/:id - Delete API key
+// DELETE /api/auth/api-keys/:id - Delete API key (soft delete)
 export async function DELETE(request: NextRequest) {
     try {
         const { user, error } = await authenticate(request);
@@ -122,7 +135,8 @@ export async function DELETE(request: NextRequest) {
         const apiKey = await prisma.apiKey.findFirst({
             where: {
                 id: keyId,
-                userId: user.id
+                userId: user.id,
+                deletedAt: null
             }
         });
 
@@ -133,9 +147,10 @@ export async function DELETE(request: NextRequest) {
             );
         }
 
-        // Delete API key
-        await prisma.apiKey.delete({
-            where: { id: keyId }
+        // Soft delete API key
+        await prisma.apiKey.update({
+            where: { id: keyId },
+            data: { deletedAt: new Date() }
         });
 
         return NextResponse.json({
