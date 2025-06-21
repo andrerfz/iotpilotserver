@@ -17,6 +17,7 @@ const PUBLIC_ROUTES = [
 // API routes that accept EITHER JWT token OR API key (handled in route handlers)
 const API_KEY_ROUTES = [
     '/api/devices/heartbeat',
+    '/api/devices',
     '/api/devices/tailscale-register'
 ];
 

@@ -21,14 +21,34 @@ const deviceRegistrationSchema = z.object({
 // GET /api/devices - List all devices
 export async function GET(request: NextRequest) {
     try {
-        const userId = request.headers.get('x-user-id');
-        const userRole = request.headers.get('x-user-role');
+        let userId: string | null = null;
+        let userRole: string | null = null;
 
-        if (!userId) {
-            return NextResponse.json(
-                {error: 'Unauthorized - JWT token required for device listing'},
-                {status: 401}
-            );
+        // Try API key authentication first
+        const apiKey = request.headers.get('x-api-key') ||
+            request.headers.get('authorization')?.replace('ApiKey ', '');
+
+        if (apiKey) {
+            console.log('🔑 DEVICES GET: Using API key authentication');
+            const { valid, user } = await validateApiKey(apiKey);
+            if (valid && user) {
+                userId = user.id;
+                userRole = user.role;
+            } else {
+                return NextResponse.json({error: 'Invalid API key'}, {status: 401});
+            }
+        } else {
+            // Try JWT authentication (from middleware headers)
+            console.log('🔐 DEVICES GET: Using JWT authentication');
+            userId = request.headers.get('x-user-id');
+            userRole = request.headers.get('x-user-role');
+
+            if (!userId) {
+                return NextResponse.json(
+                    {error: 'Unauthorized'},
+                    {status: 401}
+                );
+            }
         }
 
         const url = new URL(request.url);
@@ -47,6 +67,7 @@ export async function GET(request: NextRequest) {
             filter.userId = userId;
         }
 
+        // Rest stays the same...
         const devices = await prisma.device.findMany({
             where: filter,
             include: {
@@ -67,7 +88,6 @@ export async function GET(request: NextRequest) {
             take: limit
         });
 
-        // Rest of the function stays the same...
         const formattedDevices = devices.map(device => ({
             id: device.id,
             deviceId: device.deviceId,
