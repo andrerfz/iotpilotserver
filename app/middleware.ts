@@ -1,6 +1,5 @@
 import type {NextRequest} from 'next/server';
 import {NextResponse} from 'next/server';
-import {verifyToken} from '@/lib/auth';
 import prisma from '@/lib/db';
 
 // Public routes that don't require any authentication
@@ -18,7 +17,6 @@ const PUBLIC_ROUTES = [
 // API routes that accept EITHER JWT token OR API key (handled in route handlers)
 const API_KEY_ROUTES = [
     '/api/devices/heartbeat',
-    '/api/devices',
     '/api/devices/tailscale-register'
 ];
 
@@ -111,16 +109,21 @@ export async function middleware(request: NextRequest) {
                     });
                 } else {
                     console.log('❌ MIDDLEWARE: No valid session found for API route');
+                    // Don't immediately fail - let it continue to check if it's an error
                 }
             } catch (error) {
                 console.error('❌ MIDDLEWARE: Session validation error for API route:', error);
+                // Log error but continue to final auth failure
             }
         }
 
-        // No valid API key or JWT token
+        // No valid API key or JWT token - return 401
         console.log('🚫 MIDDLEWARE: No valid auth for API route, returning 401');
         return NextResponse.json(
-            {error: 'Authentication required - provide API key or JWT token'},
+            {
+                error: 'Authentication required',
+                details: 'Provide either X-API-Key header or valid JWT token'
+            },
             {status: 401}
         );
     }

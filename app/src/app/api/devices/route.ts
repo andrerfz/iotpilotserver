@@ -21,13 +21,12 @@ const deviceRegistrationSchema = z.object({
 // GET /api/devices - List all devices
 export async function GET(request: NextRequest) {
     try {
-        // Get user from middleware headers instead of calling authenticate()
         const userId = request.headers.get('x-user-id');
         const userRole = request.headers.get('x-user-role');
 
         if (!userId) {
             return NextResponse.json(
-                {error: 'Unauthorized'},
+                {error: 'Unauthorized - JWT token required for device listing'},
                 {status: 401}
             );
         }
@@ -118,15 +117,13 @@ export async function POST(request: NextRequest) {
         let userId: string | null = null;
         let authUser: any = null;
 
-        // Try API key authentication first
+        // Try API key authentication first (for device agents)
         const apiKey = request.headers.get('x-api-key') ||
             request.headers.get('authorization')?.replace('ApiKey ', '');
 
         if (apiKey) {
-            const {
-                valid,
-                user
-            } = await validateApiKey(apiKey);
+            console.log('🔑 DEVICES: Using API key authentication');
+            const { valid, user } = await validateApiKey(apiKey);
             if (valid && user) {
                 userId = user.id;
                 authUser = user;
@@ -134,16 +131,17 @@ export async function POST(request: NextRequest) {
                 return NextResponse.json({error: 'Invalid API key'}, {status: 401});
             }
         } else {
-            // Try user authentication
-            const {
-                user,
-                error
-            } = await authenticate(request);
-            if (error || !user) {
+            // Try JWT authentication (from middleware headers)
+            console.log('🔐 DEVICES: Using JWT authentication');
+            userId = request.headers.get('x-user-id');
+            const userEmail = request.headers.get('x-user-email');
+            const userRole = request.headers.get('x-user-role');
+
+            if (!userId) {
                 return NextResponse.json({error: 'Unauthorized'}, {status: 401});
             }
-            userId = user.id;
-            authUser = user;
+
+            authUser = { id: userId, email: userEmail, role: userRole };
         }
 
         const body = await request.json();
