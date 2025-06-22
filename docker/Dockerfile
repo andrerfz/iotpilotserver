@@ -22,14 +22,8 @@ COPY tailwind.config.js ./
 COPY next.config.js ./
 COPY tsconfig.json ./
 
-# Install dependencies
-RUN if [ -f package-lock.json ]; then \
-        echo "Found package-lock.json, using npm ci"; \
-        npm ci --include=dev && npm cache clean --force; \
-    else \
-        echo "No package-lock.json found, using npm install"; \
-        npm install --include=dev && npm cache clean --force; \
-    fi
+# Clean install - ensures fresh node_modules
+RUN npm ci --include=dev && npm cache clean --force
 
 # Copy source code
 COPY . .
@@ -46,9 +40,6 @@ RUN npm run build
 
 # Verify CSS was built properly
 RUN ls -la .next/static/css/ || echo "No CSS files found"
-
-# Remove dev dependencies to reduce image size
-RUN npm prune --omit=dev
 
 # Production stage
 FROM node:20-alpine3.18 AS production
@@ -76,11 +67,11 @@ RUN addgroup -g 1001 -S nodejs && \
 # Set working directory
 WORKDIR /app
 
-# Copy package files
+# Copy package files first
 COPY --from=base --chown=iotpilot:nodejs /app/package*.json ./
 
-# Copy node_modules (production only)
-COPY --from=base --chown=iotpilot:nodejs /app/node_modules ./node_modules
+# Fresh install in production (only production deps)
+RUN npm ci --omit=dev && npm cache clean --force
 
 # Copy built Next.js application
 COPY --from=base --chown=iotpilot:nodejs /app/.next ./.next
@@ -98,8 +89,10 @@ COPY --from=base --chown=iotpilot:nodejs /app/postcss.config.js ./
 COPY --from=base --chown=iotpilot:nodejs /app/tsconfig.json ./
 COPY --from=base --chown=iotpilot:nodejs /app/next-env.d.ts ./
 
-# Copy Prisma files
+# Copy Prisma files and generated client
 COPY --from=base --chown=iotpilot:nodejs /app/prisma ./prisma
+COPY --from=base --chown=iotpilot:nodejs /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=base --chown=iotpilot:nodejs /app/node_modules/@prisma ./node_modules/@prisma
 
 # Copy source directory (needed for API routes in Next.js 14 app directory)
 COPY --from=base --chown=iotpilot:nodejs /app/src ./src
