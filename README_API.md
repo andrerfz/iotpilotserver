@@ -62,7 +62,7 @@
 ```json
 {
   "email": "string (required) - User email",
-  "password": "string (required) - User password", 
+  "password": "string (required) - User password",
   "remember": "boolean (optional) - Extend session to 7 days"
 }
 ```
@@ -74,7 +74,7 @@
   "user": {
     "id": "string",
     "email": "string",
-    "username": "string", 
+    "username": "string",
     "role": "ADMIN|USER|READONLY"
   },
   "token": "string"
@@ -240,7 +240,7 @@
   ],
   "stats": {
     "total": "number",
-    "online": "number", 
+    "online": "number",
     "offline": "number",
     "maintenance": "number",
     "error": "number"
@@ -258,7 +258,7 @@
 ```json
 {
   "device_id": "string (required) - Unique device identifier",
-  "hostname": "string (required) - Device hostname", 
+  "hostname": "string (required) - Device hostname",
   "device_type": "string (required) - Device type",
   "device_model": "string (optional) - Device model",
   "architecture": "string (required) - CPU architecture",
@@ -281,7 +281,7 @@
     "deviceModel": "string|null",
     "architecture": "string",
     "location": "string|null",
-    "ipAddress": "string|null", 
+    "ipAddress": "string|null",
     "tailscaleIp": "string|null",
     "macAddress": "string|null",
     "status": "ONLINE",
@@ -322,10 +322,10 @@
 ```json
 {
   "success": true,
-  "device": { /* device object */ },
+  "device": { "...device object..." },
   "tailscale": {
     "user": "string",
-    "name": "string", 
+    "name": "string",
     "ip": "string"
   }
 }
@@ -350,14 +350,12 @@
   "memory_used_mb": "number (optional) - Memory used MB",
   "memory_total_mb": "number (optional) - Total memory MB",
   "disk_usage_percent": "number (optional) - Disk usage %",
-  "disk_used": "string (optional) - Disk used",
-  "disk_total": "string (optional) - Total disk",
-  "app_status": "RUNNING|STOPPED|ERROR|NOT_INSTALLED|UNKNOWN (optional)",
-  "agent_version": "string (optional) - Agent version",
+  "disk_used_gb": "number (optional) - Disk used GB",
+  "disk_total_gb": "number (optional) - Total disk GB",
+  "network_rx_mb": "number (optional) - Network received MB",
+  "network_tx_mb": "number (optional) - Network transmitted MB",
   "last_boot": "string (optional) - Last boot time",
-  "timestamp": "string (optional) - Current timestamp",
-  "ip_address": "string (optional) - IP address",
-  "tailscale_ip": "string (optional) - Tailscale IP"
+  "app_status": "string (optional) - Application status"
 }
 ```
 
@@ -365,8 +363,7 @@
 
 ```json
 {
-  "status": "success",
-  "message": "Heartbeat received",
+  "message": "Heartbeat received successfully",
   "device": {
     "id": "string",
     "status": "ONLINE",
@@ -377,7 +374,7 @@
 
 ### GET /api/devices/[id]
 
-**Description**: Get device details  
+**Description**: Get specific device details  
 **Auth**: JWT required
 
 **Path Parameters**:
@@ -388,62 +385,30 @@
 
 ```json
 {
-  "id": "string",
-  "deviceId": "string",
-  "hostname": "string",
-  "deviceType": "string",
-  "deviceModel": "string|null",
-  "architecture": "string",
-  "location": "string|null",
-  "description": "string|null",
-  "ipAddress": "string|null",
-  "tailscaleIp": "string|null",
-  "macAddress": "string|null",
-  "status": "string",
-  "lastSeen": "string|null",
-  "lastBoot": "string|null",
-  "uptime": "string|null",
-  "cpuUsage": "number|null",
-  "cpuTemp": "number|null",
-  "memoryUsage": "number|null",
-  "memoryTotal": "number|null", 
-  "diskUsage": "number|null",
-  "diskTotal": "string|null",
-  "loadAverage": "string|null",
-  "appStatus": "string",
-  "agentVersion": "string|null",
-  "userId": "string|null",
-  "registeredAt": "string",
-  "updatedAt": "string",
-  "alertCount": "number",
-  "metrics": {
-    "cpu_usage": [
+  "success": true,
+  "data": {
+    "id": "string",
+    "deviceId": "string",
+    "hostname": "string",
+    "deviceType": "string",
+    "status": "string",
+    "lastSeen": "string",
+    "metrics": [
       {
         "timestamp": "string",
         "value": "number",
         "unit": "string|null"
       }
+    ],
+    "commands": [
+      {
+        "id": "string",
+        "command": "string",
+        "status": "string",
+        "createdAt": "string"
+      }
     ]
-  },
-  "alerts": [
-    {
-      "id": "string",
-      "type": "string",
-      "severity": "string",
-      "title": "string", 
-      "message": "string",
-      "resolved": "boolean",
-      "createdAt": "string"
-    }
-  ],
-  "commands": [
-    {
-      "id": "string",
-      "command": "string",
-      "status": "string",
-      "createdAt": "string"
-    }
-  ]
+  }
 }
 ```
 
@@ -460,10 +425,14 @@
 
 ```json
 {
-  "hostname": "string (optional) - Device hostname",
-  "location": "string (optional) - Physical location", 
+  "name": "string (optional) - Device name",
+  "ipAddress": "string (optional) - IP address",
+  "sshUsername": "string (optional) - SSH username",
+  "sshPassword": "string (optional) - SSH password",
+  "sshPort": "number (optional) - SSH port",
   "description": "string (optional) - Device description",
-  "status": "ONLINE|OFFLINE|MAINTENANCE|ERROR (optional) - Device status"
+  "location": "string (optional) - Physical location",
+  "tags": "array[string] (optional) - Device tags"
 }
 ```
 
@@ -471,7 +440,7 @@
 
 ```json
 {
-  "device": { /* updated device object */ },
+  "success": true,
   "message": "Device updated successfully"
 }
 ```
@@ -534,6 +503,186 @@
   "processed_points": "number"
 }
 ```
+
+---
+
+## 🚨 Alert Management
+
+### GET /api/devices/[id]/alerts
+
+**Description**: Get device alerts  
+**Auth**: JWT required
+
+**Path Parameters**:
+
+- `id` (required): Device ID
+
+**Query Parameters**:
+
+- `severity` (optional): Filter by severity (`INFO|WARNING|ERROR|CRITICAL`)
+- `resolved` (optional): Filter by resolution status (`true|false`)
+- `limit` (optional): Number of alerts to return (default: 20, max: 100)
+- `offset` (optional): Pagination offset (default: 0)
+
+**Response**:
+
+```json
+{
+  "alerts": [
+    {
+      "id": "string",
+      "deviceId": "string",
+      "type": "string",
+      "severity": "INFO|WARNING|ERROR|CRITICAL",
+      "title": "string",
+      "message": "string",
+      "source": "string|null",
+      "resolved": "boolean",
+      "resolvedAt": "string|null",
+      "acknowledgedAt": "string|null",
+      "resolvedBy": "string|null",
+      "resolveNote": "string|null",
+      "createdAt": "string",
+      "updatedAt": "string",
+      "metadata": "object|null"
+    }
+  ],
+  "total": "number",
+  "limit": "number",
+  "offset": "number",
+  "stats": {
+    "INFO": "number",
+    "WARNING": "number",
+    "ERROR": "number",
+    "CRITICAL": "number"
+  }
+}
+```
+
+### POST /api/devices/[id]/alerts
+
+**Description**: Create new device alert  
+**Auth**: JWT required
+
+**Path Parameters**:
+
+- `id` (required): Device ID
+
+**Body Parameters**:
+
+```json
+{
+  "type": "string (required) - Alert type",
+  "severity": "INFO|WARNING|ERROR|CRITICAL (required) - Alert severity",
+  "title": "string (required) - Alert title",
+  "message": "string (required) - Alert message",
+  "source": "string (optional) - Alert source",
+  "metadata": "object (optional) - Additional metadata"
+}
+```
+
+**Response**:
+
+```json
+{
+  "id": "string",
+  "deviceId": "string",
+  "type": "string",
+  "severity": "string",
+  "title": "string",
+  "message": "string",
+  "source": "string|null",
+  "resolved": false,
+  "createdAt": "string",
+  "updatedAt": "string",
+  "metadata": "object|null"
+}
+```
+
+### GET /api/devices/[id]/alerts/[alertId]
+
+**Description**: Get specific alert details  
+**Auth**: JWT required
+
+**Path Parameters**:
+
+- `id` (required): Device ID
+- `alertId` (required): Alert ID
+
+**Response**:
+
+```json
+{
+  "id": "string",
+  "deviceId": "string",
+  "type": "string",
+  "severity": "INFO|WARNING|ERROR|CRITICAL",
+  "title": "string",
+  "message": "string",
+  "source": "string|null",
+  "resolved": "boolean",
+  "resolvedAt": "string|null",
+  "acknowledgedAt": "string|null",
+  "resolvedBy": "string|null",
+  "resolveNote": "string|null",
+  "createdAt": "string",
+  "updatedAt": "string",
+  "metadata": "object|null"
+}
+```
+
+### PATCH /api/devices/[id]/alerts/[alertId]
+
+**Description**: Update alert (acknowledge, resolve, update)  
+**Auth**: JWT required
+
+**Path Parameters**:
+
+- `id` (required): Device ID
+- `alertId` (required): Alert ID
+
+**Body Parameters**:
+
+For acknowledge action:
+```json
+{
+  "action": "acknowledge"
+}
+```
+
+For resolve action:
+```json
+{
+  "action": "resolve",
+  "resolvedBy": "string (optional)",
+  "note": "string (optional)"
+}
+```
+
+For update action:
+```json
+{
+  "action": "update",
+  "severity": "INFO|WARNING|ERROR|CRITICAL (optional)",
+  "title": "string (optional)",
+  "message": "string (optional)",
+  "metadata": "object (optional)"
+}
+```
+
+**Response**:
+
+```json
+{
+  "id": "string",
+  "message": "Alert updated successfully",
+  "alert": { "...updated alert object..." }
+}
+```
+
+---
+
+## 🎛️ Device Commands
 
 ### GET /api/devices/[id]/commands
 
@@ -630,6 +779,56 @@
     "executedAt": "string|null",
     "createdAt": "string",
     "updatedAt": "string"
+  }
+}
+```
+
+---
+
+## ⚙️ Settings Management
+
+### GET /api/settings/notifications
+
+**Description**: Get notification settings  
+**Auth**: JWT required
+
+**Response**:
+
+```json
+{
+  "emailNotifications": "true|false",
+  "pushNotifications": "true|false", 
+  "alertNotifications": "true|false",
+  "deviceOfflineNotifications": "true|false"
+}
+```
+
+### PUT /api/settings/notifications
+
+**Description**: Update notification settings  
+**Auth**: JWT required
+
+**Body Parameters**:
+
+```json
+{
+  "emailNotifications": "true|false (required)",
+  "pushNotifications": "true|false (required)",
+  "alertNotifications": "true|false (required)",
+  "deviceOfflineNotifications": "true|false (required)"
+}
+```
+
+**Response**:
+
+```json
+{
+  "message": "Notifications settings updated successfully",
+  "settings": {
+    "emailNotifications": "true|false",
+    "pushNotifications": "true|false",
+    "alertNotifications": "true|false", 
+    "deviceOfflineNotifications": "true|false"
   }
 }
 ```
@@ -780,4 +979,38 @@ curl -H "Authorization: Bearer $JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -X POST http://localhost:3001/api/devices/device-id/commands \
   -d '{"command":"RESTART"}'
+```
+
+**Get Device Alerts**:
+
+```bash
+curl -H "Authorization: Bearer $JWT_TOKEN" \
+  "http://localhost:3001/api/devices/device-id/alerts?severity=ERROR&limit=10"
+```
+
+**Create Alert**:
+
+```bash
+curl -H "Authorization: Bearer $JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -X POST http://localhost:3001/api/devices/device-id/alerts \
+  -d '{"type":"cpu_high","severity":"WARNING","title":"High CPU Usage","message":"CPU usage is above 80%"}'
+```
+
+**Acknowledge Alert**:
+
+```bash
+curl -H "Authorization: Bearer $JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -X PATCH http://localhost:3001/api/devices/device-id/alerts/alert-id \
+  -d '{"action":"acknowledge"}'
+```
+
+**Update Notification Settings**:
+
+```bash
+curl -H "Authorization: Bearer $JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -X PUT http://localhost:3001/api/settings/notifications \
+  -d '{"emailNotifications":"true","pushNotifications":"false","alertNotifications":"true","deviceOfflineNotifications":"true"}'
 ```
