@@ -104,6 +104,7 @@ enum PreferenceCategory {
   SYSTEM
   APPEARANCE
   ACCESSIBILITY
+  DEVICE_SETTINGS
 }
 
 // =====================================================

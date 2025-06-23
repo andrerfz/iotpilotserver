@@ -312,7 +312,7 @@ export default function DeviceNav({
                     <h3 className="text-xs font-medium text-default-500 uppercase tracking-wide mb-2">
                         Feature Status
                     </h3>
-                    <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="grid grid-cols-2 gap-2 text-xs px-3">
                         <div className="flex items-center">
                             <Badge color={isFeatureEnabled('sshTerminal') ? "success" : "danger"} variant="flat"
                                    size="sm" className="mr-2 w-2 h-2 min-w-unit-2 p-0 rounded-full">{""}</Badge>

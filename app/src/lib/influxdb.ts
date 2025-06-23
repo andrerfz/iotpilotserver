@@ -25,7 +25,6 @@ export function validateInfluxConfig(): ValidationResult {
         return { isValid: false, error: 'INFLUXDB_TOKEN not configured' };
     }
 
-    // Use defaults if not provided
     const finalOrg = org || 'iotpilot';
     const finalBucket = bucket || 'devices';
 
@@ -42,12 +41,10 @@ export function validateInfluxConfig(): ValidationResult {
 
 export function formatMetricsForInflux(data: any, timestamp?: number): string {
     const points: string[] = [];
-    const ts = timestamp || new Date().getTime() * 1000000; // nanoseconds
+    const ts = timestamp || new Date().getTime() * 1000000;
 
-    // Escape special characters in device_id
     const deviceId = data.device_id.replace(/([, =])/g, '\\$1');
 
-    // Map metrics to InfluxDB line protocol
     const metricMappings = {
         cpu_usage: 'cpu_usage',
         cpu_temperature: 'cpu_temperature',
@@ -73,15 +70,7 @@ export async function sendToInfluxDB(data: any): Promise<void> {
         }
 
         const { url, token, org, bucket } = validation.config!;
-        const points = formatMetricsForInflux(data);
-
-        if (!points) {
-            return; // No metrics to send
-        }
-
-        // Create AbortController for timeout
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        const lineProtocol = formatMetricsForInflux(data);
 
         const response = await fetch(`${url}/api/v2/write?org=${org}&bucket=${bucket}`, {
             method: 'POST',
@@ -89,21 +78,14 @@ export async function sendToInfluxDB(data: any): Promise<void> {
                 'Authorization': `Token ${token}`,
                 'Content-Type': 'text/plain'
             },
-            body: points,
-            signal: controller.signal
+            body: lineProtocol
         });
 
-        clearTimeout(timeoutId);
-
         if (!response.ok) {
-            console.error('Failed to send metrics to InfluxDB:', response.statusText);
+            throw new Error(`InfluxDB write failed: ${response.statusText}`);
         }
-
     } catch (error) {
-        if (error instanceof Error && error.name === 'AbortError') {
-            console.error('InfluxDB request timed out');
-        } else {
-            console.error('Error sending metrics to InfluxDB:', error);
-        }
+        console.error('Failed to send data to InfluxDB:', error);
+        throw error;
     }
 }

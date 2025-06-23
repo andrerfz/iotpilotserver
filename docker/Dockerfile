@@ -21,6 +21,7 @@ COPY postcss.config.js ./
 COPY tailwind.config.js ./
 COPY next.config.js ./
 COPY tsconfig.json ./
+COPY vitest.config.ts ./
 
 # Install dependencies (handle both npm and yarn)
 RUN if [ -f package-lock.json ]; then \
@@ -100,6 +101,7 @@ COPY --from=base --chown=iotpilot:nodejs /app/tailwind.config.js ./
 COPY --from=base --chown=iotpilot:nodejs /app/postcss.config.js ./
 COPY --from=base --chown=iotpilot:nodejs /app/tsconfig.json ./
 COPY --from=base --chown=iotpilot:nodejs /app/next-env.d.ts ./
+COPY --from=base --chown=iotpilot:nodejs /app/vitest.config.ts ./
 
 # Copy Prisma files and ensure Prisma is available
 COPY --from=base --chown=iotpilot:nodejs /app/prisma ./prisma

@@ -41,6 +41,11 @@ function getDefaultPreferences(category: PreferenceCategory): Record<string, str
         reducedMotion: 'false',
         largeText: 'false'
       };
+    case 'DEVICE_SETTINGS':
+      return {
+        // Default device settings can be empty since they're device-specific
+        // or add global defaults here
+      };
     default:
       return {};
   }

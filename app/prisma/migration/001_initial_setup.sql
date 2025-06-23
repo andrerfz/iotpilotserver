@@ -356,6 +356,25 @@ VALUES (
            CURRENT_TIMESTAMP
        );
 
+-- Insert the default api key for tests.
+INSERT INTO "api_keys" (
+    "id",
+    "userId",
+    "customerId",
+    "name",
+    "key",
+    "createdAt",
+    "deletedAt"
+) VALUES (
+             'test-api-key-1',
+             'default-admin-user',
+             'default-customer',
+             'Test Device API Key',
+             'local-kCs945S6Lq11CNTRL-28USAxy6dUQXxPrpq-u9ruoL',
+             CURRENT_TIMESTAMP,
+             NULL
+         );
+
 -- Insert default system configuration
 INSERT INTO "system_config" ("id", "key", "value", "category", "updatedAt")
 VALUES
