@@ -126,7 +126,6 @@ export default function SystemHealth() {
       setLastUpdated(new Date());
     } catch (err) {
       setError('Error loading system health. Please try again.');
-      console.error('Error fetching system health:', err);
     } finally {
       setLoading(false);
     }

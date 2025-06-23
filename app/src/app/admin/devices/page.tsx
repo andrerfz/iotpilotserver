@@ -67,7 +67,6 @@ export default function DeviceManagement() {
             setStats(data.stats);
         } catch (err) {
             setError('Error loading devices. Please try again.');
-            console.error('Error fetching devices:', err);
         } finally {
             setLoading(false);
         }
@@ -104,7 +103,6 @@ export default function DeviceManagement() {
             setActionDialogOpen(false);
         } catch (err) {
             setError(`Error performing ${deviceAction} on device. Please try again.`);
-            console.error(`Error performing ${deviceAction}:`, err);
         } finally {
             setActionLoading(false);
         }

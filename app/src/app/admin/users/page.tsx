@@ -87,7 +87,6 @@ export default function UserManagement() {
       setTotalPages(data.pagination.pages);
     } catch (err) {
       setError('Error loading users. Please try again.');
-      console.error('Error fetching users:', err);
     } finally {
       setLoading(false);
     }
@@ -126,7 +125,6 @@ export default function UserManagement() {
       setApprovalDialogOpen(false);
     } catch (err) {
       setError(`Error ${approvalAction}ing user. Please try again.`);
-      console.error(`Error ${approvalAction}ing user:`, err);
     } finally {
       setActionLoading(false);
     }

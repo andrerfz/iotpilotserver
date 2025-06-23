@@ -21,6 +21,7 @@ import {CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAx
 import DeviceNav from '@/components/device-nav';
 import SSHTerminal from '@/components/ssh-terminal';
 import {Button, Card, CardBody, Chip, Spinner} from '@heroui/react';
+import {toast} from "sonner";
 
 interface DeviceDetail {
     id: string;
@@ -110,7 +111,6 @@ export default function DeviceDetailPage({params}: {
                 setDevice(data);
                 setError(null);
             } catch (err) {
-                console.error('Error fetching device details:', err);
                 setError(err instanceof Error ? err.message : 'Unknown error occurred');
             } finally {
                 setLoading(false);
@@ -140,8 +140,6 @@ export default function DeviceDetailPage({params}: {
                 const data = await response.json();
                 setMetrics(data.metrics || {});
             } catch (err) {
-                console.error('Error fetching metrics:', err);
-                // Don't set error state for metrics failure - just log it
             }
         }
 
@@ -175,13 +173,11 @@ export default function DeviceDetailPage({params}: {
                         setDevice(data);
                     }
                 } catch (err) {
-                    console.error('Error refetching device after command:', err);
                 }
             }, 1000);
 
-        } catch (err) {
-            console.error('Error issuing command:', err);
-            // You might want to show a toast notification here
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Failed to issue command.');
         } finally {
             setIssuingCommand(false);
         }
@@ -331,7 +327,6 @@ export default function DeviceDetailPage({params}: {
                     setMetrics(metricsData.metrics || {});
                 }
             } catch (err) {
-                console.error('Error refreshing metrics:', err);
             }
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Unknown error');

@@ -181,10 +181,6 @@ export default function DeviceNav({
 
     const handleExternalLink = (url: string, title: string) => {
         window.open(url, '_blank', 'noopener,noreferrer');
-
-        if (isDevelopment()) {
-            console.log(`Opened external link: ${title} - ${url}`);
-        }
     };
 
     return (

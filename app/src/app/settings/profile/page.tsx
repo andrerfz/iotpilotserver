@@ -49,7 +49,6 @@ export default function ProfileSettings() {
         // Update form values
         form.reset(data);
       } catch (error) {
-        console.error('Error fetching profile settings:', error);
         toast.error('Failed to load profile settings');
       } finally {
         setIsLoading(false);
@@ -79,7 +78,6 @@ export default function ProfileSettings() {
 
       toast.success('Profile settings updated successfully');
     } catch (error) {
-      console.error('Error updating profile settings:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to update profile settings');
     } finally {
       setIsSaving(false);

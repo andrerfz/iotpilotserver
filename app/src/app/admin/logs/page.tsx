@@ -122,7 +122,6 @@ export default function LogsViewer() {
       setLastUpdated(new Date());
     } catch (err) {
       setError('Error loading logs. Please try again.');
-      console.error('Error fetching logs:', err);
     } finally {
       setLoading(false);
     }

@@ -28,25 +28,18 @@ export default function LoginForm() {
     const redirectTo = searchParams.get('redirect') || '/';
     const { login, user } = useAuth();
 
-    console.log('🔐 LOGIN FORM: Current auth state - User:', user?.email, 'Redirect to:', redirectTo);
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setError('');
 
-        console.log('🚀 LOGIN FORM: Form submitted, attempting login...');
-
         try {
             await login(email, password, remember);
-
-            console.log('✅ LOGIN FORM: Login successful, redirecting to:', redirectTo);
 
             // Use router.push instead of window.location for now
             router.push(redirectTo);
 
         } catch (err) {
-            console.log('❌ LOGIN FORM: Login failed:', err);
             setError(err instanceof Error ? err.message : 'Login failed');
             setLoading(false);
         }

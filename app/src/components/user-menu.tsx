@@ -144,9 +144,6 @@ export default function UserMenu() {
     };
 
     const handleDebug = () => {
-        console.log('Environment Info:', envInfo);
-        console.log('Service URLs:', serviceUrls);
-        console.log('User:', user);
     };
 
     return (

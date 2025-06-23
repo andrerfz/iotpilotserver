@@ -54,7 +54,6 @@ export default function SecuritySettings() {
         // Update slider value
         setSessionTimeoutValue(parseInt(data.sessionTimeout) || 30);
       } catch (error) {
-        console.error('Error fetching security settings:', error);
         toast.error('Failed to load security settings');
       } finally {
         setIsLoading(false);
@@ -90,7 +89,6 @@ export default function SecuritySettings() {
 
       toast.success('Security settings updated successfully');
     } catch (error) {
-      console.error('Error updating security settings:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to update security settings');
     } finally {
       setIsSaving(false);

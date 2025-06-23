@@ -92,7 +92,6 @@ export default function SystemSettings() {
         // Update form values
         form.reset(data);
       } catch (error) {
-        console.error('Error fetching system settings:', error);
         toast.error('Failed to load system settings');
       } finally {
         setIsLoading(false);
@@ -129,7 +128,6 @@ export default function SystemSettings() {
 
       toast.success('System settings updated successfully');
     } catch (error) {
-      console.error('Error updating system settings:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to update system settings');
     } finally {
       setIsSaving(false);

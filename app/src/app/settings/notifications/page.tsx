@@ -50,7 +50,6 @@ export default function NotificationsSettings() {
         // Update form values
         form.reset(data);
       } catch (error) {
-        console.error('Error fetching notification settings:', error);
         toast.error('Failed to load notification settings');
       } finally {
         setIsLoading(false);
@@ -80,7 +79,6 @@ export default function NotificationsSettings() {
 
       toast.success('Notification settings updated successfully');
     } catch (error) {
-      console.error('Error updating notification settings:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to update notification settings');
     } finally {
       setIsSaving(false);
