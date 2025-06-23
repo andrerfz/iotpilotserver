@@ -1,4 +1,5 @@
 import React from 'react';
+import { ALERT_TYPES } from '@/types/alerts';
 import {Input, Select, SelectItem, Button} from '@heroui/react';
 import {Filter, X} from 'lucide-react';
 
@@ -13,41 +14,6 @@ interface AlertFiltersProps {
     onTypeChange: (value: string) => void;
     onClearFilters: () => void;
 }
-
-const ALERT_TYPES = [
-    {
-        key: 'DEVICE_OFFLINE',
-        label: 'Device Offline'
-    },
-    {
-        key: 'HIGH_CPU',
-        label: 'High CPU Usage'
-    },
-    {
-        key: 'HIGH_MEMORY',
-        label: 'High Memory Usage'
-    },
-    {
-        key: 'HIGH_TEMPERATURE',
-        label: 'High Temperature'
-    },
-    {
-        key: 'LOW_DISK_SPACE',
-        label: 'Low Disk Space'
-    },
-    {
-        key: 'APPLICATION_ERROR',
-        label: 'Application Error'
-    },
-    {
-        key: 'SYSTEM_ERROR',
-        label: 'System Error'
-    },
-    {
-        key: 'SECURITY_ALERT',
-        label: 'Security Alert'
-    }
-];
 
 export function AlertFilters({
     searchQuery,

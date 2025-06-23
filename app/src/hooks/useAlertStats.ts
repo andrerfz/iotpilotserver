@@ -1,19 +1,5 @@
 import { useEffect, useState } from 'react';
-
-interface AlertStats {
-    total: number;
-    active: number;
-    resolved: number;
-    critical: number;
-    bySeverity: {
-        INFO: number;
-        WARNING: number;
-        ERROR: number;
-        CRITICAL: number;
-    };
-    byType: Record<string, number>;
-    trend: Array<{ date: string; count: number }>;
-}
+import { Alert, AlertStats } from '@/types/alerts';
 
 export function useAlertStats(deviceId: string, refreshInterval: number = 60000) {
     const [stats, setStats] = useState<AlertStats | null>(null);

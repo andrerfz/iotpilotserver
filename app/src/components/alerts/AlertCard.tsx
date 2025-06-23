@@ -1,4 +1,5 @@
 import React from 'react';
+import { Alert } from '@/types/alerts';
 import {
     Card,
     CardBody,
@@ -20,19 +21,13 @@ import {
     UserCheck
 } from 'lucide-react';
 
-interface Alert {
-    id: string;
-    deviceId: string;
-    type: string;
-    severity: 'INFO' | 'WARNING' | 'ERROR' | 'CRITICAL';
-    title: string;
-    message: string;
-    resolved: boolean;
-    resolvedAt?: string;
-    acknowledgedAt?: string;
-    createdAt: string;
-    updatedAt: string;
-    metadata?: Record<string, any>;
+interface AlertCardProps {
+    alert: Alert; // Now uses the shared Alert type
+    onView?: (alert: Alert) => void;
+    onAcknowledge?: (alertId: string) => void;
+    onResolve?: (alertId: string) => void;
+    onComment?: (alertId: string) => void;
+    compact?: boolean;
 }
 
 interface AlertCardProps {

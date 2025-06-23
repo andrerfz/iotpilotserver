@@ -1,14 +1,10 @@
 import React from 'react';
+import { AlertStats as Stats } from '@/types/alerts';
 import { Card, CardBody, CardHeader } from '@heroui/react';
 import { AlertTriangle, CheckCircle, Clock, TrendingUp } from 'lucide-react';
 
 interface AlertStatsProps {
-    stats: {
-        total: number;
-        active: number;
-        resolved: number;
-        critical: number;
-    };
+    stats: Stats;
 }
 
 export function AlertStats({ stats }: AlertStatsProps) {

@@ -1,18 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { toast } from 'sonner';
-
-interface Alert {
-    id: string;
-    deviceId: string;
-    type: string;
-    severity: 'INFO' | 'WARNING' | 'ERROR' | 'CRITICAL';
-    title: string;
-    message: string;
-    resolved: boolean;
-    createdAt: string;
-    updatedAt: string;
-    metadata?: Record<string, any>;
-}
+import { Alert } from '@/types/alerts';
 
 interface UseRealTimeAlertsOptions {
     deviceId?: string;
