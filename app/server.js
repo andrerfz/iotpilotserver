@@ -213,13 +213,15 @@ app.prepare().then(() => {
 
     // Initialize command queue for device commands
     try {
-        // Import the command queue
-        const { CommandQueueManager } = require('./src/lib/command-executor.ts');
-
-        // Start processing the command queue with a 60-second interval
-        CommandQueueManager.startQueueProcessing(60000);
-
-        logger.info('Command queue processing started');
+        // Use dynamic import for ES modules
+        import('./src/lib/command-executor.js').then(({ CommandQueueManager }) => {
+            // Start processing the command queue with a 60-second interval
+            CommandQueueManager.startQueueProcessing(60000);
+            logger.info('Command queue processing started');
+        }).catch(error => {
+            logger.error('Failed to initialize command queue:', error);
+            // Continue server startup even if command queue fails
+        });
     } catch (error) {
         logger.error('Failed to initialize command queue:', error);
         // Continue server startup even if command queue fails

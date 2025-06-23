@@ -22,8 +22,14 @@ COPY tailwind.config.js ./
 COPY next.config.js ./
 COPY tsconfig.json ./
 
-# Clean install - ensures fresh node_modules
-RUN npm ci --include=dev && npm cache clean --force
+# Install dependencies (handle both npm and yarn)
+RUN if [ -f package-lock.json ]; then \
+        npm ci --include=dev && npm cache clean --force; \
+    elif [ -f yarn.lock ]; then \
+        yarn install --frozen-lockfile && yarn cache clean; \
+    else \
+        npm install --include=dev && npm cache clean --force; \
+    fi
 
 # Copy source code
 COPY . .
@@ -70,8 +76,14 @@ WORKDIR /app
 # Copy package files first
 COPY --from=base --chown=iotpilot:nodejs /app/package*.json ./
 
-# Fresh install in production (only production deps)
-RUN npm ci --omit=dev && npm cache clean --force
+# CRITICAL: Fresh install in production with clean slate
+RUN if [ -f package-lock.json ]; then \
+        npm ci --omit=dev && npm cache clean --force; \
+    elif [ -f yarn.lock ]; then \
+        yarn install --frozen-lockfile --production && yarn cache clean; \
+    else \
+        npm install --omit=dev && npm cache clean --force; \
+    fi
 
 # Copy built Next.js application
 COPY --from=base --chown=iotpilot:nodejs /app/.next ./.next
@@ -89,10 +101,11 @@ COPY --from=base --chown=iotpilot:nodejs /app/postcss.config.js ./
 COPY --from=base --chown=iotpilot:nodejs /app/tsconfig.json ./
 COPY --from=base --chown=iotpilot:nodejs /app/next-env.d.ts ./
 
-# Copy Prisma files and generated client
+# Copy Prisma files and ensure Prisma is available
 COPY --from=base --chown=iotpilot:nodejs /app/prisma ./prisma
-COPY --from=base --chown=iotpilot:nodejs /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=base --chown=iotpilot:nodejs /app/node_modules/@prisma ./node_modules/@prisma
+
+# Generate Prisma client in production
+RUN npx prisma generate
 
 # Copy source directory (needed for API routes in Next.js 14 app directory)
 COPY --from=base --chown=iotpilot:nodejs /app/src ./src

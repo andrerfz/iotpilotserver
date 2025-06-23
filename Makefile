@@ -597,21 +597,21 @@ tailscale-logs:
 
 create-superadmin:
 	@echo "👑 Creating new SUPERADMIN user..."
-	@cd app && npx ts-node ../scripts/create-superadmin.ts
+	@cd app && npx ts-node ../app_scripts/create-superadmin.ts
 	@echo "✅ SUPERADMIN creation process complete!"
 
 list-superadmins:
 	@echo "👑 Listing SUPERADMIN users..."
-	@cd app && npx ts-node ../scripts/list-superadmins.ts
+	@cd app && npx ts-node ../app_scripts/list-superadmins.ts
 
 reset-superadmin-password:
 	@echo "🔑 Resetting SUPERADMIN password..."
-	@cd app && npx ts-node ../scripts/reset-superadmin-password.ts
+	@cd app && npx ts-node ../app_scripts/reset-superadmin-password.ts
 	@echo "✅ Password reset process complete!"
 
 delete-superadmin:
 	@echo "⚠️ Deleting SUPERADMIN user..."
-	@cd app && npx ts-node ../scripts/delete-superadmin.ts
+	@cd app && npx ts-node ../app_scripts/delete-superadmin.ts
 	@echo "✅ SUPERADMIN deletion process complete!"
 
 # =============================================================================
