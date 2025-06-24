@@ -1,7 +1,7 @@
-import { TenantAwareQuery } from '../../../../shared/application/queries/tenant-aware-query';
-import { TenantContext } from '../../../../shared/application/context/tenant-context.vo';
-import { CustomerId } from '../../../domain/value-objects/customer-id.vo';
-import { Customer } from '../../../domain/entities/customer.entity';
+import { TenantAwareQuery } from '@/lib/shared/application/queries/tenant-aware-query';
+import { TenantContext } from '@/lib/shared/application/context/tenant-context.vo';
+import { CustomerId } from '@/lib/shared/domain/value-objects/customer-id.vo';
+import { Customer } from '@/lib/customer/domain/entities/customer.entity';
 
 export class GetCustomerQuery extends TenantAwareQuery<Customer | null> {
   private constructor(

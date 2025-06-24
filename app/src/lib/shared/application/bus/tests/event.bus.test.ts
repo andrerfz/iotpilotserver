@@ -1,6 +1,6 @@
 import {describe, it, expect, beforeEach, vi} from 'vitest';
 import {InMemoryEventBus} from '../event.bus';
-import {DomainEvent, DomainEventBase} from '../../../domain/events/domain.event';
+import {DomainEvent, DomainEventBase} from '@/lib/customer/shared/events/domain.event';
 import {EventHandler} from '../event.bus';
 
 class TestEvent extends DomainEventBase {

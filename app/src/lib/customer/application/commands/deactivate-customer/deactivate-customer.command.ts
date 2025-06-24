@@ -1,6 +1,6 @@
-import { TenantAwareCommand } from '../../../../shared/application/commands/tenant-aware-command';
-import { TenantContext } from '../../../../shared/application/context/tenant-context.vo';
-import { CustomerId } from '../../../domain/value-objects/customer-id.vo';
+import { TenantAwareCommand } from '@/lib/shared/application/commands/tenant-aware-command';
+import { TenantContext } from '@/lib/shared/application/context/tenant-context.vo';
+import { CustomerId } from '@/lib/shared/domain/value-objects/customer-id.vo';
 
 export class DeactivateCustomerCommand extends TenantAwareCommand {
   private constructor(

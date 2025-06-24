@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { Customer } from '../entities/customer.entity';
-import { CustomerId } from '../value-objects/customer-id.vo';
+import { CustomerId } from '@/lib/shared/domain/value-objects/customer-id.vo';
 import { CustomerStatus, CustomerStatusEnum } from '../value-objects/customer-status.vo';
 import { CustomerValidator } from './customer-validator.service';
-import { TenantContext } from '../../../shared/application/context/tenant-context.vo';
-import { TenantAccessDeniedException } from '../../../shared/domain/exceptions/tenant.exception';
+import { TenantContext } from '@/lib/shared/application/context/tenant-context.vo';
+import { TenantAccessDeniedException } from '@/lib/shared/domain/exceptions/tenant.exception';
 
 @Injectable()
 export class CustomerLifecycleManager {

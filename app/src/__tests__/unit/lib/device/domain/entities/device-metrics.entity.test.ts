@@ -11,7 +11,8 @@ describe('DeviceMetrics Entity', () => {
   const cpuUsage = 25.5;
   const memoryUsage = 40.2;
   const diskUsage = 60.8;
-  const networkUsage = 15.3;
+  const networkUpload = 15.3;
+  const networkDownload = 10.7;
   const timestamp = new Date('2023-01-01T12:00:00Z');
 
   beforeEach(() => {
@@ -24,7 +25,8 @@ describe('DeviceMetrics Entity', () => {
       cpuUsage,
       memoryUsage,
       diskUsage,
-      networkUsage,
+      networkUpload,
+      networkDownload,
       timestamp
     );
   });
@@ -35,7 +37,8 @@ describe('DeviceMetrics Entity', () => {
       expect(deviceMetrics.cpuUsage).toBe(cpuUsage);
       expect(deviceMetrics.memoryUsage).toBe(memoryUsage);
       expect(deviceMetrics.diskUsage).toBe(diskUsage);
-      expect(deviceMetrics.networkUsage).toBe(networkUsage);
+      expect(deviceMetrics.networkUpload).toBe(networkUpload);
+      expect(deviceMetrics.networkDownload).toBe(networkDownload);
       expect(deviceMetrics.timestamp).toBe(timestamp);
     });
 
@@ -48,7 +51,8 @@ describe('DeviceMetrics Entity', () => {
         cpuUsage,
         memoryUsage,
         diskUsage,
-        networkUsage
+        networkUpload,
+        networkDownload
       );
 
       expect(metricsWithoutTimestamp.timestamp).toBe(now);
@@ -72,8 +76,12 @@ describe('DeviceMetrics Entity', () => {
       expect(deviceMetrics.diskUsage).toBe(diskUsage);
     });
 
-    it('should return the correct networkUsage', () => {
-      expect(deviceMetrics.networkUsage).toBe(networkUsage);
+    it('should return the correct networkUpload', () => {
+      expect(deviceMetrics.networkUpload).toBe(networkUpload);
+    });
+
+    it('should return the correct networkDownload', () => {
+      expect(deviceMetrics.networkDownload).toBe(networkDownload);
     });
 
     it('should return the correct timestamp', () => {

@@ -1,18 +1,15 @@
-import { Entity } from '../../../../shared/domain/interfaces/entity.interface';
-import { ITenantScoped } from '../../../../shared/domain/interfaces/tenant-scoped.interface';
-import { DomainEvent } from '../../../../shared/domain/events/domain.event';
-import { CustomerId } from '../value-objects/customer-id.vo';
-import { CustomerName } from '../value-objects/customer-name.vo';
-import { CustomerStatus, CustomerStatusEnum } from '../value-objects/customer-status.vo';
-import { OrganizationSettings } from '../value-objects/organization-settings.vo';
-import { CustomerCreatedEvent } from '../events/customer-created.event';
-import { CustomerStatusChangedEvent } from '../events/customer-status-changed.event';
-import { CustomerSettingsUpdatedEvent } from '../events/customer-settings-updated.event';
-import { CustomerInvalidStatusException } from '../exceptions/customer.exception';
+import {Entity} from '@/lib/shared/domain/interfaces/entity.interface';
+import {ITenantScoped} from '@/lib/shared/domain/interfaces/tenant-scoped.interface';
+import { CustomerId } from '@/lib/shared/domain/value-objects/customer-id.vo';
+import {CustomerName} from '../value-objects/customer-name.vo';
+import {CustomerStatus, CustomerStatusEnum} from '../value-objects/customer-status.vo';
+import {OrganizationSettings} from '../value-objects/organization-settings.vo';
+import {CustomerCreatedEvent} from '../events/customer-created.event';
+import {CustomerStatusChangedEvent} from '../events/customer-status-changed.event';
+import {CustomerSettingsUpdatedEvent} from '../events/customer-settings-updated.event';
+import {CustomerInvalidStatusException} from '../exceptions/customer.exception';
 
 export class Customer extends Entity<CustomerId> implements ITenantScoped {
-  private events: DomainEvent[] = [];
-
   private constructor(
     id: CustomerId,
     private name: CustomerName,
@@ -43,17 +40,6 @@ export class Customer extends Entity<CustomerId> implements ITenantScoped {
     return customer;
   }
 
-  private addEvent(event: DomainEvent): void {
-    this.events.push(event);
-  }
-
-  getEvents(): DomainEvent[] {
-    return [...this.events];
-  }
-
-  clearEvents(): void {
-    this.events = [];
-  }
 
   getId(): CustomerId {
     return this.id;

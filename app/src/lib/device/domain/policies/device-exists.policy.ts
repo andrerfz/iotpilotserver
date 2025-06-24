@@ -8,7 +8,7 @@ export class DeviceExistsPolicy {
     async validate(deviceId: DeviceId): Promise<void> {
         const device = await this.deviceRepository.findById(deviceId);
         if (!device) {
-            throw new DeviceNotFoundException(deviceId.getValue);
+            throw new DeviceNotFoundException(deviceId.getValue());
         }
     }
 }

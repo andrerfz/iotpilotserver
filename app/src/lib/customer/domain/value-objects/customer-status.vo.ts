@@ -1,4 +1,4 @@
-import { ValueObject, ValueObjectInterface } from '../../../../shared/domain/interfaces/value-object.interface';
+import { ValueObject, ValueObjectInterface } from '@/lib/shared/domain/interfaces/value-object.interface';
 
 export enum CustomerStatusEnum {
   ACTIVE = 'ACTIVE',

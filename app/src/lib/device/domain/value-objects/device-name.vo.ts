@@ -3,17 +3,21 @@ export class DeviceName {
         if (!_value) {
             throw new Error('Device name cannot be empty');
         }
-        
+
         if (_value.length < 3) {
             throw new Error('Device name must be at least 3 characters long');
         }
-        
+
         if (_value.length > 50) {
             throw new Error('Device name cannot exceed 50 characters');
         }
     }
 
     get value(): string {
+        return this._value;
+    }
+
+    getValue(): string {
         return this._value;
     }
 

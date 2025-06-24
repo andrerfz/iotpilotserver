@@ -84,8 +84,8 @@ export class DeviceValidator {
   ): Promise<void> {
     try {
       // Create a temporary device ID for testing the connection
-      const tempDeviceId = DeviceId.create('temp-' + Date.now());
-      
+      const tempDeviceId = DeviceId.fromString('temp-' + Date.now());
+
       // Try to establish a connection
       const session = await this.sshClient.connect(
         tempDeviceId,
@@ -93,12 +93,17 @@ export class DeviceValidator {
         port,
         credentials
       );
-      
+
       // Disconnect immediately after successful connection
       await this.sshClient.disconnect(session.id);
     } catch (error) {
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Unknown error occurred';
+
       throw new SSHConnectionFailedException(
-        `Failed to validate SSH connection to ${ipAddress.value}: ${error.message}`
+        ipAddress.value,
+        `Failed to validate SSH connection: ${errorMessage}`
       );
     }
   }

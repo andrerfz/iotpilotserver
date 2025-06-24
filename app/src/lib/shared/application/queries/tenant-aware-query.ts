@@ -1,7 +1,7 @@
 import { Query } from '../interfaces/query.interface';
 import { TenantContext } from '../context/tenant-context.vo';
-import { CustomerId } from '../../../../customer/domain/value-objects/customer-id.vo';
-import { TenantAccessDeniedException } from '../../domain/policies/tenant-validation.policy';
+import { CustomerId } from '@/lib/shared/domain/value-objects/customer-id.vo';
+import { TenantAccessDeniedException } from '@/lib/shared/domain/policies/tenant-validation.policy';
 
 /**
  * Base class for all tenant-aware queries

@@ -42,9 +42,16 @@ describe('DeviceName Value Object', () => {
     const name1 = DeviceName.create('Test Device');
     const name2 = DeviceName.create('Test Device');
     const name3 = DeviceName.create('Another Device');
-    
+
     expect(name1.equals(name2)).toBe(true);
     expect(name1.equals(name3)).toBe(false);
     expect(name2.equals(name3)).toBe(false);
+  });
+
+  it('should return the same value from getValue() as from value property', () => {
+    const name = 'Test Device';
+    const deviceName = DeviceName.create(name);
+    expect(deviceName.getValue()).toBe(name);
+    expect(deviceName.getValue()).toBe(deviceName.value);
   });
 });

@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { CommandHandler } from '../../../../shared/application/interfaces/command.interface';
+import { CommandHandler } from '@/lib/shared/application/interfaces/command.interface';
 import { CreateCustomerCommand } from './create-customer.command';
-import { CustomerCreator } from '../../../domain/services/customer-creator.service';
-import { TenantRepository } from '../../../../shared/domain/interfaces/tenant-repository.interface';
-import { Customer } from '../../../domain/entities/customer.entity';
-import { CustomerId } from '../../../domain/value-objects/customer-id.vo';
-import { CustomerAlreadyExistsException } from '../../../domain/exceptions/customer.exception';
-import { TenantAccessDeniedException } from '../../../../shared/domain/exceptions/tenant.exception';
+import { CustomerCreator } from '@/lib/customer/domain/services/customer-creator.service';
+import { TenantRepository } from '@/lib/shared/domain/interfaces/tenant-repository.interface';
+import { Customer } from '@/lib/customer/domain/entities/customer.entity';
+import { CustomerId } from '@/lib/shared/domain/value-objects/customer-id.vo';
+import { CustomerAlreadyExistsException } from '@/lib/customer/domain/exceptions/customer.exception';
+import { TenantAccessDeniedException } from '@/lib/shared/domain/exceptions/tenant.exception';
 
 @Injectable()
 export class CreateCustomerHandler implements CommandHandler<CreateCustomerCommand, void> {

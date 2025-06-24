@@ -3,77 +3,84 @@ import {UserId} from '@/lib/user/domain/value-objects/user-id.vo';
 import {Email} from '@/lib/user/domain/value-objects/email.vo';
 import {Password} from '@/lib/user/domain/value-objects/password.vo';
 import {UserRole} from '@/lib/user/domain/value-objects/user-role.vo';
-
-// Define the shape of the user data in the database
-interface UserPersistence {
-    id: string;
-    email: string;
-    username: string;
-    password: string;
-    role: string;
-    status?: string; // UserStatus enum in Prisma
-    createdAt: Date;
-    updatedAt: Date;
-    lastLoginAt?: Date | null; // Optional in create operation
-    active?: boolean; // Mapped to status in Prisma
-}
-
-// Define the shape of the user data for DTOs
-interface UserDTO {
-    id: string;
-    email: string;
-    role: string;
-    createdAt: string;
-    lastLoginAt: string | null;
-    active: boolean;
-}
+import {UserRoleEnum} from '@/lib/user/domain/value-objects/user-role.vo';
+import {CustomerId} from '@/lib/shared/domain/value-objects/customer-id.vo';
+import {User as PrismaUser, UserRole as PrismaUserRole, UserStatus} from '@prisma/client';
 
 export class UserMapper {
-    static toDomain(persistence: UserPersistence): User {
+    // Helper method to map domain role to Prisma role
+    private mapToPrismaRole(domainRole: UserRoleEnum): PrismaUserRole {
+        switch (domainRole) {
+            case UserRoleEnum.SUPERADMIN:
+                return PrismaUserRole.SUPERADMIN;
+            case UserRoleEnum.CUSTOMER_ADMIN:
+                return PrismaUserRole.ADMIN;
+            case UserRoleEnum.USER:
+                return PrismaUserRole.USER;
+            case UserRoleEnum.GUEST:
+                return PrismaUserRole.READONLY;
+            default:
+                throw new Error(`Unsupported user role: ${domainRole}`);
+        }
+    }
+
+    toDomain(prismaUser: PrismaUser): User {
         return new User(
-            new UserId(persistence.id),
-            new Email(persistence.email),
-            Password.createHashed(persistence.password),
-            new UserRole(persistence.role as any),
-            persistence.createdAt,
-            persistence.updatedAt,
-            persistence.lastLoginAt,
-            persistence.active
+            UserId.fromString(prismaUser.id),
+            Email.create(prismaUser.email),
+            prismaUser.username,
+            Password.create(prismaUser.password),
+            UserRole.create(prismaUser.role),
+            prismaUser.customerId ? CustomerId.create(prismaUser.customerId) : null,
+            prismaUser.createdAt,
+            prismaUser.updatedAt,
+            prismaUser.lastLoginAt,
+            prismaUser.active
         );
     }
 
-    static toPersistence(domain: User): UserPersistence {
-        const email = domain.getEmail().getValue();
-        // Generate a username from the email (remove @ and domain part)
-        const username = email.split('@')[0];
+    toPersistence(user: User): Omit<PrismaUser, 'id'> & { id: string } & { customer?: { connect: { id: string } } } {
+        const customerId = user.getCustomerId()?.getValue() || null;
+        const domainRole = user.getRole().getValue();
+        const prismaRole = this.mapToPrismaRole(domainRole);
 
-        const result: UserPersistence = {
-            id: domain.getId().getValue(),
-            email: email,
-            username: username,
-            password: domain.getPassword().getValue(),
-            role: domain.getRole().getValue(),
-            status: domain.isActive() ? 'ACTIVE' : 'INACTIVE', // Map active boolean to UserStatus enum
-            createdAt: domain.getCreatedAt(),
-            updatedAt: domain.getUpdatedAt()
+        return {
+            id: user.getId().getValue(),
+            email: user.getEmail().getValue(),
+            username: user.getUsername(),
+            password: user.getPassword().getValue(),
+            role: prismaRole,
+            status: UserStatus.ACTIVE, // Default status
+            active: user.isActive(),
+            profileImage: null, // Default value
+            lastLoginAt: user.getLastLoginAt(),
+            deletedAt: null, // Default value
+            customerId: customerId,
+            customer: customerId ? { connect: { id: customerId } } : undefined,
+            createdAt: user.getCreatedAt(),
+            updatedAt: user.getUpdatedAt()
         };
-
-        // Only add lastLoginAt if it's not null
-        if (domain.getLastLoginAt() !== null) {
-            result.lastLoginAt = domain.getLastLoginAt();
-        }
-
-        return result;
     }
 
-    static toDTO(domain: User): UserDTO {
+    toDTO(user: User): {
+        id: string;
+        email: string;
+        username: string;
+        role: string;
+        customerId: string | null;
+        createdAt: string;
+        lastLoginAt: string | null;
+        active: boolean;
+    } {
         return {
-            id: domain.getId().getValue(),
-            email: domain.getEmail().getValue(),
-            role: domain.getRole().getValue(),
-            createdAt: domain.getCreatedAt().toISOString(),
-            lastLoginAt: domain.getLastLoginAt()?.toISOString() || null,
-            active: domain.isActive()
+            id: user.getId().getValue(),
+            email: user.getEmail().getValue(),
+            username: user.getUsername(),
+            role: user.getRole().getValue(),
+            customerId: user.getCustomerId()?.getValue() || null,
+            createdAt: user.getCreatedAt().toISOString(),
+            lastLoginAt: user.getLastLoginAt()?.toISOString() || null,
+            active: user.isActive()
         };
     }
 }

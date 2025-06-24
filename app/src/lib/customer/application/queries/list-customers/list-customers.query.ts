@@ -1,7 +1,7 @@
-import { TenantAwareQuery } from '../../../../shared/application/queries/tenant-aware-query';
-import { TenantContext } from '../../../../shared/application/context/tenant-context.vo';
-import { Customer } from '../../../domain/entities/customer.entity';
-import { CustomerStatusEnum } from '../../../domain/value-objects/customer-status.vo';
+import { TenantAwareQuery } from '@/lib/shared/application/queries/tenant-aware-query';
+import { TenantContext } from '@/lib/shared/application/context/tenant-context.vo';
+import { Customer } from '@/lib/customer/domain/entities/customer.entity';
+import { CustomerStatusEnum } from '@/lib/customer/domain/value-objects/customer-status.vo';
 
 export interface ListCustomersFilters {
   status?: CustomerStatusEnum;

@@ -2,14 +2,9 @@ import {CommandHandler} from '@/lib/shared/application/interfaces/command.interf
 import {RegisterUserCommand} from './register-user.command';
 import {UserRepository} from '@/lib/user/domain/interfaces/user-repository.interface';
 import {PasswordHasher} from '@/lib/user/domain/services/password-hasher';
-import {Email} from '@/lib/user/domain/value-objects/email.vo';
-import {Password} from '@/lib/user/domain/value-objects/password.vo';
-import {UserRole} from '@/lib/user/domain/value-objects/user-role.vo';
-import {UserId} from '@/lib/user/domain/value-objects/user-id.vo';
 import {User} from '@/lib/user/domain/entities/user.entity';
-import {EmailAlreadyExistsException} from '@/lib/user/domain/exceptions/email-already-exists.exception';
+import {Password} from '@/lib/user/domain/value-objects/password.vo';
 import {EventBus} from '@/lib/shared/application/bus/event.bus';
-import {UserRegisteredEvent} from '@/lib/user/domain/events/user-registered.event';
 
 export class RegisterUserHandler implements CommandHandler<RegisterUserCommand> {
     constructor(
@@ -19,26 +14,33 @@ export class RegisterUserHandler implements CommandHandler<RegisterUserCommand> 
     ) {}
 
     async handle(command: RegisterUserCommand): Promise<void> {
-        // Check if email already exists
-        const emailExists = await this.userRepository.emailExists(command.email);
-        if (emailExists) {
-            throw new EmailAlreadyExistsException(command.email.getValue());
+        // Check if user already exists
+        const existingUser = command.customerId
+            ? await this.userRepository.findByEmailInTenant(command.email, command.customerId)
+            : await this.userRepository.findByEmail(command.email);
+
+        if (existingUser) {
+            throw new Error('User with this email already exists');
         }
 
         // Hash password
         const hashedPassword = await this.passwordHasher.hash(command.password);
+        const passwordWithHash = Password.create(hashedPassword);
 
         // Create user
-        const userId = UserId.generate();
-        const user = User.create(userId, command.email, hashedPassword, command.role);
+        const user = User.create(
+            command.email,
+            passwordWithHash,
+            command.role,
+            command.customerId,
+            command.username
+        );
 
         // Save user
         await this.userRepository.save(user);
 
-        // Publish event
-        await this.eventBus.publish(new UserRegisteredEvent(
-            userId.getValue(),
-            command.email.getValue()
-        ));
+        // Publish domain events
+        await this.eventBus.publishAll(user.getEvents());
+        user.clearEvents();
     }
 }

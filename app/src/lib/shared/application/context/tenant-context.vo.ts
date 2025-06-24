@@ -1,7 +1,7 @@
-import { ValueObject } from '../../../domain/interfaces/value-object.interface';
-import { CustomerId } from '../../../../customer/domain/value-objects/customer-id.vo';
-import { UserId } from '../../../../user/domain/value-objects/user-id.vo';
-import { UserRole } from '../../../../user/domain/value-objects/user-role.vo';
+import { ValueObject } from '@/lib/shared/domain/interfaces/value-object.interface';
+import { CustomerId } from '@/lib/shared/domain/value-objects/customer-id.vo';
+import { UserId } from '@/lib/user/domain/value-objects/user-id.vo';
+import { UserRole } from '@/lib/user/domain/value-objects/user-role.vo';
 
 export class TenantContext extends ValueObject {
   constructor(

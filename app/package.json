@@ -64,7 +64,10 @@
     "@heroui/table": "^2.2.20",
     "@heroui/theme": "^2.4.16",
     "@hookform/resolvers": "^3.3.2",
+    "@nestjs/common": "^10.3.3",
     "@prisma/client": "6.10.1",
+    "@types/axios": "^0.9.36",
+    "axios": "^1.10.0",
     "bcryptjs": "^2.4.3",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
@@ -80,6 +83,7 @@
     "mitt": "^3.0.1",
     "mqtt": "^5.3.4",
     "next": "^14.2.30",
+    "node-ssh": "^13.1.0",
     "prisma": "6.10.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -142,6 +146,5 @@
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=9.0.0"
-  },
-  "packageManager": "yarn@4.6.0+sha512.5383cc12567a95f1d668fbe762dfe0075c595b4bfff433be478dbbe24e05251a8e8c3eb992a986667c1d53b6c3a9c85b8398c35a960587fbd9fa3a0915406728"
+  }
 }

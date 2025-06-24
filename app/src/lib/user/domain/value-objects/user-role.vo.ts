@@ -1,7 +1,8 @@
 import {ValueObject} from '@/lib/shared/domain/interfaces/value-object.interface';
 
 export enum UserRoleEnum {
-    ADMIN = 'ADMIN',
+    SUPERADMIN = 'SUPERADMIN',
+    CUSTOMER_ADMIN = 'CUSTOMER_ADMIN',
     USER = 'USER',
     GUEST = 'GUEST'
 }
@@ -19,8 +20,12 @@ export class UserRole extends ValueObject {
         return other instanceof UserRole && this.value === other.value;
     }
 
-    isAdmin(): boolean {
-        return this.value === UserRoleEnum.ADMIN;
+    isSuperAdmin(): boolean {
+        return this.value === UserRoleEnum.SUPERADMIN;
+    }
+
+    isCustomerAdmin(): boolean {
+        return this.value === UserRoleEnum.CUSTOMER_ADMIN;
     }
 
     isUser(): boolean {
@@ -42,8 +47,12 @@ export class UserRole extends ValueObject {
         return new UserRole(value as UserRoleEnum);
     }
 
-    static admin(): UserRole {
-        return new UserRole(UserRoleEnum.ADMIN);
+    static superAdmin(): UserRole {
+        return new UserRole(UserRoleEnum.SUPERADMIN);
+    }
+
+    static customerAdmin(): UserRole {
+        return new UserRole(UserRoleEnum.CUSTOMER_ADMIN);
     }
 
     static user(): UserRole {

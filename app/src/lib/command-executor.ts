@@ -3,7 +3,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import * as ssh2 from 'ssh2';
 import * as mqtt from 'mqtt';
-import { tenantPrisma } from './tenant-middleware';
+import { tenantPrisma } from '@/lib/tenant-middleware';
 import { logger } from './logger';
 
 // Promisify exec for async/await usage

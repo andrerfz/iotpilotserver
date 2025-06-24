@@ -1,14 +1,14 @@
-import { ValueObject, ValueObjectInterface } from '../../../../shared/domain/interfaces/value-object.interface';
+import { ValueObject, ValueObjectInterface } from '@/lib/shared/domain/interfaces/value-object.interface';
 
 export interface OrganizationSettingsProps {
   maxUsers?: number;
   maxDevices?: number;
   allowedFeatures?: string[];
   dataRetentionDays?: number;
-  customDomain?: string;
-  logoUrl?: string;
-  primaryColor?: string;
-  secondaryColor?: string;
+  customDomain?: string | null;
+  logoUrl?: string | null;
+  primaryColor?: string | null;
+  secondaryColor?: string | null;
 }
 
 export class OrganizationSettings extends ValueObject {
@@ -32,6 +32,21 @@ export class OrganizationSettings extends ValueObject {
     this.primaryColor = props.primaryColor || null;
     this.secondaryColor = props.secondaryColor || null;
     this.validate();
+  }
+
+  static create(
+    maxUsers: number,
+    maxDevices: number,
+    features: string[] = ['basic'],
+    theme: string = 'default',
+    customDomain: string | null = null
+  ): OrganizationSettings {
+    return new OrganizationSettings({
+      maxUsers,
+      maxDevices,
+      allowedFeatures: features,
+      customDomain
+    });
   }
 
   private validate(): void {
@@ -92,7 +107,7 @@ export class OrganizationSettings extends ValueObject {
     if (!(other instanceof OrganizationSettings)) {
       return false;
     }
-    
+
     return (
       this.maxUsers === other.getMaxUsers() &&
       this.maxDevices === other.getMaxDevices() &&

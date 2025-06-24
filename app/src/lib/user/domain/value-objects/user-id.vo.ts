@@ -1,11 +1,10 @@
 import {ValueObject} from '@/lib/shared/domain/interfaces/value-object.interface';
+import {v4 as uuidv4} from 'uuid';
 
 export class UserId extends ValueObject {
     constructor(private readonly value: string) {
         super();
-        if (!value || value.trim().length === 0) {
-            throw new Error('UserId cannot be empty');
-        }
+        this.validate(value);
     }
 
     getValue(): string {
@@ -20,11 +19,24 @@ export class UserId extends ValueObject {
         return this.value;
     }
 
-    static create(value: string): UserId {
+    private validate(value: string): void {
+        if (!value || value.trim().length === 0) {
+            throw new Error('User ID cannot be empty');
+        }
+        if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)) {
+            throw new Error('Invalid User ID format');
+        }
+    }
+
+    static create(value?: string): UserId {
+        return new UserId(value || uuidv4());
+    }
+
+    static fromString(value: string): UserId {
         return new UserId(value);
     }
 
     static generate(): UserId {
-        return new UserId(crypto.randomUUID());
+        return new UserId(uuidv4());
     }
 }

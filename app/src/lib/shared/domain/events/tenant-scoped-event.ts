@@ -1,5 +1,5 @@
 import { DomainEvent, DomainEventBase } from './domain.event';
-import { CustomerId } from '../../../../customer/domain/value-objects/customer-id.vo';
+import { CustomerId } from '@/lib/shared/domain/value-objects/customer-id.vo';
 
 /**
  * Interface for tenant-scoped domain events

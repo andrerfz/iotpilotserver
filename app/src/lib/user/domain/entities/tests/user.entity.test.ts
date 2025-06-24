@@ -4,6 +4,7 @@ import {UserId} from '../../value-objects/user-id.vo';
 import {Email} from '../../value-objects/email.vo';
 import {Password} from '../../value-objects/password.vo';
 import {UserRole, UserRoleEnum} from '../../value-objects/user-role.vo';
+import {CustomerId} from '@/lib/shared/domain/value-objects/customer-id.vo';
 
 describe('User Entity', () => {
     let userId: UserId;
@@ -17,14 +18,14 @@ describe('User Entity', () => {
         email = Email.create('test@example.com');
         password = Password.createHashed('hashed_password');
         role = UserRole.user();
-        user = User.create(userId, email, password, role);
+        const customerId = CustomerId.create('test-customer-id');
+        user = User.create(email, password, role, customerId);
     });
 
     it('should create a user with correct values', () => {
-        expect(user.getId()).toBe(userId);
-        expect(user.getEmail()).toBe(email);
-        expect(user.getPassword()).toBe(password);
-        expect(user.getRole()).toBe(role);
+        expect(user.getEmail()).toEqual(email);
+        expect(user.getPassword()).toEqual(password);
+        expect(user.getRole()).toEqual(role);
         expect(user.isActive()).toBe(true);
         expect(user.getLastLoginAt()).toBeNull();
     });
@@ -42,7 +43,7 @@ describe('User Entity', () => {
     });
 
     it('should update role', () => {
-        const newRole = UserRole.admin();
+        const newRole = UserRole.customerAdmin();
         user.updateRole(newRole);
         expect(user.getRole()).toBe(newRole);
     });

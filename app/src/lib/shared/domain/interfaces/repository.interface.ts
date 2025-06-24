@@ -1,9 +1,11 @@
+import { TenantContext } from '@/lib/shared/application/context/tenant-context.vo';
+
 export interface Repository<T, ID> {
-    findById(id: ID): Promise<T | null>;
+    findById(id: ID, tenantContext?: TenantContext): Promise<T | null>;
 
-    findAll(): Promise<T[]>;
+    findAll(tenantContext?: TenantContext): Promise<T[]>;
 
-    save(entity: T): Promise<void>;
+    save(entity: T, tenantContext?: TenantContext): Promise<void>;
 
-    delete(id: ID): Promise<void>;
+    delete(id: ID, tenantContext?: TenantContext): Promise<void>;
 }

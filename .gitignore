@@ -261,3 +261,10 @@ packages/arm64v8/node_modules.tar.gz
 
 # But keep the build info files
 !packages/*/build-info.txt
+
+.yarn/
+!.yarn/releases
+
+# Yarn error logs
+yarn-error.log
+yarn-debug.log*

@@ -10,11 +10,11 @@ export class SshCredentials {
         if (!props.username) {
             throw new Error('SSH username cannot be empty');
         }
-        
+
         if (!props.password && !props.privateKey) {
             throw new Error('Either password or private key must be provided');
         }
-        
+
         if (props.port <= 0 || props.port > 65535) {
             throw new Error('SSH port must be between 1 and 65535');
         }
@@ -53,7 +53,17 @@ export class SshCredentials {
         );
     }
 
-    static create(props: SshCredentialsProps): SshCredentials {
-        return new SshCredentials(props);
+    static create(propsOrUsername: SshCredentialsProps | string, password?: string, port: number = 22): SshCredentials {
+        if (typeof propsOrUsername === 'string') {
+            // Handle parameter-based creation pattern
+            return new SshCredentials({
+                username: propsOrUsername,
+                password: password,
+                port: port
+            });
+        } else {
+            // Handle object-based creation pattern
+            return new SshCredentials(propsOrUsername);
+        }
     }
 }

@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { QueryHandler } from '../../../../shared/application/interfaces/query.interface';
+import { QueryHandler } from '@/lib/shared/application/interfaces/query.interface';
 import { GetCustomerQuery } from './get-customer.query';
-import { TenantRepository } from '../../../../shared/domain/interfaces/tenant-repository.interface';
-import { Customer } from '../../../domain/entities/customer.entity';
-import { CustomerId } from '../../../domain/value-objects/customer-id.vo';
-import { CustomerValidator } from '../../../domain/services/customer-validator.service';
-import { TenantIsolationEnforcer } from '../../../domain/services/tenant-isolation-enforcer.service';
-import { TenantAccessDeniedException } from '../../../../shared/domain/exceptions/tenant.exception';
+import { TenantRepository } from '@/lib/shared/domain/interfaces/tenant-repository.interface';
+import { Customer } from '@/lib/customer/domain/entities/customer.entity';
+import { CustomerId } from '@/lib/shared/domain/value-objects/customer-id.vo';
+import { CustomerValidator } from '@/lib/customer/domain/services/customer-validator.service';
+import { TenantIsolationEnforcer } from '@/lib/customer/domain/services/tenant-isolation-enforcer.service';
+import { TenantAccessDeniedException } from '@/lib/shared/domain/exceptions/tenant.exception';
 
 @Injectable()
 export class GetCustomerHandler implements QueryHandler<GetCustomerQuery, Customer | null> {

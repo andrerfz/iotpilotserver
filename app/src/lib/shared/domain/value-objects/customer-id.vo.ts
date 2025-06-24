@@ -1,6 +1,7 @@
 import {ValueObject} from '@/lib/shared/domain/interfaces/value-object.interface';
+import { v4 as uuidv4 } from 'uuid';
 
-export class Email extends ValueObject {
+export class CustomerId extends ValueObject {
     constructor(private readonly value: string) {
         super();
         this.validate(value);
@@ -11,7 +12,7 @@ export class Email extends ValueObject {
     }
 
     equals(other: ValueObject): boolean {
-        return other instanceof Email && this.value === other.value;
+        return other instanceof CustomerId && this.value === (other as CustomerId).getValue();
     }
 
     toString(): string {
@@ -20,15 +21,11 @@ export class Email extends ValueObject {
 
     private validate(value: string): void {
         if (!value || value.trim().length === 0) {
-            throw new Error('Email cannot be empty');
-        }
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(value)) {
-            throw new Error('Invalid email format');
+            throw new Error('Customer ID cannot be empty');
         }
     }
 
-    static create(value: string): Email {
-        return new Email(value.toLowerCase().trim());
+    static create(value?: string): CustomerId {
+        return new CustomerId(value || uuidv4());
     }
 }

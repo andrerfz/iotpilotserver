@@ -26,6 +26,18 @@ class MockUserRepository implements UserRepository {
         return null;
     }
 
+    async findByEmailInTenant(email: Email, customerId: any): Promise<User | null> {
+        const emailValue = email.getValue();
+        for (const user of this.users.values()) {
+            if (user.getEmail().getValue() === emailValue && 
+                user.getCustomerId() && 
+                user.getCustomerId()?.getValue() === customerId.getValue()) {
+                return user;
+            }
+        }
+        return null;
+    }
+
     async emailExists(email: Email): Promise<boolean> {
         return (await this.findByEmail(email)) !== null;
     }
@@ -62,9 +74,11 @@ describe('User Domain Integration', () => {
 
     it('should register a new user', async () => {
         const email = `test-${Date.now()}@example.com`;
-        const command = RegisterUserCommand.create(
+        const customerId = 'test-customer-id';
+        const command = RegisterUserCommand.createForTenant(
             email,
             'Password123!',
+            customerId,
             'USER'
         );
 
@@ -75,5 +89,6 @@ describe('User Domain Integration', () => {
         expect(user?.getEmail().getValue()).toBe(email);
         expect(user?.getRole().getValue()).toBe('USER');
         expect(user?.isActive()).toBe(true);
+        expect(user?.getCustomerId()?.getValue()).toBe(customerId);
     });
 });

@@ -1,4 +1,4 @@
-import { CustomerId } from '../domain/value-objects/customer-id.vo';
+import { CustomerId } from '@/lib/shared/domain/value-objects/customer-id.vo';
 import { CustomerName } from '../domain/value-objects/customer-name.vo';
 import { CustomerStatus, CustomerStatusEnum } from '../domain/value-objects/customer-status.vo';
 import { OrganizationSettings } from '../domain/value-objects/organization-settings.vo';

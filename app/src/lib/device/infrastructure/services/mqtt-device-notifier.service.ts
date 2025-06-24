@@ -1,10 +1,10 @@
-import { DeviceId } from '../../domain/value-objects/device-id.vo';
-import { DeviceStatus } from '../../domain/value-objects/device-status.vo';
-import { DeviceNotification, NotificationType } from '../../domain/interfaces/device-notification.interface';
+import { DeviceId } from '@/lib/device/domain/value-objects/device-id.vo';
+import { DeviceStatus } from '@/lib/device/domain/value-objects/device-status.vo';
+import { DeviceNotification, NotificationType } from '@/lib/device/domain/interfaces/device-notification.interface';
 import * as mqtt from 'mqtt';
 
 export class MQTTDeviceNotifierService implements DeviceNotification {
-  private client: mqtt.Client;
+  private client: ReturnType<typeof mqtt.connect>;
   private readonly baseTopic: string;
   private readonly subscriptions: Map<string, Set<NotificationType>> = new Map();
 
@@ -104,10 +104,12 @@ export class MQTTDeviceNotifierService implements DeviceNotification {
       if (!this.subscriptions.has(key)) {
         this.subscriptions.set(key, new Set());
       }
-      
+
       const userSubscriptions = this.subscriptions.get(key);
-      for (const type of notificationTypes) {
-        userSubscriptions.add(type);
+      if (userSubscriptions) {
+        for (const type of notificationTypes) {
+          userSubscriptions.add(type);
+        }
       }
     }
 
@@ -115,7 +117,7 @@ export class MQTTDeviceNotifierService implements DeviceNotification {
     for (const deviceId of deviceIds) {
       for (const type of notificationTypes) {
         let topic: string;
-        
+
         switch (type) {
           case NotificationType.STATUS_CHANGE:
             topic = `${this.baseTopic}/${deviceId.value}/status`;
@@ -132,7 +134,7 @@ export class MQTTDeviceNotifierService implements DeviceNotification {
           default:
             continue;
         }
-        
+
         await this.subscribeToTopic(topic);
       }
     }
@@ -149,29 +151,31 @@ export class MQTTDeviceNotifierService implements DeviceNotification {
       const userDeviceIds = Array.from(this.subscriptions.keys())
         .filter(key => key.startsWith(`${userId}:`))
         .map(key => key.split(':')[1]);
-      
+
       // Create DeviceId objects
-      deviceIds = userDeviceIds.map(id => DeviceId.create(id));
+      deviceIds = userDeviceIds.map(id => DeviceId.fromString(id));
     }
 
     // Update subscription preferences
     for (const deviceId of deviceIds) {
       const key = `${userId}:${deviceId.value}`;
-      
+
       if (!this.subscriptions.has(key)) {
         continue;
       }
-      
+
       // If notification types are specified, remove only those types
       if (notificationTypes && notificationTypes.length > 0) {
         const userSubscriptions = this.subscriptions.get(key);
-        for (const type of notificationTypes) {
-          userSubscriptions.delete(type);
-        }
-        
-        // If no subscriptions left, remove the entry
-        if (userSubscriptions.size === 0) {
-          this.subscriptions.delete(key);
+        if (userSubscriptions) {
+          for (const type of notificationTypes) {
+            userSubscriptions.delete(type);
+          }
+
+          // If no subscriptions left, remove the entry
+          if (userSubscriptions.size === 0) {
+            this.subscriptions.delete(key);
+          }
         }
       } else {
         // Remove all subscriptions for this device
@@ -184,7 +188,7 @@ export class MQTTDeviceNotifierService implements DeviceNotification {
       // Check if any user is still subscribed to this device
       const isAnyUserSubscribed = Array.from(this.subscriptions.keys())
         .some(key => key.endsWith(`:${deviceId.value}`));
-      
+
       if (!isAnyUserSubscribed) {
         // Unsubscribe from all topics for this device
         const topics = [
@@ -193,7 +197,7 @@ export class MQTTDeviceNotifierService implements DeviceNotification {
           `${this.baseTopic}/${deviceId.value}/connection/issues`,
           `${this.baseTopic}/${deviceId.value}/security/alerts`
         ];
-        
+
         for (const topic of topics) {
           await this.unsubscribeFromTopic(topic);
         }

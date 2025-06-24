@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { CommandHandler } from '../../../../shared/application/interfaces/command.interface';
+import { CommandHandler } from '@/lib/shared/application/interfaces/command.interface';
 import { DeactivateCustomerCommand } from './deactivate-customer.command';
-import { TenantRepository } from '../../../../shared/domain/interfaces/tenant-repository.interface';
-import { Customer } from '../../../domain/entities/customer.entity';
-import { CustomerId } from '../../../domain/value-objects/customer-id.vo';
-import { CustomerValidator } from '../../../domain/services/customer-validator.service';
-import { CustomerLifecycleManager } from '../../../domain/services/customer-lifecycle-manager.service';
-import { CustomerNotFoundException, CustomerInvalidStatusException } from '../../../domain/exceptions/customer.exception';
-import { TenantAccessDeniedException } from '../../../../shared/domain/exceptions/tenant.exception';
+import { TenantRepository } from '@/lib/shared/domain/interfaces/tenant-repository.interface';
+import { Customer } from '@/lib/customer/domain/entities/customer.entity';
+import { CustomerId } from '@/lib/shared/domain/value-objects/customer-id.vo';
+import { CustomerValidator } from '@/lib/customer/domain/services/customer-validator.service';
+import { CustomerLifecycleManager } from '@/lib/customer/domain/services/customer-lifecycle-manager.service';
+import { CustomerNotFoundException, CustomerInvalidStatusException } from '@/lib/customer/domain/exceptions/customer.exception';
+import { TenantAccessDeniedException } from '@/lib/shared/domain/exceptions/tenant.exception';
 
 @Injectable()
 export class DeactivateCustomerHandler implements CommandHandler<DeactivateCustomerCommand, void> {

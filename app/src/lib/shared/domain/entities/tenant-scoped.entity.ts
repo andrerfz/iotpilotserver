@@ -1,6 +1,6 @@
 import { Entity } from '../interfaces/entity.interface';
 import { ITenantScoped } from '../interfaces/tenant-scoped.interface';
-import { CustomerId } from '../../../../customer/domain/value-objects/customer-id.vo';
+import { CustomerId } from '@/lib/shared/domain/value-objects/customer-id.vo';
 
 /**
  * Base class for all tenant-scoped entities

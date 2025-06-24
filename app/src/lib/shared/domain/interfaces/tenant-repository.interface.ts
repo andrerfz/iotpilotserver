@@ -1,7 +1,7 @@
 import { Repository } from './repository.interface';
 import { ITenantScoped } from './tenant-scoped.interface';
-import { CustomerId } from '../../../../customer/domain/value-objects/customer-id.vo';
-import { TenantContext } from '../../application/context/tenant-context.vo';
+import { CustomerId } from '@/lib/shared/domain/value-objects/customer-id.vo';
+import { TenantContext } from '@/lib/shared/application/context/tenant-context.vo';
 
 export interface TenantRepository<T extends ITenantScoped, ID> extends Repository<T, ID> {
   /**

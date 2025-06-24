@@ -36,7 +36,7 @@ describe('DeviceExistsPolicy', () => {
     deviceExistsPolicy = new DeviceExistsPolicy(deviceRepository);
 
     // Mock DeviceId
-    deviceId = { getValue: 'device-123' } as unknown as DeviceId;
+    deviceId = { getValue: () => 'device-123' } as unknown as DeviceId;
   });
 
   describe('validate', () => {
@@ -68,7 +68,7 @@ describe('DeviceExistsPolicy', () => {
       deviceRepository.findById.mockResolvedValue(null);
 
       // Validate should throw with the correct error message
-      await expect(deviceExistsPolicy.validate(deviceId)).rejects.toThrow(`Device with ID ${deviceId.getValue} not found`);
+      await expect(deviceExistsPolicy.validate(deviceId)).rejects.toThrow(`Device with ID ${deviceId.getValue()} not found`);
     });
   });
 });

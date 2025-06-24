@@ -1,5 +1,5 @@
-import { DomainException } from '../../../../shared/domain/exceptions/domain.exception';
-import { CustomerId } from '../value-objects/customer-id.vo';
+import { DomainException } from '@/lib/shared/domain/exceptions/domain.exception';
+import { CustomerId } from '@/lib/shared/domain/value-objects/customer-id.vo';
 
 export class CustomerException extends DomainException {
   constructor(message: string) {

@@ -28,17 +28,17 @@ export class SSHAllowedPolicy {
         const hasSSHPermission = await this.userPermissionsService.hasSSHPermission(userId);
         if (!hasSSHPermission) {
             throw new SSHConnectionFailedException(
-                deviceId.getValue,
+                deviceId.getValue(),
                 'User does not have SSH permission'
             );
         }
 
         // Finally check if the device is active
         const device = await this.deviceRepository.findById(deviceId);
-        if (device && device.status.getValue !== 'active') {
+        if (device && device.status.getValue() !== 'active') {
             throw new SSHConnectionFailedException(
-                deviceId.getValue,
-                `Device is not active (current status: ${device.status.getValue})`
+                deviceId.getValue(),
+                `Device is not active (current status: ${device.status.getValue()})`
             );
         }
     }

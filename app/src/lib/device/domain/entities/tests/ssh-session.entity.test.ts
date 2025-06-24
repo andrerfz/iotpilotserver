@@ -13,7 +13,7 @@ describe('SSHSession Entity', () => {
 
   beforeEach(() => {
     sessionId = 'session-123';
-    deviceId = DeviceId.create('device-123');
+    deviceId = DeviceId.fromString('device-123');
     ipAddress = IpAddress.create('192.168.1.1');
     sshCredentials = SshCredentials.create('user', 'password');
     sshSession = SSHSession.create(sessionId, deviceId, ipAddress, sshCredentials);
@@ -33,23 +33,23 @@ describe('SSHSession Entity', () => {
   it('should add commands to the session', () => {
     const command1 = 'ls -la';
     const command2 = 'cd /home';
-    
+
     sshSession.addCommand(command1);
     expect(sshSession.commands).toEqual([command1]);
-    
+
     sshSession.addCommand(command2);
     expect(sshSession.commands).toEqual([command1, command2]);
   });
 
   it('should return a copy of commands array to prevent direct modification', () => {
     sshSession.addCommand('ls -la');
-    
+
     // Get the commands array
     const commands = sshSession.commands;
-    
+
     // Try to modify it directly
     commands.push('cd /home');
-    
+
     // The original commands array in the session should not be modified
     expect(sshSession.commands).toEqual(['ls -la']);
   });
@@ -57,12 +57,12 @@ describe('SSHSession Entity', () => {
   it('should close the session', () => {
     expect(sshSession.isActive).toBe(true);
     expect(sshSession.endTime).toBeNull();
-    
+
     sshSession.closeSession();
-    
+
     expect(sshSession.isActive).toBe(false);
     expect(sshSession.endTime).toBeInstanceOf(Date);
-    
+
     // The end time should be very recent (within the last second)
     const now = new Date();
     const timeDifference = now.getTime() - sshSession.endTime!.getTime();

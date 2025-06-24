@@ -1,14 +1,14 @@
-import { Redis } from 'ioredis';
-import { Device } from '../../domain/entities/device.entity';
-import { DeviceId } from '../../domain/value-objects/device-id.vo';
-import { DeviceRepository } from '../../domain/interfaces/device-repository.interface';
-import { DeviceMapper, DevicePersistence } from '../mappers/device.mapper';
+import { createClient, RedisClientType } from 'redis';
+import { Device } from '@/lib/device/domain/entities/device.entity';
+import { DeviceId } from '@/lib/device/domain/value-objects/device-id.vo';
+import { DeviceRepository } from '@/lib/device/domain/interfaces/device-repository.interface';
+import { DeviceMapper, DevicePersistence } from '@/lib/device/infrastructure/mappers/device.mapper';
 
 export class RedisDeviceCacheRepository implements DeviceRepository {
   private readonly keyPrefix = 'device:';
   private readonly ttl = 3600; // 1 hour in seconds
 
-  constructor(private readonly redis: Redis) {}
+  constructor(private readonly redis: RedisClientType) {}
 
   private getKey(id: string): string {
     return `${this.keyPrefix}${id}`;
@@ -24,7 +24,10 @@ export class RedisDeviceCacheRepository implements DeviceRepository {
       const deviceData = JSON.parse(deviceJson) as DevicePersistence;
       return DeviceMapper.toDomain(deviceData);
     } catch (error) {
-      console.error(`Error parsing device data from Redis: ${error.message}`);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Unknown error occurred';
+      console.error(`Error parsing device data from Redis: ${errorMessage}`);
       return null;
     }
   }
@@ -33,7 +36,7 @@ export class RedisDeviceCacheRepository implements DeviceRepository {
     // Redis doesn't support direct querying by fields other than key
     // We need to scan all keys and check each device
     const keys = await this.redis.keys(`${this.keyPrefix}*`);
-    
+
     for (const key of keys) {
       const deviceJson = await this.redis.get(key);
       if (deviceJson) {
@@ -43,11 +46,14 @@ export class RedisDeviceCacheRepository implements DeviceRepository {
             return DeviceMapper.toDomain(deviceData);
           }
         } catch (error) {
-          console.error(`Error parsing device data from Redis: ${error.message}`);
+          const errorMessage = error instanceof Error 
+            ? error.message 
+            : 'Unknown error occurred';
+          console.error(`Error parsing device data from Redis: ${errorMessage}`);
         }
       }
     }
-    
+
     return null;
   }
 
@@ -55,7 +61,7 @@ export class RedisDeviceCacheRepository implements DeviceRepository {
     // Redis doesn't support direct querying by fields other than key
     // We need to scan all keys and check each device
     const keys = await this.redis.keys(`${this.keyPrefix}*`);
-    
+
     for (const key of keys) {
       const deviceJson = await this.redis.get(key);
       if (deviceJson) {
@@ -65,18 +71,21 @@ export class RedisDeviceCacheRepository implements DeviceRepository {
             return DeviceMapper.toDomain(deviceData);
           }
         } catch (error) {
-          console.error(`Error parsing device data from Redis: ${error.message}`);
+          const errorMessage = error instanceof Error 
+            ? error.message 
+            : 'Unknown error occurred';
+          console.error(`Error parsing device data from Redis: ${errorMessage}`);
         }
       }
     }
-    
+
     return null;
   }
 
   async findAll(): Promise<Device[]> {
     const keys = await this.redis.keys(`${this.keyPrefix}*`);
     const devices: Device[] = [];
-    
+
     for (const key of keys) {
       const deviceJson = await this.redis.get(key);
       if (deviceJson) {
@@ -84,11 +93,14 @@ export class RedisDeviceCacheRepository implements DeviceRepository {
           const deviceData = JSON.parse(deviceJson) as DevicePersistence;
           devices.push(DeviceMapper.toDomain(deviceData));
         } catch (error) {
-          console.error(`Error parsing device data from Redis: ${error.message}`);
+          const errorMessage = error instanceof Error 
+            ? error.message 
+            : 'Unknown error occurred';
+          console.error(`Error parsing device data from Redis: ${errorMessage}`);
         }
       }
     }
-    
+
     return devices;
   }
 
@@ -107,8 +119,9 @@ export class RedisDeviceCacheRepository implements DeviceRepository {
     await this.redis.set(
       this.getKey(device.id.value),
       JSON.stringify(deviceData),
-      'EX',
-      this.ttl
+      {
+        EX: this.ttl
+      }
     );
   }
 
@@ -120,7 +133,7 @@ export class RedisDeviceCacheRepository implements DeviceRepository {
   async invalidateCache(): Promise<void> {
     const keys = await this.redis.keys(`${this.keyPrefix}*`);
     if (keys.length > 0) {
-      await this.redis.del(...keys);
+      await this.redis.del(keys);
     }
   }
 

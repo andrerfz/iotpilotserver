@@ -1,9 +1,9 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
-import { TenantContextProvider } from '../../application/context/tenant-context-provider.service';
-import { CustomerId } from '../../../../customer/domain/value-objects/customer-id.vo';
-import { UserId } from '../../../../user/domain/value-objects/user-id.vo';
-import { UserRole } from '../../../../user/domain/value-objects/user-role.vo';
+import { TenantContextProvider } from '@/lib/shared/application/context/tenant-context-provider.service';
+import { CustomerId } from '@/lib/shared/domain/value-objects/customer-id.vo';
+import { UserId } from '@/lib/user/domain/value-objects/user-id.vo';
+import { UserRole } from '@/lib/user/domain/value-objects/user-role.vo';
 
 @Injectable()
 export class TenantScopeMiddleware implements NestMiddleware {

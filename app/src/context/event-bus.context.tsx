@@ -1,5 +1,6 @@
 import { createContext, useContext, useMemo, ReactNode, useEffect } from 'react';
-import { EventBus, InMemoryEventBus, DomainEvent } from '../lib/shared/application/bus/event.bus';
+import { EventBus, InMemoryEventBus } from '../lib/shared/application/bus/event.bus';
+import { DomainEvent } from '../lib/shared/domain/events/domain.event';
 
 // Example event handler imports (these would need to be created)
 // import { DeviceRegisteredEvent } from '../lib/device/domain/events/device-registered.event';
@@ -47,7 +48,7 @@ export function useEventSubscription<T extends DomainEvent>(
 
     useEffect(() => {
         eventBus.subscribe<T>(eventType, handler);
-        
+
         // No need to unsubscribe as the event bus doesn't provide that functionality
         // If needed, we could enhance the event bus to support unsubscribing
     }, [eventBus, eventType, handler]);

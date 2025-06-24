@@ -1,9 +1,9 @@
-import { Device } from '../../domain/entities/device.entity';
-import { DeviceId } from '../../domain/value-objects/device-id.vo';
-import { DeviceName } from '../../domain/value-objects/device-name.vo';
-import { IpAddress } from '../../domain/value-objects/ip-address.vo';
-import { DeviceStatus } from '../../domain/value-objects/device-status.vo';
-import { SshCredentials } from '../../domain/value-objects/ssh-credentials.vo';
+import { Device } from '@/lib/device/domain/entities/device.entity';
+import { DeviceId } from '@/lib/device/domain/value-objects/device-id.vo';
+import { DeviceName } from '@/lib/device/domain/value-objects/device-name.vo';
+import { IpAddress } from '@/lib/device/domain/value-objects/ip-address.vo';
+import { DeviceStatus } from '@/lib/device/domain/value-objects/device-status.vo';
+import { SshCredentials } from '@/lib/device/domain/value-objects/ssh-credentials.vo';
 
 // Define the shape of the device data in the database
 export interface DevicePersistence {

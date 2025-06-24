@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
-import { TenantContext } from '../../../../shared/application/context/tenant-context.vo';
-import { CustomerId } from '../../../domain/value-objects/customer-id.vo';
-import { CustomerName } from '../../../domain/value-objects/customer-name.vo';
-import { OrganizationSettings } from '../../../domain/value-objects/organization-settings.vo';
-import { Customer } from '../../../domain/entities/customer.entity';
+import { TenantContext } from '@/lib/shared/application/context/tenant-context.vo';
+import { CustomerId } from '@/lib/shared/domain/value-objects/customer-id.vo';
+import { CustomerName } from '@/lib/customer/domain/value-objects/customer-name.vo';
+import { OrganizationSettings } from '@/lib/customer/domain/value-objects/organization-settings.vo';
+import { Customer } from '@/lib/customer/domain/entities/customer.entity';
 import { CustomerRepository } from '../persistence/customer.repository';
-import { TenantScopedLoggingService } from '../../../../shared/infrastructure/logging/tenant-scoped-logging.service';
-import { tenantPrisma } from '../../../../../tenant-middleware';
+import { TenantScopedLoggingService } from '@/lib/shared/infrastructure/logging/tenant-scoped-logging.service';
+import { tenantPrisma } from '@/lib/tenant-middleware';
 
 /**
  * Service for handling customer onboarding processes
@@ -51,7 +51,7 @@ export class CustomerOnboardingService {
       // Create customer ID and entity
       const customerId = CustomerId.create(crypto.randomUUID());
       const customerName = CustomerName.create(name);
-      
+
       // Create default organization settings
       const settings = OrganizationSettings.create(
         10, // maxUsers
@@ -68,10 +68,10 @@ export class CustomerOnboardingService {
       await this.customerRepository.save(customer, adminContext);
 
       // Create admin user for the customer
-      await this.createCustomerAdmin(customerId, adminEmail, adminPassword, adminContext);
+      const adminUserId = await this.createCustomerAdmin(customerId, adminEmail, adminPassword, adminContext);
 
       // Set up initial resources for the customer
-      await this.setupInitialResources(customerId, adminContext);
+      await this.setupInitialResources(customerId, adminUserId, adminContext);
 
       this.loggingService.info(
         `Successfully onboarded new customer: ${name} with ID: ${customerId.getValue()}`,
@@ -80,8 +80,9 @@ export class CustomerOnboardingService {
 
       return customerId;
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       this.loggingService.error(
-        `Error onboarding customer: ${error.message}`,
+        `Error onboarding customer: ${errorMessage}`,
         adminContext,
         { error }
       );
@@ -101,18 +102,20 @@ export class CustomerOnboardingService {
     email: string,
     password: string,
     adminContext: TenantContext
-  ): Promise<void> {
+  ): Promise<string> {
     // Create admin user with ADMIN role for the customer
+    const userId = crypto.randomUUID();
+
     await this.prisma.user.create({
       data: {
-        id: crypto.randomUUID(),
+        id: userId,
         email,
+        username: 'admin', // Using username instead of name
         password, // In a real implementation, this would be hashed
         role: 'ADMIN',
-        customerId: customerId.getValue(),
-        name: 'Admin',
-        createdAt: new Date(),
-        updatedAt: new Date()
+        customerId: customerId.getValue()
+        // createdAt is handled automatically by Prisma
+        // updatedAt is handled automatically by Prisma
       }
     });
 
@@ -120,6 +123,8 @@ export class CustomerOnboardingService {
       `Created admin user (${email}) for customer: ${customerId.getValue()}`,
       adminContext
     );
+
+    return userId;
   }
 
   /**
@@ -129,6 +134,7 @@ export class CustomerOnboardingService {
    */
   private async setupInitialResources(
     customerId: CustomerId,
+    userId: string,
     adminContext: TenantContext
   ): Promise<void> {
     // Create default API key for the customer
@@ -137,9 +143,8 @@ export class CustomerOnboardingService {
         id: crypto.randomUUID(),
         name: 'Default API Key',
         key: this.generateApiKey(),
+        userId: userId,
         customerId: customerId.getValue(),
-        createdAt: new Date(),
-        updatedAt: new Date(),
         expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) // 1 year expiry
       }
     });
@@ -148,26 +153,26 @@ export class CustomerOnboardingService {
     await this.prisma.systemConfig.create({
       data: {
         id: crypto.randomUUID(),
-        key: 'default_alert_threshold',
+        key: `customer_${customerId.getValue()}_default_alert_threshold`,
         value: '80',
-        customerId: customerId.getValue(),
-        createdAt: new Date(),
-        updatedAt: new Date()
+        category: 'CUSTOMER_SETTINGS'
       }
     });
 
     // Create welcome notification
+    // Note: Notification model doesn't exist in the Prisma schema
+    // Commenting out this code until the Notification model is added to the schema
+    /*
     await this.prisma.notification.create({
       data: {
         id: crypto.randomUUID(),
         title: 'Welcome to IoT Pilot Server',
         message: 'Thank you for signing up. Get started by adding your first device.',
         read: false,
-        customerId: customerId.getValue(),
-        createdAt: new Date(),
-        updatedAt: new Date()
+        customerId: customerId.getValue()
       }
     });
+    */
 
     this.loggingService.info(
       `Set up initial resources for customer: ${customerId.getValue()}`,
@@ -183,22 +188,22 @@ export class CustomerOnboardingService {
   private generateApiKey(): string {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     const segments = [16, 16, 16, 16]; // 4 segments of 16 characters
-    
+
     let apiKey = '';
-    
+
     for (const segmentLength of segments) {
       if (apiKey) {
         apiKey += '.';
       }
-      
+
       let segment = '';
       for (let i = 0; i < segmentLength; i++) {
         segment += chars.charAt(Math.floor(Math.random() * chars.length));
       }
-      
+
       apiKey += segment;
     }
-    
+
     return apiKey;
   }
 
@@ -224,38 +229,37 @@ export class CustomerOnboardingService {
     try {
       // Create sample devices
       const deviceTypes = ['Temperature Sensor', 'Humidity Sensor', 'Pressure Sensor'];
-      
+
       for (let i = 0; i < deviceTypes.length; i++) {
         const deviceId = crypto.randomUUID();
-        
+
         // Create device
         await this.prisma.device.create({
           data: {
             id: deviceId,
-            name: `Demo ${deviceTypes[i]}`,
-            type: deviceTypes[i],
-            status: 'ACTIVE',
-            customerId: customerId.getValue(),
-            createdAt: new Date(),
-            updatedAt: new Date()
+            deviceId: `demo-device-${i}`,
+            hostname: `Demo-${deviceTypes[i]}`,
+            deviceType: 'GENERIC',
+            architecture: 'arm64',
+            status: 'ONLINE',
+            customerId: customerId.getValue()
           }
         });
-        
+
         // Create sample metrics for the device
         const now = new Date();
         for (let j = 0; j < 10; j++) {
           const timestamp = new Date(now.getTime() - j * 3600000); // 1 hour intervals
-          
+
           await this.prisma.deviceMetric.create({
             data: {
               id: crypto.randomUUID(),
-              deviceId,
-              customerId: customerId.getValue(),
-              name: deviceTypes[i].split(' ')[0].toLowerCase(),
-              value: (Math.random() * 100).toFixed(2),
+              deviceId, // This links to the device, which is already associated with the customer
+              metric: deviceTypes[i].split(' ')[0].toLowerCase(), // Using 'metric' field instead of 'name'
+              value: parseFloat((Math.random() * 100).toFixed(2)), // Convert to Float
               unit: i === 0 ? '°C' : i === 1 ? '%' : 'hPa',
-              timestamp,
-              createdAt: timestamp
+              timestamp
+              // createdAt is handled automatically by Prisma
             }
           });
         }
@@ -266,8 +270,9 @@ export class CustomerOnboardingService {
         adminContext
       );
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       this.loggingService.error(
-        `Error provisioning demo data: ${error.message}`,
+        `Error provisioning demo data: ${errorMessage}`,
         adminContext,
         { error }
       );

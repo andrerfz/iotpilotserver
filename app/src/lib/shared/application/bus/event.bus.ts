@@ -1,10 +1,4 @@
-import {DomainEvent} from '../../domain/events/domain.event';
-
-export interface DomainEvent {
-    readonly occurredOn: Date;
-    readonly eventName?: string;
-    readonly eventType?: string;
-}
+import {DomainEvent} from '@/lib/shared/domain/events/domain.event';
 
 export interface EventHandler<T extends DomainEvent> {
     handle(event: T): Promise<void>;
@@ -12,6 +6,8 @@ export interface EventHandler<T extends DomainEvent> {
 
 export interface EventBus {
     publish(event: DomainEvent): Promise<void>;
+
+    publishAll(events: DomainEvent[]): Promise<void>;
 
     subscribe<T extends DomainEvent>(
         eventType: string,
@@ -33,8 +29,8 @@ export class InMemoryEventBus implements EventBus {
     }
 
     async publish(event: DomainEvent): Promise<void> {
-        // Get the event type from either eventType or eventName property
-        const eventTypeName = event.eventType || event.eventName || event.constructor.name;
+        // Get the event type from eventType property
+        const eventTypeName = event.eventType || event.constructor.name;
         const handlers = this.subscribers.get(eventTypeName) || [];
 
         await Promise.all(handlers.map(handler => {
@@ -44,5 +40,11 @@ export class InMemoryEventBus implements EventBus {
                 return handler.handle(event);
             }
         }));
+    }
+
+    async publishAll(events: DomainEvent[]): Promise<void> {
+        for (const event of events) {
+            await this.publish(event);
+        }
     }
 }

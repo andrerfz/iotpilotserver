@@ -1,4 +1,4 @@
-import { ValueObject, ValueObjectInterface } from '../../../../shared/domain/interfaces/value-object.interface';
+import { ValueObject, ValueObjectInterface } from '@/lib/shared/domain/interfaces/value-object.interface';
 
 export class CustomerName extends ValueObject {
   constructor(private readonly value: string) {
@@ -29,5 +29,9 @@ export class CustomerName extends ValueObject {
 
   toString(): string {
     return this.value;
+  }
+
+  static create(value: string): CustomerName {
+    return new CustomerName(value);
   }
 }

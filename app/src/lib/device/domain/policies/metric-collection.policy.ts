@@ -16,9 +16,9 @@ export class MetricCollectionPolicy {
 
         // Then check if the device is in a state that allows metric collection
         const device = await this.deviceRepository.findById(deviceId);
-        if (device && device.status.getValue === 'inactive') {
+        if (device && device.status.isInactive()) {
             throw new InvalidDeviceDataException(
-                `Cannot collect metrics for inactive device ${deviceId.getValue}`
+                `Cannot collect metrics for inactive device ${deviceId.getValue()}`
             );
         }
 

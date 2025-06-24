@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { Customer } from '../entities/customer.entity';
-import { CustomerId } from '../value-objects/customer-id.vo';
-import { TenantContext } from '../../../shared/application/context/tenant-context.vo';
-import { ITenantScoped } from '../../../shared/domain/interfaces/tenant-scoped.interface';
-import { CrossTenantAccessException, TenantAccessDeniedException } from '../../../shared/domain/exceptions/tenant.exception';
+import { CustomerId } from '@/lib/shared/domain/value-objects/customer-id.vo';
+import { TenantContext } from '@/lib/shared/application/context/tenant-context.vo';
+import { ITenantScoped } from '@/lib/shared/domain/interfaces/tenant-scoped.interface';
+import { CrossTenantAccessException, TenantAccessDeniedException } from '@/lib/shared/domain/exceptions/tenant.exception';
 
 @Injectable()
 export class TenantIsolationEnforcer {

@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { Customer } from '../entities/customer.entity';
 import { OrganizationSettings, OrganizationSettingsProps } from '../value-objects/organization-settings.vo';
 import { CustomerInvalidSettingsException } from '../exceptions/customer.exception';
-import { TenantContext } from '../../../shared/application/context/tenant-context.vo';
-import { TenantAccessDeniedException, TenantQuotaExceededException } from '../../../shared/domain/exceptions/tenant.exception';
+import { TenantContext } from '@/lib/shared/application/context/tenant-context.vo';
+import { TenantAccessDeniedException, TenantQuotaExceededException } from '@/lib/shared/domain/exceptions/tenant.exception';
 
 @Injectable()
 export class OrganizationManager {
@@ -29,14 +29,27 @@ export class OrganizationManager {
     try {
       // Create new settings value object
       const settings = new OrganizationSettings(settingsProps);
-      
+
       // Update customer settings
       customer.updateSettings(settings);
-      
+
       return customer;
     } catch (error) {
       // Convert validation errors to domain exceptions
-      throw new CustomerInvalidSettingsException(error.message);
+      let errorMessage = 'Invalid organization settings';
+
+      // Check if error is an Error object with a message property
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'object' && error !== null && 'message' in error) {
+        // Handle case where error is an object with a message property
+        errorMessage = String(error.message);
+      } else if (typeof error === 'string') {
+        // Handle case where error is a string
+        errorMessage = error;
+      }
+
+      throw new CustomerInvalidSettingsException(errorMessage);
     }
   }
 

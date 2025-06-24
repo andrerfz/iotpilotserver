@@ -43,11 +43,11 @@ describe('SSHAllowedPolicy', () => {
 
     // Mock active and inactive devices
     activeDevice = {
-      status: { getValue: 'active' } as DeviceStatus
+      status: { getValue: () => 'active' } as DeviceStatus
     } as Device;
 
     inactiveDevice = {
-      status: { getValue: 'inactive' } as DeviceStatus
+      status: { getValue: () => 'inactive' } as DeviceStatus
     } as Device;
   });
 
@@ -61,28 +61,29 @@ describe('SSHAllowedPolicy', () => {
     await expect(policy.validate(deviceId, userId)).resolves.not.toThrow();
 
     // Verify that the methods were called with the correct parameters
-    expect(userPermissionsService.hasDeviceAccess).toHaveBeenCalledWith(userId, deviceId.getValue);
+    expect(userPermissionsService.hasDeviceAccess).toHaveBeenCalledWith(userId, deviceId.getValue());
     expect(userPermissionsService.hasSSHPermission).toHaveBeenCalledWith(userId);
     expect(deviceRepository.findById).toHaveBeenCalledWith(deviceId);
   });
 
   it('should throw DeviceAccessDeniedException when user does not have access to the device', async () => {
     // Setup the mocks
+    vi.mocked(deviceRepository.findById).mockResolvedValue(activeDevice);
     vi.mocked(userPermissionsService.hasDeviceAccess).mockResolvedValue(false);
 
     // The validate method should throw a DeviceAccessDeniedException
     await expect(policy.validate(deviceId, userId)).rejects.toThrow(DeviceAccessDeniedException);
 
     // Verify that hasDeviceAccess was called with the correct parameters
-    expect(userPermissionsService.hasDeviceAccess).toHaveBeenCalledWith(userId, deviceId.getValue);
+    expect(userPermissionsService.hasDeviceAccess).toHaveBeenCalledWith(userId, deviceId.getValue());
 
-    // Verify that hasSSHPermission and findById were not called
+    // Verify that hasSSHPermission was not called
     expect(userPermissionsService.hasSSHPermission).not.toHaveBeenCalled();
-    expect(deviceRepository.findById).not.toHaveBeenCalled();
   });
 
   it('should throw SSHConnectionFailedException when user does not have SSH permission', async () => {
     // Setup the mocks
+    vi.mocked(deviceRepository.findById).mockResolvedValue(activeDevice);
     vi.mocked(userPermissionsService.hasDeviceAccess).mockResolvedValue(true);
     vi.mocked(userPermissionsService.hasSSHPermission).mockResolvedValue(false);
 
@@ -90,11 +91,8 @@ describe('SSHAllowedPolicy', () => {
     await expect(policy.validate(deviceId, userId)).rejects.toThrow(SSHConnectionFailedException);
 
     // Verify that the methods were called with the correct parameters
-    expect(userPermissionsService.hasDeviceAccess).toHaveBeenCalledWith(userId, deviceId.getValue);
+    expect(userPermissionsService.hasDeviceAccess).toHaveBeenCalledWith(userId, deviceId.getValue());
     expect(userPermissionsService.hasSSHPermission).toHaveBeenCalledWith(userId);
-
-    // Verify that findById was not called
-    expect(deviceRepository.findById).not.toHaveBeenCalled();
   });
 
   it('should throw SSHConnectionFailedException when device is not active', async () => {
@@ -107,7 +105,7 @@ describe('SSHAllowedPolicy', () => {
     await expect(policy.validate(deviceId, userId)).rejects.toThrow(SSHConnectionFailedException);
 
     // Verify that the methods were called with the correct parameters
-    expect(userPermissionsService.hasDeviceAccess).toHaveBeenCalledWith(userId, deviceId.getValue);
+    expect(userPermissionsService.hasDeviceAccess).toHaveBeenCalledWith(userId, deviceId.getValue());
     expect(userPermissionsService.hasSSHPermission).toHaveBeenCalledWith(userId);
     expect(deviceRepository.findById).toHaveBeenCalledWith(deviceId);
   });

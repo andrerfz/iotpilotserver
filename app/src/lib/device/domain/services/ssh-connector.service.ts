@@ -31,8 +31,13 @@ export class SSHConnector {
 
       return session;
     } catch (error) {
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Unknown error occurred';
+
       throw new SSHConnectionFailedException(
-        `Failed to connect to device ${deviceId.value}: ${error.message}`
+        deviceId.value,
+        `Failed to connect to device: ${errorMessage}`
       );
     }
   }
@@ -41,8 +46,13 @@ export class SSHConnector {
     try {
       await this.sshClient.disconnect(sessionId);
     } catch (error) {
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Unknown error occurred';
+
       throw new SSHConnectionFailedException(
-        `Failed to disconnect session ${sessionId}: ${error.message}`
+        sessionId,
+        `Failed to disconnect session: ${errorMessage}`
       );
     }
   }
@@ -54,8 +64,13 @@ export class SSHConnector {
     try {
       return await this.sshClient.executeCommand(sessionId, command);
     } catch (error) {
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Unknown error occurred';
+
       throw new SSHConnectionFailedException(
-        `Failed to execute command on session ${sessionId}: ${error.message}`
+        sessionId,
+        `Failed to execute command: ${errorMessage}`
       );
     }
   }

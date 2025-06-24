@@ -1,21 +1,27 @@
 import {QueryHandler} from '@/lib/shared/application/interfaces/query.interface';
 import {GetCurrentUserQuery} from './get-current-user.query';
-import {UserAuthenticator} from '@/lib/user/domain/services/user-authenticator';
-import {UserMapper} from '@/lib/user/infrastructure/mappers/user.mapper';
-import {SessionExpiredException} from '@/lib/user/domain/exceptions/session-expired.exception';
+import {UserRepository} from '@/lib/user/domain/interfaces/user-repository.interface';
+import {User} from '@/lib/user/domain/entities/user.entity';
 
-export class GetCurrentUserHandler implements QueryHandler<GetCurrentUserQuery, any> {
+export class GetCurrentUserHandler implements QueryHandler<GetCurrentUserQuery> {
     constructor(
-        private readonly userAuthenticator: UserAuthenticator
+        private readonly userRepository: UserRepository
     ) {}
 
-    async handle(query: GetCurrentUserQuery): Promise<any> {
-        const user = await this.userAuthenticator.validateSession(query.token);
+    async handle(query: GetCurrentUserQuery): Promise<User | null> {
+        const user = await this.userRepository.findById(query.userId);
 
         if (!user) {
-            throw new SessionExpiredException();
+            return null;
         }
 
-        return UserMapper.toDTO(user);
+        // Validate tenant access
+        if (query.customerId && !user.isSuperAdmin()) {
+            if (!user.belongsToTenant(query.customerId)) {
+                return null; // User doesn't belong to requested tenant
+            }
+        }
+
+        return user;
     }
 }

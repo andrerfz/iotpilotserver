@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
-import { TenantContext } from '../../../application/context/tenant-context.vo';
-import { CustomerId } from '../../../../customer/domain/value-objects/customer-id.vo';
-import { tenantPrisma } from '../../../../../tenant-middleware';
+import { TenantContext } from '@/lib/shared/application/context/tenant-context.vo';
+import { CustomerId } from '@/lib/shared/domain/value-objects/customer-id.vo';
+import { tenantPrisma } from '@/lib/tenant-middleware';
 import { TenantScopedLoggingService, LogLevel } from '../logging/tenant-scoped-logging.service';
 
 /**
@@ -81,8 +81,9 @@ export class TenantDataMigrationUtils {
 
       return result;
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       this.loggingService.error(
-        `Error migrating ${entityType} data: ${error.message}`,
+        `Error migrating ${entityType} data: ${errorMessage}`,
         adminContext,
         { error }
       );
@@ -114,8 +115,7 @@ export class TenantDataMigrationUtils {
     try {
       // Get source tenant data
       const sourceTenant = await this.prisma.customer.findUnique({
-        where: { id: sourceTenantId.getValue() },
-        include: { settings: true }
+        where: { id: sourceTenantId.getValue() }
       });
 
       if (!sourceTenant) {
@@ -124,25 +124,25 @@ export class TenantDataMigrationUtils {
 
       // Create new tenant
       const newTenantId = this.generateNewId();
+      // Generate a slug from the tenant name (lowercase, replace spaces with hyphens)
+      // Add a timestamp to ensure uniqueness
+      const timestamp = Date.now().toString().slice(-6);
+      const slug = `${newTenantName.toLowerCase().replace(/\s+/g, '-')}-${timestamp}`;
       await this.prisma.customer.create({
         data: {
           id: newTenantId,
           name: newTenantName,
-          status: sourceTenant.status,
-          settings: {
-            create: {
-              ...sourceTenant.settings,
-              id: this.generateNewId()
-            }
-          }
+          slug,
+          status: sourceTenant.status
         }
       });
+
 
       const newCustomerId = CustomerId.create(newTenantId);
 
       // Clone entity data for the new tenant
       const entityTypes = ['user', 'device', 'deviceMetric', 'deviceLog', 'alert'];
-      
+
       for (const entityType of entityTypes) {
         await this.migrateData(
           sourceTenantId,
@@ -164,8 +164,9 @@ export class TenantDataMigrationUtils {
 
       return newCustomerId;
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       this.loggingService.error(
-        `Error cloning tenant: ${error.message}`,
+        `Error cloning tenant: ${errorMessage}`,
         adminContext,
         { error }
       );
@@ -193,7 +194,7 @@ export class TenantDataMigrationUtils {
    */
   private async getEntityDataFromTenant(tenantId: CustomerId, entityType: string): Promise<any[]> {
     const model = this.getModelForEntityType(entityType);
-    return await this.prisma[model].findMany({
+    return await (this.prisma as any)[model].findMany({
       where: { customerId: tenantId.getValue() }
     });
   }
@@ -205,7 +206,7 @@ export class TenantDataMigrationUtils {
    */
   private async deleteExistingData(tenantId: CustomerId, entityType: string): Promise<void> {
     const model = this.getModelForEntityType(entityType);
-    await this.prisma[model].deleteMany({
+    await (this.prisma as any)[model].deleteMany({
       where: { customerId: tenantId.getValue() }
     });
   }
@@ -223,7 +224,7 @@ export class TenantDataMigrationUtils {
     data: any[]
   ): Promise<MigrationResult> {
     const model = this.getModelForEntityType(entityType);
-    
+
     // Insert data in batches to avoid potential issues with large datasets
     const batchSize = 100;
     let migratedCount = 0;
@@ -232,17 +233,17 @@ export class TenantDataMigrationUtils {
 
     for (let i = 0; i < data.length; i += batchSize) {
       const batch = data.slice(i, i + batchSize);
-      
+
       try {
-        const result = await this.prisma[model].createMany({
+        const result = await (this.prisma as any)[model].createMany({
           data: batch,
           skipDuplicates: true
         });
-        
+
         migratedCount += result.count;
       } catch (error) {
         errorCount += batch.length;
-        errors.push(error.message);
+        errors.push(error instanceof Error ? error.message : String(error));
       }
     }
 
@@ -274,11 +275,11 @@ export class TenantDataMigrationUtils {
     };
 
     const model = modelMap[entityType];
-    
+
     if (!model) {
       throw new Error(`Unsupported entity type: ${entityType}`);
     }
-    
+
     return model;
   }
 

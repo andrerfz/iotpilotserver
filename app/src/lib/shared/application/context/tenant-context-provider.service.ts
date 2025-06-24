@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { TenantContext } from './tenant-context.vo';
-import { CustomerId } from '../../../../customer/domain/value-objects/customer-id.vo';
-import { UserId } from '../../../../user/domain/value-objects/user-id.vo';
-import { UserRole } from '../../../../user/domain/value-objects/user-role.vo';
+import { CustomerId } from '@/lib/shared/domain/value-objects/customer-id.vo';
+import { UserId } from '@/lib/user/domain/value-objects/user-id.vo';
+import { UserRole } from '@/lib/user/domain/value-objects/user-role.vo';
 
 @Injectable()
 export class TenantContextProvider {

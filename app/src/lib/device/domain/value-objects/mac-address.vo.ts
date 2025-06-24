@@ -14,8 +14,9 @@ export class MACAddress {
 
     static isValid(value: string): boolean {
         // MAC address format: XX:XX:XX:XX:XX:XX or XX-XX-XX-XX-XX-XX
-        const macRegex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/;
-        return macRegex.test(value);
+        const colonMacRegex = /^([0-9A-Fa-f]{2}:){5}([0-9A-Fa-f]{2})$/;
+        const hyphenMacRegex = /^([0-9A-Fa-f]{2}-){5}([0-9A-Fa-f]{2})$/;
+        return colonMacRegex.test(value) || hyphenMacRegex.test(value);
     }
 
     equals(other: MACAddress): boolean {

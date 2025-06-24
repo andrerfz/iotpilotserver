@@ -51,7 +51,7 @@ describe('DeviceAccessiblePolicy', () => {
     expect(deviceRepository.findById).toHaveBeenCalledWith(deviceId);
 
     // Verify that hasDeviceAccess was called with the correct user ID and device ID
-    expect(userPermissionsService.hasDeviceAccess).toHaveBeenCalledWith(userId, deviceId.getValue);
+    expect(userPermissionsService.hasDeviceAccess).toHaveBeenCalledWith(userId, deviceId.getValue());
   });
 
   it('should throw DeviceAccessDeniedException when user does not have access to the device', async () => {
@@ -66,7 +66,7 @@ describe('DeviceAccessiblePolicy', () => {
     expect(deviceRepository.findById).toHaveBeenCalledWith(deviceId);
 
     // Verify that hasDeviceAccess was called with the correct user ID and device ID
-    expect(userPermissionsService.hasDeviceAccess).toHaveBeenCalledWith(userId, deviceId.getValue);
+    expect(userPermissionsService.hasDeviceAccess).toHaveBeenCalledWith(userId, deviceId.getValue());
   });
 
   it('should throw DeviceNotFoundException when device does not exist', async () => {

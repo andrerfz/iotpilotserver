@@ -1,6 +1,6 @@
-import { DeviceId } from '../../domain/value-objects/device-id.vo';
-import { DeviceStatus } from '../../domain/value-objects/device-status.vo';
-import { DeviceNotification, NotificationType } from '../../domain/interfaces/device-notification.interface';
+import { DeviceId } from '@/lib/device/domain/value-objects/device-id.vo';
+import { DeviceStatus } from '@/lib/device/domain/value-objects/device-status.vo';
+import { DeviceNotification, NotificationType } from '@/lib/device/domain/interfaces/device-notification.interface';
 import { Server as WebSocketServer } from 'ws';
 import * as http from 'http';
 
@@ -30,7 +30,7 @@ export class WebSocketDeviceNotifierService implements DeviceNotification {
       if (!this.clients.has(userId)) {
         this.clients.set(userId, new Set());
       }
-      this.clients.get(userId).add(ws as any);
+      this.clients.get(userId)!.add(ws as any);
 
       // Handle client disconnection
       ws.on('close', () => {
@@ -135,15 +135,15 @@ export class WebSocketDeviceNotifierService implements DeviceNotification {
     if (!this.subscriptions.has(userId)) {
       this.subscriptions.set(userId, new Map());
     }
-    
-    const userSubscriptions = this.subscriptions.get(userId);
-    
+
+    const userSubscriptions = this.subscriptions.get(userId)!;
+
     for (const deviceId of deviceIds) {
       if (!userSubscriptions.has(deviceId.value)) {
         userSubscriptions.set(deviceId.value, new Set());
       }
-      
-      const deviceSubscriptions = userSubscriptions.get(deviceId.value);
+
+      const deviceSubscriptions = userSubscriptions.get(deviceId.value)!;
       for (const type of notificationTypes) {
         deviceSubscriptions.add(type);
       }
@@ -158,9 +158,9 @@ export class WebSocketDeviceNotifierService implements DeviceNotification {
     if (!this.subscriptions.has(userId)) {
       return;
     }
-    
-    const userSubscriptions = this.subscriptions.get(userId);
-    
+
+    const userSubscriptions = this.subscriptions.get(userId)!;
+
     // If no device IDs provided, unsubscribe from all or specific notification types
     if (!deviceIds || deviceIds.length === 0) {
       if (!notificationTypes || notificationTypes.length === 0) {
@@ -168,16 +168,16 @@ export class WebSocketDeviceNotifierService implements DeviceNotification {
         this.subscriptions.delete(userId);
       } else {
         // Unsubscribe from specific notification types for all devices
-        for (const [deviceId, deviceSubscriptions] of userSubscriptions.entries()) {
+        Array.from(userSubscriptions.entries()).forEach(([deviceId, deviceSubscriptions]) => {
           for (const type of notificationTypes) {
             deviceSubscriptions.delete(type);
           }
-          
+
           if (deviceSubscriptions.size === 0) {
             userSubscriptions.delete(deviceId);
           }
-        }
-        
+        });
+
         if (userSubscriptions.size === 0) {
           this.subscriptions.delete(userId);
         }
@@ -188,23 +188,23 @@ export class WebSocketDeviceNotifierService implements DeviceNotification {
         if (!userSubscriptions.has(deviceId.value)) {
           continue;
         }
-        
+
         if (!notificationTypes || notificationTypes.length === 0) {
           // Unsubscribe from all notification types for this device
           userSubscriptions.delete(deviceId.value);
         } else {
           // Unsubscribe from specific notification types for this device
-          const deviceSubscriptions = userSubscriptions.get(deviceId.value);
+          const deviceSubscriptions = userSubscriptions.get(deviceId.value)!;
           for (const type of notificationTypes) {
             deviceSubscriptions.delete(type);
           }
-          
+
           if (deviceSubscriptions.size === 0) {
             userSubscriptions.delete(deviceId.value);
           }
         }
       }
-      
+
       if (userSubscriptions.size === 0) {
         this.subscriptions.delete(userId);
       }
@@ -217,24 +217,24 @@ export class WebSocketDeviceNotifierService implements DeviceNotification {
     notification: any
   ): Promise<void> {
     const message = JSON.stringify(notification);
-    
+
     // Find all users subscribed to this device and notification type
-    for (const [userId, userSubscriptions] of this.subscriptions.entries()) {
+    Array.from(this.subscriptions.entries()).forEach(([userId, userSubscriptions]) => {
       if (userSubscriptions.has(deviceId.value)) {
-        const deviceSubscriptions = userSubscriptions.get(deviceId.value);
+        const deviceSubscriptions = userSubscriptions.get(deviceId.value)!;
         if (deviceSubscriptions.has(notificationType)) {
           // Send notification to all connected clients for this user
           const userClients = this.clients.get(userId);
           if (userClients) {
-            for (const client of userClients) {
+            Array.from(userClients).forEach(client => {
               if (this.isClientConnected(client)) {
                 client.send(message);
               }
-            }
+            });
           }
         }
       }
-    }
+    });
   }
 
   private isClientConnected(client: WebSocket): boolean {
@@ -243,6 +243,9 @@ export class WebSocketDeviceNotifierService implements DeviceNotification {
 
   private extractUserIdFromRequest(request: http.IncomingMessage): string | null {
     // Extract user ID from query parameters
+    if (!request.url) {
+      return null;
+    }
     const url = new URL(request.url, `http://${request.headers.host}`);
     return url.searchParams.get('userId');
   }
@@ -252,7 +255,7 @@ export class WebSocketDeviceNotifierService implements DeviceNotification {
     deviceIds: string[],
     notificationTypes: NotificationType[]
   ): void {
-    const deviceIdObjects = deviceIds.map(id => DeviceId.create(id));
+    const deviceIdObjects = deviceIds.map(id => DeviceId.fromString(id));
     this.subscribeToNotifications(userId, deviceIdObjects, notificationTypes)
       .catch(error => console.error('Error handling subscribe request:', error));
   }
@@ -262,7 +265,7 @@ export class WebSocketDeviceNotifierService implements DeviceNotification {
     deviceIds?: string[],
     notificationTypes?: NotificationType[]
   ): void {
-    const deviceIdObjects = deviceIds ? deviceIds.map(id => DeviceId.create(id)) : undefined;
+    const deviceIdObjects = deviceIds ? deviceIds.map(id => DeviceId.fromString(id)) : undefined;
     this.unsubscribeFromNotifications(userId, deviceIdObjects, notificationTypes)
       .catch(error => console.error('Error handling unsubscribe request:', error));
   }

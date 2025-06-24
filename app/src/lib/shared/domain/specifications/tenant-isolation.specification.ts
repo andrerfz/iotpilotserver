@@ -1,6 +1,6 @@
-import { CustomerId } from '../../../../customer/domain/value-objects/customer-id.vo';
-import { ITenantScoped } from '../interfaces/tenant-scoped.interface';
-import { TenantContext } from '../../application/context/tenant-context.vo';
+import { CustomerId } from '@/lib/shared/domain/value-objects/customer-id.vo';
+import { ITenantScoped } from '@/lib/shared/domain/interfaces/tenant-scoped.interface';
+import { TenantContext } from '@/lib/shared/application/context/tenant-context.vo';
 
 /**
  * Base specification interface

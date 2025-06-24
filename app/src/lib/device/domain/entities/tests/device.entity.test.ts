@@ -14,7 +14,7 @@ describe('Device Entity', () => {
   let device: Device;
 
   beforeEach(() => {
-    deviceId = DeviceId.create('device-123');
+    deviceId = DeviceId.fromString('device-123');
     deviceName = DeviceName.create('Test Device');
     ipAddress = IpAddress.create('192.168.1.1');
     sshCredentials = SshCredentials.create('user', 'password');
@@ -34,7 +34,7 @@ describe('Device Entity', () => {
   it('should update name', () => {
     const newName = DeviceName.create('Updated Device');
     const originalUpdatedAt = device.updatedAt;
-    
+
     // Wait a bit to ensure updatedAt will be different
     setTimeout(() => {
       device.updateName(newName);
@@ -46,7 +46,7 @@ describe('Device Entity', () => {
   it('should update IP address', () => {
     const newIpAddress = IpAddress.create('192.168.1.2');
     const originalUpdatedAt = device.updatedAt;
-    
+
     // Wait a bit to ensure updatedAt will be different
     setTimeout(() => {
       device.updateIpAddress(newIpAddress);
@@ -58,7 +58,7 @@ describe('Device Entity', () => {
   it('should update status', () => {
     const newStatus = DeviceStatus.create('active');
     const originalUpdatedAt = device.updatedAt;
-    
+
     // Wait a bit to ensure updatedAt will be different
     setTimeout(() => {
       device.updateStatus(newStatus);
@@ -70,7 +70,7 @@ describe('Device Entity', () => {
   it('should update SSH credentials', () => {
     const newSshCredentials = SshCredentials.create('newuser', 'newpassword');
     const originalUpdatedAt = device.updatedAt;
-    
+
     // Wait a bit to ensure updatedAt will be different
     setTimeout(() => {
       device.updateSshCredentials(newSshCredentials);

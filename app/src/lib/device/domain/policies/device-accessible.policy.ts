@@ -22,11 +22,11 @@ export class DeviceAccessiblePolicy {
         // Then check if the user has access to the device
         const hasAccess = await this.userPermissionsService.hasDeviceAccess(
             userId,
-            deviceId.getValue
+            deviceId.getValue()
         );
 
         if (!hasAccess) {
-            throw new DeviceAccessDeniedException(deviceId.getValue, userId);
+            throw new DeviceAccessDeniedException(deviceId.getValue(), userId);
         }
     }
 }

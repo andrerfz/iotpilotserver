@@ -1,5 +1,5 @@
-import { DomainEventBase } from '../../../../shared/domain/events/domain.event';
-import { CustomerId } from '../value-objects/customer-id.vo';
+import { DomainEventBase } from '@/lib/shared/domain/events/domain.event';
+import { CustomerId } from '@/lib/shared/domain/value-objects/customer-id.vo';
 import { OrganizationSettings } from '../value-objects/organization-settings.vo';
 
 export class CustomerSettingsUpdatedEvent extends DomainEventBase {

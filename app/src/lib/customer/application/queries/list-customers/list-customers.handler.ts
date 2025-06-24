@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { QueryHandler } from '../../../../shared/application/interfaces/query.interface';
+import { QueryHandler } from '@/lib/shared/application/interfaces/query.interface';
 import { ListCustomersQuery } from './list-customers.query';
-import { TenantRepository } from '../../../../shared/domain/interfaces/tenant-repository.interface';
-import { Customer } from '../../../domain/entities/customer.entity';
-import { CustomerId } from '../../../domain/value-objects/customer-id.vo';
-import { TenantDataSegregationService } from '../../../domain/services/tenant-data-segregation.service';
+import { TenantRepository } from '@/lib/shared/domain/interfaces/tenant-repository.interface';
+import { Customer } from '@/lib/customer/domain/entities/customer.entity';
+import { CustomerId } from '@/lib/shared/domain/value-objects/customer-id.vo';
+import { TenantDataSegregationService } from '@/lib/customer/domain/services/tenant-data-segregation.service';
 
 @Injectable()
 export class ListCustomersHandler implements QueryHandler<ListCustomersQuery, Customer[]> {

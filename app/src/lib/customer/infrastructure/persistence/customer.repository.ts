@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
-import { TenantRepository } from '../../../../../shared/domain/interfaces/tenant-repository.interface';
-import { TenantContext } from '../../../../../shared/application/context/tenant-context.vo';
-import { Customer } from '../../../domain/entities/customer.entity';
-import { CustomerId } from '../../../domain/value-objects/customer-id.vo';
-import { CustomerName } from '../../../domain/value-objects/customer-name.vo';
-import { CustomerStatus, CustomerStatusEnum } from '../../../domain/value-objects/customer-status.vo';
-import { OrganizationSettings } from '../../../domain/value-objects/organization-settings.vo';
-import { tenantPrisma } from '../../../../../tenant-middleware';
+import { TenantRepository } from '@/lib/shared/domain/interfaces/tenant-repository.interface';
+import { TenantContext } from '@/lib/shared/application/context/tenant-context.vo';
+import { Customer } from '@/lib/customer/domain/entities/customer.entity';
+import { CustomerId } from '@/lib/shared/domain/value-objects/customer-id.vo';
+import { CustomerName } from '@/lib/customer/domain/value-objects/customer-name.vo';
+import { CustomerStatus, CustomerStatusEnum } from '@/lib/customer/domain/value-objects/customer-status.vo';
+import { OrganizationSettings } from '@/lib/customer/domain/value-objects/organization-settings.vo';
+import { tenantPrisma } from '@/lib/tenant-middleware';
 
 @Injectable()
 export class CustomerRepository implements TenantRepository<Customer, CustomerId> {
@@ -31,7 +31,7 @@ export class CustomerRepository implements TenantRepository<Customer, CustomerId
 
   async findAll(tenantContext: TenantContext): Promise<Customer[]> {
     const customers = await this.prisma.customer.findMany();
-    return customers.map(customer => this.mapToDomain(customer));
+    return customers.map((customer: any) => this.mapToDomain(customer));
   }
 
   async save(entity: Customer, tenantContext: TenantContext): Promise<void> {
@@ -88,7 +88,7 @@ export class CustomerRepository implements TenantRepository<Customer, CustomerId
     );
 
     const customer = Customer.create(id, name, settings);
-    
+
     // Set the correct status
     if (status.getValue() === CustomerStatusEnum.INACTIVE) {
       customer.deactivate();
@@ -98,7 +98,7 @@ export class CustomerRepository implements TenantRepository<Customer, CustomerId
 
     // Clear events to avoid publishing them when loading from DB
     customer.clearEvents();
-    
+
     return customer;
   }
 
@@ -110,8 +110,8 @@ export class CustomerRepository implements TenantRepository<Customer, CustomerId
       settings: {
         maxUsers: entity.getSettings().getMaxUsers(),
         maxDevices: entity.getSettings().getMaxDevices(),
-        features: entity.getSettings().getFeatures(),
-        theme: entity.getSettings().getTheme(),
+        features: entity.getSettings().getAllowedFeatures(),
+        theme: 'default',
         customDomain: entity.getSettings().getCustomDomain()
       },
       createdAt: entity.getCreatedAt(),

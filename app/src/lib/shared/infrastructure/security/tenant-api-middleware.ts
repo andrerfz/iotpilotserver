@@ -1,13 +1,13 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import { PrismaClient, UserRole } from '@prisma/client';
-import { TenantContext } from '../../../application/context/tenant-context.vo';
-import { TenantContextProvider } from '../../../application/context/tenant-context-provider.service';
+import { TenantContext } from '@/lib/shared/application/context/tenant-context.vo';
+import { TenantContextProvider } from '@/lib/shared/application/context/tenant-context-provider.service';
 import { TenantScopedLoggingService } from '../logging/tenant-scoped-logging.service';
-import { tenantPrisma, withTenant } from '../../../../../tenant-middleware';
-import { CustomerId } from '../../../../customer/domain/value-objects/customer-id.vo';
-import { UserId } from '../../../../user/domain/value-objects/user-id.vo';
-import { UserRole as UserRoleVO } from '../../../../user/domain/value-objects/user-role.vo';
+import { tenantPrisma, withTenant, TenantContext as TenantContextInterface } from '@/lib/tenant-middleware';
+import { CustomerId } from '@/lib/shared/domain/value-objects/customer-id.vo';
+import { UserId } from '@/lib/user/domain/value-objects/user-id.vo';
+import { UserRole as UserRoleVO } from '@/lib/user/domain/value-objects/user-role.vo';
 
 /**
  * Middleware for handling tenant context in API requests
@@ -34,7 +34,7 @@ export class TenantApiMiddleware implements NestMiddleware {
       // Extract user information from the request
       // This assumes authentication middleware has already run
       const userId = this.extractUserId(req);
-      
+
       if (!userId) {
         // No authenticated user, proceed without tenant context
         return next();
@@ -53,8 +53,16 @@ export class TenantApiMiddleware implements NestMiddleware {
       // Create tenant context
       const tenantContext = await this.createTenantContext(user, req);
 
+      // Convert TenantContext class to TenantContextInterface
+      const tenantContextAdapter: TenantContextInterface = {
+        customerId: tenantContext.getCustomerId()?.getValue() || null,
+        userId: tenantContext.getUserId().getValue(),
+        role: tenantContext.getRole().getValue() as UserRole,
+        isSuperAdmin: tenantContext.isSuperAdminUser()
+      };
+
       // Run the rest of the request with tenant context
-      await withTenant(tenantContext, async () => {
+      await withTenant(tenantContextAdapter, async () => {
         // Log the request with tenant context
         this.logRequest(req, tenantContext);
 
@@ -67,7 +75,7 @@ export class TenantApiMiddleware implements NestMiddleware {
     } catch (error) {
       // Log the error
       console.error('Error in tenant middleware:', error);
-      
+
       // Continue without tenant context
       next();
     }
@@ -81,12 +89,12 @@ export class TenantApiMiddleware implements NestMiddleware {
   private extractUserId(req: Request): string | null {
     // This implementation depends on your authentication strategy
     // It could extract from JWT token, session, etc.
-    
+
     // Example: Extract from authenticated user object
     if ((req as any).user && (req as any).user.id) {
       return (req as any).user.id;
     }
-    
+
     // Example: Extract from authorization header with JWT
     const authHeader = req.headers.authorization;
     if (authHeader && authHeader.startsWith('Bearer ')) {
@@ -94,7 +102,7 @@ export class TenantApiMiddleware implements NestMiddleware {
       // For now, we'll just return null
       return null;
     }
-    
+
     return null;
   }
 
@@ -110,31 +118,31 @@ export class TenantApiMiddleware implements NestMiddleware {
   ): Promise<TenantContext> {
     // Check if user is SUPERADMIN
     const isSuperAdmin = user.role === 'SUPERADMIN';
-    
+
     // For SUPERADMIN, check if a specific tenant is requested
     let customerId: CustomerId | null = null;
-    
+
     if (user.customerId) {
       customerId = CustomerId.create(user.customerId);
     } else if (isSuperAdmin) {
       // SUPERADMIN can specify a tenant in the request
       const requestedTenantId = this.extractRequestedTenantId(req);
-      
+
       if (requestedTenantId) {
         // Verify the requested tenant exists
         const tenantExists = await this.tenantExists(requestedTenantId);
-        
+
         if (tenantExists) {
           customerId = CustomerId.create(requestedTenantId);
         }
       }
     }
-    
+
     // Create and return the tenant context
     return this.tenantContextProvider.createContext(
-      customerId,
       UserId.create(user.id),
       UserRoleVO.create(user.role),
+      customerId,
       isSuperAdmin
     );
   }
@@ -149,19 +157,19 @@ export class TenantApiMiddleware implements NestMiddleware {
     if (req.query.tenantId && typeof req.query.tenantId === 'string') {
       return req.query.tenantId;
     }
-    
+
     // Check header
     const tenantHeader = req.headers['x-tenant-id'];
     if (tenantHeader && typeof tenantHeader === 'string') {
       return tenantHeader;
     }
-    
+
     // Check path parameter
     // This assumes routes with tenant ID follow pattern /api/tenants/:tenantId/...
     if (req.params.tenantId) {
       return req.params.tenantId;
     }
-    
+
     return null;
   }
 
@@ -174,7 +182,7 @@ export class TenantApiMiddleware implements NestMiddleware {
     const count = await this.prisma.customer.count({
       where: { id: tenantId }
     });
-    
+
     return count > 0;
   }
 
@@ -188,7 +196,7 @@ export class TenantApiMiddleware implements NestMiddleware {
     const url = req.originalUrl;
     const ip = req.ip;
     const userAgent = req.headers['user-agent'] || 'unknown';
-    
+
     this.loggingService.info(
       `API Request: ${method} ${url}`,
       tenantContext,
@@ -213,19 +221,19 @@ export class TenantApiMiddleware implements NestMiddleware {
     if (!body) {
       return {};
     }
-    
+
     // Create a copy of the body
     const sanitized = { ...body };
-    
+
     // Remove sensitive fields
-    const sensitiveFields = ['password', 'token', 'secret', 'apiKey', 'creditCard'];
-    
+    const sensitiveFields = ['password', 'token', 'secret', 'apiKey'];
+
     for (const field of sensitiveFields) {
       if (sanitized[field]) {
         sanitized[field] = '***REDACTED***';
       }
     }
-    
+
     return sanitized;
   }
 }

@@ -1,6 +1,6 @@
-import { Device } from '../../domain/entities/device.entity';
-import { DeviceId } from '../../domain/value-objects/device-id.vo';
-import { DeviceRepository } from '../../domain/interfaces/device-repository.interface';
+import { Device } from '@/lib/device/domain/entities/device.entity';
+import { DeviceId } from '@/lib/device/domain/value-objects/device-id.vo';
+import { DeviceRepository } from '@/lib/device/domain/interfaces/device-repository.interface';
 
 export class InMemoryDeviceRepository implements DeviceRepository {
   private devices: Map<string, Device> = new Map();
@@ -10,7 +10,8 @@ export class InMemoryDeviceRepository implements DeviceRepository {
   }
 
   async findByName(name: string): Promise<Device | null> {
-    for (const device of this.devices.values()) {
+    const devices = Array.from(this.devices.values());
+    for (const device of devices) {
       if (device.name.value === name) {
         return device;
       }
@@ -19,7 +20,8 @@ export class InMemoryDeviceRepository implements DeviceRepository {
   }
 
   async findByIpAddress(ipAddress: string): Promise<Device | null> {
-    for (const device of this.devices.values()) {
+    const devices = Array.from(this.devices.values());
+    for (const device of devices) {
       if (device.ipAddress.value === ipAddress) {
         return device;
       }

@@ -1,12 +1,10 @@
 import {Entity} from '@/lib/shared/domain/interfaces/entity.interface';
 import {UserId} from '../value-objects/user-id.vo';
+import {CustomerId} from '@/lib/shared/domain/value-objects/customer-id.vo';
+import {v4 as uuidv4} from 'uuid';
 
 export class SessionId {
-    constructor(private readonly value: string) {
-        if (!value || value.trim().length === 0) {
-            throw new Error('SessionId cannot be empty');
-        }
-    }
+    constructor(private readonly value: string) {}
 
     getValue(): string {
         return this.value;
@@ -20,12 +18,12 @@ export class SessionId {
         return this.value;
     }
 
-    static create(value: string): SessionId {
-        return new SessionId(value);
+    static create(): SessionId {
+        return new SessionId(uuidv4());
     }
 
-    static generate(): SessionId {
-        return new SessionId(crypto.randomUUID());
+    static fromString(value: string): SessionId {
+        return new SessionId(value);
     }
 }
 
@@ -33,11 +31,10 @@ export class UserSession extends Entity<SessionId> {
     constructor(
         id: SessionId,
         private readonly userId: UserId,
+        private readonly customerId: CustomerId | null, // null for SUPERADMIN sessions
         private readonly token: string,
         private readonly expiresAt: Date,
         private readonly createdAt: Date,
-        private readonly ipAddress: string,
-        private readonly userAgent: string,
         private revoked: boolean = false
     ) {
         super(id);
@@ -49,6 +46,10 @@ export class UserSession extends Entity<SessionId> {
 
     getUserId(): UserId {
         return this.userId;
+    }
+
+    getCustomerId(): CustomerId | null {
+        return this.customerId;
     }
 
     getToken(): string {
@@ -63,14 +64,6 @@ export class UserSession extends Entity<SessionId> {
         return this.createdAt;
     }
 
-    getIpAddress(): string {
-        return this.ipAddress;
-    }
-
-    getUserAgent(): string {
-        return this.userAgent;
-    }
-
     isRevoked(): boolean {
         return this.revoked;
     }
@@ -80,7 +73,16 @@ export class UserSession extends Entity<SessionId> {
     }
 
     isValid(): boolean {
-        return !this.isRevoked() && !this.isExpired();
+        return !this.revoked && !this.isExpired();
+    }
+
+    isSuperAdminSession(): boolean {
+        return this.customerId === null;
+    }
+
+    belongsToTenant(tenantId: CustomerId): boolean {
+        if (this.isSuperAdminSession()) return true; // SUPERADMIN sessions have access to all tenants
+        return this.customerId?.equals(tenantId) || false;
     }
 
     revoke(): void {
@@ -89,19 +91,24 @@ export class UserSession extends Entity<SessionId> {
 
     static create(
         userId: UserId,
+        customerId: CustomerId | null,
         token: string,
-        expiresAt: Date,
-        ipAddress: string,
-        userAgent: string
+        expirationHours: number = 24
     ): UserSession {
+        const expiresAt = new Date();
+        expiresAt.setHours(expiresAt.getHours() + expirationHours);
+
         return new UserSession(
-            SessionId.generate(),
+            SessionId.create(),
             userId,
+            customerId,
             token,
             expiresAt,
-            new Date(),
-            ipAddress,
-            userAgent
+            new Date()
         );
+    }
+
+    equals(other: Entity<SessionId>): boolean {
+        return other instanceof UserSession && this.id.equals(other.id);
     }
 }

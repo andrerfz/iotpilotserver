@@ -1,5 +1,5 @@
 import { DomainException } from './domain.exception';
-import { CustomerId } from '../../../../customer/domain/value-objects/customer-id.vo';
+import { CustomerId } from '@/lib/shared/domain/value-objects/customer-id.vo';
 
 /**
  * Base class for all tenant-related exceptions

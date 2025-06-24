@@ -6,7 +6,8 @@ export class DeviceMetrics {
         private readonly _cpuUsage: number,
         private readonly _memoryUsage: number,
         private readonly _diskUsage: number,
-        private readonly _networkUsage: number,
+        private readonly _networkUpload: number,
+        private readonly _networkDownload: number,
         private readonly _timestamp: Date
     ) {}
 
@@ -26,12 +27,20 @@ export class DeviceMetrics {
         return this._diskUsage;
     }
 
-    get networkUsage(): number {
-        return this._networkUsage;
+    get networkUpload(): number {
+        return this._networkUpload;
+    }
+
+    get networkDownload(): number {
+        return this._networkDownload;
     }
 
     get timestamp(): Date {
         return this._timestamp;
+    }
+
+    get networkUsage(): number {
+        return this._networkUpload + this._networkDownload;
     }
 
     static create(
@@ -39,7 +48,8 @@ export class DeviceMetrics {
         cpuUsage: number,
         memoryUsage: number,
         diskUsage: number,
-        networkUsage: number,
+        networkUpload: number,
+        networkDownload: number,
         timestamp?: Date
     ): DeviceMetrics {
         return new DeviceMetrics(
@@ -47,7 +57,8 @@ export class DeviceMetrics {
             cpuUsage,
             memoryUsage,
             diskUsage,
-            networkUsage,
+            networkUpload,
+            networkDownload,
             timestamp || new Date()
         );
     }

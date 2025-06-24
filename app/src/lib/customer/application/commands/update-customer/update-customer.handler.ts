@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { CommandHandler } from '../../../../shared/application/interfaces/command.interface';
+import { CommandHandler } from '@/lib/shared/application/interfaces/command.interface';
 import { UpdateCustomerCommand } from './update-customer.command';
-import { TenantRepository } from '../../../../shared/domain/interfaces/tenant-repository.interface';
-import { Customer } from '../../../domain/entities/customer.entity';
-import { CustomerId } from '../../../domain/value-objects/customer-id.vo';
-import { CustomerValidator } from '../../../domain/services/customer-validator.service';
-import { OrganizationManager } from '../../../domain/services/organization-manager.service';
-import { CustomerNotFoundException } from '../../../domain/exceptions/customer.exception';
-import { TenantAccessDeniedException } from '../../../../shared/domain/exceptions/tenant.exception';
+import { TenantRepository } from '@/lib/shared/domain/interfaces/tenant-repository.interface';
+import { Customer } from '@/lib/customer/domain/entities/customer.entity';
+import { CustomerId } from '@/lib/shared/domain/value-objects/customer-id.vo';
+import { CustomerValidator } from '@/lib/customer/domain/services/customer-validator.service';
+import { OrganizationManager } from '@/lib/customer/domain/services/organization-manager.service';
+import { CustomerNotFoundException } from '@/lib/customer/domain/exceptions/customer.exception';
+import { TenantAccessDeniedException } from '@/lib/shared/domain/exceptions/tenant.exception';
 
 @Injectable()
 export class UpdateCustomerHandler implements CommandHandler<UpdateCustomerCommand, void> {

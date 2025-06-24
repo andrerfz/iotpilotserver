@@ -1,11 +1,13 @@
 import { NodeSSH } from 'node-ssh';
-import { DeviceId } from '../../domain/value-objects/device-id.vo';
-import { IpAddress } from '../../domain/value-objects/ip-address.vo';
-import { Port } from '../../domain/value-objects/port.vo';
-import { SshCredentials } from '../../domain/value-objects/ssh-credentials.vo';
-import { SSHSession } from '../../domain/entities/ssh-session.entity';
-import { SSHClient } from '../../domain/interfaces/ssh-client.interface';
-import { SSHConnectionFailedException } from '../../domain/exceptions/ssh-connection-failed.exception';
+import { DeviceId } from '@/lib/device/domain/value-objects/device-id.vo';
+import { IpAddress } from '@/lib/device/domain/value-objects/ip-address.vo';
+import { Port } from '@/lib/device/domain/value-objects/port.vo';
+import { SshCredentials } from '@/lib/device/domain/value-objects/ssh-credentials.vo';
+import { SSHSession } from '@/lib/device/domain/entities/ssh-session.entity';
+import { SSHClient } from '@/lib/device/domain/interfaces/ssh-client.interface';
+import { SSHConnectionFailedException } from '@/lib/device/domain/exceptions/ssh-connection-failed.exception';
+
+// Note: Port.getValue is a getter property, not a method, so it should be accessed without parentheses
 
 export class NodeSSHClientService implements SSHClient {
   private activeSessions: Map<string, { ssh: NodeSSH; session: SSHSession }> = new Map();
@@ -18,10 +20,10 @@ export class NodeSSHClientService implements SSHClient {
   ): Promise<SSHSession> {
     try {
       const ssh = new NodeSSH();
-      
+
       await ssh.connect({
         host: ipAddress.value,
-        port: port.value,
+        port: port.getValue,
         username: credentials.username,
         password: credentials.password,
         // Add additional options as needed
@@ -34,8 +36,8 @@ export class NodeSSHClientService implements SSHClient {
       const session = SSHSession.create(
         sessionId,
         deviceId,
-        new Date(),
-        null // End time will be set when the session ends
+        ipAddress,
+        credentials
       );
 
       // Store the session
@@ -43,8 +45,12 @@ export class NodeSSHClientService implements SSHClient {
 
       return session;
     } catch (error) {
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Unknown error';
       throw new SSHConnectionFailedException(
-        `Failed to connect to device ${deviceId.value} at ${ipAddress.value}:${port.value}: ${error.message}`
+          deviceId.value,
+        `Failed to connect to device at ${ipAddress.value}:${port.getValue}: ${errorMessage}`
       );
     }
   }
@@ -58,14 +64,17 @@ export class NodeSSHClientService implements SSHClient {
     try {
       // Disconnect the SSH connection
       sessionData.ssh.dispose();
-      
+
       // Update the session end time
-      sessionData.session.end(new Date());
-      
+      sessionData.session.closeSession();
+
       // Remove the session from active sessions
       this.activeSessions.delete(sessionId);
     } catch (error) {
-      throw new Error(`Failed to disconnect session ${sessionId}: ${error.message}`);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Unknown error';
+      throw new Error(`Failed to disconnect session ${sessionId}: ${errorMessage}`);
     }
   }
 
@@ -85,7 +94,10 @@ export class NodeSSHClientService implements SSHClient {
         error: result.stderr || null
       };
     } catch (error) {
-      throw new Error(`Failed to execute command on session ${sessionId}: ${error.message}`);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Unknown error';
+      throw new Error(`Failed to execute command on session ${sessionId}: ${errorMessage}`);
     }
   }
 
