@@ -1,6 +1,13 @@
+import {DomainEvent} from '../../domain/events/domain.event';
+
 export interface DomainEvent {
     readonly occurredOn: Date;
-    readonly eventName: string;
+    readonly eventName?: string;
+    readonly eventType?: string;
+}
+
+export interface EventHandler<T extends DomainEvent> {
+    handle(event: T): Promise<void>;
 }
 
 export interface EventBus {
@@ -8,16 +15,16 @@ export interface EventBus {
 
     subscribe<T extends DomainEvent>(
         eventType: string,
-        handler: (event: T) => Promise<void>
+        handler: EventHandler<T> | ((event: T) => Promise<void>)
     ): void;
 }
 
 export class InMemoryEventBus implements EventBus {
-    private subscribers = new Map<string, Array<(event: any) => Promise<void>>>();
+    private subscribers = new Map<string, (EventHandler<any> | ((event: any) => Promise<void>))[]>();
 
     subscribe<T extends DomainEvent>(
         eventType: string,
-        handler: (event: T) => Promise<void>
+        handler: EventHandler<T> | ((event: T) => Promise<void>)
     ): void {
         if (!this.subscribers.has(eventType)) {
             this.subscribers.set(eventType, []);
@@ -26,7 +33,16 @@ export class InMemoryEventBus implements EventBus {
     }
 
     async publish(event: DomainEvent): Promise<void> {
-        const handlers = this.subscribers.get(event.constructor.name) || [];
-        await Promise.all(handlers.map(handler => handler(event)));
+        // Get the event type from either eventType or eventName property
+        const eventTypeName = event.eventType || event.eventName || event.constructor.name;
+        const handlers = this.subscribers.get(eventTypeName) || [];
+
+        await Promise.all(handlers.map(handler => {
+            if (typeof handler === 'function') {
+                return handler(event);
+            } else {
+                return handler.handle(event);
+            }
+        }));
     }
 }

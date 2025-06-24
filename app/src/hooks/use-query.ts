@@ -1,7 +1,8 @@
-import { useState, useCallback } from 'react';
-import { useQueryBus } from '../context/query-bus.context';
+import {useState, useCallback} from 'react';
+import {useQueryBus} from '@/context/ddd.context';
+import {Query} from '@/lib/shared/application/interfaces/query.interface';
 
-export function useQuery<T, R>() {
+export function useQuery<T extends Query<R>, R = any>() {
     const queryBus = useQueryBus();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -11,21 +12,28 @@ export function useQuery<T, R>() {
         try {
             setLoading(true);
             setError(null);
-            const result = await queryBus.execute<T, R>(query);
+            const result = await queryBus.execute(query);
             setData(result);
             return result;
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Unknown error');
+            const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+            setError(errorMessage);
             throw err;
         } finally {
             setLoading(false);
         }
     }, [queryBus]);
 
+    const reset = useCallback(() => {
+        setData(null);
+        setError(null);
+    }, []);
+
     return {
         execute,
         loading,
         error,
-        data
+        data,
+        reset
     };
 }
