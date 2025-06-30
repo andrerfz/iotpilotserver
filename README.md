@@ -125,7 +125,7 @@ iotpilotserver/
 │   ├── prisma/
 │   │   ├── schema.prisma             # Database schema
 │   │   └── migration/                # SQL migrations
-│   ├── server.js                     # Express + Next.js
+│   ├── server.cjs                     # Express + Next.js
 │   └── package.json                  # Dependencies
 ├── 🐳 docker/                        # Containerization
 │   ├── Dockerfile                    # Multi-stage build

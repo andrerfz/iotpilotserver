@@ -35,7 +35,7 @@ export class UserMapper {
             prismaUser.createdAt,
             prismaUser.updatedAt,
             prismaUser.lastLoginAt,
-            prismaUser.active
+            prismaUser.status
         );
     }
 
@@ -50,8 +50,7 @@ export class UserMapper {
             username: user.getUsername(),
             password: user.getPassword().getValue(),
             role: prismaRole,
-            status: UserStatus.ACTIVE, // Default status
-            active: user.isActive(),
+            status: user.isActive() ? UserStatus.ACTIVE : UserStatus.INACTIVE,
             profileImage: null, // Default value
             lastLoginAt: user.getLastLoginAt(),
             deletedAt: null, // Default value
@@ -71,6 +70,7 @@ export class UserMapper {
         createdAt: string;
         lastLoginAt: string | null;
         active: boolean;
+        status: string;
     } {
         return {
             id: user.getId().getValue(),
@@ -80,7 +80,8 @@ export class UserMapper {
             customerId: user.getCustomerId()?.getValue() || null,
             createdAt: user.getCreatedAt().toISOString(),
             lastLoginAt: user.getLastLoginAt()?.toISOString() || null,
-            active: user.isActive()
+            active: user.isActive(),
+            status: user.isActive() ? 'ACTIVE' : 'INACTIVE'
         };
     }
 }

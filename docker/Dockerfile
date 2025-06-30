@@ -17,15 +17,15 @@ WORKDIR /app
 
 # Copy package files first for better caching
 COPY package*.json ./
-COPY postcss.config.js ./
+COPY postcss.config.cjs ./
 COPY tailwind.config.js ./
-COPY next.config.js ./
+COPY next.config.cjs ./
 COPY tsconfig.json ./
 COPY vitest.config.ts ./
 
 # Install dependencies (handle both npm and yarn)
 RUN if [ -f package-lock.json ]; then \
-        npm ci --include=dev && npm cache clean --force; \
+        npm install --include=dev && npm cache clean --force; \
     elif [ -f yarn.lock ]; then \
         yarn install --frozen-lockfile && yarn cache clean; \
     else \
@@ -79,7 +79,7 @@ COPY --from=base --chown=iotpilot:nodejs /app/package*.json ./
 
 # CRITICAL: Fresh install in production with clean slate
 RUN if [ -f package-lock.json ]; then \
-        npm ci --omit=dev && npm cache clean --force; \
+        npm install --omit=dev && npm cache clean --force; \
     elif [ -f yarn.lock ]; then \
         yarn install --frozen-lockfile --production && yarn cache clean; \
     else \
@@ -93,12 +93,12 @@ COPY --from=base --chown=iotpilot:nodejs /app/.next ./.next
 COPY --from=base --chown=iotpilot:nodejs /app/public ./public
 
 # Copy server file
-COPY --from=base --chown=iotpilot:nodejs /app/server.js ./
+COPY --from=base --chown=iotpilot:nodejs /app/server.cjs ./
 
 # Copy configuration files
-COPY --from=base --chown=iotpilot:nodejs /app/next.config.js ./
+COPY --from=base --chown=iotpilot:nodejs /app/next.config.cjs ./
 COPY --from=base --chown=iotpilot:nodejs /app/tailwind.config.js ./
-COPY --from=base --chown=iotpilot:nodejs /app/postcss.config.js ./
+COPY --from=base --chown=iotpilot:nodejs /app/postcss.config.cjs ./
 COPY --from=base --chown=iotpilot:nodejs /app/tsconfig.json ./
 COPY --from=base --chown=iotpilot:nodejs /app/next-env.d.ts ./
 COPY --from=base --chown=iotpilot:nodejs /app/vitest.config.ts ./

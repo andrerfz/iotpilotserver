@@ -108,4 +108,4 @@ else
 fi
 
 echo "🎉 Starting the application..."
-exec node server.js
+exec node server.cjs

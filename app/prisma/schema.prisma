@@ -140,7 +140,6 @@ model User {
   password     String
   role         UserRole   @default(USER)
   status       UserStatus @default(ACTIVE)
-  active       Boolean    @default(true)
   profileImage String?
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
@@ -218,6 +217,26 @@ model Device {
   ipAddress   String?
   tailscaleIp String?
   macAddress  String?
+
+  // Device Capabilities
+  capabilities Json @default("{}")
+  // Example structure:
+  // {
+  //   "protocols": ["ssh", "mqtt", "http"],
+  //   "commands": ["restart", "reboot", "update", "status"],
+  //   "features": ["monitoring", "logging", "remote_access"],
+  //   "restrictions": ["no_sudo", "read_only"],
+  //   "ssh": {
+  //     "supported": true,
+  //     "port": 22,
+  //     "auth_methods": ["password", "key"]
+  //   },
+  //   "mqtt": {
+  //     "supported": true,
+  //     "broker_required": true,
+  //     "topics": ["commands", "responses"]
+  //   }
+  // }
 
   // Status
   status   DeviceStatus @default(OFFLINE)

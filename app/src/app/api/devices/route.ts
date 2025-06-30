@@ -2,6 +2,7 @@ import {NextRequest, NextResponse} from 'next/server';
 import {AlertSeverity, AlertType, DeviceStatus, DeviceType, PrismaClient} from '@prisma/client';
 import {z} from 'zod';
 import {authenticate, validateApiKey} from '@/lib/auth';
+import { DeviceCapabilityDetector } from '@/lib/command-executor';
 
 const prisma = new PrismaClient();
 
@@ -319,24 +320,40 @@ export async function POST(request: NextRequest) {
             // If device is soft deleted, restore it
             if (existingDevice.deletedAt) {
                 console.log('🔄 DEVICES: Restoring soft-deleted device');
+
+                // Detect device capabilities
+                const capabilities = await DeviceCapabilityDetector.detectCapabilities({
+                    deviceType: deviceTypeEnum,
+                    architecture: data.architecture,
+                    deviceModel: data.device_model,
+                    ipAddress: data.ip_address,
+                    tailscaleIp: data.tailscale_ip
+                });
+
+                console.log('🔍 DEVICES: Detected capabilities for restoration:', capabilities);
+
+                // Create update data with capabilities
+                const updateData: any = {
+                    hostname: data.hostname,
+                    deviceType: deviceTypeEnum,
+                    deviceModel: data.device_model,
+                    architecture: data.architecture,
+                    location: data.location,
+                    ipAddress: data.ip_address,
+                    tailscaleIp: data.tailscale_ip,
+                    macAddress: data.mac_address,
+                    capabilities: capabilities,
+                    status: DeviceStatus.ONLINE,
+                    lastSeen: new Date(),
+                    userId: authUser.id,
+                    customerId: targetCustomerId,
+                    updatedAt: new Date(),
+                    deletedAt: null // Restore the device
+                };
+
                 const restoredDevice = await prisma.device.update({
                     where: {id: existingDevice.id},
-                    data: {
-                        hostname: data.hostname,
-                        deviceType: deviceTypeEnum,
-                        deviceModel: data.device_model,
-                        architecture: data.architecture,
-                        location: data.location,
-                        ipAddress: data.ip_address,
-                        tailscaleIp: data.tailscale_ip,
-                        macAddress: data.mac_address,
-                        status: DeviceStatus.ONLINE,
-                        lastSeen: new Date(),
-                        userId: authUser.id,
-                        customerId: targetCustomerId,
-                        updatedAt: new Date(),
-                        deletedAt: null // Restore the device
-                    }
+                    data: updateData
                 });
 
                 return NextResponse.json({
@@ -350,22 +367,38 @@ export async function POST(request: NextRequest) {
             if (existingDevice.customerId === targetCustomerId) {
                 // Same customer - update the device
                 console.log('🔄 DEVICES: Updating existing device for same customer');
+
+                // Detect device capabilities
+                const capabilities = await DeviceCapabilityDetector.detectCapabilities({
+                    deviceType: deviceTypeEnum,
+                    architecture: data.architecture,
+                    deviceModel: data.device_model,
+                    ipAddress: data.ip_address,
+                    tailscaleIp: data.tailscale_ip
+                });
+
+                console.log('🔍 DEVICES: Detected capabilities for update:', capabilities);
+
+                // Create update data with capabilities
+                const updateData: any = {
+                    hostname: data.hostname,
+                    deviceType: deviceTypeEnum,
+                    deviceModel: data.device_model,
+                    architecture: data.architecture,
+                    location: data.location,
+                    ipAddress: data.ip_address,
+                    tailscaleIp: data.tailscale_ip,
+                    macAddress: data.mac_address,
+                    capabilities: capabilities,
+                    status: DeviceStatus.ONLINE,
+                    lastSeen: new Date(),
+                    userId: authUser.id,
+                    updatedAt: new Date()
+                };
+
                 const updatedDevice = await prisma.device.update({
                     where: {id: existingDevice.id},
-                    data: {
-                        hostname: data.hostname,
-                        deviceType: deviceTypeEnum,
-                        deviceModel: data.device_model,
-                        architecture: data.architecture,
-                        location: data.location,
-                        ipAddress: data.ip_address,
-                        tailscaleIp: data.tailscale_ip,
-                        macAddress: data.mac_address,
-                        status: DeviceStatus.ONLINE,
-                        lastSeen: new Date(),
-                        userId: authUser.id,
-                        updatedAt: new Date()
-                    }
+                    data: updateData
                 });
 
                 return NextResponse.json({
@@ -389,24 +422,40 @@ export async function POST(request: NextRequest) {
 
         // Create new device with proper customerId
         console.log('✨ DEVICES: Creating new device');
+
+        // Detect device capabilities
+        const capabilities = await DeviceCapabilityDetector.detectCapabilities({
+            deviceType: deviceTypeEnum,
+            architecture: data.architecture,
+            deviceModel: data.device_model,
+            ipAddress: data.ip_address,
+            tailscaleIp: data.tailscale_ip
+        });
+
+        console.log('🔍 DEVICES: Detected capabilities:', capabilities);
+
+        // Create device data with capabilities
+        const createData: any = {
+            deviceId: data.device_id,
+            hostname: data.hostname,
+            deviceType: deviceTypeEnum,
+            deviceModel: data.device_model,
+            architecture: data.architecture,
+            location: data.location,
+            ipAddress: data.ip_address,
+            tailscaleIp: data.tailscale_ip,
+            macAddress: data.mac_address,
+            capabilities: capabilities,
+            status: DeviceStatus.ONLINE,
+            lastSeen: new Date(),
+            userId: authUser.id,
+            customerId: targetCustomerId, // CRITICAL: Set the customerId
+            registeredAt: new Date(),
+            updatedAt: new Date()
+        };
+
         const device = await prisma.device.create({
-            data: {
-                deviceId: data.device_id,
-                hostname: data.hostname,
-                deviceType: deviceTypeEnum,
-                deviceModel: data.device_model,
-                architecture: data.architecture,
-                location: data.location,
-                ipAddress: data.ip_address,
-                tailscaleIp: data.tailscale_ip,
-                macAddress: data.mac_address,
-                status: DeviceStatus.ONLINE,
-                lastSeen: new Date(),
-                userId: authUser.id,
-                customerId: targetCustomerId, // CRITICAL: Set the customerId
-                registeredAt: new Date(),
-                updatedAt: new Date()
-            }
+            data: createData
         });
 
         console.log('✅ DEVICES: Device created successfully:', {

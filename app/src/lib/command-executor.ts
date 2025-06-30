@@ -1,10 +1,50 @@
 import { Device, DeviceCommand, CommandStatus } from '@prisma/client';
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import * as ssh2 from 'ssh2';
 import * as mqtt from 'mqtt';
 import { tenantPrisma } from '@/lib/tenant-middleware';
 import { logger } from './logger';
+
+// Device capabilities interface
+interface DeviceCapabilities {
+  protocols: string[];
+  commands: string[];
+  features: string[];
+  restrictions?: string[];
+  ssh?: {
+    supported: boolean;
+    port?: number;
+    auth_methods?: string[];
+  };
+  mqtt?: {
+    supported: boolean;
+    broker_required?: boolean;
+    topics?: string[];
+  };
+}
+
+// Helper function to get device capabilities
+function getDeviceCapabilities(device: Device): DeviceCapabilities {
+  try {
+    // Use type assertion to access capabilities property
+    const deviceWithCapabilities = device as Device & { capabilities?: any };
+    return deviceWithCapabilities.capabilities || {
+      protocols: [],
+      commands: [],
+      features: []
+    };
+  } catch {
+    // Fallback for devices without capabilities
+    return {
+      protocols: [],
+      commands: [],
+      features: []
+    };
+  }
+}
+
+// We'll dynamically import the SSH executor only on the server side
+let sshExecutorFactory: any = null;
 
 // Promisify exec for async/await usage
 const execAsync = promisify(exec);
@@ -45,9 +85,10 @@ export interface CommandExecutionResult {
  * Executes commands via SSH on devices that have an IP address
  */
 export class SSHCommandExecutor implements CommandExecutor {
-  private readonly sshConfig: ssh2.ConnectConfig;
-  
-  constructor(config?: Partial<ssh2.ConnectConfig>) {
+  private sshExecutor: any = null;
+  private readonly sshConfig: any;
+
+  constructor(config?: any) {
     // Default SSH configuration
     this.sshConfig = {
       host: '',
@@ -62,101 +103,100 @@ export class SSHCommandExecutor implements CommandExecutor {
   }
 
   canHandle(device: Device): boolean {
-    // Can handle if device has an IP address
-    return !!device.ipAddress || !!device.tailscaleIp;
+    // Can only handle if we're on the server side and device has an IP address
+    if (typeof window !== 'undefined') {
+      return false; // Not available on client side
+    }
+
+    const capabilities = getDeviceCapabilities(device);
+
+    // Check if device explicitly supports SSH
+    if (capabilities.ssh?.supported === false) {
+      return false;
+    }
+
+    // Check if SSH protocol is supported
+    if (capabilities.protocols.length > 0 && !capabilities.protocols.includes('ssh')) {
+      return false;
+    }
+
+    // Must have IP address for SSH connection
+    const hasIpAddress = !!device.ipAddress || !!device.tailscaleIp;
+
+    // SSH is supported if:
+    // 1. Device has IP address AND
+    // 2. SSH is not explicitly disabled AND
+    // 3. SSH protocol is supported (or no protocols specified)
+    const sshSupported = capabilities.ssh === undefined || capabilities.ssh.supported === true;
+    return hasIpAddress && 
+           sshSupported &&
+           (capabilities.protocols.length === 0 || capabilities.protocols.includes('ssh'));
+  }
+
+  canExecuteCommand(device: Device, command: DeviceCommand): boolean {
+    const capabilities = getDeviceCapabilities(device);
+
+    // Check if command is in allowed commands list
+    if (capabilities.commands.length > 0 && !capabilities.commands.includes(command.command)) {
+      return false;
+    }
+
+    // Check for restrictions
+    if (capabilities.restrictions?.includes('no_sudo') && 
+        ['reboot', 'restart', 'update'].includes(command.command)) {
+      return false;
+    }
+
+    if (capabilities.restrictions?.includes('read_only') && 
+        !['status', 'info', 'ps', 'df', 'top'].includes(command.command)) {
+      return false;
+    }
+
+    return true;
   }
 
   async execute(device: Device, command: DeviceCommand): Promise<CommandExecutionResult> {
-    // Use tailscale IP if available, otherwise use regular IP
-    const host = device.tailscaleIp || device.ipAddress;
-    
-    if (!host) {
+    // Check if this executor can execute this specific command
+    if (!this.canExecuteCommand(device, command)) {
       return {
         status: CommandStatus.FAILED,
-        error: 'No IP address available for SSH connection',
+        error: `Command '${command.command}' not supported by this device`,
+        exitCode: 1
+      };
+    }
+    // Check if we're on the server side
+    if (typeof window !== 'undefined') {
+      return {
+        status: CommandStatus.FAILED,
+        error: 'SSH functionality is only available on the server',
         exitCode: 1
       };
     }
 
-    // Log the execution attempt
-    logger.info(`Executing command via SSH on device ${device.hostname} (${host}): ${command.command} ${command.arguments || ''}`);
+    // Lazily load the SSH executor if not already loaded
+    if (!this.sshExecutor) {
+      try {
+        // Only import the factory if not already loaded
+        if (!sshExecutorFactory) {
+          // Dynamic import that will only be executed at runtime on the server
+          const module = await import('./ssh-executor.server');
+          sshExecutorFactory = module.createSSHExecutor;
+        }
 
-    // Create SSH connection config for this specific device
-    const config: ssh2.ConnectConfig = {
-      ...this.sshConfig,
-      host
-    };
-
-    return new Promise((resolve) => {
-      const conn = new ssh2.Client();
-      
-      // Handle connection errors
-      conn.on('error', (err) => {
-        logger.error(`SSH connection error to ${host}: ${err.message}`);
-        resolve({
+        // Create a new SSH executor
+        this.sshExecutor = sshExecutorFactory(this.sshConfig);
+      } catch (err) {
+        logger.error(`Failed to load SSH executor module: ${err}`);
+        return {
           status: CommandStatus.FAILED,
-          error: `SSH connection error: ${err.message}`,
+          error: `Failed to load SSH module: ${err instanceof Error ? err.message : String(err)}`,
           exitCode: 1
-        });
-      });
+        };
+      }
+    }
 
-      // Set connection timeout
-      const timeout = setTimeout(() => {
-        conn.end();
-        logger.error(`SSH connection timeout to ${host}`);
-        resolve({
-          status: CommandStatus.TIMEOUT,
-          error: 'SSH connection timeout',
-          exitCode: 1
-        });
-      }, 15000); // 15 second timeout
-
-      conn.on('ready', () => {
-        clearTimeout(timeout);
-        logger.debug(`SSH connection established to ${host}`);
-        
-        // Execute the command
-        const cmd = `${command.command} ${command.arguments || ''}`.trim();
-        conn.exec(cmd, (err, stream) => {
-          if (err) {
-            conn.end();
-            logger.error(`SSH exec error on ${host}: ${err.message}`);
-            resolve({
-              status: CommandStatus.FAILED,
-              error: `SSH exec error: ${err.message}`,
-              exitCode: 1
-            });
-            return;
-          }
-
-          let output = '';
-          let errorOutput = '';
-
-          stream.on('data', (data: Buffer) => {
-            output += data.toString();
-          });
-
-          stream.stderr.on('data', (data: Buffer) => {
-            errorOutput += data.toString();
-          });
-
-          stream.on('close', (code: number) => {
-            conn.end();
-            logger.info(`Command executed on ${host} with exit code ${code}`);
-            
-            resolve({
-              status: code === 0 ? CommandStatus.COMPLETED : CommandStatus.FAILED,
-              output: output.trim(),
-              error: errorOutput.trim(),
-              exitCode: code
-            });
-          });
-        });
-      });
-
-      // Connect to the device
-      conn.connect(config);
-    });
+    // Execute the command using the SSH executor
+    return this.sshExecutor.execute(device, command);
   }
 }
 
@@ -190,11 +230,56 @@ export class MQTTCommandExecutor implements CommandExecutor {
   }
 
   canHandle(device: Device): boolean {
-    // Can handle if device has MQTT capability (for now, assume all online devices do)
-    return device.status === 'ONLINE';
+    const capabilities = getDeviceCapabilities(device);
+
+    // Check if device explicitly supports MQTT
+    if (capabilities.mqtt?.supported === false) {
+      return false;
+    }
+
+    // Check if MQTT protocol is supported
+    if (capabilities.protocols.length > 0 && !capabilities.protocols.includes('mqtt')) {
+      return false;
+    }
+
+    // Device must be online for MQTT
+    const isOnline = device.status === 'ONLINE';
+
+    // MQTT is supported if:
+    // 1. Device is online AND
+    // 2. MQTT is not explicitly disabled AND  
+    // 3. MQTT protocol is supported (or no protocols specified)
+    const mqttSupported = capabilities.mqtt === undefined || capabilities.mqtt.supported === true;
+    return isOnline &&
+           mqttSupported &&
+           (capabilities.protocols.length === 0 || capabilities.protocols.includes('mqtt'));
+  }
+
+  canExecuteCommand(device: Device, command: DeviceCommand): boolean {
+    const capabilities = getDeviceCapabilities(device);
+
+    // Same command checking logic as SSH
+    if (capabilities.commands.length > 0 && !capabilities.commands.includes(command.command)) {
+      return false;
+    }
+
+    // MQTT-specific restrictions
+    if (capabilities.restrictions?.includes('mqtt_read_only') && 
+        !['status', 'info', 'metrics'].includes(command.command)) {
+      return false;
+    }
+
+    return true;
   }
 
   async execute(device: Device, command: DeviceCommand): Promise<CommandExecutionResult> {
+    if (!this.canExecuteCommand(device, command)) {
+      return {
+        status: CommandStatus.FAILED,
+        error: `Command '${command.command}' not supported via MQTT by this device`,
+        exitCode: 1
+      };
+    }
     // Log the execution attempt
     logger.info(`Executing command via MQTT on device ${device.hostname}: ${command.command} ${command.arguments || ''}`);
 
@@ -236,7 +321,7 @@ export class MQTTCommandExecutor implements CommandExecutor {
       // Handle successful connection
       client.on('connect', () => {
         logger.debug(`MQTT connected to broker for device ${device.deviceId}`);
-        
+
         // Subscribe to response topic
         client.subscribe(responseTopic, { qos: this.mqttConfig.qos }, (err) => {
           if (err) {
@@ -281,14 +366,14 @@ export class MQTTCommandExecutor implements CommandExecutor {
         if (topic === responseTopic) {
           try {
             const response = JSON.parse(message.toString());
-            
+
             // Check if this is a response to our command
             if (response.id === command.id) {
               clearTimeout(timeout);
               client.end();
-              
+
               logger.info(`Received command response from device ${device.deviceId}`);
-              
+
               resolve({
                 status: response.success ? CommandStatus.COMPLETED : CommandStatus.FAILED,
                 output: response.output || '',
@@ -378,7 +463,7 @@ export class CommandQueueManager {
     try {
       // Find an executor that can handle this device
       const executor = this.executors.find(e => e.canHandle(device));
-      
+
       if (!executor) {
         logger.error(`No suitable executor found for device ${device.hostname}`);
         await tenantPrisma.client.deviceCommand.update({
@@ -430,7 +515,7 @@ export class CommandQueueManager {
       logger.info(`Command ${command.id} executed on device ${device.hostname} with status ${result.status}`);
     } catch (error) {
       logger.error(`Error executing command ${command.id} on device ${device.hostname}: ${error}`);
-      
+
       // Update command with error
       await tenantPrisma.client.deviceCommand.update({
         where: { id: command.id },
@@ -503,3 +588,172 @@ export class CommandQueueManager {
 
 // Export a singleton instance of the queue manager
 export const commandQueue = CommandQueueManager.getInstance();
+
+// Device capability detection service
+export class DeviceCapabilityDetector {
+
+  /**
+   * Detect device capabilities based on device type and initial connection
+   */
+  static async detectCapabilities(device: {
+    deviceType: string;
+    architecture: string;
+    deviceModel?: string;
+    ipAddress?: string;
+    tailscaleIp?: string;
+  }): Promise<DeviceCapabilities> {
+
+    const capabilities: DeviceCapabilities = {
+      protocols: [],
+      commands: [],
+      features: [],
+      restrictions: []
+    };
+
+    // Base capabilities by device type
+    switch (device.deviceType) {
+      case 'PI_ZERO':
+        capabilities.protocols = ['ssh'];
+        capabilities.commands = ['status', 'restart', 'reboot', 'update'];
+        capabilities.features = ['monitoring', 'logging'];
+        capabilities.restrictions = ['limited_resources'];
+        capabilities.ssh = { supported: true, port: 22, auth_methods: ['password', 'key'] };
+        break;
+
+      case 'PI_3':
+      case 'PI_4':
+      case 'PI_5':
+        capabilities.protocols = ['ssh', 'mqtt', 'http'];
+        capabilities.commands = ['status', 'restart', 'reboot', 'update', 'ps', 'top', 'df'];
+        capabilities.features = ['monitoring', 'logging', 'remote_access'];
+        capabilities.ssh = { supported: true, port: 22, auth_methods: ['password', 'key'] };
+        capabilities.mqtt = { supported: true, broker_required: false };
+        break;
+
+      case 'ORANGE_PI':
+        capabilities.protocols = ['ssh', 'http'];
+        capabilities.commands = ['status', 'restart', 'reboot', 'update'];
+        capabilities.features = ['monitoring', 'logging'];
+        capabilities.ssh = { supported: true, port: 22, auth_methods: ['password', 'key'] };
+        break;
+
+      case 'GENERIC':
+        // Conservative capabilities for unknown devices
+        capabilities.protocols = ['ssh'];
+        capabilities.commands = ['status'];
+        capabilities.features = ['monitoring'];
+        capabilities.restrictions = ['read_only'];
+        capabilities.ssh = { supported: true, port: 22, auth_methods: ['password'] };
+        break;
+
+      default:
+        // Minimal capabilities for unknown devices
+        capabilities.protocols = [];
+        capabilities.commands = ['status'];
+        capabilities.features = [];
+        capabilities.restrictions = ['read_only'];
+        break;
+    }
+
+    // Test actual connectivity if IP available
+    if (device.ipAddress || device.tailscaleIp) {
+      const sshAvailable = await DeviceCapabilityDetector.testSSHConnectivity(device);
+      if (!sshAvailable) {
+        capabilities.ssh = { supported: false };
+        capabilities.protocols = capabilities.protocols.filter(p => p !== 'ssh');
+      }
+    }
+
+    return capabilities;
+  }
+
+  /**
+   * Test SSH connectivity to determine if SSH is actually available
+   */
+  private static async testSSHConnectivity(device: {
+    ipAddress?: string;
+    tailscaleIp?: string;
+  }): Promise<boolean> {
+    const host = device.tailscaleIp || device.ipAddress;
+    if (!host) return false;
+
+    try {
+      // Simple TCP connection test to SSH port
+      const { exec } = require('child_process');
+      const { promisify } = require('util');
+      const execAsync = promisify(exec);
+
+      // Test if SSH port is open (timeout after 5 seconds)
+      await execAsync(`timeout 5 bash -c "echo >/dev/tcp/${host}/22"`, { 
+        timeout: 6000 
+      });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Update device capabilities after successful command execution
+   */
+  static async updateCapabilitiesFromExecution(
+    deviceId: string, 
+    command: string, 
+    protocol: string, 
+    success: boolean
+  ): Promise<void> {
+    // Get current device
+    const device = await tenantPrisma.client.device.findUnique({
+      where: { id: deviceId }
+    });
+
+    if (!device) return;
+
+    const capabilities = getDeviceCapabilities(device);
+
+    if (success) {
+      // Add successful command to capabilities
+      if (!capabilities.commands.includes(command)) {
+        capabilities.commands.push(command);
+      }
+
+      // Add successful protocol
+      if (!capabilities.protocols.includes(protocol)) {
+        capabilities.protocols.push(protocol);
+      }
+    } else {
+      // Remove failed command from capabilities
+      capabilities.commands = capabilities.commands.filter(c => c !== command);
+
+      // If this was the only way to use this protocol, mark it as unsupported
+      if (protocol === 'ssh' && !capabilities.commands.some(c => 
+          ['restart', 'reboot', 'update', 'status'].includes(c))) {
+        capabilities.ssh = { supported: false };
+      }
+    }
+
+    // Update device capabilities
+    // Use type assertion to bypass TypeScript check
+    const updateData: any = { capabilities };
+    await tenantPrisma.client.device.update({
+      where: { id: deviceId },
+      data: updateData
+    });
+  }
+}
+
+// Usage in device registration
+export async function registerDevice(deviceData: any) {
+  // Detect capabilities
+  const capabilities = await DeviceCapabilityDetector.detectCapabilities(deviceData);
+
+  // Create device with capabilities
+  const device = await tenantPrisma.client.device.create({
+    data: {
+      ...deviceData,
+      capabilities
+    }
+  });
+
+  return device;
+}

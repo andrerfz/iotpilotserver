@@ -214,7 +214,7 @@ app.prepare().then(() => {
     // Initialize command queue for device commands
     try {
         // Use dynamic import for ES modules
-        import('./src/lib/command-executor.js').then(({ CommandQueueManager }) => {
+        import('./src/lib/command-executor.ts').then(({ CommandQueueManager }) => {
             // Start processing the command queue with a 60-second interval
             CommandQueueManager.startQueueProcessing(60000);
             logger.info('Command queue processing started');

@@ -5,7 +5,6 @@
 .PHONY: local-logs-app local-logs-influxdb local-logs-loki local-logs-postgres local-logs-redis local-logs-traefik local-logs-tailscale
 .PHONY: dev shell health migrate migrate-reset migrate-dev db-push db-setup db-status db-shell apply-migration
 .PHONY: fresh-setup local-start-with-migration
-.PHONY: fresh-setup local-start-with-migration
 .PHONY: test lint test-api test-ci test-db test-influxdb test-integration test-unit test-fresh test-file test-debug test-watch test-coverage test-env-check test-integration-full test-performance test-security test-clean test-db-with-data test-influxdb-connection test-services test-smoke test-all
 .PHONY: create-superadmin list-superadmins reset-superadmin-password delete-superadmin
 
@@ -166,10 +165,6 @@ db-setup: check-env
 	@docker exec iotpilot-server-app npx prisma generate
 	@echo "✅ Database setup complete!"
 
-make:
-	@echo "📊 Database Status:"
-	@docker exec iotpilot-server-postgres psql -U iotpilot -d iotpilot -c "\dt" 2>/dev/null || echo "❌ Database not accessible"
-
 db-shell:
 	@echo "🗄️ Opening database shell..."
 	@docker exec -it iotpilot-server-postgres psql -U iotpilot -d iotpilot
@@ -179,31 +174,80 @@ apply-migration:
 	@docker exec -i iotpilot-server-postgres psql -U iotpilot -d iotpilot < app/prisma/migration/001_initial_setup.sql
 	@echo "✅ Migration applied!"
 
+# Wait for app container to be ready
+wait-for-app:
+	@echo "⏳ Waiting for app container to be ready..."
+	@for i in 1 2 3 4 5 6 7 8 9 10; do \
+		if docker exec iotpilot-server-app echo "ready" >/dev/null 2>&1; then \
+			echo "✅ App container is ready!"; \
+			break; \
+		fi; \
+		echo "Waiting... ($$i/10)"; \
+		sleep 3; \
+	done
+	@if ! docker exec iotpilot-server-app echo "ready" >/dev/null 2>&1; then \
+		echo "❌ App container failed to start"; \
+		exit 1; \
+	fi
+
+# Reset database and apply fresh migration with seeds
+reset-and-migrate: check-env
+	@echo "🔄 Resetting database and applying fresh migration..."
+	@echo "⚠️  This will DELETE ALL DATA and recreate from migration"
+	@docker exec iotpilot-server-postgres psql -U iotpilot -d iotpilot -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+	@make apply-migration
+	@echo "✅ Database reset and migration applied with seeds!"
+
+# Check if database needs initial setup
+check-and-setup-db: check-env
+	@echo "🔍 Checking database status..."
+	@if ! docker exec iotpilot-server-postgres psql -U iotpilot -d iotpilot -t -c "SELECT COUNT(*) FROM users;" 2>/dev/null | grep -q "[0-9]"; then \
+		echo "📋 Database appears empty or uninitialized, applying migration..."; \
+		make apply-migration; \
+	else \
+		echo "✅ Database already initialized with data"; \
+	fi
+
 # =============================================================================
 # ENHANCED LOCAL DEVELOPMENT COMMANDS
 # =============================================================================
 
 local-start-with-migration: check-env
 	@echo "▶️  Starting local services with auto-migration..."
-	@docker compose -f $(LOCAL_COMPOSE_FILE) up -d postgres redis influxdb loki grafana
-	@echo "⏳ Waiting for database to be ready..."
-	@sleep 15
-	@echo "🗄️ Running database setup..."
-	@make db-setup
-	@echo "🚀 Starting main application..."
-	@docker compose -f $(LOCAL_COMPOSE_FILE) up -d iotpilot-app traefik
+	@echo "🚀 Starting all services..."
+	@docker compose -f $(LOCAL_COMPOSE_FILE) up -d
+	@echo "⏳ Waiting for services to be ready..."
+	@sleep 20
+	@make wait-for-app
+	@echo "🗄️ Checking and setting up database..."
+	@make check-and-setup-db
 	@echo "✅ All services started with migrations!"
 	@echo "  • Main Dashboard:    https://iotpilotserver.test:9443"
 	@echo "  • Grafana:           http://iotpilotserver.test:3002"
 	@echo "  • InfluxDB:          http://iotpilotserver.test:8087"
 	@echo "  • Loki:              http://iotpilotserver.test:3101/metrics"
 	@echo "  • Traefik Dashboard: http://iotpilotserver.test:8081"
+	@echo ""
+	@echo "🔐 Default login: manager@iotpilot.app / iotpilot123"
 
 fresh-setup: check-env
 	@echo "🆕 Fresh setup with migrations..."
 	@make local-stop || true
 	@docker system prune -f
-	@make local-start-with-migration
+	@docker volume prune -f || true
+	@echo "🔄 Starting with fresh database..."
+	@docker compose -f $(LOCAL_COMPOSE_FILE) up -d
+	@sleep 20
+	@make wait-for-app
+	@make reset-and-migrate
+	@echo "✅ All services started!"
+	@echo "  • Main Dashboard:    https://iotpilotserver.test:9443"
+	@echo "  • Grafana:           http://iotpilotserver.test:3002"
+	@echo "  • InfluxDB:          http://iotpilotserver.test:8087"
+	@echo "  • Loki:              http://iotpilotserver.test:3101/metrics"
+	@echo "  • Traefik Dashboard: http://iotpilotserver.test:8081"
+	@echo ""
+	@echo "🔐 Default login: manager@iotpilot.app / iotpilot123"
 	@echo "🎉 Fresh setup complete!"
 
 # =============================================================================
@@ -262,7 +306,6 @@ local-install: check-env
 	@echo "⏳ Waiting for database..."
 	@sleep 10
 	@echo "🗄️ Applying migrations..."
-	@make db-setup
 	@make apply-migration
 	@echo "✅ Local setup complete!"
 	@echo "💡 Run 'make local-start' to start all services"
@@ -270,13 +313,16 @@ local-install: check-env
 local-start: check-env
 	@echo "▶️  Starting local services..."
 	@docker compose -f $(LOCAL_COMPOSE_FILE) up -d
-	@make migrate
+	@make wait-for-app
+	@make check-and-setup-db
 	@echo "✅ Local services started!"
 	@echo "  • Main Dashboard:    https://iotpilotserver.test:9443"
 	@echo "  • Grafana:           http://iotpilotserver.test:3002"
 	@echo "  • InfluxDB:          http://iotpilotserver.test:8087"
 	@echo "  • Loki:              http://iotpilotserver.test:3101/metrics"
 	@echo "  • Traefik Dashboard: http://iotpilotserver.test:8081"
+	@echo ""
+	@echo "🔐 Default login: manager@iotpilot.app / iotpilot123"
 
 local-stop:
 	@echo "⏹️  Stopping local services..."
@@ -284,19 +330,23 @@ local-stop:
 	@echo "✅ Local services stopped!"
 
 local-restart:
-	@docker exec iotpilot-server-app rm -rf .next
+	@docker exec iotpilot-server-app rm -rf .next 2>/dev/null || true
 	@make local-stop
 	@make local-start
 
 local-restart-app:
 	@docker compose -f $(LOCAL_COMPOSE_FILE) restart iotpilot-app
+	@make wait-for-app
+	@make check-and-setup-db
 
 local-recreate-app:
 	@echo "⏹️  Recreating local app..."
 	@docker compose -f $(LOCAL_COMPOSE_FILE) down iotpilot-app
 	@docker compose -f $(LOCAL_COMPOSE_FILE) build --no-cache iotpilot-app
 	@docker compose -f $(LOCAL_COMPOSE_FILE) up -d iotpilot-app
-	@echo "✅ App is live!"
+	@make wait-for-app
+	@make check-and-setup-db
+	@echo "✅ App recreated and ready!"
 
 local-status:
 	@echo "📊 Local Service Status:"
@@ -349,6 +399,11 @@ test:
 	@docker exec iotpilot-server-app npm test
 	@echo "✅ Tests complete!"
 
+fix-npm-deps:
+	@echo "🔧 Fixing npm dependencies bug..."
+	@docker exec iotpilot-server-app sh -c "rm -rf node_modules package-lock.json && npm install"
+	@echo "✅ Dependencies fixed!"
+
 lint:
 	@echo "🔍 Running linter in Docker..."
 	@docker exec iotpilot-server-app npm run lint
@@ -372,134 +427,93 @@ test-ci: check-env
 
 test-db:
 	@echo "🧪 Testing database..."
-	@docker exec iotpilot-server-postgres psql -U iotpilot -d iotpilot -c "SELECT COUNT(*) FROM devices;" 2>/dev/null && echo "✅ Database working!" || echo "❌ Database issues - try 'make apply-migration'"
+	@docker exec iotpilot-server-postgres psql -U iotpilot -d iotpilot -c "SELECT COUNT(*) FROM devices;" 2>/dev/null && echo "✅ Database working!"
 
-# Test with fresh container (ensures clean environment)
-test-fresh:
+test-fresh: check-env
 	@echo "🧪 Running tests in fresh container..."
-	@docker compose -f $(LOCAL_COMPOSE_FILE) run --rm iotpilot-app npm test
-	@echo "✅ Fresh tests complete!"
+	@docker compose -f $(LOCAL_COMPOSE_FILE) build --no-cache iotpilot-app
+	@docker compose -f $(LOCAL_COMPOSE_FILE) up -d iotpilot-app
+	@make wait-for-app
+	@make test
 
-# Test specific file
-test-file:
-	@echo "🧪 Running specific test file in Docker..."
+test-file: check-env
+	@echo "🧪 Running test file: $(FILE)"
 	@if [ -z "$(FILE)" ]; then \
-		echo "❌ Please provide test file: make test-file FILE=src/__tests__/unit/influxdb.unit.test.ts"; \
+		echo "❌ Please provide test file: make test-file FILE=test/auth.test.js"; \
 		exit 1; \
 	fi
-	@docker exec iotpilot-server-app npm test -- $(FILE)
+	@docker exec iotpilot-server-app npm test $(FILE)
 
-# Debug tests with verbose output
-test-debug:
-	@echo "🐛 Running tests with debug output..."
+test-debug: check-env
+	@echo "🔍 Running tests with debug output..."
 	@docker exec iotpilot-server-app npm test -- --verbose --no-coverage
 
-# Watch mode (for development)
-test-watch:
-	@echo "👁️  Running tests in watch mode..."
+test-watch: check-env
+	@echo "👀 Running tests in watch mode..."
 	@docker exec -it iotpilot-server-app npm test -- --watch
 
-# Coverage report
-test-coverage:
-	@echo "📊 Generating test coverage report..."
+test-coverage: check-env
+	@echo "📊 Generating test coverage..."
 	@docker exec iotpilot-server-app npm test -- --coverage --watchAll=false
-	@echo "📊 Coverage report generated in app/coverage/"
 
-# API endpoint tests
-test-api:
-	@echo "🧪 Testing API endpoints..."
-	@echo "Health: " && curl -s http://localhost:3001/api/health | jq .status || echo "Failed"
-	@echo "Devices: " && curl -s http://localhost:3001/api/devices | jq .stats || echo "Failed"
-
-# Test environment setup
 test-env-check:
 	@echo "🔍 Checking test environment..."
-	@docker exec iotpilot-server-app sh -c "echo 'Node: '; node --version"
-	@docker exec iotpilot-server-app sh -c "echo 'NPM: '; npm --version"
-	@docker exec iotpilot-server-app sh -c "echo 'Jest: '; npx jest --version"
-	@docker exec iotpilot-server-app sh -c "echo 'TypeScript: '; npx tsc --version"
-	@echo "Environment variables:"
-	@docker exec iotpilot-server-app printenv | grep -E "(INFLUXDB|NODE_ENV|DATABASE)" || echo "No test env vars found"
+	@docker exec iotpilot-server-app node -e "console.log('Node version:', process.version); console.log('Environment:', process.env.NODE_ENV);"
 
-# Integration test with services
 test-integration-full: check-env
-	@echo "🧪 Running full integration tests with all services..."
-	@echo "Ensuring all services are running..."
-	@docker compose -f $(LOCAL_COMPOSE_FILE) up -d
-	@echo "Waiting for services to be ready..."
-	@sleep 10
-	@echo "Running integration tests..."
-	@docker exec iotpilot-server-app npm test -- --testPathPattern=integration --verbose
-	@echo "✅ Full integration tests complete!"
-
-# Performance tests
-test-performance:
-	@echo "⚡ Running performance tests..."
-	@docker exec iotpilot-server-app npm test -- --testNamePattern="Performance" --verbose
-
-# Security tests
-test-security:
-	@echo "🔒 Running security tests..."
-	@docker exec iotpilot-server-app npm audit
-	@docker exec iotpilot-server-app npm test -- --testNamePattern="Security|Auth" --verbose
-
-# Cleanup test artifacts
-test-clean:
-	@echo "🧹 Cleaning test artifacts..."
-	@docker exec iotpilot-server-app rm -rf coverage/ || true
-	@docker exec iotpilot-server-app rm -rf .nyc_output/ || true
-	@echo "✅ Test cleanup complete!"
-
-# Test database with sample data
-test-db-with-data:
-	@echo "🧪 Testing database with sample data..."
-	@docker exec iotpilot-server-postgres psql -U iotpilot -d iotpilot -c "INSERT INTO devices (id, \"deviceId\", hostname, \"deviceType\", architecture, \"registeredAt\", \"updatedAt\") VALUES ('test-device-1', 'test-device-1', 'test-host', 'GENERIC', 'arm64', NOW(), NOW()) ON CONFLICT DO NOTHING;" 2>/dev/null || echo "Insert failed"
-	@docker exec iotpilot-server-postgres psql -U iotpilot -d iotpilot -c "SELECT COUNT(*) as device_count FROM devices;" 2>/dev/null && echo "✅ Database with data working!" || echo "❌ Database issues"
-	@docker exec iotpilot-server-postgres psql -U iotpilot -d iotpilot -c "DELETE FROM devices WHERE id = 'test-device-1';" 2>/dev/null || echo "Cleanup failed"
-
-# Test InfluxDB connectivity from app container
-test-influxdb-connection:
-	@echo "🧪 Testing InfluxDB connection from app..."
-	@docker exec iotpilot-server-app sh -c "curl -f http://influxdb:8086/health || echo 'InfluxDB health check failed'"
-	@docker exec iotpilot-server-app sh -c "curl -f http://influxdb:8086/api/v2/ready || echo 'InfluxDB ready check failed'"
-
-# Test all services connectivity
-test-services:
-	@echo "🧪 Testing all service connections..."
-	@echo "PostgreSQL:" && docker exec iotpilot-server-app sh -c "pg_isready -h postgres -p 5432 -U iotpilot" || echo "Failed"
-	@echo "Redis:" && docker exec iotpilot-server-app sh -c "redis-cli -h redis ping" || echo "Failed"
-	@echo "InfluxDB:" && docker exec iotpilot-server-app sh -c "curl -sf http://influxdb:8086/health" || echo "Failed"
-	@echo "Loki:" && docker exec iotpilot-server-app sh -c "curl -sf http://loki:3100/ready" || echo "Failed"
-	@echo "Grafana:" && docker exec iotpilot-server-app sh -c "curl -sf http://grafana:3000/api/health" || echo "Failed"
-
-# Quick smoke test
-test-smoke:
-	@echo "💨 Running smoke tests..."
-	@make test-env-check
-	@make test-services
+	@echo "🔗 Running full integration tests..."
 	@make test-db
-	@make test-api
-	@echo "✅ Smoke tests complete!"
-
-# Full test suite
-test-all:
-	@echo "🎯 Running complete test suite..."
-	@make test-env-check
-	@make test-services
-	@make test-unit
-	@make test-integration-full
 	@make test-influxdb
 	@make test-api
-	@echo "🎉 All tests complete!"
+
+test-performance: check-env
+	@echo "⚡ Running performance tests..."
+	@docker exec iotpilot-server-app npm test -- --testPathPattern=performance
+
+test-security: check-env
+	@echo "🔒 Running security tests..."
+	@docker exec iotpilot-server-app npm audit
+	@docker exec iotpilot-server-app npm test -- --testPathPattern=security
+
+test-clean:
+	@echo "🧹 Cleaning test artifacts..."
+	@docker exec iotpilot-server-app rm -rf coverage/ junit.xml || true
+
+test-db-with-data: check-env
+	@echo "🗄️ Testing database with sample data..."
+	@make check-and-setup-db
+	@make test-db
+
+test-influxdb-connection: check-env
+	@echo "📊 Testing InfluxDB connection from app..."
+	@docker exec iotpilot-server-app npm test -- --testPathPattern=influxdb-connection
+
+test-services: check-env
+	@echo "🔧 Testing all service connections..."
+	@make test-db
+	@make test-influxdb-connection
+	@echo "✅ All service tests complete!"
+
+test-smoke: check-env
+	@echo "💨 Running smoke tests..."
+	@curl -f http://localhost:3001/api/health 2>/dev/null && echo "✅ API healthy" || echo "❌ API unhealthy"
+	@make test-db
+
+test-api: check-env
+	@echo "🌐 Testing API endpoints..."
+	@docker exec iotpilot-server-app npm test -- --testPathPattern=api
+
+test-all: test-env-check test-fresh test-services test-smoke
+	@echo "🎉 All tests completed!"
+
 # =============================================================================
 # MAINTENANCE COMMANDS
 # =============================================================================
 
 backup:
 	@echo "💾 Creating backup..."
-	@mkdir -p ./backups
 	@./scripts/backup.sh
-	@echo "✅ Backup created!"
+	@echo "✅ Backup complete!"
 
 restore:
 	@echo "📥 Restoring..."
@@ -585,70 +599,50 @@ tailscale-ip:
 
 tailscale-devices:
 	@echo "📱 Connected Tailscale Devices:"
-	@docker exec iotpilot-tailscale tailscale status --json 2>/dev/null | jq -r '.Peer[]? | select(.Online == true) | .HostName + " (" + .TailscaleIPs[0] + ")"' || echo "No devices connected"
+	@docker exec iotpilot-tailscale tailscale status --json 2>/dev/null | jq -r '.Peer[]? | "\(.HostName) - \(.TailscaleIPs[0])"' || echo "No devices found"
 
 tailscale-logs:
 	@echo "📋 Tailscale Logs:"
-	@docker logs iotpilot-tailscale --tail=50
+	@docker compose -f $(LOCAL_COMPOSE_FILE) logs -f --tail=50 tailscale
 
 # =============================================================================
-# SUPERADMIN MANAGEMENT COMMANDS
+# SUPERADMIN MANAGEMENT
 # =============================================================================
 
 create-superadmin:
-	@echo "👑 Creating new SUPERADMIN user..."
-	@cd app && npx ts-node ../app_scripts/create-superadmin.ts
-	@echo "✅ SUPERADMIN creation process complete!"
+	@echo "👑 Creating SUPERADMIN user..."
+	@./scripts/create-superadmin.sh
 
 list-superadmins:
 	@echo "👑 Listing SUPERADMIN users..."
-	@cd app && npx ts-node ../app_scripts/list-superadmins.ts
+	@docker exec iotpilot-server-postgres psql -U iotpilot -d iotpilot -c "SELECT id, email, username, status FROM users WHERE role = 'SUPERADMIN' AND \"deletedAt\" IS NULL;"
 
 reset-superadmin-password:
 	@echo "🔑 Resetting SUPERADMIN password..."
-	@cd app && npx ts-node ../app_scripts/reset-superadmin-password.ts
-	@echo "✅ Password reset process complete!"
+	@./scripts/reset-superadmin-password.sh
 
 delete-superadmin:
-	@echo "⚠️ Deleting SUPERADMIN user..."
-	@cd app && npx ts-node ../app_scripts/delete-superadmin.ts
-	@echo "✅ SUPERADMIN deletion process complete!"
+	@echo "🗑️  Deleting SUPERADMIN user..."
+	@./scripts/delete-superadmin.sh
 
 # =============================================================================
-# UTILITY COMMANDS
+# UTILITY FUNCTIONS
 # =============================================================================
 
-# Environment management helper
 setup-env:
-	@echo "🔧 Setting up environment file..."
+	@echo "⚙️  Setting up environment file..."
 	@if [ ! -f .env ]; then \
-		if [ -f .env.local ]; then \
-			cp .env.local .env; \
-			echo "✅ Copied .env.local to .env"; \
-		elif [ -f .env.example ]; then \
-			cp .env.example .env; \
-			echo "✅ Copied .env.example to .env"; \
-			echo "⚠️  Please edit .env with your actual values"; \
-		else \
-			echo "❌ No template file found. Please create .env manually"; \
-		fi \
+		cp .env.example .env; \
+		echo "✅ Created .env from example"; \
 	else \
 		echo "✅ .env already exists"; \
 	fi
 
-# Show all logs
-logs-all:
-	@echo "📋 All service logs:"
-	@docker compose -f $(LOCAL_COMPOSE_FILE) logs --tail=50
-
-# Fix permissions (useful on Linux)
-fix-permissions:
-	@echo "🔧 Fixing permissions..."
-	@sudo chown -R $(USER):$(USER) . 2>/dev/null || echo "No permission changes needed"
-
-# Generate new secrets
 generate-secrets:
 	@echo "🔐 Generating new secrets..."
-	@echo "JWT_SECRET=$(shell openssl rand -base64 32)"
-	@echo "DEVICE_API_KEY=$(shell openssl rand -base64 24)"
-	@echo "SESSION_SECRET=$(shell openssl rand -base64 32)"
+	@./scripts/generate-secrets.sh
+
+fix-permissions:
+	@echo "🔧 Fixing file permissions..."
+	@chmod +x scripts/*.sh
+	@echo "✅ Permissions fixed!"

@@ -2,11 +2,12 @@
   "name": "iotpilot-server",
   "version": "1.0.0",
   "description": "IoT Device Management Platform",
-  "main": "server.js",
+  "main": "server.cjs",
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "node server.js",
+    "start": "node server.cjs",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
     "db:migrate": "npx prisma migrate deploy",
@@ -65,7 +66,7 @@
     "@heroui/theme": "^2.4.16",
     "@hookform/resolvers": "^3.3.2",
     "@nestjs/common": "^10.3.3",
-    "@prisma/client": "6.10.1",
+    "@prisma/client": "^6.10.1",
     "@types/axios": "^0.9.36",
     "axios": "^1.10.0",
     "bcryptjs": "^2.4.3",
@@ -84,7 +85,6 @@
     "mqtt": "^5.3.4",
     "next": "^14.2.30",
     "node-ssh": "^13.1.0",
-    "prisma": "6.10.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.48.2",
@@ -137,7 +137,9 @@
     "jest": "^30.0.2",
     "jsdom": "^23.2.0",
     "nodemon": "^3.0.2",
+    "null-loader": "^4.0.1",
     "postcss": "^8.4.32",
+    "prisma": "^6.10.1",
     "supertest": "^6.3.3",
     "ts-jest": "^29.4.0",
     "typescript": "5.8.3",
@@ -146,5 +148,9 @@
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=9.0.0"
+  },
+  "browser": {
+    "ssh2": false,
+    "./src/lib/ssh-executor.server.ts": false
   }
 }

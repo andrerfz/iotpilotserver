@@ -100,7 +100,7 @@ export class PrismaUserRepository implements UserRepository {
                 customer: {
                     id: customerId.getValue()
                 },
-                active: true
+                status: 'ACTIVE'
             }
         });
 
@@ -111,19 +111,17 @@ export class PrismaUserRepository implements UserRepository {
         const data = this.userMapper.toPersistence(user);
         const { customer, ...dataWithoutCustomer } = data;
 
-        // Explicitly exclude lastLoginAt, active, and customer from create operation
+        // Explicitly exclude lastLoginAt and customer from create operation
         await tenantPrisma.client.user.upsert({
             where: { id: user.getId().getValue() },
             create: {
                 ...dataWithoutCustomer,
                 lastLoginAt: undefined,
-                active: undefined,
                 status: 'ACTIVE' // Set default status
             },
             update: {
                 ...dataWithoutCustomer,
-                lastLoginAt: undefined,
-                active: undefined
+                lastLoginAt: undefined
             }
         });
     }

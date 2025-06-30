@@ -268,3 +268,5 @@ packages/arm64v8/node_modules.tar.gz
 # Yarn error logs
 yarn-error.log
 yarn-debug.log*
+
+.opencode.json

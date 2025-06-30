@@ -2,8 +2,10 @@ import {NextResponse} from 'next/server';
 import {CommandStatus} from '@prisma/client';
 import {AuthenticatedRequest, withCustomerContext} from '@/lib/api-middleware';
 import {tenantPrisma} from '@/lib/tenant-middleware';
-import {commandQueue} from '@/lib/command-executor';
 import {logger} from '@/lib/logger';
+
+// We'll dynamically import the commandQueue at runtime
+let commandQueueModule: any = null;
 
 // Supported command types and their mappings
 const SUPPORTED_COMMANDS = {
@@ -119,15 +121,28 @@ export const POST = withCustomerContext(async (request: AuthenticatedRequest) =>
         });
 
         // Execute or queue the command based on device status
-        // This replaces the setTimeout simulation with real execution
-        commandQueue.executeOrQueue(id, command.id)
-            .catch(error => {
-                logger.error(`Failed to queue command ${command.id}:`, {
-                    error: error instanceof Error ? error.message : String(error),
-                    deviceId: id,
-                    commandId: command.id,
-                });
+        // Dynamically import the commandQueue module only on the server side
+        try {
+            // Only import on the server side
+            if (typeof window === 'undefined') {
+                if (!commandQueueModule) {
+                    // Dynamic import that will only be executed at runtime on the server
+                    const module = await import('@/lib/command-executor');
+                    commandQueueModule = module.commandQueue;
+                }
+
+                // Now we can use the commandQueue
+                await commandQueueModule.executeOrQueue(id, command.id);
+            } else {
+                logger.warn('Command execution is only available on the server side');
+            }
+        } catch (error) {
+            logger.error(`Failed to queue command ${command.id}:`, {
+                error: error instanceof Error ? error.message : String(error),
+                deviceId: id,
+                commandId: command.id,
             });
+        }
 
         return NextResponse.json({
             command,

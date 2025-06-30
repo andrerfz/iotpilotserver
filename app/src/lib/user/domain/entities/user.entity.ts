@@ -18,7 +18,7 @@ export class User extends Entity<UserId> {
         private readonly createdAt: Date,
         private updatedAt: Date,
         private lastLoginAt: Date | null = null,
-        private active: boolean = true
+        private status: string = 'ACTIVE'
     ) {
         super(id);
         this.validateTenantConsistency();
@@ -73,7 +73,7 @@ export class User extends Entity<UserId> {
     }
 
     isActive(): boolean {
-        return this.active;
+        return this.status === 'ACTIVE';
     }
 
     isSuperAdmin(): boolean {
@@ -115,12 +115,12 @@ export class User extends Entity<UserId> {
     }
 
     deactivate(): void {
-        this.active = false;
+        this.status = 'INACTIVE';
         this.updatedAt = new Date();
     }
 
     activate(): void {
-        this.active = true;
+        this.status = 'ACTIVE';
         this.updatedAt = new Date();
     }
 
