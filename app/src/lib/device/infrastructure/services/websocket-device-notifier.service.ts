@@ -1,7 +1,7 @@
 import { DeviceId } from '@/lib/device/domain/value-objects/device-id.vo';
 import { DeviceStatus } from '@/lib/device/domain/value-objects/device-status.vo';
 import { DeviceNotification, NotificationType } from '@/lib/device/domain/interfaces/device-notification.interface';
-import { Server as WebSocketServer } from 'ws';
+import { WebSocketServer } from 'ws';
 import * as http from 'http';
 
 export class WebSocketDeviceNotifierService implements DeviceNotification {
@@ -11,7 +11,7 @@ export class WebSocketDeviceNotifierService implements DeviceNotification {
 
   constructor(httpServer?: http.Server, port: number = 8080) {
     if (httpServer) {
-      // Use existing HTTP server
+      // Use an existing HTTP server
       this.server = new WebSocketServer({ server: httpServer });
     } else {
       // Create a new WebSocket server
