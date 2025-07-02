@@ -116,10 +116,6 @@ COPY --from=base --chown=iotpilot:nodejs /app/prisma ./prisma
 # Generate Prisma client in production
 RUN npx prisma generate
 
-# Copy start script
-COPY --from=base --chown=iotpilot:nodejs /app/scripts/start-production.sh ./
-RUN chmod +x start-production.sh
-
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:3000/api/health || exit 1
@@ -134,4 +130,4 @@ EXPOSE 3000
 ENTRYPOINT ["/sbin/tini", "--"]
 
 # Start the application using compiled JavaScript
-CMD ["./start-production.sh"]
+CMD ["npm", "start"]
