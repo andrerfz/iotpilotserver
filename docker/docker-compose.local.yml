@@ -43,7 +43,7 @@ services:
       - "3001:3000"
     volumes:
       - ../app/src:/app/src
-      - ../app/tailwind.config.js:/app/tailwind.config.js
+      - ../app/tailwind.config.cjs:/app/tailwind.config.cjs
       - ../app/package.json:/app/package.json
       - ../data:/app/data
       - ../logs:/app/logs
