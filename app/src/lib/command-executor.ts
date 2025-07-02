@@ -2,7 +2,7 @@ import {CommandStatus, Device, DeviceCommand} from '@prisma/client';
 import {exec} from 'child_process';
 import {promisify} from 'util';
 import * as mqtt from 'mqtt';
-import {tenantPrisma} from '@/lib/tenant-middleware';
+import {tenantPrisma} from './tenant-middleware';
 import {logger} from './logger';
 
 // Device capabilities interface
@@ -149,12 +149,9 @@ export class SSHCommandExecutor implements CommandExecutor {
             return false;
         }
 
-        if (capabilities.restrictions?.includes('read_only') &&
-            !['status', 'info', 'ps', 'df', 'top'].includes(command.command)) {
-            return false;
-        }
+        return !(capabilities.restrictions?.includes('read_only') &&
+            !['status', 'info', 'ps', 'df', 'top'].includes(command.command));
 
-        return true;
     }
 
     async execute(device: Device, command: DeviceCommand): Promise<CommandExecutionResult> {

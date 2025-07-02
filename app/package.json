@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build && tsc && tsc-alias",
     "start": "node server.cjs",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
@@ -142,6 +142,7 @@
     "prisma": "^6.10.1",
     "supertest": "^6.3.3",
     "ts-jest": "^29.4.0",
+    "tsc-alias": "^1.8.16",
     "typescript": "5.8.3",
     "vitest": "^1.6.1"
   },
