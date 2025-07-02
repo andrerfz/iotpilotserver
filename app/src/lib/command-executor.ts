@@ -177,7 +177,7 @@ export class SSHCommandExecutor implements CommandExecutor {
             try {
                 if (!sshExecutorFactory) {
                     try {
-                        const module = require('./ssh-executor.server.js');
+                        const module = require('./ssh-executor.server.ts');
                         sshExecutorFactory = module.createSSHExecutor;
                     } catch (jsError) {
                         const module = eval('require("./ssh-executor.server")');

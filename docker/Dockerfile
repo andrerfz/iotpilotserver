@@ -16,12 +16,12 @@ RUN apk add --no-cache \
 WORKDIR /app
 
 # Copy package files first for better caching
-COPY package*.json ./
-COPY postcss.config.cjs ./
-COPY tailwind.config.js ./
-COPY next.config.cjs ./
-COPY tsconfig.json ./
-COPY vitest.config.ts ./
+COPY app/package*.json ./
+COPY app/postcss.config.cjs ./
+COPY app/tailwind.config.cjs ./
+COPY app/next.config.cjs ./
+COPY app/tsconfig.json ./
+COPY app/vitest.config.ts ./
 
 # Install dependencies (handle both npm and yarn)
 RUN if [ -f package-lock.json ]; then \
@@ -33,7 +33,7 @@ RUN if [ -f package-lock.json ]; then \
     fi
 
 # Copy source code
-COPY . .
+COPY app/ .
 
 # Create public directory if it doesn't exist
 RUN mkdir -p public
@@ -104,7 +104,7 @@ COPY --from=base --chown=iotpilot:nodejs /app/server.cjs ./
 
 # Copy configuration files
 COPY --from=base --chown=iotpilot:nodejs /app/next.config.cjs ./
-COPY --from=base --chown=iotpilot:nodejs /app/tailwind.config.js ./
+COPY --from=base --chown=iotpilot:nodejs /app/tailwind.config.cjs ./
 COPY --from=base --chown=iotpilot:nodejs /app/postcss.config.cjs ./
 COPY --from=base --chown=iotpilot:nodejs /app/tsconfig.json ./
 COPY --from=base --chown=iotpilot:nodejs /app/next-env.d.ts ./
@@ -112,6 +112,9 @@ COPY --from=base --chown=iotpilot:nodejs /app/vitest.config.ts ./
 
 # Copy Prisma files
 COPY --from=base --chown=iotpilot:nodejs /app/prisma ./prisma
+
+# Copy node_modules to ensure all dependencies are available
+COPY --from=base --chown=iotpilot:nodejs /app/node_modules ./node_modules
 
 # Generate Prisma client in production
 RUN npx prisma generate
