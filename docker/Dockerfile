@@ -41,12 +41,16 @@ RUN mkdir -p public
 # Generate Prisma client if schema exists
 RUN if [ -f prisma/schema.prisma ]; then npx prisma generate; fi
 
-# CRITICAL: Build with proper environment for Tailwind
+# CRITICAL: Compile TypeScript to JavaScript
 ENV NODE_ENV=production
 RUN npm run build
 
-# Verify CSS was built properly
+# NEW: Compile all TypeScript files to JavaScript
+RUN npx tsc --project tsconfig.json
+
+# Verify build output
 RUN ls -la .next/static/css/ || echo "No CSS files found"
+RUN ls -la dist/ || echo "No compiled JS files found"
 
 # Production stage
 FROM node:20-alpine3.18 AS production
@@ -77,7 +81,7 @@ WORKDIR /app
 # Copy package files first
 COPY --from=base --chown=iotpilot:nodejs /app/package*.json ./
 
-# CRITICAL: Fresh install in production with clean slate
+# Install production dependencies only
 RUN if [ -f package-lock.json ]; then \
         npm install --omit=dev && npm cache clean --force; \
     elif [ -f yarn.lock ]; then \
@@ -88,6 +92,9 @@ RUN if [ -f package-lock.json ]; then \
 
 # Copy built Next.js application
 COPY --from=base --chown=iotpilot:nodejs /app/.next ./.next
+
+# Copy compiled JavaScript files
+COPY --from=base --chown=iotpilot:nodejs /app/dist ./dist
 
 # Copy static assets
 COPY --from=base --chown=iotpilot:nodejs /app/public ./public
@@ -103,45 +110,28 @@ COPY --from=base --chown=iotpilot:nodejs /app/tsconfig.json ./
 COPY --from=base --chown=iotpilot:nodejs /app/next-env.d.ts ./
 COPY --from=base --chown=iotpilot:nodejs /app/vitest.config.ts ./
 
-# Copy Prisma files and ensure Prisma is available
+# Copy Prisma files
 COPY --from=base --chown=iotpilot:nodejs /app/prisma ./prisma
 
 # Generate Prisma client in production
 RUN npx prisma generate
 
-# Copy source directory (needed for API routes in Next.js 14 app directory)
-COPY --from=base --chown=iotpilot:nodejs /app/src ./src
-
-# Copy migration file if it exists
-COPY --from=base --chown=iotpilot:nodejs /app/prisma/migration/001_initial_setup.sql ./migration.sql
-
-# Copy startup script
-COPY --from=base --chown=iotpilot:nodejs /app/start.sh ./start.sh
-
-# Create necessary directories with proper permissions
-RUN mkdir -p /app/data /app/logs /app/tmp && \
-    chown -R iotpilot:nodejs /app && \
-    chmod -R 755 /app && \
-    chmod +x ./start.sh
-
-# Set environment variables
-ENV NODE_ENV=production
-ENV PORT=3000
-ENV HOSTNAME=0.0.0.0
-ENV NEXT_TELEMETRY_DISABLED=1
+# Copy start script
+COPY --from=base --chown=iotpilot:nodejs /app/scripts/start-production.sh ./
+RUN chmod +x start-production.sh
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:3000/api/health || exit 1
-
-# Expose port
-EXPOSE 3000
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:3000/api/health || exit 1
 
 # Switch to non-root user
 USER iotpilot
 
-# Use tini as PID 1 to handle signals properly
-ENTRYPOINT ["tini", "--"]
+# Expose port
+EXPOSE 3000
 
-# Start with migration script
-CMD ["env", "./start.sh"]
+# Use tini for proper signal handling
+ENTRYPOINT ["/sbin/tini", "--"]
+
+# Start the application using compiled JavaScript
+CMD ["./start-production.sh"]
