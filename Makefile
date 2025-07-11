@@ -7,6 +7,7 @@
 .PHONY: fresh-setup local-start-with-migration
 .PHONY: test lint test-api test-ci test-db test-influxdb test-integration test-unit test-fresh test-file test-debug test-watch test-coverage test-env-check test-integration-full test-performance test-security test-clean test-db-with-data test-influxdb-connection test-services test-smoke test-all
 .PHONY: create-superadmin list-superadmins reset-superadmin-password delete-superadmin
+.PHONY: sync-node-modules clean-dev
 
 # Variables - Using .env for both production and local
 COMPOSE_FILE = docker/docker-compose.yml --env-file .env
@@ -341,12 +342,26 @@ local-restart-app:
 
 local-recreate-app:
 	@echo "⏹️  Recreating local app..."
+	@echo "🧹 Cleaning local node_modules cache..."
+	@rm -rf app/node_modules app/.next 2>/dev/null || true
 	@docker compose -f $(LOCAL_COMPOSE_FILE) down iotpilot-app
 	@docker compose -f $(LOCAL_COMPOSE_FILE) build --no-cache iotpilot-app
 	@docker compose -f $(LOCAL_COMPOSE_FILE) up -d iotpilot-app
 	@make wait-for-app
+	@echo "📦 Copying node_modules from container to local..."
+	@docker cp iotpilot-server-app:/app/node_modules ./app/
 	@make check-and-setup-db
 	@echo "✅ App recreated and ready!"
+
+sync-node-modules:
+	@echo "📦 Syncing node_modules from container..."
+	@docker cp iotpilot-server-app:/app/node_modules ./app/
+	@echo "✅ node_modules synced for IDE!"
+
+clean-dev:
+	@echo "🧹 Cleaning development artifacts..."
+	@rm -rf app/node_modules app/.next app/dist 2>/dev/null || true
+	@echo "✅ Development cleanup complete!"
 
 local-status:
 	@echo "📊 Local Service Status:"

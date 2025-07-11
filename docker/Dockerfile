@@ -1,147 +1,60 @@
-# Multi-stage build for optimal size and security
-FROM node:20-alpine AS base
+# Simple single-stage build for development
+FROM node:20-alpine
 
-# Install build dependencies and security updates
+# Install system dependencies
 RUN apk add --no-cache \
+    curl \
+    bash \
     python3 \
     make \
     g++ \
     git \
-    openssl \
-    openssl-dev \
-    ca-certificates \
+    postgresql-client \
     && apk upgrade --no-cache
 
-# Set working directory
-WORKDIR /app
-
-# Copy package files first for better caching
-COPY package*.json ./
-COPY postcss.config.cjs ./
-COPY tailwind.config.js ./
-COPY next.config.cjs ./
-COPY tsconfig.json ./
-COPY vitest.config.ts ./
-
-# Install dependencies (handle both npm and yarn)
-RUN if [ -f package-lock.json ]; then \
-        npm install --include=dev && npm cache clean --force; \
-    elif [ -f yarn.lock ]; then \
-        yarn install --frozen-lockfile && yarn cache clean; \
-    else \
-        npm install --include=dev && npm cache clean --force; \
-    fi
-
-# Copy source code
-COPY . .
-
-# Create public directory if it doesn't exist
-RUN mkdir -p public
-
-# Generate Prisma client if schema exists
-RUN if [ -f prisma/schema.prisma ]; then npx prisma generate; fi
-
-# CRITICAL: Build with proper environment for Tailwind
-ENV NODE_ENV=production
-RUN npm run build
-
-# Verify CSS was built properly
-RUN ls -la .next/static/css/ || echo "No CSS files found"
-
-# Production stage
-FROM node:20-alpine3.18 AS production
-
-# Install runtime dependencies
-RUN apk add --no-cache \
-    curl \
-    bash \
-    openssh-client \
-    postgresql-client \
-    dumb-init \
-    tini \
-    tzdata \
-    jq \
-    openssl \
-    openssl-dev \
-    libc6-compat \
-    && apk upgrade --no-cache \
-    && rm -rf /var/cache/apk/*
-
-# Create app user for security
+# Create app user
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S iotpilot -u 1001 -G nodejs
 
 # Set working directory
 WORKDIR /app
 
-# Copy package files first
-COPY --from=base --chown=iotpilot:nodejs /app/package*.json ./
+# Copy package files
+COPY app/package*.json ./
 
-# CRITICAL: Fresh install in production with clean slate
-RUN if [ -f package-lock.json ]; then \
-        npm install --omit=dev && npm cache clean --force; \
-    elif [ -f yarn.lock ]; then \
-        yarn install --frozen-lockfile --production && yarn cache clean; \
-    else \
-        npm install --omit=dev && npm cache clean --force; \
-    fi
+# Install ALL dependencies
+RUN npm install
 
-# Copy built Next.js application
-COPY --from=base --chown=iotpilot:nodejs /app/.next ./.next
+# Explicitly install Express if missing (debug step)
+RUN npm list express || npm install express --save
 
-# Copy static assets
-COPY --from=base --chown=iotpilot:nodejs /app/public ./public
+# Verify Express installation
+RUN ls -la node_modules/express/
 
-# Copy server file
-COPY --from=base --chown=iotpilot:nodejs /app/server.cjs ./
+# Copy entire app directory
+COPY app/ ./
 
-# Copy configuration files
-COPY --from=base --chown=iotpilot:nodejs /app/next.config.cjs ./
-COPY --from=base --chown=iotpilot:nodejs /app/tailwind.config.js ./
-COPY --from=base --chown=iotpilot:nodejs /app/postcss.config.cjs ./
-COPY --from=base --chown=iotpilot:nodejs /app/tsconfig.json ./
-COPY --from=base --chown=iotpilot:nodejs /app/next-env.d.ts ./
-COPY --from=base --chown=iotpilot:nodejs /app/vitest.config.ts ./
+# Generate Prisma client
+RUN if [ -f prisma/schema.prisma ]; then npx prisma generate; fi
 
-# Copy Prisma files and ensure Prisma is available
-COPY --from=base --chown=iotpilot:nodejs /app/prisma ./prisma
+# Build Next.js app
+RUN npm run build
 
-# Generate Prisma client in production
-RUN npx prisma generate
-
-# Copy source directory (needed for API routes in Next.js 14 app directory)
-COPY --from=base --chown=iotpilot:nodejs /app/src ./src
-
-# Copy migration file if it exists
-COPY --from=base --chown=iotpilot:nodejs /app/prisma/migration/001_initial_setup.sql ./migration.sql
-
-# Copy startup script
-COPY --from=base --chown=iotpilot:nodejs /app/start.sh ./start.sh
-
-# Create necessary directories with proper permissions
-RUN mkdir -p /app/data /app/logs /app/tmp && \
-    chown -R iotpilot:nodejs /app && \
-    chmod -R 755 /app && \
-    chmod +x ./start.sh
-
-# Set environment variables
-ENV NODE_ENV=production
-ENV PORT=3000
-ENV HOSTNAME=0.0.0.0
-ENV NEXT_TELEMETRY_DISABLED=1
+# Set proper ownership
+RUN chown -R iotpilot:nodejs /app
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:3000/api/health || exit 1
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:3000/api/health || exit 1
+
+# Switch to app user
+USER iotpilot
 
 # Expose port
 EXPOSE 3000
 
-# Switch to non-root user
-USER iotpilot
+# Make start script executable
+RUN chmod +x start.sh
 
-# Use tini as PID 1 to handle signals properly
-ENTRYPOINT ["tini", "--"]
-
-# Start with migration script
-CMD ["env", "./start.sh"]
+# Start the application using the startup script
+CMD ["./start.sh"]

@@ -27,8 +27,8 @@ services:
   # Main IotPilot Application
   iotpilot-app:
     build:
-      context: ./app
-      dockerfile: ../docker/Dockerfile
+      context: ..
+      dockerfile: ./docker/Dockerfile
       args:
         - NODE_ENV=production
     container_name: iotpilot-app

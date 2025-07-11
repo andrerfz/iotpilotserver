@@ -211,21 +211,38 @@ app.prepare().then(() => {
         return handle(req, res);
     });
 
-    // Initialize command queue for device commands
-    try {
-        // Use dynamic import for ES modules
-        import('./src/lib/command-executor.ts').then(({ CommandQueueManager }) => {
-            // Start processing the command queue with a 60-second interval
-            CommandQueueManager.startQueueProcessing(60000);
-            logger.info('Command queue processing started');
-        }).catch(error => {
-            logger.error('Failed to initialize command queue:', error);
-            // Continue server startup even if command queue fails
-        });
-    } catch (error) {
-        logger.error('Failed to initialize command queue:', error);
-        // Continue server startup even if command queue fails
-    }
+    setTimeout(async () => {
+        try {
+            // Try multiple import strategies
+            let CommandQueueManager;
+
+            try {
+                // Try compiled JS first
+                const module = await import('./dist/src/lib/command-executor.js');
+                CommandQueueManager = module.CommandQueueManager;
+            } catch (distError) {
+                try {
+                    // Fallback to TypeScript source
+                    const module = await import('./src/lib/command-executor.ts');
+                    CommandQueueManager = module.CommandQueueManager;
+                } catch (tsError) {
+                    // Try Next.js transpiled version
+                    const module = await import('./.next/server/src/lib/command-executor.js');
+                    CommandQueueManager = module.CommandQueueManager;
+                }
+            }
+
+            if (CommandQueueManager) {
+                CommandQueueManager.startQueueProcessing(60000);
+                logger.info('Command queue processing started');
+            } else {
+                logger.warn('CommandQueueManager not found, command queue disabled');
+            }
+        } catch (error) {
+            logger.warn('Command queue initialization failed, continuing without it:', error.message);
+            // Server continues to run without a command queue
+        }
+    }, 5000); // Delay to ensure all modules are loaded
 
     // Start the server
     httpServer.listen(port, (err) => {

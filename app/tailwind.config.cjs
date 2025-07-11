@@ -1,4 +1,4 @@
-const {heroui} = require('@heroui/theme');
+const { heroui } = require('@heroui/theme');
 /** @type {import('tailwindcss').Config} */
 module.exports = {
     darkMode: ["class"],
@@ -7,7 +7,7 @@ module.exports = {
     "./components/**/*.{ts,tsx}",
     "./app/**/*.{ts,tsx}",
     "./src/**/*.{ts,tsx}",
-    "// Include ReUI components\n        './app/src/components/ui/**/*.{ts,tsx}'",
+    "./src/components/ui/**/*.{ts,tsx}",
     "./node_modules/@heroui/theme/dist/components/(accordion|alert|autocomplete|avatar|badge|breadcrumbs|button|calendar|card|checkbox|chip|code|date-input|date-picker|divider|drawer|dropdown|form|image|input|input-otp|kbd|link|listbox|menu|modal|navbar|number-input|pagination|popover|progress|radio|ripple|scroll-shadow|select|skeleton|slider|snippet|spacer|spinner|toggle|table|tabs|toast|user).js"
   ],
     theme: {
@@ -124,5 +124,5 @@ module.exports = {
             },
         },
     },
-  plugins: [require("tailwindcss-animate"),heroui()],
+  plugins: [require("tailwindcss-animate"), heroui],
 }

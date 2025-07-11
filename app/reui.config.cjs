@@ -1,4 +1,4 @@
-// reui.config.js
+// reui.config.cjs
 /** @type {import('@reui/core').Config} */
 module.exports = {
     theme: {

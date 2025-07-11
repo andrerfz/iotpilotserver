@@ -22,8 +22,8 @@ services:
   # Main IotPilot Application
   iotpilot-app:
     build:
-      context: ../app
-      dockerfile: ../docker/Dockerfile
+      context: ..
+      dockerfile: ./docker/Dockerfile
       args:
         - NODE_ENV=development
     container_name: iotpilot-server-app
@@ -43,11 +43,11 @@ services:
       - "3001:3000"
     volumes:
       - ../app/src:/app/src
-      - ../app/tailwind.config.js:/app/tailwind.config.js
+      - ../app/tailwind.config.cjs:/app/tailwind.config.cjs
       - ../app/package.json:/app/package.json
+      - ../app/node_modules:/app/node_modules:delegated
       - ../data:/app/data
       - ../logs:/app/logs
-      - ../app/node_modules:/app/node_modules
       - /var/run/docker.sock:/var/run/docker.sock:ro
     depends_on:
       postgres:
