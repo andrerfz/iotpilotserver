@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { DeviceMetrics } from '@/lib/device/domain/entities/device-metrics.entity';
-import { DeviceId } from '@/lib/device/domain/value-objects/device-id.vo';
+import {beforeEach, describe, expect, it, vi} from 'vitest';
+import {DeviceMetrics} from '@/lib/device/domain/entities/device-metrics.entity';
+import {DeviceId} from '@/lib/device/domain/value-objects/device-id.vo';
 
 // Mock the value objects
 vi.mock('@/lib/device/domain/value-objects/device-id.vo');
@@ -44,7 +44,8 @@ describe('DeviceMetrics Entity', () => {
 
     it('should use current date as timestamp if not provided', () => {
       const now = new Date();
-      vi.spyOn(global, 'Date').mockImplementationOnce(() => now as unknown as string);
+      // Properly mock Date constructor while preserving Date.now
+      vi.spyOn(global, 'Date').mockImplementationOnce(() => now);
 
       const metricsWithoutTimestamp = DeviceMetrics.create(
         deviceId,

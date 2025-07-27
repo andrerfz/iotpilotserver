@@ -1,36 +1,64 @@
-import { DomainEventBase } from '@/lib/shared/domain/events/domain.event';
-import { DeviceId } from '../value-objects/device-id.vo';
-import { DeviceName } from '../value-objects/device-name.vo';
-import { IpAddress } from '../value-objects/ip-address.vo';
-import { Port } from '../value-objects/port.vo';
+import {TenantScopedEventBase} from '@/lib/shared/domain/events/tenant-scoped-event';
+import {CustomerId} from '@/lib/shared/domain/value-objects/customer-id.vo';
+import {DeviceId} from '../value-objects/device-id.vo';
+import {DeviceName} from '../value-objects/device-name.vo';
+import {IpAddress} from '../value-objects/ip-address.vo';
 
-export class SSHSessionStartedEvent extends DomainEventBase {
+/**
+ * Event emitted when an SSH session is started with a device
+ */
+export class SSHSessionStartedEvent extends TenantScopedEventBase {
   constructor(
+    public readonly sessionId: string,
     public readonly deviceId: DeviceId,
     public readonly deviceName: DeviceName,
     public readonly ipAddress: IpAddress,
-    public readonly port: Port,
-    public readonly sessionId: string,
-    public readonly userId: string
+    public readonly startedBy: string,
+    public readonly startTimestamp: Date,
+    tenantId: CustomerId
   ) {
-    super();
+    super(tenantId);
   }
 
-  static create(
-    deviceId: DeviceId,
-    deviceName: DeviceName,
-    ipAddress: IpAddress,
-    port: Port,
-    sessionId: string,
-    userId: string
-  ): SSHSessionStartedEvent {
-    return new SSHSessionStartedEvent(
-      deviceId,
-      deviceName,
-      ipAddress,
-      port,
-      sessionId,
-      userId
-    );
+  /**
+   * Gets the ID of the SSH session
+   */
+  getSessionId(): string {
+    return this.sessionId;
+  }
+
+  /**
+   * Gets the ID of the device that the SSH session is connected to
+   */
+  getDeviceId(): DeviceId {
+    return this.deviceId;
+  }
+
+  /**
+   * Gets the name of the device that the SSH session is connected to
+   */
+  getDeviceName(): DeviceName {
+    return this.deviceName;
+  }
+
+  /**
+   * Gets the IP address of the device that the SSH session is connected to
+   */
+  getIpAddress(): IpAddress {
+    return this.ipAddress;
+  }
+
+  /**
+   * Gets the identifier of the user or process that started the SSH session
+   */
+  getStartedBy(): string {
+    return this.startedBy;
+  }
+
+  /**
+   * Gets the timestamp when the SSH session was started
+   */
+  getStartTimestamp(): Date {
+    return this.startTimestamp;
   }
 }

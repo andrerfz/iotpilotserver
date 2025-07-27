@@ -1,31 +1,35 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { AuthenticatedRequest, withCustomerContext } from '@/lib/api-middleware';
-import { tenantPrisma } from '@/lib/tenant-middleware';
-import { logger } from '@/lib/logger';
-import { z } from 'zod';
+import {AuthenticatedRequest, withCustomerContext} from '@/lib/shared/infrastructure/middleware/api-middleware';
+import {tenantPrisma} from '@/lib/tenant-middleware';
+import {StructuredLogger} from '@/lib/shared/infrastructure/logging/structured-logger';
+import {validator} from '@/lib/shared/infrastructure/validation/validation-helper';
+import {ApiResponse} from '@/lib/shared/infrastructure/http/api-response.util';
+import {z} from 'zod';
+
+const logger = StructuredLogger.forService('device-settings-api');
 
 // Device settings validation schema
-const deviceSettingsSchema = z.object({
+const v = validator();
+const deviceSettingsSchema = v.object({
     // Device Info
-    hostname: z.string().min(1).max(100).optional(),
-    location: z.string().max(200).optional(),
-    description: z.string().max(500).optional(),
-    tags: z.array(z.string().max(50)).optional(),
+    hostname: v.optional(v.string({ min: 1, max: 100 })),
+    location: v.optional(v.string({ max: 200 })),
+    description: v.optional(v.string({ max: 500 })),
+    tags: v.optional(v.array(v.string({ max: 50 }))),
 
     // Monitoring
-    heartbeatInterval: z.number().min(30).max(600).optional(),
-    metricsEnabled: z.boolean().optional(),
-    cpuThreshold: z.number().min(50).max(100).optional(),
-    memoryThreshold: z.number().min(50).max(100).optional(),
-    temperatureThreshold: z.number().min(40).max(100).optional(),
-    diskThreshold: z.number().min(70).max(100).optional(),
+    heartbeatInterval: v.optional(v.number({ min: 30, max: 600 })),
+    metricsEnabled: v.optional(v.boolean()),
+    cpuThreshold: v.optional(v.number({ min: 50, max: 100 })),
+    memoryThreshold: v.optional(v.number({ min: 50, max: 100 })),
+    temperatureThreshold: v.optional(v.number({ min: 40, max: 100 })),
+    diskThreshold: v.optional(v.number({ min: 70, max: 100 })),
 
     // Network
-    networkMonitoring: z.boolean().optional(),
+    networkMonitoring: v.optional(v.boolean()),
 
     // Agent
-    autoUpdate: z.boolean().optional(),
-    updateChannel: z.enum(['stable', 'beta', 'nightly']).optional(),
+    autoUpdate: v.optional(v.boolean()),
+    updateChannel: v.optional(v.enum(['stable', 'beta', 'nightly'] as const)),
 
     // Security
     sshEnabled: z.boolean().optional(),
@@ -46,10 +50,7 @@ export const GET = withCustomerContext(async (request: AuthenticatedRequest) => 
         });
 
         if (!device) {
-            return NextResponse.json(
-                { error: 'Device not found' },
-                { status: 404 }
-            );
+            return ApiResponse.notFound('Device not found');
         }
 
         // Try to get device settings from preferences or use defaults
@@ -90,7 +91,7 @@ export const GET = withCustomerContext(async (request: AuthenticatedRequest) => 
         };
 
         // Override with stored preferences
-        preferences.forEach(pref => {
+        preferences.forEach((pref: { key: string; value: string }) => {
             const settingKey = pref.key.replace(`device_${deviceId}_`, '');
             try {
                 // Parse the value based on the key
@@ -111,17 +112,14 @@ export const GET = withCustomerContext(async (request: AuthenticatedRequest) => 
             }
         });
 
-        return NextResponse.json(settings);
+        return ApiResponse.ok(settings);
 
     } catch (error) {
         logger.error('Failed to fetch device settings:', {
             error: error instanceof Error ? error.message : String(error),
             deviceId
         });
-        return NextResponse.json(
-            { error: 'Failed to fetch device settings' },
-            { status: 500 }
-        );
+        return ApiResponse.internalError('Failed to fetch device settings');
     }
 });
 
@@ -142,10 +140,7 @@ export const PUT = withCustomerContext(async (request: AuthenticatedRequest) => 
         });
 
         if (!device) {
-            return NextResponse.json(
-                { error: 'Device not found' },
-                { status: 404 }
-            );
+            return ApiResponse.notFound('Device not found');
         }
 
         // Update device basic info if provided
@@ -220,29 +215,20 @@ export const PUT = withCustomerContext(async (request: AuthenticatedRequest) => 
             updatedFields: Object.keys(validatedSettings)
         });
 
-        return NextResponse.json({
+        return ApiResponse.ok({
             message: 'Device settings updated successfully',
             settings: validatedSettings
         });
 
     } catch (error) {
         if (error instanceof z.ZodError) {
-            return NextResponse.json(
-                {
-                    error: 'Invalid settings data',
-                    details: error.errors
-                },
-                { status: 400 }
-            );
+            return ApiResponse.badRequest('Invalid settings data', error.errors);
         }
 
         logger.error('Failed to update device settings:', {
             error: error instanceof Error ? error.message : String(error),
             deviceId
         });
-        return NextResponse.json(
-            { error: 'Failed to update device settings' },
-            { status: 500 }
-        );
+        return ApiResponse.internalError('Failed to update device settings');
     }
 });

@@ -1,7 +1,7 @@
-import { DeviceId } from '../value-objects/device-id.vo';
-import { DeviceRepository } from '../interfaces/device-repository.interface';
-import { DeviceAccessDeniedException } from '../exceptions/device-access-denied.exception';
-import { DeviceExistsPolicy } from './device-exists.policy';
+import {DeviceId} from '../value-objects/device-id.vo';
+import {DeviceRepository} from '../interfaces/device.repository';
+import {DeviceAccessDeniedException} from '../exceptions/device-access-denied.exception';
+import {DeviceExistsPolicy} from './device-exists.policy';
 
 export class DeviceAccessiblePolicy {
     private readonly deviceExistsPolicy: DeviceExistsPolicy;
@@ -17,7 +17,7 @@ export class DeviceAccessiblePolicy {
 
     async validate(deviceId: DeviceId, userId: string): Promise<void> {
         // First check if the device exists
-        await this.deviceExistsPolicy.validate(deviceId);
+        await this.deviceExistsPolicy.validate(deviceId.value);
 
         // Then check if the user has access to the device
         const hasAccess = await this.userPermissionsService.hasDeviceAccess(

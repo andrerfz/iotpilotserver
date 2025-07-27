@@ -4,6 +4,9 @@ import {Password} from '@/lib/user/domain/value-objects/password.vo';
 import {CustomerId} from '@/lib/shared/domain/value-objects/customer-id.vo';
 
 export class AuthenticateUserCommand implements Command {
+    /** Static type identifier that survives minification */
+    static readonly type = 'AuthenticateUserCommand';
+
     private constructor(
         public readonly email: Email,
         public readonly password: Password,

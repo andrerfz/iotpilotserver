@@ -1,8 +1,7 @@
-import { DeviceId } from '../value-objects/device-id.vo';
-import { DeviceRepository } from '../interfaces/device-repository.interface';
-import { DeviceAccessiblePolicy } from './device-accessible.policy';
-import { SSHConnectionFailedException } from '../exceptions/ssh-connection-failed.exception';
-import { DeviceStatus } from '../value-objects/device-status.vo';
+import {DeviceId} from '../value-objects/device-id.vo';
+import {DeviceRepository} from '../interfaces/device.repository';
+import {DeviceAccessiblePolicy} from './device-accessible.policy';
+import {SSHConnectionFailedException} from '../exceptions/ssh-connection-failed.exception';
 
 export class SSHAllowedPolicy {
     private readonly deviceAccessiblePolicy: DeviceAccessiblePolicy;

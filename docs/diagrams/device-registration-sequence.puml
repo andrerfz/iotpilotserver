@@ -1,0 +1,65 @@
+@startuml Device Registration Sequence
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam sequenceParticipant underline
+
+title Device Registration Flow
+
+actor "User" as User
+participant "REST API" as API
+participant "CommandBus" as CmdBus
+participant "RegisterDeviceHandler" as Handler
+participant "DeviceRegistrationService" as RegSvc
+participant "DeviceRepository" as DeviceRepo
+participant "DeviceConnectivityPolicy" as ConnectivityPolicy
+participant "PrismaClient" as Prisma
+participant "PostgreSQL" as DB
+participant "EventBus" as EventBus
+participant "WebSocket" as WS
+
+== Command Submission ==
+User -> API: POST /api/devices\n{\n  "deviceId": "pi-001",\n  "hostname": "raspberry-pi",\n  "ipAddress": "192.168.1.100"\n}
+API -> CmdBus: RegisterDeviceCommand
+
+== Command Validation ==
+CmdBus -> Handler: handle(command)
+Handler -> Handler: validate(command)
+Handler -> Handler: check permissions
+
+== Domain Logic Execution ==
+Handler -> RegSvc: registerDevice(params)
+RegSvc -> DeviceRepo: findByIpAddress(ipAddress)
+DeviceRepo -> Prisma: SELECT * FROM devices WHERE ip_address = ?
+Prisma -> DB: Query execution
+DB --> Prisma: Result (empty)
+Prisma --> DeviceRepo: null
+
+RegSvc -> ConnectivityPolicy: validateConnectivity(deviceData)
+ConnectivityPolicy -> ConnectivityPolicy: ping device
+ConnectivityPolicy -> ConnectivityPolicy: check SSH access
+ConnectivityPolicy --> RegSvc: connectivity OK
+
+RegSvc -> RegSvc: Device.create(params)
+RegSvc --> Handler: Device entity
+
+== Persistence ==
+Handler -> DeviceRepo: save(device)
+DeviceRepo -> Prisma: INSERT INTO devices (...)
+Prisma -> DB: Execute INSERT
+DB --> Prisma: Success
+Prisma --> DeviceRepo: OK
+
+== Event Publishing ==
+Handler -> EventBus: publish(DeviceRegisteredEvent)
+EventBus -> WS: broadcast("device:registered", event)
+
+== Response ==
+Handler --> CmdBus: success
+CmdBus --> API: 201 Created\n{\n  "device": {...},\n  "message": "Device registered"\n}
+API --> User: Response
+
+== Asynchronous Processing ==
+EventBus ->> EventBus: queue for async processing
+note right: Background job processes:\n- Initialize monitoring\n- Send notifications\n- Update caches
+
+@enduml

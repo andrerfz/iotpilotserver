@@ -1,9 +1,9 @@
-import {describe, it, expect, beforeEach} from 'vitest';
+import {beforeEach, describe, expect, it} from 'vitest';
 import {User} from '../user.entity';
 import {UserId} from '../../value-objects/user-id.vo';
 import {Email} from '../../value-objects/email.vo';
 import {Password} from '../../value-objects/password.vo';
-import {UserRole, UserRoleEnum} from '../../value-objects/user-role.vo';
+import {UserRole} from '../../value-objects/user-role.vo';
 import {CustomerId} from '@/lib/shared/domain/value-objects/customer-id.vo';
 
 describe('User Entity', () => {

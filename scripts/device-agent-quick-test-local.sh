@@ -510,7 +510,7 @@ if [[ "$SERVER_URL" == "https://"* ]]; then
 fi
 
 HTTP_STATUS=$(curl $CURL_OPTS -w "%{http_code}" -o /tmp/heartbeat_response.json -s \
-  -X POST "$SERVER_URL/api/heartbeat" \
+  -X POST "$SERVER_URL/api/iot/heartbeat" \
   -H "Content-Type: application/json" \
   -H "X-API-Key: $DEVICE_API_KEY" \
   -d "$DEVICE_DATA" \
@@ -588,12 +588,12 @@ if [[ "$SERVER_URL" == "https://"* ]]; then
     CURL_OPTS="-k --insecure"
 fi
 
-echo "🔗 Registering at: $SERVER_URL/api/devices"
+echo "🔗 Registering at: $SERVER_URL/api/iot/register"
 echo "📋 Enhanced registration payload:"
 echo "$REGISTRATION_DATA" | jq . 2>/dev/null || echo "$REGISTRATION_DATA"
 
 HTTP_STATUS=$(curl $CURL_OPTS -w "%{http_code}" -o /tmp/registration_response.json -s \
-  -X POST "$SERVER_URL/api/devices" \
+  -X POST "$SERVER_URL/api/iot/register" \
   -H "Content-Type: application/json" \
   -H "X-API-Key: $DEVICE_API_KEY" \
   -d "$REGISTRATION_DATA" \

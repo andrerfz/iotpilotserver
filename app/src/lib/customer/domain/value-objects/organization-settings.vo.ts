@@ -1,135 +1,127 @@
-import { ValueObject, ValueObjectInterface } from '@/lib/shared/domain/interfaces/value-object.interface';
+import {ValueObject} from '@/lib/shared/domain/base.value-object';
 
 export interface OrganizationSettingsProps {
-  maxUsers?: number;
-  maxDevices?: number;
-  allowedFeatures?: string[];
-  dataRetentionDays?: number;
-  customDomain?: string | null;
-  logoUrl?: string | null;
-  primaryColor?: string | null;
-  secondaryColor?: string | null;
+  maxUsers: number;
+  maxDevices: number;
+  allowedFeatures: string[];
+  dataRetentionDays: number;
+  customDomain: string | null;
+  logoUrl: string | null;
+  primaryColor: string | null;
+  secondaryColor: string | null;
 }
 
-export class OrganizationSettings extends ValueObject {
-  private readonly maxUsers: number;
-  private readonly maxDevices: number;
-  private readonly allowedFeatures: string[];
-  private readonly dataRetentionDays: number;
-  private readonly customDomain: string | null;
-  private readonly logoUrl: string | null;
-  private readonly primaryColor: string | null;
-  private readonly secondaryColor: string | null;
-
-  constructor(props: OrganizationSettingsProps) {
-    super();
-    this.maxUsers = props.maxUsers || 10;
-    this.maxDevices = props.maxDevices || 50;
-    this.allowedFeatures = props.allowedFeatures || ['basic'];
-    this.dataRetentionDays = props.dataRetentionDays || 30;
-    this.customDomain = props.customDomain || null;
-    this.logoUrl = props.logoUrl || null;
-    this.primaryColor = props.primaryColor || null;
-    this.secondaryColor = props.secondaryColor || null;
+export class OrganizationSettings extends ValueObject<OrganizationSettingsProps> {
+  private constructor(props: OrganizationSettingsProps) {
+    super(props);
     this.validate();
   }
 
-  static create(
-    maxUsers: number,
-    maxDevices: number,
-    features: string[] = ['basic'],
-    theme: string = 'default',
-    customDomain: string | null = null
-  ): OrganizationSettings {
+  static create(props: Partial<OrganizationSettingsProps>): OrganizationSettings {
     return new OrganizationSettings({
-      maxUsers,
-      maxDevices,
-      allowedFeatures: features,
-      customDomain
+      maxUsers: props.maxUsers ?? 10,
+      maxDevices: props.maxDevices ?? 50,
+      allowedFeatures: props.allowedFeatures ?? ['basic'],
+      dataRetentionDays: props.dataRetentionDays ?? 30,
+      customDomain: props.customDomain ?? null,
+      logoUrl: props.logoUrl ?? null,
+      primaryColor: props.primaryColor ?? null,
+      secondaryColor: props.secondaryColor ?? null
     });
   }
 
+  static default(): OrganizationSettings {
+    return OrganizationSettings.create({});
+  }
+
   private validate(): void {
-    if (this.maxUsers < 1) {
+    if (this.props.maxUsers < 1) {
       throw new Error('Maximum users must be at least 1');
     }
 
-    if (this.maxDevices < 1) {
+    if (this.props.maxDevices < 1) {
       throw new Error('Maximum devices must be at least 1');
     }
 
-    if (this.dataRetentionDays < 1) {
+    if (this.props.dataRetentionDays < 1) {
       throw new Error('Data retention days must be at least 1');
     }
 
-    if (this.customDomain && !/^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+$/.test(this.customDomain)) {
+    if (this.props.customDomain && !/^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+$/.test(this.props.customDomain)) {
       throw new Error('Invalid custom domain format');
     }
   }
 
   getMaxUsers(): number {
-    return this.maxUsers;
+    return this.props.maxUsers;
   }
 
   getMaxDevices(): number {
-    return this.maxDevices;
+    return this.props.maxDevices;
   }
 
   getAllowedFeatures(): string[] {
-    return [...this.allowedFeatures];
+    return [...this.props.allowedFeatures];
   }
 
   getDataRetentionDays(): number {
-    return this.dataRetentionDays;
+    return this.props.dataRetentionDays;
   }
 
   getCustomDomain(): string | null {
-    return this.customDomain;
+    return this.props.customDomain;
   }
 
   getLogoUrl(): string | null {
-    return this.logoUrl;
+    return this.props.logoUrl;
   }
 
   getPrimaryColor(): string | null {
-    return this.primaryColor;
+    return this.props.primaryColor;
   }
 
   getSecondaryColor(): string | null {
-    return this.secondaryColor;
+    return this.props.secondaryColor;
   }
 
   hasFeature(feature: string): boolean {
-    return this.allowedFeatures.includes(feature);
+    return this.props.allowedFeatures.includes(feature);
   }
 
-  equals(other: ValueObjectInterface): boolean {
+  withMaxUsers(maxUsers: number): OrganizationSettings {
+    return OrganizationSettings.create({ ...this.props, maxUsers });
+  }
+
+  withMaxDevices(maxDevices: number): OrganizationSettings {
+    return OrganizationSettings.create({ ...this.props, maxDevices });
+  }
+
+  withDataRetentionDays(days: number): OrganizationSettings {
+    return OrganizationSettings.create({ ...this.props, dataRetentionDays: days });
+  }
+
+  withCustomDomain(domain: string | null): OrganizationSettings {
+    return OrganizationSettings.create({ ...this.props, customDomain: domain });
+  }
+
+  equals(other: OrganizationSettings): boolean {
     if (!(other instanceof OrganizationSettings)) {
       return false;
     }
 
     return (
-      this.maxUsers === other.getMaxUsers() &&
-      this.maxDevices === other.getMaxDevices() &&
-      JSON.stringify(this.allowedFeatures.sort()) === JSON.stringify(other.getAllowedFeatures().sort()) &&
-      this.dataRetentionDays === other.getDataRetentionDays() &&
-      this.customDomain === other.getCustomDomain() &&
-      this.logoUrl === other.getLogoUrl() &&
-      this.primaryColor === other.getPrimaryColor() &&
-      this.secondaryColor === other.getSecondaryColor()
+      this.props.maxUsers === other.props.maxUsers &&
+      this.props.maxDevices === other.props.maxDevices &&
+      JSON.stringify(this.props.allowedFeatures.sort()) === JSON.stringify(other.props.allowedFeatures.sort()) &&
+      this.props.dataRetentionDays === other.props.dataRetentionDays &&
+      this.props.customDomain === other.props.customDomain &&
+      this.props.logoUrl === other.props.logoUrl &&
+      this.props.primaryColor === other.props.primaryColor &&
+      this.props.secondaryColor === other.props.secondaryColor
     );
   }
 
-  toObject(): OrganizationSettingsProps {
-    return {
-      maxUsers: this.maxUsers,
-      maxDevices: this.maxDevices,
-      allowedFeatures: [...this.allowedFeatures],
-      dataRetentionDays: this.dataRetentionDays,
-      customDomain: this.customDomain || undefined,
-      logoUrl: this.logoUrl || undefined,
-      primaryColor: this.primaryColor || undefined,
-      secondaryColor: this.secondaryColor || undefined
-    };
+  toJSON(): OrganizationSettingsProps {
+    return { ...this.props };
   }
 }

@@ -1,107 +1,37 @@
-import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import {ServiceContainer} from '@/lib/shared/infrastructure/container/service-container';
+import {GetSystemHealthQuery} from '@/lib/shared/application/queries/get-system-health/get-system-health.query';
+import {logger} from '@/lib/shared/infrastructure/logging/logger.service';
+import {ApiResponse} from '@/lib/shared/infrastructure/http/api-response.util';
 
-const prisma = new PrismaClient();
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
+/**
+ * GET /api/health - Get system health status
+ * Uses CQRS pattern with GetSystemHealthQuery
+ * Public endpoint - no authentication required
+ */
 export async function GET() {
     try {
-        // Check database connection
-        await prisma.$queryRaw`SELECT 1`;
+        const serviceContainer = ServiceContainer.getInstance();
+        const queryBus = serviceContainer.getQueryBus();
 
-        // Check system health
-        const deviceCount = await prisma.device.count();
-        const onlineDevices = await prisma.device.count({
-            where: {
-                status: 'ONLINE',
-                lastSeen: {
-                    gte: new Date(Date.now() - 5 * 60 * 1000) // Last 5 minutes
-                }
-            }
-        });
+        const query = GetSystemHealthQuery.create();
+        const health = await queryBus.execute(query);
 
-        const uptime = process.uptime();
-        const memoryUsage = process.memoryUsage();
-
-        return NextResponse.json({
-            status: 'healthy',
-            timestamp: new Date().toISOString(),
-            uptime: Math.floor(uptime),
-            version: process.env.npm_package_version || '1.0.0',
-            database: 'connected',
-            devices: {
-                total: deviceCount,
-                online: onlineDevices,
-                offline: deviceCount - onlineDevices
-            },
-            memory: {
-                used: Math.round(memoryUsage.heapUsed / 1024 / 1024),
-                total: Math.round(memoryUsage.heapTotal / 1024 / 1024),
-                external: Math.round(memoryUsage.external / 1024 / 1024)
-            },
-            services: {
-                influxdb: await checkInfluxDB(),
-                redis: await checkRedis(),
-                grafana: await checkGrafana()
-            }
-        }, { status: 200 });
+        if (health.status === 'healthy') {
+            return ApiResponse.ok(health);
+        } else {
+            return ApiResponse.serviceUnavailable('Service unhealthy', health);
+        }
 
     } catch (error) {
-        console.error('Health check failed:', error);
+        logger.error('Health check failed', error instanceof Error ? error : undefined);
 
-        return NextResponse.json({
+        return ApiResponse.serviceUnavailable('Health check failed', {
             status: 'unhealthy',
-            timestamp: new Date().toISOString(),
             error: error instanceof Error ? error.message : 'Unknown error',
             uptime: Math.floor(process.uptime())
-        }, { status: 503 });
-    }
-}
-
-async function checkInfluxDB(): Promise<string> {
-    try {
-        // Create AbortController for timeout
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
-
-        const response = await fetch(`${process.env.INFLUXDB_URL}/health`, {
-            signal: controller.signal
         });
-
-        clearTimeout(timeoutId);
-        return response.ok ? 'healthy' : 'unhealthy';
-    } catch (error) {
-        if (error instanceof Error && error.name === 'AbortError') {
-            return 'timeout';
-        }
-        return 'unreachable';
-    }
-}
-
-async function checkRedis(): Promise<string> {
-    try {
-        // Simple Redis check - you might want to use ioredis here
-        return 'healthy'; // Placeholder
-    } catch {
-        return 'unreachable';
-    }
-}
-
-async function checkGrafana(): Promise<string> {
-    try {
-        // Create AbortController for timeout
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
-
-        const response = await fetch(`${process.env.GRAFANA_URL}/api/health`, {
-            signal: controller.signal
-        });
-
-        clearTimeout(timeoutId);
-        return response.ok ? 'healthy' : 'unhealthy';
-    } catch (error) {
-        if (error instanceof Error && error.name === 'AbortError') {
-            return 'timeout';
-        }
-        return 'unreachable';
     }
 }

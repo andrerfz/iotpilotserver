@@ -1,22 +1,49 @@
-import { DomainEventBase } from '@/lib/shared/domain/events/domain.event';
-import { DeviceId } from '../value-objects/device-id.vo';
-import { DeviceName } from '../value-objects/device-name.vo';
-import { IpAddress } from '../value-objects/ip-address.vo';
+import {TenantScopedEventBase} from '@/lib/shared/domain/events/tenant-scoped-event';
+import {CustomerId} from '@/lib/shared/domain/value-objects/customer-id.vo';
+import {DeviceId} from '../value-objects/device-id.vo';
+import {DeviceName} from '../value-objects/device-name.vo';
+import {IpAddress} from '../value-objects/ip-address.vo';
+import {DeviceStatus} from '../value-objects/device-status.vo';
 
-export class DeviceRegisteredEvent extends DomainEventBase {
+/**
+ * Event emitted when a new device is registered in the system
+ */
+export class DeviceRegisteredEvent extends TenantScopedEventBase {
   constructor(
     public readonly deviceId: DeviceId,
     public readonly deviceName: DeviceName,
-    public readonly ipAddress: IpAddress
+    public readonly ipAddress: IpAddress,
+    public readonly status: DeviceStatus,
+    tenantId: CustomerId
   ) {
-    super();
+    super(tenantId);
   }
 
-  static create(
-    deviceId: DeviceId,
-    deviceName: DeviceName,
-    ipAddress: IpAddress
-  ): DeviceRegisteredEvent {
-    return new DeviceRegisteredEvent(deviceId, deviceName, ipAddress);
+  /**
+   * Gets the ID of the device that was registered
+   */
+  getDeviceId(): DeviceId {
+    return this.deviceId;
+  }
+
+  /**
+   * Gets the name of the device that was registered
+   */
+  getDeviceName(): DeviceName {
+    return this.deviceName;
+  }
+
+  /**
+   * Gets the IP address of the device that was registered
+   */
+  getIpAddress(): IpAddress {
+    return this.ipAddress;
+  }
+
+  /**
+   * Gets the status of the device that was registered
+   */
+  getStatus(): DeviceStatus {
+    return this.status;
   }
 }

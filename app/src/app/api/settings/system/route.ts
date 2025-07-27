@@ -1,32 +1,40 @@
-import {NextResponse} from 'next/server';
-import {z} from 'zod';
-import {AuthenticatedRequest, withCustomerContext} from '@/lib/api-middleware';
+import {validator} from '@/lib/shared/infrastructure/validation/validation-helper';
+import {AuthenticatedRequest, withCustomerContext} from '@/lib/shared/infrastructure/middleware/api-middleware';
 import {tenantPrisma} from '@/lib/tenant-middleware';
 import {getUserPreferences} from '@/lib/user-preferences';
+import {ApiResponse} from '@/lib/shared/infrastructure/http/api-response.util';
+import {z} from 'zod'; // Keep for regex and extend
+
+// Dynamic route: reads auth from cookies
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
 
 // Validation schema for system settings
-const systemSettingsSchema = z.object({
+// Note: Using Zod for extend() and regex - can be migrated later
+const v = validator();
+const regexStringSchema = z.string().regex(/^\d+$/);
+const systemSettingsSchemaZod = z.object({
     theme: z.enum(['light', 'dark', 'system']),
     dashboardLayout: z.enum(['default', 'compact', 'expanded']),
-    itemsPerPage: z.string().regex(/^\d+$/) // numeric string
+    itemsPerPage: regexStringSchema // numeric string
 });
+const systemSettingsSchema = (v as any).fromZodSchema(systemSettingsSchemaZod);
 
 // Additional admin-only settings schema
-const adminSystemSettingsSchema = systemSettingsSchema.extend({
+const adminSystemSettingsSchemaZod = systemSettingsSchemaZod.extend({
     enableAdvancedMetrics: z.enum(['true', 'false']),
     enableBetaFeatures: z.enum(['true', 'false']),
     logLevel: z.enum(['debug', 'info', 'warn', 'error'])
 });
+const adminSystemSettingsSchema = (v as any).fromZodSchema(adminSystemSettingsSchemaZod);
 
 // GET /api/settings/system - Get system settings
 export const GET = withCustomerContext(async (request: AuthenticatedRequest) => {
     try {
         const user = request.user;
         if (!user) {
-            return NextResponse.json(
-                {error: 'Authentication required'},
-                {status: 401}
-            );
+            return ApiResponse.unauthorized('Authentication required');
         }
 
         // Get system preferences with defaults
@@ -43,7 +51,7 @@ export const GET = withCustomerContext(async (request: AuthenticatedRequest) => 
             });
 
             // Add admin-only settings
-            const adminSettings = systemConfig.reduce((acc, config) => {
+            const adminSettings = systemConfig.reduce((acc: Record<string, string>, config: { key: string; value: string }) => {
                 acc[config.key] = config.value;
                 return acc;
             }, {} as Record<string, string>);
@@ -60,20 +68,17 @@ export const GET = withCustomerContext(async (request: AuthenticatedRequest) => 
             }
 
             // Merge with user preferences
-            return NextResponse.json({
+            return ApiResponse.ok({
                 ...preferences,
                 ...adminSettings,
                 isAdmin: 'true'
             });
         }
 
-        return NextResponse.json(preferences);
+        return ApiResponse.ok(preferences);
     } catch (error) {
         console.error('Failed to fetch system settings:', error);
-        return NextResponse.json(
-            {error: 'Failed to fetch system settings'},
-            {status: 500}
-        );
+        return ApiResponse.internalError('Failed to fetch system settings');
     }
 });
 
@@ -82,14 +87,11 @@ export const PUT = withCustomerContext(async (request: AuthenticatedRequest) => 
     try {
         const user = request.user;
         if (!user) {
-            return NextResponse.json(
-                {error: 'Authentication required'},
-                {status: 401}
-            );
+            return ApiResponse.unauthorized('Authentication required');
         }
 
         // Parse request body
-        const body = await request.json();
+        const body = await (request as any).json();
 
         // Check if user is admin
         const isAdmin = user.role === 'ADMIN' || user.role === 'SUPERADMIN';
@@ -105,17 +107,14 @@ export const PUT = withCustomerContext(async (request: AuthenticatedRequest) => 
         // Additional validation for itemsPerPage
         const itemsPerPage = parseInt(validatedData.itemsPerPage);
         if (isNaN(itemsPerPage) || itemsPerPage < 5 || itemsPerPage > 100) {
-            return NextResponse.json(
-                {error: 'Items per page must be between 5 and 100'},
-                {status: 400}
-            );
+            return ApiResponse.badRequest('Items per page must be between 5 and 100');
         }
 
         // Separate user preferences from system config settings
         const userPrefs: Record<string, string> = {};
         const systemConfigSettings: Record<string, string> = {};
 
-        Object.entries(validatedData).forEach(([key, value]) => {
+        Object.entries(validatedData).forEach(([key, value]: [string, any]) => {
             if (isAdmin && ['enableAdvancedMetrics', 'enableBetaFeatures', 'logLevel'].includes(key)) {
                 systemConfigSettings[key] = String(value);
             } else {
@@ -124,7 +123,7 @@ export const PUT = withCustomerContext(async (request: AuthenticatedRequest) => 
         });
 
         // Update user preferences
-        const updatePromises = Object.entries(userPrefs).map(([key, value]) =>
+        const updatePromises = Object.entries(userPrefs).map(([key, value]: [string, string]) =>
             tenantPrisma.client.userPreference.upsert({
                 where: {
                     userId_category_key: {
@@ -147,7 +146,7 @@ export const PUT = withCustomerContext(async (request: AuthenticatedRequest) => 
 
         // If admin, update system config settings
         if (isAdmin && Object.keys(systemConfigSettings).length > 0) {
-            const systemConfigPromises = Object.entries(systemConfigSettings).map(([key, value]) =>
+            const systemConfigPromises = Object.entries(systemConfigSettings).map(([key, value]: [string, string]) =>
                 tenantPrisma.client.systemConfig.upsert({
                     where: {key},
                     update: {
@@ -167,28 +166,19 @@ export const PUT = withCustomerContext(async (request: AuthenticatedRequest) => 
             await Promise.all(systemConfigPromises);
         }
 
-        return NextResponse.json({
+        return ApiResponse.ok({
             message: 'System settings updated successfully',
             settings: validatedData
         });
     } catch (error) {
         if (error instanceof z.ZodError) {
-            return NextResponse.json(
-                {
-                    error: 'Invalid input',
-                    details: error.errors.map(err => ({
-                        path: err.path.join('.'),
-                        message: err.message
-                    }))
-                },
-                {status: 400}
-            );
+            return ApiResponse.badRequest('Invalid input', (error as z.ZodError).errors.map((err: z.ZodIssue) => ({
+                path: err.path.join('.'),
+                message: err.message
+            })));
         }
 
         console.error('Failed to update system settings:', error);
-        return NextResponse.json(
-            {error: 'Failed to update system settings'},
-            {status: 500}
-        );
+        return ApiResponse.internalError('Failed to update system settings');
     }
 });

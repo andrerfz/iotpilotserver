@@ -1,6 +1,9 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { DeviceCommand, CommandStatus } from '../device-command.entity';
-import { DeviceId } from '@/lib/device/value-objects/device-id.vo';
+/**
+ * @vitest-environment node
+ */
+import {beforeEach, describe, expect, it} from 'vitest';
+import {CommandStatus, DeviceCommand} from '../device-command.entity';
+import {DeviceId} from '@/lib/device/domain/value-objects/device-id.vo';
 
 describe('DeviceCommand Entity', () => {
   let commandId: string;

@@ -1,19 +1,39 @@
-import { DomainEventBase } from '@/lib/shared/domain/events/domain.event';
-import { DeviceId } from '../value-objects/device-id.vo';
-import { DeviceName } from '../value-objects/device-name.vo';
+import {TenantScopedEventBase} from '@/lib/shared/domain/events/tenant-scoped-event';
+import {CustomerId} from '@/lib/shared/domain/value-objects/customer-id.vo';
+import {DeviceId} from '../value-objects/device-id.vo';
+import {DeviceName} from '../value-objects/device-name.vo';
 
-export class DeviceRemovedEvent extends DomainEventBase {
+/**
+ * Event emitted when a device is removed from the system
+ */
+export class DeviceRemovedEvent extends TenantScopedEventBase {
   constructor(
     public readonly deviceId: DeviceId,
-    public readonly deviceName: DeviceName
+    public readonly deviceName: DeviceName,
+    public readonly removedBy: string,
+    tenantId: CustomerId
   ) {
-    super();
+    super(tenantId);
   }
 
-  static create(
-    deviceId: DeviceId,
-    deviceName: DeviceName
-  ): DeviceRemovedEvent {
-    return new DeviceRemovedEvent(deviceId, deviceName);
+  /**
+   * Gets the ID of the device that was removed
+   */
+  getDeviceId(): DeviceId {
+    return this.deviceId;
+  }
+
+  /**
+   * Gets the name of the device that was removed
+   */
+  getDeviceName(): DeviceName {
+    return this.deviceName;
+  }
+
+  /**
+   * Gets the identifier of the user or process that removed the device
+   */
+  getRemovedBy(): string {
+    return this.removedBy;
   }
 }

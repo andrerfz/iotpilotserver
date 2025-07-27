@@ -1,113 +1,395 @@
-import { PrismaClient } from '@prisma/client';
-import { Device } from '@/lib/device/domain/entities/device.entity';
-import { DeviceId } from '@/lib/device/domain/value-objects/device-id.vo';
-import { DeviceRepository } from '@/lib/device/domain/interfaces/device-repository.interface';
-import { DeviceMapper, DevicePersistence } from '@/lib/device/infrastructure/mappers/device.mapper';
+import {TenantContext} from '../../../shared/domain/tenant-context';
+import {PrismaService} from '../../../shared/infrastructure/database/prisma.service';
+import {DeviceEntity} from '../../domain/entities/device.entity';
+import {DeviceRepository, DeviceSearchOptions, DeviceSearchResult} from '../../domain/interfaces/device.repository';
+import {DeviceId} from '../../domain/value-objects/device-id.vo';
+import {DeviceMapper} from '../mappers/device.mapper';
+import {MetricsRepository} from '../../domain/interfaces/metrics-repository.interface';
 
 export class PrismaDeviceRepository implements DeviceRepository {
-    constructor(private prisma: PrismaClient) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly metricsRepository?: MetricsRepository
+  ) {}
 
-    async findById(id: DeviceId): Promise<Device | null> {
-        const deviceData = await this.prisma.device.findUnique({
-            where: { id: id.value }
-        });
+  async findById(id: DeviceId, tenantContext?: TenantContext): Promise<DeviceEntity | null> {
+    const where: any = {
+      id: id.value,
+      deletedAt: null
+    };
 
-        return deviceData ? DeviceMapper.toDomain(deviceData as unknown as DevicePersistence) : null;
+    // Apply tenant filtering
+    if (tenantContext && !tenantContext.isSuperAdmin()) {
+      where.customerId = tenantContext.getCustomerId()?.getValue();
     }
 
-    async findByName(name: string): Promise<Device | null> {
-        const deviceData = await this.prisma.device.findFirst({
-            where: { hostname: name }
-        });
+    const device = await this.prisma.getClient().device.findFirst({
+      where,
+      include: {
+        metrics: true
+      }
+    });
 
-        return deviceData ? DeviceMapper.toDomain(deviceData as unknown as DevicePersistence) : null;
+    if (!device) {
+      return null;
     }
 
-    async findByIpAddress(ipAddress: string): Promise<Device | null> {
-        const deviceData = await this.prisma.device.findFirst({
-            where: { ipAddress }
-        });
+    return DeviceMapper.toDomain(device, tenantContext);
+  }
 
-        return deviceData ? DeviceMapper.toDomain(deviceData as unknown as DevicePersistence) : null;
+  async findByDeviceId(deviceId: string, tenantContext?: TenantContext): Promise<DeviceEntity | null> {
+    const where: any = {
+      id: deviceId,
+      deletedAt: null
+    };
+
+    // Apply tenant filtering
+    if (tenantContext && !tenantContext.isSuperAdmin()) {
+      where.customerId = tenantContext.getCustomerId()?.getValue();
     }
 
-    async findAll(): Promise<Device[]> {
-        const devicesData = await this.prisma.device.findMany();
+    const device = await this.prisma.getClient().device.findFirst({
+      where,
+      include: {
+        metrics: true
+      }
+    });
 
-        return devicesData.map(device => 
-            DeviceMapper.toDomain(device as unknown as DevicePersistence)
-        );
+    if (!device) {
+      return null;
     }
 
-    async findActive(): Promise<Device[]> {
-        const devicesData = await this.prisma.device.findMany({
-            where: { status: 'ONLINE' }
-        });
+    return DeviceMapper.toDomain(device, tenantContext);
+  }
 
-        return devicesData.map(device => 
-            DeviceMapper.toDomain(device as unknown as DevicePersistence)
-        );
+  async findByName(name: string, tenantContext?: TenantContext): Promise<DeviceEntity | null> {
+    const where: any = {
+      name: name,
+      deletedAt: null
+    };
+
+    // Apply tenant filtering
+    if (tenantContext && !tenantContext.isSuperAdmin()) {
+      where.customerId = tenantContext.getCustomerId()?.getValue();
     }
 
-    async findInactive(): Promise<Device[]> {
-        const devicesData = await this.prisma.device.findMany({
-            where: { status: 'OFFLINE' }
-        });
+    const device = await this.prisma.getClient().device.findFirst({
+      where,
+      include: {
+        metrics: true
+      }
+    });
 
-        return devicesData.map(device => 
-            DeviceMapper.toDomain(device as unknown as DevicePersistence)
-        );
+    if (!device) {
+      return null;
     }
 
-    async save(device: Device): Promise<void> {
-        const deviceData = DeviceMapper.toPersistence(device);
+    return DeviceMapper.toDomain(device, tenantContext);
+  }
 
-        // For update operations, we only need to update the fields that are in DevicePersistence
-        const updateData = {
-            hostname: deviceData.name, // Map name to hostname
-            ipAddress: deviceData.ipAddress,
-            status: deviceData.status as any, // Cast to any to bypass type checking
-            updatedAt: deviceData.updatedAt
-        };
+  async save(device: DeviceEntity, tenantContext?: TenantContext): Promise<void> {
+    const persistenceData = DeviceMapper.toPersistence(device) as any;
+    
+    if (tenantContext && !tenantContext.isSuperAdmin()) {
+      // Validate tenant access
+      const customerId = tenantContext.getCustomerId();
+      if (customerId) {
+        device.validateBelongsToTenant(customerId);
+        persistenceData.customerId = customerId.getValue();
+      }
+    }
 
-        // Check if the device already exists
-        const existingDevice = await this.prisma.device.findUnique({
-            where: { id: deviceData.id }
-        });
-
-        if (existingDevice) {
-            // Update existing device
-            await this.prisma.device.update({
-                where: { id: deviceData.id },
-                data: updateData
-            });
-
-            return;
+    // Store SSH credentials in capabilities JSON field if present
+    const updateData: any = { ...persistenceData };
+    if (device.sshCredentials) {
+      const existingCapabilities = (updateData.capabilities as any) || {};
+      updateData.capabilities = {
+        ...existingCapabilities,
+        ssh: {
+          username: device.sshCredentials.username,
+          port: device.sshCredentials.port || 22,
+          authMethod: device.sshCredentials.privateKey ? 'key' : 'password',
+          // Note: privateKey and passphrase are sensitive and should be encrypted
+          // For now, we'll store them in capabilities but they should be encrypted
         }
-
-        // To create operations, we need to provide all required fields
-        // This is a simplified version and might need to be adjusted based on your actual requirements
-        await this.prisma.device.create({
-            data: {
-                id: deviceData.id,
-                deviceId: `device-${deviceData.id}`, // Generate a deviceId
-                hostname: deviceData.name,
-                deviceType: 'GENERIC', // Default value
-                architecture: 'unknown', // Default value
-                ipAddress: deviceData.ipAddress,
-                status: deviceData.status as any,
-                customer: {
-                    connect: {
-                        id: 'default-customer-id' // You need to provide a valid customer ID
-                    }
-                }
-            }
-        });
+      };
     }
 
-    async delete(id: DeviceId): Promise<void> {
-        await this.prisma.device.delete({
-            where: { id: id.value }
-        });
+    // Get device ID from persistence data (it uses 'id' field)
+    const deviceId = updateData.id || device.getId().getValue();
+    
+    // Clean up the data for Prisma - remove undefined values
+    const cleanedData: any = {};
+    for (const [key, value] of Object.entries(updateData)) {
+      if (value !== undefined) {
+        cleanedData[key] = value;
+      }
     }
+    
+    await this.prisma.getClient().device.upsert({
+      where: { id: deviceId },
+      update: {
+        ...cleanedData,
+        updatedAt: new Date()
+      },
+      create: cleanedData
+    });
+
+    // Save metrics to DeviceMetric table for Grafana time-series data
+    if (device.metrics && this.metricsRepository && tenantContext) {
+      const timestamp = device.metrics.timestamp || new Date();
+      const metricsData = [
+        {
+          deviceId: deviceId,
+          metric: 'cpu_usage',
+          value: device.metrics.cpuUsage,
+          unit: '%',
+          timestamp: timestamp
+        },
+        {
+          deviceId: deviceId,
+          metric: 'memory_usage',
+          value: device.metrics.memoryUsage,
+          unit: '%',
+          timestamp: timestamp
+        },
+        {
+          deviceId: deviceId,
+          metric: 'disk_usage',
+          value: device.metrics.diskUsage,
+          unit: '%',
+          timestamp: timestamp
+        },
+        {
+          deviceId: deviceId,
+          metric: 'uptime',
+          value: device.metrics.uptime,
+          unit: 'seconds',
+          timestamp: timestamp
+        }
+      ];
+
+      try {
+        await this.metricsRepository.saveMany(metricsData, tenantContext);
+      } catch (error) {
+        // Log error but don't fail device save operation
+        console.error(`Failed to save metrics for device ${deviceId}:`, error);
+      }
+    }
+  }
+
+  async saveAll(devices: DeviceEntity[], tenantContext?: TenantContext): Promise<void> {
+    const operations = devices.map(async (device) => {
+      await this.save(device, tenantContext);
+    });
+
+    await Promise.all(operations);
+  }
+
+  async saveMany(devices: DeviceEntity[], tenantContext?: TenantContext): Promise<void> {
+    // Alias for saveAll to maintain interface compatibility
+    return this.saveAll(devices, tenantContext);
+  }
+
+  async findAll(tenantContext?: TenantContext): Promise<DeviceEntity[]> {
+    const where: any = {
+      deletedAt: null
+    };
+
+    if (tenantContext && !tenantContext.isSuperAdmin()) {
+      where.customerId = tenantContext.getCustomerId()?.getValue();
+    }
+
+    const devices = await this.prisma.getClient().device.findMany({
+      where,
+      include: {
+        metrics: true
+      },
+      orderBy: { registeredAt: 'desc' }
+    });
+
+    return devices.map((device: any) => DeviceMapper.toDomain(device, tenantContext)).filter((d: DeviceEntity | null): d is DeviceEntity => d !== null);
+  }
+
+  async findAllWithPagination(
+    options?: DeviceSearchOptions,
+    tenantContext?: TenantContext
+  ): Promise<DeviceEntity[]> {
+    const page = options?.page || 1;
+    const limit = options?.limit || 50;
+    const skip = (page - 1) * limit;
+
+    const where: any = {
+      deletedAt: null
+    };
+
+    if (tenantContext && !tenantContext.isSuperAdmin()) {
+      where.customerId = tenantContext.getCustomerId()?.getValue();
+    }
+
+    // Apply search filters
+    if (options?.searchTerm) {
+      where.OR = [
+        { name: { contains: options.searchTerm, mode: 'insensitive' } },
+        { hostname: { contains: options.searchTerm, mode: 'insensitive' } }
+      ];
+    }
+
+    if (options?.status) {
+      where.status = options.status;
+    }
+
+    if (options?.ipAddress) {
+      where.ipAddress = { contains: options.ipAddress };
+    }
+
+    const devices = await this.prisma.getClient().device.findMany({
+      where,
+      skip,
+      take: limit,
+      include: {
+        metrics: true
+      },
+      orderBy: options?.sortBy ? { [options.sortBy]: options.sortOrder || 'desc' } : { registeredAt: 'desc' }
+    });
+
+    return devices.map((device: any) => DeviceMapper.toDomain(device, tenantContext)).filter((d: DeviceEntity | null): d is DeviceEntity => d !== null);
+  }
+
+  async search(
+    criteria: any,
+    options?: DeviceSearchOptions,
+    tenantContext?: TenantContext
+  ): Promise<DeviceSearchResult> {
+    const page = options?.page || 1;
+    const limit = options?.limit || 50;
+    const skip = (page - 1) * limit;
+
+    // Ensure tenant filtering
+    if (tenantContext && !tenantContext.isSuperAdmin()) {
+      criteria.customerId = tenantContext.getCustomerId()?.value;
+    }
+
+    // Default criteria
+    const where: any = {
+      ...criteria,
+      deletedAt: null
+    };
+
+    // Get total count
+    const total = await this.prisma.getClient().device.count({ where });
+
+    // Get paginated results
+    const devices = await this.prisma.getClient().device.findMany({
+      where,
+      skip,
+      take: limit,
+      include: {
+        metrics: true
+      },
+      orderBy: options?.sortBy ? { [options.sortBy]: options.sortOrder || 'desc' } : { registeredAt: 'desc' }
+    });
+
+    const deviceEntities = devices.map((device: any) => DeviceMapper.toDomain(device, tenantContext)).filter((d: DeviceEntity | null): d is DeviceEntity => d !== null);
+
+    return {
+      devices: deviceEntities,
+      total,
+      limit,
+      offset: skip
+    };
+  }
+
+  async findByIpAddress(ipAddress: string, tenantContext?: TenantContext): Promise<DeviceEntity | null> {
+    const where: any = {
+      ipAddress: { contains: ipAddress },
+      deletedAt: null
+    };
+
+    if (tenantContext && !tenantContext.isSuperAdmin()) {
+      where.customerId = tenantContext.getCustomerId()?.getValue();
+    }
+
+    const device = await this.prisma.getClient().device.findFirst({
+      where,
+      include: {
+        metrics: true
+      }
+    });
+
+    return DeviceMapper.toDomain(device, tenantContext);
+  }
+
+  async findOnlineDevices(tenantContext?: TenantContext): Promise<DeviceEntity[]> {
+    const where: any = {
+      deletedAt: null,
+      lastSeen: { gte: new Date(Date.now() - 120000) }, // 2 minutes ago
+      status: 'ONLINE'
+    };
+
+    if (tenantContext && !tenantContext.isSuperAdmin()) {
+      where.customerId = tenantContext.getCustomerId()?.getValue();
+    }
+
+    const devices = await this.prisma.getClient().device.findMany({
+      where,
+      include: {
+        metrics: true
+      },
+      orderBy: { lastSeen: 'desc' }
+    });
+
+    return devices.map((device: any) => DeviceMapper.toDomain(device, tenantContext)).filter((d: DeviceEntity | null): d is DeviceEntity => d !== null);
+  }
+
+  async count(tenantContext?: TenantContext): Promise<number> {
+    const where: any = { deletedAt: null };
+
+    if (tenantContext && !tenantContext.isSuperAdmin()) {
+      where.customerId = tenantContext.getCustomerId()?.getValue();
+    }
+
+    return this.prisma.getClient().device.count({ where });
+  }
+
+  async countOnlineDevices(tenantContext?: TenantContext): Promise<number> {
+    const where: any = {
+      deletedAt: null,
+      lastSeen: { gte: new Date(Date.now() - 120000) }, // 2 minutes ago
+      status: 'ONLINE'
+    };
+
+    if (tenantContext && !tenantContext.isSuperAdmin()) {
+      where.customerId = tenantContext.getCustomerId()?.getValue();
+    }
+
+    return this.prisma.getClient().device.count({ where });
+  }
+
+  async softDelete(deviceId: DeviceId, tenantContext?: TenantContext): Promise<void> {
+    const where: any = { id: deviceId.value };
+
+    if (tenantContext && !tenantContext.isSuperAdmin()) {
+      where.customerId = tenantContext.getCustomerId()?.getValue();
+    }
+
+    await this.prisma.getClient().device.updateMany({
+      where,
+      data: {
+        deletedAt: new Date(),
+        updatedAt: new Date()
+      }
+    });
+  }
+
+  // SSH credentials are now stored in the capabilities JSON field
+  // This method is kept for backward compatibility but is no longer used
+  // private async saveSshCredentials(deviceId: string, credentials: SSHCredentials): Promise<void> {
+  //   // SSH credentials are stored in Device.capabilities JSON field
+  //   // This method is deprecated
+  // }
+
+  // DeviceEntity.metrics is of type DeviceMetrics (interface), not DeviceMetrics (entity)
+  // Metrics should be persisted separately via MetricsRepository as time-series data
+  // The DeviceEntity.metrics property is for in-memory use only and is not persisted here
 }

@@ -1,29 +1,91 @@
-import { DomainEventBase } from '@/lib/shared/domain/events/domain.event';
-import { DeviceId } from '../value-objects/device-id.vo';
-import { DeviceName } from '../value-objects/device-name.vo';
-import { DeviceMetrics } from '../entities/device-metrics.entity';
+import {TenantScopedEventBase} from '@/lib/shared/domain/events/tenant-scoped-event';
+import {CustomerId} from '@/lib/shared/domain/value-objects/customer-id.vo';
+import {DeviceId} from '../value-objects/device-id.vo';
+import {DeviceName} from '../value-objects/device-name.vo';
+import {DeviceMetrics} from '../entities/device-metrics.entity';
 
-export class MetricsCollectedEvent extends DomainEventBase {
+/**
+ * Event emitted when metrics are collected from a device
+ */
+export class MetricsCollectedEvent extends TenantScopedEventBase {
   constructor(
     public readonly deviceId: DeviceId,
     public readonly deviceName: DeviceName,
     public readonly metrics: DeviceMetrics,
-    public readonly hasAlerts: boolean
+    public readonly collectionTimestamp: Date,
+    public readonly hasAlerts: boolean,
+    tenantId: CustomerId
   ) {
-    super();
+    super(tenantId);
   }
 
-  static create(
-    deviceId: DeviceId,
-    deviceName: DeviceName,
-    metrics: DeviceMetrics,
-    hasAlerts: boolean = false
-  ): MetricsCollectedEvent {
-    return new MetricsCollectedEvent(
-      deviceId,
-      deviceName,
-      metrics,
-      hasAlerts
-    );
+  /**
+   * Gets the ID of the device that the metrics were collected from
+   */
+  getDeviceId(): DeviceId {
+    return this.deviceId;
+  }
+
+  /**
+   * Gets the name of the device that the metrics were collected from
+   */
+  getDeviceName(): DeviceName {
+    return this.deviceName;
+  }
+
+  /**
+   * Gets the metrics that were collected
+   */
+  getMetrics(): DeviceMetrics {
+    return this.metrics;
+  }
+
+  /**
+   * Gets the timestamp when the metrics were collected
+   */
+  getCollectionTimestamp(): Date {
+    return this.collectionTimestamp;
+  }
+
+  /**
+   * Indicates whether any alerts were triggered by the collected metrics
+   */
+  hasTriggeredAlerts(): boolean {
+    return this.hasAlerts;
+  }
+
+  /**
+   * Gets the CPU usage from the collected metrics
+   */
+  getCpuUsage(): number {
+    return this.metrics.cpuUsage;
+  }
+
+  /**
+   * Gets the memory usage from the collected metrics
+   */
+  getMemoryUsage(): number {
+    return this.metrics.memoryUsage;
+  }
+
+  /**
+   * Gets the disk usage from the collected metrics
+   */
+  getDiskUsage(): number {
+    return this.metrics.diskUsage;
+  }
+
+  /**
+   * Gets the temperature from the collected metrics
+   */
+  getTemperature(): number | undefined {
+    return this.metrics.temperature;
+  }
+
+  /**
+   * Gets the network traffic from the collected metrics (sum of Rx and Tx)
+   */
+  getNetworkTraffic(): number {
+    return (this.metrics.networkRx || 0) + (this.metrics.networkTx || 0);
   }
 }

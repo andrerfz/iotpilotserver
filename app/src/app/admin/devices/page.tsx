@@ -2,7 +2,7 @@
 
 import {useEffect, useState} from 'react';
 import {useRouter} from 'next/navigation';
-import {useAuth} from '@/contexts/auth-context'; // Add this import
+import {useAuth} from '@/contexts/auth-context';
 import {AlertTriangle, CheckCircle, HardDrive, Power, RefreshCw, Search, Wrench, XCircle} from 'lucide-react';
 import {Button} from '@heroui/button';
 import {Card} from '@heroui/card';
@@ -26,7 +26,7 @@ interface Device {
 
 export default function DeviceManagement() {
     const router = useRouter();
-    const {apiCall} = useAuth(); // Add this line
+    const {apiCall} = useAuth();
     const [devices, setDevices] = useState<Device[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);

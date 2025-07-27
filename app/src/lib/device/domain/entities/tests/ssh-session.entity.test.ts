@@ -1,8 +1,11 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { SSHSession } from '../ssh-session.entity';
-import { DeviceId } from '../../value-objects/device-id.vo';
-import { IpAddress } from '../../value-objects/ip-address.vo';
-import { SshCredentials } from '../../value-objects/ssh-credentials.vo';
+/**
+ * @vitest-environment node
+ */
+import {beforeEach, describe, expect, it} from 'vitest';
+import {SSHSession} from '../ssh-session.entity';
+import {DeviceId} from '../../value-objects/device-id.vo';
+import {IpAddress} from '../../value-objects/ip-address.vo';
+import {SshCredentials} from '../../value-objects/ssh-credentials.vo';
 
 describe('SSHSession Entity', () => {
   let sessionId: string;

@@ -1,8 +1,8 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { SSHSession } from '@/lib/device/domain/entities/ssh-session.entity';
-import { DeviceId } from '@/lib/device/domain/value-objects/device-id.vo';
-import { IpAddress } from '@/lib/device/domain/value-objects/ip-address.vo';
-import { SshCredentials } from '@/lib/device/domain/value-objects/ssh-credentials.vo';
+import {beforeEach, describe, expect, it, vi} from 'vitest';
+import {SSHSession} from '@/lib/device/domain/entities/ssh-session.entity';
+import {DeviceId} from '@/lib/device/domain/value-objects/device-id.vo';
+import {IpAddress} from '@/lib/device/domain/value-objects/ip-address.vo';
+import {SshCredentials} from '@/lib/device/domain/value-objects/ssh-credentials.vo';
 
 // Mock the value objects
 vi.mock('@/lib/device/domain/value-objects/device-id.vo');
@@ -72,7 +72,8 @@ describe('SSHSession Entity', () => {
   describe('closeSession', () => {
     it('should mark the session as inactive and set the end time', () => {
       const now = new Date();
-      vi.spyOn(global, 'Date').mockImplementationOnce(() => now as unknown as string);
+      // Properly mock Date constructor while preserving Date.now
+      vi.spyOn(global, 'Date').mockImplementationOnce(() => now);
 
       sshSession.closeSession();
 

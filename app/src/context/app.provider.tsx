@@ -1,7 +1,5 @@
-import { ReactNode } from 'react';
-import { CommandBusProvider } from './command-bus.context';
-import { QueryBusProvider } from './query-bus.context';
-import { EventBusProvider } from './event-bus.context';
+import {ReactNode} from 'react';
+import {DDDProvider} from './ddd.context';
 
 interface AppProviderProps {
     children: ReactNode;
@@ -9,12 +7,8 @@ interface AppProviderProps {
 
 export function AppProvider({ children }: AppProviderProps) {
     return (
-        <EventBusProvider>
-            <CommandBusProvider>
-                <QueryBusProvider>
-                    {children}
-                </QueryBusProvider>
-            </CommandBusProvider>
-        </EventBusProvider>
+        <DDDProvider>
+            {children}
+        </DDDProvider>
     );
 }

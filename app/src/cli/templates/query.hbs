@@ -1,0 +1,72 @@
+import { Query } from '@/lib/shared/application/interfaces/query.interface';
+
+/**
+ * {{name}} query
+ * Represents a query to retrieve {{name}} data
+ *
+ * @author {{data.author}}
+ * @license {{data.license}}
+ */
+export class {{pascalName}}Query implements Query {
+  private constructor(
+    public readonly id?: string,
+    public readonly name?: string,
+    public readonly limit?: number,
+    public readonly offset?: number
+  ) {}
+
+  /**
+   * Create a new {{name}} query
+   */
+  static create(params: {
+    id?: string;
+    name?: string;
+    limit?: number;
+    offset?: number;
+  } = {}): {{pascalName}}Query {
+    const { id, name, limit = 10, offset = 0 } = params;
+
+    if (limit < 0 || limit > 1000) {
+      throw new Error('Limit must be between 0 and 1000');
+    }
+
+    if (offset < 0) {
+      throw new Error('Offset must be non-negative');
+    }
+
+    return new {{pascalName}}Query(
+      id?.trim(),
+      name?.trim(),
+      limit,
+      offset
+    );
+  }
+
+  /**
+   * Create query to find by ID
+   */
+  static findById(id: string): {{pascalName}}Query {
+    return new {{pascalName}}Query(id, undefined, 1, 0);
+  }
+
+  /**
+   * Create query to find by name
+   */
+  static findByName(name: string): {{pascalName}}Query {
+    return new {{pascalName}}Query(undefined, name, 10, 0);
+  }
+
+  /**
+   * Create paginated query
+   */
+  static paginated(limit: number = 10, offset: number = 0): {{pascalName}}Query {
+    return new {{pascalName}}Query(undefined, undefined, limit, offset);
+  }
+
+  /**
+   * Get query name for logging/debugging
+   */
+  getQueryName(): string {
+    return '{{pascalName}}Query';
+  }
+}

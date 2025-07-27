@@ -1,0 +1,192 @@
+@startuml User Domain Components
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam package {
+    BackgroundColor #E3F2FD
+    BorderColor #1565C0
+    BorderThickness 2
+}
+
+title User Domain Component Architecture
+
+package "User Bounded Context" as UserContext {
+
+    package "Application Layer" as App {
+        package "Commands" as Commands {
+            class RegisterUserCommand
+            class AuthenticateUserCommand
+            class ChangePasswordCommand
+            class UpdateUserProfileCommand
+            class DeactivateUserCommand
+        }
+
+        package "Queries" as Queries {
+            class GetUserQuery
+            class ListUsersQuery
+            class GetUserProfileQuery
+            class ValidateSessionQuery
+        }
+
+        class CommandBus
+        class QueryBus
+        class EventBus
+    }
+
+    package "Domain Layer" as Domain {
+
+        package "Entities" as Entities {
+            class User <<Aggregate Root>>
+            class Session
+        }
+
+        package "Value Objects" as ValueObjects {
+            class UserId
+            class Email
+            class Username
+            class Password
+            class UserRole
+            class UserStatus
+            class SessionToken
+        }
+
+        package "Domain Services" as DomainServices {
+            class AuthenticationService
+            class AuthorizationService
+            class PasswordPolicyService
+        }
+
+        package "Domain Events" as DomainEvents {
+            class UserRegisteredEvent
+            class UserAuthenticatedEvent
+            class PasswordChangedEvent
+            class UserDeactivatedEvent
+        }
+
+        package "Interfaces" as Interfaces {
+            interface UserRepository
+            interface SessionRepository
+        }
+
+        package "Policies" as Policies {
+            class PasswordComplexityPolicy
+            class UserUniquenessPolicy
+            class SessionSecurityPolicy
+        }
+    }
+
+    package "Infrastructure Layer" as Infra {
+
+        package "Repositories" as Repositories {
+            class PrismaUserRepository
+            class RedisSessionRepository
+        }
+
+        package "Mappers" as Mappers {
+            class UserMapper
+            class SessionMapper
+        }
+
+        package "Services" as InfraServices {
+            class BcryptPasswordHasher
+            class JwtTokenService
+            class RedisSessionStore
+        }
+
+        package "DTOs" as DTOs {
+            class UserDTO
+            class UserProfileDTO
+            class AuthenticationDTO
+            class SessionDTO
+        }
+    }
+}
+
+' External Dependencies
+package "Shared Kernel" as Shared {
+    class TenantContext
+    class DomainEvent
+    class ValueObject
+    class Entity
+    interface Repository
+}
+
+package "Infrastructure Services" as External {
+    database PostgreSQL
+    database Redis
+    interface EmailService
+    interface AuditLogger
+}
+
+' Internal Relationships
+User ..> UserId : has
+User ..> Email : has
+User ..> Username : has
+User ..> Password : has
+User ..> UserRole : has
+User ..> UserStatus : has
+
+Session ..> UserId : belongs to
+Session ..> SessionToken : has
+
+AuthenticateUserCommand ..> AuthenticationService : executes
+AuthenticationService ..> UserRepository : queries
+AuthenticationService ..> PasswordPolicyService : validates
+AuthenticationService ..> SessionRepository : creates session
+
+PrismaUserRepository ..> PostgreSQL : persists to
+RedisSessionRepository ..> Redis : caches sessions
+
+BcryptPasswordHasher ..> Password : hashes
+JwtTokenService ..> User : generates tokens
+RedisSessionStore ..> Session : manages storage
+
+' External Relationships
+UserContext --> Shared : depends on
+Infra --> External : integrates with
+
+' Authentication Flow
+RegisterUserCommand --> CommandBus : submitted
+CommandBus --> RegisterUserHandler : routed to
+RegisterUserHandler --> User : creates
+User --> DomainEvents : publishes UserRegisteredEvent
+DomainEvents --> EventBus : sent to
+
+AuthenticateUserCommand --> CommandBus : submitted
+CommandBus --> AuthenticateUserHandler : routed to
+AuthenticateUserHandler --> AuthenticationService : delegates
+AuthenticationService --> PrismaUserRepository : find user
+PrismaUserRepository --> PostgreSQL : query user
+AuthenticationService --> BcryptPasswordHasher : verify password
+AuthenticationService --> JwtTokenService : generate tokens
+AuthenticationService --> RedisSessionRepository : create session
+
+' Authorization Flow
+note right of AuthorizationService
+    Checks permissions for:
+    - Device access
+    - Command execution
+    - Administrative actions
+    - Tenant boundaries
+end note
+
+AuthorizationService --> UserRole : validates
+AuthorizationService --> TenantContext : checks isolation
+AuthorizationService --> Session : verifies validity
+
+' Component Notes
+note right of User : Aggregate Root\nManages user lifecycle\nHandles authentication
+note right of AuthenticationService : Domain Service\nComplex auth logic\nToken management
+note right of Session : Entity\nManages user sessions\nSecurity tracking
+note right of PasswordPolicyService : Enforces password rules\nHistory validation
+
+' Security Notes
+note as SecurityNotes
+    **Security Components:**
+    - Password hashing (bcrypt)
+    - JWT token generation
+    - Session management
+    - Role-based access control
+    - Audit logging
+end note
+
+@enduml

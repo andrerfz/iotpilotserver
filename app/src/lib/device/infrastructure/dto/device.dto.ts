@@ -1,51 +1,98 @@
-export interface DeviceDTO {
+import {DeviceStatusData} from '../../domain/value-objects/device-status.vo';
+
+export interface DeviceDto {
+  id: string;
+  customerId: string;
+  name: string;
+  status: DeviceStatusData;
+  ipAddress: string | null;
+  hostname: string | null;
+  tailscaleIp: string | null;
+  isOnline: boolean;
+  isActive: boolean;
+  connectionQuality: 'good' | 'fair' | 'poor' | 'disconnected';
+  lastSeen: Date | null;
+  lastHeartbeat: number;
+  sshCredentials?: {
+    username: string;
+    port?: number;
+  } | null;
+  createdAt: Date;
+  updatedAt: Date;
+  isDeleted: boolean;
+}
+
+// Add missing DTOs for mapper
+export interface DeviceListItemDTO {
   id: string;
   name: string;
-  ipAddress: string;
-  status: string;
-  sshCredentials: {
-    username: string;
-    password?: string;
-    privateKey?: string;
+  status: DeviceStatusData;
+  ipAddress: string | null;
+  isOnline: boolean;
+  activeAlerts: number;
+}
+
+export interface DeviceDetailsDTO extends DeviceDto {
+  metrics?: {
+    cpuUsage: number;
+    memoryUsage: number;
+    diskUsage: number;
+    uptime: number;
   };
-  createdAt: string;
-  updatedAt: string;
+  activeAlerts: number;
+  capabilities?: string[];
+  firmwareVersion?: string;
+  osVersion?: string;
+  lastCommandExecuted?: string;
+  commandHistory?: string[];
 }
 
 export interface CreateDeviceDTO {
   name: string;
-  ipAddress: string;
-  sshCredentials: {
+  ipAddress?: string;
+  hostname?: string;
+  sshCredentials?: {
     username: string;
-    password?: string;
-    privateKey?: string;
+    port?: number;
+    privateKey: string;
+    passphrase?: string;
   };
 }
 
 export interface UpdateDeviceDTO {
   name?: string;
   ipAddress?: string;
-  status?: string;
+  tailscaleIp?: string;
+  hostname?: string;
   sshCredentials?: {
-    username: string;
-    password?: string;
+    username?: string;
+    port?: number;
     privateKey?: string;
+    passphrase?: string;
   };
 }
 
-export interface DeviceListItemDTO {
-  id: string;
-  name: string;
-  ipAddress: string;
-  status: string;
-  createdAt: string;
-  updatedAt: string;
+export interface DeviceDetailDto extends DeviceDto {
+  metrics: {
+    cpuUsage: number;
+    memoryUsage: number;
+    diskUsage: number;
+    uptime: number;
+  };
+  activeAlerts: number;
+  capabilities: string[];
+  firmwareVersion: string;
+  osVersion: string;
 }
 
-export interface DeviceFilterDTO {
-  status?: string;
-  name?: string;
-  ipAddress?: string;
-  createdAfter?: string;
-  createdBefore?: string;
+export interface DeviceSummaryDto {
+  id: string;
+  name: string;
+  status: DeviceStatusData;
+  ipAddress: string | null;
+  hostname: string | null;
+  isOnline: boolean;
+  connectionQuality: 'good' | 'fair' | 'poor' | 'disconnected';
+  activeAlerts: number;
+  lastSeen: Date | null;
 }

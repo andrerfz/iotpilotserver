@@ -1,12 +1,8 @@
-import { Injectable } from '@nestjs/common';
-import { Customer } from '../entities/customer.entity';
-import { CustomerId } from '@/lib/shared/domain/value-objects/customer-id.vo';
-import { CustomerStatus, CustomerStatusEnum } from '../value-objects/customer-status.vo';
-import { CustomerValidator } from './customer-validator.service';
-import { TenantContext } from '@/lib/shared/application/context/tenant-context.vo';
-import { TenantAccessDeniedException } from '@/lib/shared/domain/exceptions/tenant.exception';
+import {CustomerEntity} from '../entities/customer.entity';
+import {CustomerStatusType} from '../value-objects/customer-status.vo';
+import {CustomerValidator} from './customer-validator.service';
+import {TenantContext} from '@/lib/shared/domain/tenant-context';
 
-@Injectable()
 export class CustomerLifecycleManager {
   constructor(
     private readonly customerValidator: CustomerValidator
@@ -14,41 +10,33 @@ export class CustomerLifecycleManager {
 
   /**
    * Activates a customer
-   * @throws TenantAccessDeniedException if the tenant context does not have access to the customer
+   * @throws Error if the tenant context does not have access to the customer
    * @throws CustomerInvalidStatusException if the customer is already active
    */
-  activate(customer: Customer, tenantContext: TenantContext): Customer {
+  activate(customer: CustomerEntity, tenantContext: TenantContext): CustomerEntity {
     // Validate tenant access
-    if (!tenantContext.hasAccess(customer.getId()) && !tenantContext.canBypassTenantRestrictions()) {
-      throw new TenantAccessDeniedException(
-        tenantContext.getUserId().toString(),
-        customer.getId(),
-        `User ${tenantContext.getUserId().toString()} does not have access to customer ${customer.getId().toString()}`
-      );
+    if (!tenantContext.isSuperAdminUser()) {
+      throw new Error(`User does not have access to customer ${customer.getId().getValue()}`);
     }
 
     // Validate that the customer can be activated
     this.customerValidator.validateCanReactivate(customer);
 
     // Activate the customer
-    customer.reactivate();
+    customer.activate();
 
     return customer;
   }
 
   /**
    * Deactivates a customer
-   * @throws TenantAccessDeniedException if the tenant context does not have access to the customer
+   * @throws Error if the tenant context does not have access to the customer
    * @throws CustomerInvalidStatusException if the customer is already inactive
    */
-  deactivate(customer: Customer, tenantContext: TenantContext): Customer {
+  deactivate(customer: CustomerEntity, tenantContext: TenantContext): CustomerEntity {
     // Validate tenant access
-    if (!tenantContext.hasAccess(customer.getId()) && !tenantContext.canBypassTenantRestrictions()) {
-      throw new TenantAccessDeniedException(
-        tenantContext.getUserId().toString(),
-        customer.getId(),
-        `User ${tenantContext.getUserId().toString()} does not have access to customer ${customer.getId().toString()}`
-      );
+    if (!tenantContext.isSuperAdminUser()) {
+      throw new Error(`User does not have access to customer ${customer.getId().getValue()}`);
     }
 
     // Validate that the customer can be deactivated
@@ -62,17 +50,13 @@ export class CustomerLifecycleManager {
 
   /**
    * Suspends a customer
-   * @throws TenantAccessDeniedException if the tenant context does not have access to the customer
+   * @throws Error if the tenant context does not have access to the customer
    * @throws CustomerInvalidStatusException if the customer is already suspended
    */
-  suspend(customer: Customer, tenantContext: TenantContext): Customer {
+  suspend(customer: CustomerEntity, tenantContext: TenantContext): CustomerEntity {
     // Validate tenant access
-    if (!tenantContext.hasAccess(customer.getId()) && !tenantContext.canBypassTenantRestrictions()) {
-      throw new TenantAccessDeniedException(
-        tenantContext.getUserId().toString(),
-        customer.getId(),
-        `User ${tenantContext.getUserId().toString()} does not have access to customer ${customer.getId().toString()}`
-      );
+    if (!tenantContext.isSuperAdminUser()) {
+      throw new Error(`User does not have access to customer ${customer.getId().getValue()}`);
     }
 
     // Validate that the customer can be suspended
@@ -86,33 +70,32 @@ export class CustomerLifecycleManager {
 
   /**
    * Changes the status of a customer
-   * @throws TenantAccessDeniedException if the tenant context does not have access to the customer
+   * @throws Error if the tenant context does not have access to the customer
    * @throws CustomerInvalidStatusException if the status transition is invalid
    */
   changeStatus(
-    customer: Customer,
-    newStatus: CustomerStatusEnum,
+    customer: CustomerEntity,
+    newStatus: CustomerStatusType,
     tenantContext: TenantContext
-  ): Customer {
+  ): CustomerEntity {
     // Validate tenant access
-    if (!tenantContext.hasAccess(customer.getId()) && !tenantContext.canBypassTenantRestrictions()) {
-      throw new TenantAccessDeniedException(
-        tenantContext.getUserId().toString(),
-        customer.getId(),
-        `User ${tenantContext.getUserId().toString()} does not have access to customer ${customer.getId().toString()}`
+    const customerId = customer.getId();
+    if (!tenantContext.hasAccess(customerId) && !tenantContext.canBypassTenantRestrictions()) {
+      throw new Error(
+        `User ${tenantContext.getUserId().getValue()} does not have access to customer ${customerId.getValue()}`
       );
     }
 
     // Validate the status transition
-    this.customerValidator.validateStatusTransition(customer.getStatus(), newStatus);
+    this.customerValidator.validateStatusTransition(customer.isActive, newStatus);
 
     // Change the status based on the new status
     switch (newStatus) {
-      case CustomerStatusEnum.ACTIVE:
+      case 'active':
         return this.activate(customer, tenantContext);
-      case CustomerStatusEnum.INACTIVE:
+      case 'inactive':
         return this.deactivate(customer, tenantContext);
-      case CustomerStatusEnum.SUSPENDED:
+      case 'suspended':
         return this.suspend(customer, tenantContext);
       default:
         throw new Error(`Unsupported status transition to ${newStatus}`);

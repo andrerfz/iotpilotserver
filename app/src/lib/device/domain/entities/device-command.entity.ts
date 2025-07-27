@@ -1,10 +1,12 @@
-import { DeviceId } from '../value-objects/device-id.vo';
+import {DeviceId} from '../value-objects/device-id.vo';
 
 export enum CommandStatus {
     PENDING = 'pending',
     EXECUTING = 'executing',
+    RUNNING = 'running', // Alias for EXECUTING for backward compatibility
     COMPLETED = 'completed',
-    FAILED = 'failed'
+    FAILED = 'failed',
+    TIMEOUT = 'timeout' // Added for backward compatibility
 }
 
 export class DeviceCommand {
@@ -17,7 +19,8 @@ export class DeviceCommand {
         private _error: string | null,
         private readonly _createdAt: Date,
         private _executedAt: Date | null,
-        private _completedAt: Date | null
+        private _completedAt: Date | null,
+        private readonly _arguments?: string
     ) {}
 
     get id(): string {
@@ -42,6 +45,10 @@ export class DeviceCommand {
 
     get error(): string | null {
         return this._error;
+    }
+
+    get arguments(): string | undefined {
+        return this._arguments;
     }
 
     get createdAt(): Date {

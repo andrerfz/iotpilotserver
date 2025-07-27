@@ -213,30 +213,42 @@ app.prepare().then(() => {
 
     setTimeout(async () => {
         try {
-            // Try multiple import strategies
-            let CommandQueueManager;
+            // Try multiple import strategies for CommandQueueService
+            let CommandQueueService;
+            let ServiceContainer;
 
             try {
                 // Try compiled JS first
-                const module = await import('./dist/src/lib/command-executor.js');
-                CommandQueueManager = module.CommandQueueManager;
+                const commandQueueModule = await import('./dist/src/lib/device/application/services/command-queue.service.js');
+                const serviceContainerModule = await import('./dist/src/lib/shared/infrastructure/container/service-container.js');
+                CommandQueueService = commandQueueModule.CommandQueueService;
+                ServiceContainer = serviceContainerModule.ServiceContainer;
             } catch (distError) {
                 try {
                     // Fallback to TypeScript source
-                    const module = await import('./src/lib/command-executor.ts');
-                    CommandQueueManager = module.CommandQueueManager;
+                    const commandQueueModule = await import('./src/lib/device/application/services/command-queue.service.ts');
+                    const serviceContainerModule = await import('./src/lib/shared/infrastructure/container/service-container.ts');
+                    CommandQueueService = commandQueueModule.CommandQueueService;
+                    ServiceContainer = serviceContainerModule.ServiceContainer;
                 } catch (tsError) {
                     // Try Next.js transpiled version
-                    const module = await import('./.next/server/src/lib/command-executor.js');
-                    CommandQueueManager = module.CommandQueueManager;
+                    const commandQueueModule = await import('./.next/server/src/lib/device/application/services/command-queue.service.js');
+                    const serviceContainerModule = await import('./.next/server/src/lib/shared/infrastructure/container/service-container.js');
+                    CommandQueueService = commandQueueModule.CommandQueueService;
+                    ServiceContainer = serviceContainerModule.ServiceContainer;
                 }
             }
 
-            if (CommandQueueManager) {
-                CommandQueueManager.startQueueProcessing(60000);
+            if (CommandQueueService && ServiceContainer) {
+                const serviceContainer = ServiceContainer.getInstance();
+                const commandQueue = CommandQueueService.getInstance(
+                    serviceContainer.getDeviceRepository(),
+                    serviceContainer.getDeviceCommandRepository()
+                );
+                commandQueue.startQueueProcessing(60000);
                 logger.info('Command queue processing started');
             } else {
-                logger.warn('CommandQueueManager not found, command queue disabled');
+                logger.warn('CommandQueueService or ServiceContainer not found, command queue disabled');
             }
         } catch (error) {
             logger.warn('Command queue initialization failed, continuing without it:', error.message);

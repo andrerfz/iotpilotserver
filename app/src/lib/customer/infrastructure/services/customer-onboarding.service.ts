@@ -1,26 +1,35 @@
-import { Injectable } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
-import { TenantContext } from '@/lib/shared/application/context/tenant-context.vo';
-import { CustomerId } from '@/lib/shared/domain/value-objects/customer-id.vo';
-import { CustomerName } from '@/lib/customer/domain/value-objects/customer-name.vo';
-import { OrganizationSettings } from '@/lib/customer/domain/value-objects/organization-settings.vo';
-import { Customer } from '@/lib/customer/domain/entities/customer.entity';
-import { CustomerRepository } from '../persistence/customer.repository';
-import { TenantScopedLoggingService } from '@/lib/shared/infrastructure/logging/tenant-scoped-logging.service';
-import { tenantPrisma } from '@/lib/tenant-middleware';
+import {Injectable} from '@nestjs/common';
+import {PrismaService} from '@/lib/shared/infrastructure/database/prisma.service';
+import {TenantContext} from '@/lib/shared/domain/tenant-context';
+import {CustomerId} from '@/lib/shared/domain/value-objects/customer-id.vo';
+import {CustomerName} from '@/lib/customer/domain/value-objects/customer-name.vo';
+import {OrganizationSettings} from '@/lib/customer/domain/value-objects/organization-settings.vo';
+import {CustomerEntity} from '@/lib/customer/domain/entities/customer.entity';
+import {CustomerRepository} from '../persistence/customer.repository';
+import {TenantScopedLoggingService} from '@/lib/shared/infrastructure/logging/tenant-scoped-logging.service';
+import type {CryptoService} from '@/lib/shared/domain/interfaces/crypto-service.interface';
+
+type PrismaClient = ReturnType<PrismaService['getClient']>;
 
 /**
  * Service for handling customer onboarding processes
+ * Uses constructor injection for all dependencies
  */
 @Injectable()
 export class CustomerOnboardingService {
-  private prisma: PrismaClient;
+  private readonly prismaService: PrismaService;
 
   constructor(
+    prismaService: PrismaService,
     private readonly customerRepository: CustomerRepository,
-    private readonly loggingService: TenantScopedLoggingService
+    private readonly loggingService: TenantScopedLoggingService,
+    private readonly cryptoService: CryptoService
   ) {
-    this.prisma = tenantPrisma.client;
+    this.prismaService = prismaService;
+  }
+
+  private get prisma(): PrismaClient {
+    return this.prismaService.getClient();
   }
 
   /**
@@ -49,20 +58,25 @@ export class CustomerOnboardingService {
 
     try {
       // Create customer ID and entity
-      const customerId = CustomerId.create(crypto.randomUUID());
+      const customerId = CustomerId.create(this.cryptoService.randomUUID());
       const customerName = CustomerName.create(name);
 
       // Create default organization settings
-      const settings = OrganizationSettings.create(
-        10, // maxUsers
-        50, // maxDevices
-        ['basic_monitoring', 'alerts'], // features
-        'default', // theme
-        null // customDomain
-      );
+      const settings = OrganizationSettings.create({
+        maxUsers: 10,
+        maxDevices: 50,
+        allowedFeatures: ['basic_monitoring', 'alerts'],
+        customDomain: null
+      });
 
       // Create customer entity
-      const customer = Customer.create(customerId, customerName, settings);
+      const customer = CustomerEntity.create(
+        customerId,
+        customerName,
+        undefined, // slug - will be auto-generated
+        undefined, // status - defaults to active
+        settings
+      );
 
       // Save customer to repository
       await this.customerRepository.save(customer, adminContext);
@@ -104,7 +118,7 @@ export class CustomerOnboardingService {
     adminContext: TenantContext
   ): Promise<string> {
     // Create admin user with ADMIN role for the customer
-    const userId = crypto.randomUUID();
+    const userId = this.cryptoService.randomUUID();
 
     await this.prisma.user.create({
       data: {
@@ -140,7 +154,7 @@ export class CustomerOnboardingService {
     // Create default API key for the customer
     const apiKey = await this.prisma.apiKey.create({
       data: {
-        id: crypto.randomUUID(),
+        id: this.cryptoService.randomUUID(),
         name: 'Default API Key',
         key: this.generateApiKey(),
         userId: userId,
@@ -152,7 +166,7 @@ export class CustomerOnboardingService {
     // Create default system configuration
     await this.prisma.systemConfig.create({
       data: {
-        id: crypto.randomUUID(),
+        id: this.cryptoService.randomUUID(),
         key: `customer_${customerId.getValue()}_default_alert_threshold`,
         value: '80',
         category: 'CUSTOMER_SETTINGS'
@@ -165,7 +179,7 @@ export class CustomerOnboardingService {
     /*
     await this.prisma.notification.create({
       data: {
-        id: crypto.randomUUID(),
+        id: this.cryptoService.randomUUID(),
         title: 'Welcome to IoT Pilot Server',
         message: 'Thank you for signing up. Get started by adding your first device.',
         read: false,
@@ -231,7 +245,7 @@ export class CustomerOnboardingService {
       const deviceTypes = ['Temperature Sensor', 'Humidity Sensor', 'Pressure Sensor'];
 
       for (let i = 0; i < deviceTypes.length; i++) {
-        const deviceId = crypto.randomUUID();
+        const deviceId = this.cryptoService.randomUUID();
 
         // Create device
         await this.prisma.device.create({
@@ -253,7 +267,7 @@ export class CustomerOnboardingService {
 
           await this.prisma.deviceMetric.create({
             data: {
-              id: crypto.randomUUID(),
+              id: this.cryptoService.randomUUID(),
               deviceId, // This links to the device, which is already associated with the customer
               metric: deviceTypes[i].split(' ')[0].toLowerCase(), // Using 'metric' field instead of 'name'
               value: parseFloat((Math.random() * 100).toFixed(2)), // Convert to Float

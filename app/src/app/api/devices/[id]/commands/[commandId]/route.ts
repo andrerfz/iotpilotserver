@@ -1,49 +1,50 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import {NextRequest} from 'next/server';
+import {ServiceContainer} from '@/lib/shared/infrastructure/container/service-container';
+import {authenticate} from '@/lib/shared/infrastructure/authentication/auth.service';
+import {TenantContextImpl} from '@/lib/shared/domain/tenant-context';
+import {CustomerId} from '@/lib/shared/domain/value-objects/customer-id.vo';
+import {GetDeviceCommandQuery} from '@/lib/device/application/queries/get-device-command/get-device-command.query';
+import {logger} from '@/lib/shared/infrastructure/logging/logger.service';
+import {ApiResponse} from '@/lib/shared/infrastructure/http/api-response.util';
 
-const prisma = new PrismaClient();
-
-// GET /api/devices/:id/commands/:commandId - Get command details
+/**
+ * GET /api/devices/:id/commands/:commandId - Get command details
+ * Uses CQRS pattern with GetDeviceCommandQuery
+ */
 export async function GET(
     request: NextRequest,
     { params }: { params: { id: string, commandId: string } }
 ) {
     try {
+        // 1. AUTHENTICATION
+        const { user, error } = await authenticate(request);
+        if (error || !user) {
+            return ApiResponse.unauthorized('Unauthorized');
+        }
+
         const { id, commandId } = params;
 
-        // Check if device exists
-        const device = await prisma.device.findUnique({
-            where: { id },
-        });
+        // 2. CREATE TENANT CONTEXT
+        const tenantContext = user.customerId
+            ? TenantContextImpl.create(CustomerId.fromString(user.customerId))
+            : TenantContextImpl.createSuperAdmin();
 
-        if (!device) {
-            return NextResponse.json(
-                { error: 'Device not found' },
-                { status: 404 }
-            );
-        }
+        // 3. CREATE AND EXECUTE QUERY
+        const serviceContainer = ServiceContainer.getInstance();
+        const queryBus = serviceContainer.getQueryBus();
 
-        // Fetch command details
-        const command = await prisma.deviceCommand.findFirst({
-            where: {
-                id: commandId,
-                deviceId: id,
-            },
-        });
+        const query = GetDeviceCommandQuery.create(id, commandId, tenantContext);
+        const command = await queryBus.execute(query);
 
         if (!command) {
-            return NextResponse.json(
-                { error: 'Command not found' },
-                { status: 404 }
-            );
+            return ApiResponse.notFound('Command not found');
         }
 
-        return NextResponse.json({ command });
+        // 4. RETURN RESPONSE
+        return ApiResponse.ok({ command });
+
     } catch (error) {
-        console.error('Failed to fetch command details:', error);
-        return NextResponse.json(
-            { error: 'Failed to fetch command details' },
-            { status: 500 }
-        );
+        logger.error('Failed to fetch command details', error instanceof Error ? error : undefined);
+        return ApiResponse.internalError('Failed to fetch command details');
     }
 }

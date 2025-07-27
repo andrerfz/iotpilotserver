@@ -1,8 +1,10 @@
-import axios from 'axios';
-import { DeviceId } from '@/lib/device/domain/value-objects/device-id.vo';
-import { DeviceMetrics } from '@/lib/device/domain/entities/device-metrics.entity';
-import { MetricsCollector } from '@/lib/device/domain/interfaces/metrics-collector.interface';
-import { PrismaClient } from '@prisma/client';
+import {DeviceId} from '@/lib/device/domain/value-objects/device-id.vo';
+import {DeviceMetrics} from '@/lib/device/domain/entities/device-metrics.entity';
+import {MetricsCollector} from '@/lib/device/domain/interfaces/metrics-collector.interface';
+import {PrismaService} from '@/lib/shared/infrastructure/database/prisma.service';
+import {CustomerId} from '@/lib/shared/domain/value-objects/customer-id.vo';
+import {DeviceRepository} from '@/lib/device/domain/interfaces/device.repository';
+import {HttpClient} from '@/lib/shared/domain/interfaces/http-client.interface';
 
 // Define the structure of the metrics data returned by Telegraf
 interface TelegrafMetricsData {
@@ -17,38 +19,50 @@ interface TelegrafMetricsData {
 
 export class TelegrafMetricsCollectorService implements MetricsCollector {
   constructor(
-    private readonly prisma: PrismaClient,
-    private readonly telegrafUrl: string
+    private readonly prismaService: PrismaService,
+    private readonly telegrafUrl: string,
+    private readonly httpClient: HttpClient,
+    private readonly deviceRepository?: DeviceRepository
   ) {}
+  
+  private get prisma() {
+    return this.prismaService.getClient();
+  }
 
   async collectMetrics(deviceId: DeviceId): Promise<DeviceMetrics> {
     try {
       // Get device information from the database
       const device = await this.prisma.device.findUnique({
-        where: { id: deviceId.value }
+        where: { id: deviceId.getValue() }
       });
 
       if (!device) {
-        throw new Error(`Device with ID ${deviceId.value} not found`);
+        throw new Error(`Device with ID ${deviceId.getValue()} not found`);
       }
 
+      const customerId = CustomerId.create(device.customerId);
+
       // Query Telegraf API for metrics
-      const response = await axios.get(`${this.telegrafUrl}/metrics/${device.ipAddress}`);
-      const metricsData = response.data as TelegrafMetricsData;
+      const response = await this.httpClient.get<TelegrafMetricsData>(`${this.telegrafUrl}/metrics/${device.ipAddress}`);
+      const metricsData = response.data;
 
       // Create DeviceMetrics entity
-      return DeviceMetrics.create(
+      return DeviceMetrics.create({
         deviceId,
-        metricsData.cpu || 0,
-        metricsData.memory || 0,
-        metricsData.disk || 0,
-        metricsData.network?.upload || 0,
-        metricsData.network?.download || 0,
-        new Date()
-      );
+        customerId,
+        cpuUsage: metricsData.cpu || 0,
+        memoryUsage: metricsData.memory || 0,
+        diskUsage: metricsData.disk || 0,
+        networkRx: metricsData.network?.download || 0,
+        networkTx: metricsData.network?.upload || 0,
+        uptime: 0,
+        loadAverage: [],
+        temperature: undefined,
+        collectedAt: new Date()
+      });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      throw new Error(`Failed to collect metrics for device ${deviceId.value}: ${errorMessage}`);
+      throw new Error(`Failed to collect metrics for device ${deviceId.getValue()}: ${errorMessage}`);
     }
   }
 
@@ -60,7 +74,7 @@ export class TelegrafMetricsCollectorService implements MetricsCollector {
       });
 
       // Collect metrics for each device
-      const metricsPromises = devices.map(device => 
+      const metricsPromises = devices.map((device: any) =>
         this.collectMetrics(DeviceId.fromString(device.id))
       );
 
@@ -73,10 +87,21 @@ export class TelegrafMetricsCollectorService implements MetricsCollector {
 
   async getLatestMetrics(deviceId: DeviceId): Promise<DeviceMetrics | null> {
     try {
+      // Get device to retrieve customerId
+      const device = await this.prisma.device.findUnique({
+        where: { id: deviceId.getValue() }
+      });
+      
+      if (!device) {
+        return null;
+      }
+      
+      const customerId = CustomerId.create(device.customerId);
+      
       // Get the latest metrics from the database for each metric type
       const latestCpuMetric = await this.prisma.deviceMetric.findFirst({
         where: { 
-          deviceId: deviceId.value,
+          deviceId: deviceId.getValue(),
           metric: 'cpu_usage'
         },
         orderBy: { timestamp: 'desc' }
@@ -84,7 +109,7 @@ export class TelegrafMetricsCollectorService implements MetricsCollector {
 
       const latestMemoryMetric = await this.prisma.deviceMetric.findFirst({
         where: { 
-          deviceId: deviceId.value,
+          deviceId: deviceId.getValue(),
           metric: 'memory_usage'
         },
         orderBy: { timestamp: 'desc' }
@@ -92,7 +117,7 @@ export class TelegrafMetricsCollectorService implements MetricsCollector {
 
       const latestDiskMetric = await this.prisma.deviceMetric.findFirst({
         where: { 
-          deviceId: deviceId.value,
+          deviceId: deviceId.getValue(),
           metric: 'disk_usage'
         },
         orderBy: { timestamp: 'desc' }
@@ -100,7 +125,7 @@ export class TelegrafMetricsCollectorService implements MetricsCollector {
 
       const latestNetworkUploadMetric = await this.prisma.deviceMetric.findFirst({
         where: { 
-          deviceId: deviceId.value,
+          deviceId: deviceId.getValue(),
           metric: 'network_upload'
         },
         orderBy: { timestamp: 'desc' }
@@ -108,7 +133,7 @@ export class TelegrafMetricsCollectorService implements MetricsCollector {
 
       const latestNetworkDownloadMetric = await this.prisma.deviceMetric.findFirst({
         where: { 
-          deviceId: deviceId.value,
+          deviceId: deviceId.getValue(),
           metric: 'network_download'
         },
         orderBy: { timestamp: 'desc' }
@@ -134,18 +159,22 @@ export class TelegrafMetricsCollectorService implements MetricsCollector {
         : new Date();
 
       // Create DeviceMetrics entity with values or defaults
-      return DeviceMetrics.create(
+      return DeviceMetrics.create({
         deviceId,
-        latestCpuMetric?.value ?? 0,
-        latestMemoryMetric?.value ?? 0,
-        latestDiskMetric?.value ?? 0,
-        latestNetworkUploadMetric?.value ?? 0,
-        latestNetworkDownloadMetric?.value ?? 0,
-        mostRecentTimestamp
-      );
+        customerId,
+        cpuUsage: latestCpuMetric?.value ?? 0,
+        memoryUsage: latestMemoryMetric?.value ?? 0,
+        diskUsage: latestDiskMetric?.value ?? 0,
+        networkRx: latestNetworkDownloadMetric?.value ?? 0,
+        networkTx: latestNetworkUploadMetric?.value ?? 0,
+        uptime: 0,
+        loadAverage: [],
+        temperature: undefined,
+        collectedAt: mostRecentTimestamp
+      });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      throw new Error(`Failed to get latest metrics for device ${deviceId.value}: ${errorMessage}`);
+      throw new Error(`Failed to get latest metrics for device ${deviceId.getValue()}: ${errorMessage}`);
     }
   }
 
@@ -155,10 +184,21 @@ export class TelegrafMetricsCollectorService implements MetricsCollector {
     endDate: Date
   ): Promise<DeviceMetrics[]> {
     try {
+      // Get device to retrieve customerId
+      const device = await this.prisma.device.findUnique({
+        where: { id: deviceId.getValue() }
+      });
+      
+      if (!device) {
+        return [];
+      }
+      
+      const customerId = CustomerId.create(device.customerId);
+      
       // Get all metrics within the time range
       const allMetrics = await this.prisma.deviceMetric.findMany({
         where: {
-          deviceId: deviceId.value,
+          deviceId: deviceId.getValue(),
           timestamp: {
             gte: startDate,
             lte: endDate
@@ -216,35 +256,39 @@ export class TelegrafMetricsCollectorService implements MetricsCollector {
       // Convert the grouped metrics to DeviceMetrics entities
       return Array.from(metricsByTimestamp.values())
         .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
-        .map(metrics => 
-          DeviceMetrics.create(
+        .map(metricsData => 
+          DeviceMetrics.create({
             deviceId,
-            metrics.cpu ?? 0,
-            metrics.memory ?? 0,
-            metrics.disk ?? 0,
-            metrics.networkUpload ?? 0,
-            metrics.networkDownload ?? 0,
-            metrics.timestamp
-          )
+            customerId,
+            cpuUsage: metricsData.cpu ?? 0,
+            memoryUsage: metricsData.memory ?? 0,
+            diskUsage: metricsData.disk ?? 0,
+            networkRx: metricsData.networkDownload ?? 0,
+            networkTx: metricsData.networkUpload ?? 0,
+            uptime: 0,
+            loadAverage: [],
+            temperature: undefined,
+            collectedAt: metricsData.timestamp
+          })
         );
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      throw new Error(`Failed to get metrics history for device ${deviceId.value}: ${errorMessage}`);
+      throw new Error(`Failed to get metrics history for device ${deviceId.getValue()}: ${errorMessage}`);
     }
   }
 
   async saveMetrics(metrics: DeviceMetrics): Promise<void> {
     try {
       // Save each metric type separately
-      const timestamp = metrics.timestamp;
-      const deviceId = metrics.deviceId.value;
-      const baseId = `${deviceId}-${timestamp.getTime()}`;
+      const timestamp = metrics.collectedAt;
+      const deviceIdStr = metrics.deviceId.getValue();
+      const baseId = `${deviceIdStr}-${timestamp.getTime()}`;
 
       // Create array of metric data objects
       const metricsData = [
         {
           id: `${baseId}-cpu`,
-          deviceId: deviceId,
+          deviceId: deviceIdStr,
           metric: 'cpu_usage',
           value: metrics.cpuUsage,
           unit: '%',
@@ -252,7 +296,7 @@ export class TelegrafMetricsCollectorService implements MetricsCollector {
         },
         {
           id: `${baseId}-memory`,
-          deviceId: deviceId,
+          deviceId: deviceIdStr,
           metric: 'memory_usage',
           value: metrics.memoryUsage,
           unit: '%',
@@ -260,7 +304,7 @@ export class TelegrafMetricsCollectorService implements MetricsCollector {
         },
         {
           id: `${baseId}-disk`,
-          deviceId: deviceId,
+          deviceId: deviceIdStr,
           metric: 'disk_usage',
           value: metrics.diskUsage,
           unit: 'MB',
@@ -268,17 +312,17 @@ export class TelegrafMetricsCollectorService implements MetricsCollector {
         },
         {
           id: `${baseId}-network-upload`,
-          deviceId: deviceId,
+          deviceId: deviceIdStr,
           metric: 'network_upload',
-          value: metrics.networkUpload,
+          value: metrics.networkTx,
           unit: 'MB',
           timestamp: timestamp
         },
         {
           id: `${baseId}-network-download`,
-          deviceId: deviceId,
+          deviceId: deviceIdStr,
           metric: 'network_download',
-          value: metrics.networkDownload,
+          value: metrics.networkRx,
           unit: 'MB',
           timestamp: timestamp
         }
@@ -292,7 +336,7 @@ export class TelegrafMetricsCollectorService implements MetricsCollector {
       );
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      throw new Error(`Failed to save metrics for device ${metrics.deviceId.value}: ${errorMessage}`);
+      throw new Error(`Failed to save metrics for device ${metrics.deviceId.getValue()}: ${errorMessage}`);
     }
   }
 }

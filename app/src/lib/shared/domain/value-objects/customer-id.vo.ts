@@ -1,31 +1,55 @@
-import {ValueObject} from '@/lib/shared/domain/interfaces/value-object.interface';
-import { v4 as uuidv4 } from 'uuid';
+import {ValueObject} from '../base.value-object';
 
-export class CustomerId extends ValueObject {
-    constructor(private readonly value: string) {
-        super();
-        this.validate(value);
+class CustomerIdValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'CustomerIdValidationError';
+  }
+}
+
+export interface CustomerIdData {
+  value: string;
+}
+
+export class CustomerId extends ValueObject<CustomerIdData> {
+  private constructor(value: string) {
+    super({ value });
+  }
+
+  static create(value: string): CustomerId {
+    if (!value || value.trim().length === 0) {
+      throw new CustomerIdValidationError('Customer ID cannot be empty');
     }
 
-    getValue(): string {
-        return this.value;
+    if (value.length > 36) {
+      throw new CustomerIdValidationError('Customer ID too long');
     }
 
-    equals(other: ValueObject): boolean {
-        return other instanceof CustomerId && this.value === (other as CustomerId).getValue();
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(value)) {
+      throw new CustomerIdValidationError('Customer ID must be valid UUID format');
     }
 
-    toString(): string {
-        return this.value;
-    }
+    return new CustomerId(value.trim());
+  }
 
-    private validate(value: string): void {
-        if (!value || value.trim().length === 0) {
-            throw new Error('Customer ID cannot be empty');
-        }
-    }
+  static fromString(value: string): CustomerId {
+    return CustomerId.create(value);
+  }
 
-    static create(value?: string): CustomerId {
-        return new CustomerId(value || uuidv4());
-    }
+  get value(): string {
+    return this.props.value;
+  }
+
+  getValue(): string {
+    return this.value;
+  }
+
+  equals(other: CustomerId): boolean {
+    return this.value === other.value;
+  }
+
+  toJSON(): CustomerIdData {
+    return { value: this.value };
+  }
 }

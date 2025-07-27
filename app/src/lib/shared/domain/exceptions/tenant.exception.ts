@@ -1,100 +1,109 @@
-import { DomainException } from './domain.exception';
-import { CustomerId } from '@/lib/shared/domain/value-objects/customer-id.vo';
+import {DomainException} from './domain.exception';
+import {CustomerId} from '../value-objects/customer-id.vo';
 
-/**
- * Base class for all tenant-related exceptions
- */
-export class TenantException extends DomainException {
+export abstract class TenantException extends DomainException {
   constructor(message: string) {
     super(message);
   }
+
+  abstract getStatusCode(): number;
+  abstract getErrorCode(): string;
 }
 
-/**
- * Exception thrown when tenant access is denied
- */
 export class TenantAccessDeniedException extends TenantException {
-  constructor(
-    public readonly userId: string,
-    public readonly tenantId: CustomerId | string,
-    message: string = `User ${userId} does not have access to tenant ${typeof tenantId === 'string' ? tenantId : tenantId.toString()}`
-  ) {
-    super(message);
+  constructor(userId: string, customerId: CustomerId, message?: string) {
+    super(message || `Access denied for user ${userId} to customer: ${customerId.value}`);
+  }
+
+  getStatusCode(): number {
+    return 403;
+  }
+
+  getErrorCode(): string {
+    return 'TENANT_ACCESS_DENIED';
   }
 }
 
-/**
- * Exception thrown when cross-tenant access is attempted
- */
 export class CrossTenantAccessException extends TenantException {
-  constructor(
-    public readonly sourceTenantId: CustomerId | string,
-    public readonly targetTenantId: CustomerId | string,
-    message: string = `Cross-tenant access attempted from tenant ${typeof sourceTenantId === 'string' ? sourceTenantId : sourceTenantId.toString()} to tenant ${typeof targetTenantId === 'string' ? targetTenantId : targetTenantId.toString()}`
-  ) {
-    super(message);
+  constructor(attemptedId: CustomerId, actualId: CustomerId) {
+    super(`Attempted access to customer ${attemptedId.value} but user belongs to ${actualId.value}`);
+  }
+
+  getStatusCode(): number {
+    return 403;
+  }
+
+  getErrorCode(): string {
+    return 'CROSS_TENANT_ACCESS';
   }
 }
 
-/**
- * Exception thrown when a tenant is not found
- */
 export class TenantNotFoundException extends TenantException {
-  constructor(
-    public readonly tenantId: CustomerId | string,
-    message: string = `Tenant with ID ${typeof tenantId === 'string' ? tenantId : tenantId.toString()} not found`
-  ) {
-    super(message);
+  constructor(tenantId: string) {
+    super(`Tenant not found: ${tenantId}`);
+  }
+
+  getStatusCode(): number {
+    return 404;
+  }
+
+  getErrorCode(): string {
+    return 'TENANT_NOT_FOUND';
   }
 }
 
-/**
- * Exception thrown when a tenant is inactive
- */
 export class TenantInactiveException extends TenantException {
-  constructor(
-    public readonly tenantId: CustomerId | string,
-    message: string = `Tenant with ID ${typeof tenantId === 'string' ? tenantId : tenantId.toString()} is inactive`
-  ) {
-    super(message);
+  constructor(tenantId: string) {
+    super(`Tenant is inactive: ${tenantId}`);
+  }
+
+  getStatusCode(): number {
+    return 403;
+  }
+
+  getErrorCode(): string {
+    return 'TENANT_INACTIVE';
   }
 }
 
-/**
- * Exception thrown when a tenant is suspended
- */
 export class TenantSuspendedException extends TenantException {
-  constructor(
-    public readonly tenantId: CustomerId | string,
-    message: string = `Tenant with ID ${typeof tenantId === 'string' ? tenantId : tenantId.toString()} is suspended`
-  ) {
-    super(message);
+  constructor(tenantId: string) {
+    super(`Tenant is suspended: ${tenantId}`);
+  }
+
+  getStatusCode(): number {
+    return 403;
+  }
+
+  getErrorCode(): string {
+    return 'TENANT_SUSPENDED';
   }
 }
 
-/**
- * Exception thrown when a tenant operation is not allowed
- */
 export class TenantOperationNotAllowedException extends TenantException {
-  constructor(
-    public readonly tenantId: CustomerId | string,
-    public readonly operation: string,
-    message: string = `Operation ${operation} is not allowed for tenant ${typeof tenantId === 'string' ? tenantId : tenantId.toString()}`
-  ) {
-    super(message);
+  constructor(tenantId: string, operation: string) {
+    super(`Operation ${operation} not allowed for tenant: ${tenantId}`);
+  }
+
+  getStatusCode(): number {
+    return 403;
+  }
+
+  getErrorCode(): string {
+    return 'TENANT_OPERATION_NOT_ALLOWED';
   }
 }
 
-/**
- * Exception thrown when a tenant quota is exceeded
- */
 export class TenantQuotaExceededException extends TenantException {
-  constructor(
-    public readonly tenantId: CustomerId | string,
-    public readonly quotaType: string,
-    public readonly limit: number,
-    message: string = `Quota ${quotaType} exceeded for tenant ${typeof tenantId === 'string' ? tenantId : tenantId.toString()}. Limit: ${limit}`
-  ) {
-    super(message);
+  constructor(tenantId: string, resource: string) {
+    super(`Tenant quota exceeded for ${resource}: ${tenantId}`);
+  }
+
+  getStatusCode(): number {
+    return 429;
+  }
+
+  getErrorCode(): string {
+    return 'TENANT_QUOTA_EXCEEDED';
   }
 }

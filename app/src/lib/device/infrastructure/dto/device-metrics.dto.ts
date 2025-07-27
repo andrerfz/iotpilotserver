@@ -1,69 +1,98 @@
+/**
+ * Data Transfer Object for DeviceMetrics entity
+ */
 export interface DeviceMetricsDTO {
   id: string;
   deviceId: string;
-  cpu: number;
-  memory: number;
-  disk: number;
-  networkUpload: number;
-  networkDownload: number;
+  cpuUsage: number;
+  memoryUsage: number;
+  diskUsage: number;
+  temperature: number;
+  networkTraffic: number;
   timestamp: string;
 }
 
-export interface DeviceMetricsListItemDTO {
-  deviceId: string;
-  cpu: number;
-  memory: number;
-  disk: number;
-  timestamp: string;
-}
-
+/**
+ * Data Transfer Object for DeviceMetrics summary
+ */
 export interface DeviceMetricsSummaryDTO {
   deviceId: string;
-  averageCpu: number;
-  maxCpu: number;
-  averageMemory: number;
-  maxMemory: number;
-  averageDisk: number;
-  maxDisk: number;
-  totalNetworkUpload: number;
-  totalNetworkDownload: number;
-  startTime: string;
-  endTime: string;
-  samplesCount: number;
+  cpuUsage: number;
+  memoryUsage: number;
+  diskUsage: number;
+  temperature: number;
+  networkTraffic: number;
+  timestamp: string;
 }
 
-export interface DeviceMetricsFilterDTO {
-  deviceId?: string;
-  startTime?: string;
-  endTime?: string;
-  minCpu?: number;
-  maxCpu?: number;
-  minMemory?: number;
-  maxMemory?: number;
-  minDisk?: number;
-  maxDisk?: number;
-}
-
-export interface DeviceMetricsTimeSeriesDTO {
+/**
+ * Data Transfer Object for DeviceMetrics history
+ */
+export interface DeviceMetricsHistoryDTO {
   deviceId: string;
   metrics: {
     timestamp: string;
-    cpu: number;
-    memory: number;
-    disk: number;
-    networkUpload: number;
-    networkDownload: number;
+    cpuUsage: number;
+    memoryUsage: number;
+    diskUsage: number;
+    temperature: number;
+    networkTraffic: number;
   }[];
-  startTime: string;
-  endTime: string;
-  interval: string; // e.g., '1h', '5m', '30s'
 }
 
-export interface DeviceMetricsThresholdDTO {
+/**
+ * Data Transfer Object for DeviceMetrics query parameters
+ */
+export interface DeviceMetricsQueryDTO {
   deviceId: string;
-  cpuThreshold: number;
-  memoryThreshold: number;
-  diskThreshold: number;
-  networkUploadThreshold: number;
-  networkDownloadThreshold: number;
+  startDate?: string;
+  endDate?: string;
+  interval?: string; // e.g., '1m', '5m', '1h'
+  limit?: number;
+}
+
+/**
+ * Data Transfer Object for DeviceMetrics alert
+ */
+export interface DeviceMetricsAlertDTO {
+  deviceId: string;
+  metricName: string;
+  value: number;
+  threshold: number;
+  exceededBy: number;
+  timestamp: string;
+}
+
+/**
+ * Data Transfer Object for DeviceMetrics alert configuration
+ */
+export interface DeviceMetricsAlertConfigDTO {
+  deviceId: string;
+  cpuUsageThreshold?: number;
+  memoryUsageThreshold?: number;
+  diskUsageThreshold?: number;
+  temperatureThreshold?: number;
+  networkTrafficThreshold?: number;
+  enabled: boolean;
+}
+
+/**
+ * Data Transfer Object for DeviceMetrics dashboard
+ */
+export interface DeviceMetricsDashboardDTO {
+  totalDevices: number;
+  activeDevices: number;
+  inactiveDevices: number;
+  alertCount: number;
+  metrics: {
+    deviceId: string;
+    deviceName: string;
+    cpuUsage: number;
+    memoryUsage: number;
+    diskUsage: number;
+    temperature: number;
+    networkTraffic: number;
+    status: string;
+    timestamp: string;
+  }[];
 }

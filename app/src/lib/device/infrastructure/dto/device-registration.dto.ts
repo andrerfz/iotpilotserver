@@ -1,89 +1,145 @@
+/**
+ * Data Transfer Object for Device Registration
+ */
 export interface DeviceRegistrationDTO {
-  id: string;
-  deviceId: string;
-  registrationToken: string;
-  status: 'pending' | 'approved' | 'rejected';
-  ipAddress: string;
-  deviceInfo: DeviceInfoDTO;
-  createdAt: string;
-  updatedAt: string;
-  approvedAt?: string;
-  rejectedAt?: string;
-  rejectionReason?: string;
-}
-
-export interface DeviceInfoDTO {
-  hostname: string;
-  platform: string;
-  architecture: string;
-  osVersion: string;
-  cpuModel: string;
-  cpuCores: number;
-  totalMemory: number;
-  totalDisk: number;
-  macAddress?: string;
-  serialNumber?: string;
-  manufacturer?: string;
-  model?: string;
-}
-
-export interface CreateDeviceRegistrationDTO {
-  registrationToken: string;
-  ipAddress: string;
-  deviceInfo: DeviceInfoDTO;
-}
-
-export interface UpdateDeviceRegistrationDTO {
-  status: 'approved' | 'rejected';
-  rejectionReason?: string;
-}
-
-export interface DeviceRegistrationListItemDTO {
-  id: string;
-  deviceId: string;
-  status: 'pending' | 'approved' | 'rejected';
-  ipAddress: string;
-  hostname: string;
-  platform: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface DeviceRegistrationFilterDTO {
-  status?: 'pending' | 'approved' | 'rejected';
-  ipAddress?: string;
-  hostname?: string;
-  platform?: string;
-  createdAfter?: string;
-  createdBefore?: string;
-}
-
-export interface DeviceOnboardingDTO {
-  registrationId: string;
-  deviceId: string;
   name: string;
   ipAddress: string;
-  sshCredentials: {
-    username: string;
-    password?: string;
-    privateKey?: string;
-  };
+  sshUsername: string;
+  sshPassword?: string;
+  sshPrivateKey?: string;
+  customerId: string;
+  registrationToken?: string;
+  deviceType?: string;
   tags?: string[];
-  groupId?: string;
-  initialConfiguration?: {
-    enableMetricsCollection: boolean;
-    enableAutoUpdates: boolean;
-    enableRemoteAccess: boolean;
-    enableNotifications: boolean;
+  description?: string;
+}
+
+/**
+ * Data Transfer Object for Device Registration Request
+ * Used when a device requests to be registered
+ */
+export interface DeviceRegistrationRequestDTO {
+  registrationToken: string;
+  hostname: string;
+  ipAddress: string;
+  macAddress: string;
+  osInfo: string;
+  cpuInfo: string;
+  memoryInfo: string;
+  diskInfo: string;
+  deviceType?: string;
+}
+
+/**
+ * Data Transfer Object for Device Registration Response
+ * Sent back to the device after registration
+ */
+export interface DeviceRegistrationResponseDTO {
+  success: boolean;
+  deviceId?: string;
+  message: string;
+  error?: string;
+  configurationUrl?: string;
+  agentConfiguration?: {
+    reportingInterval: number;
+    logLevel: string;
+    features: {
+      metrics: boolean;
+      logs: boolean;
+      fileSystem: boolean;
+      updates: boolean;
+    };
   };
 }
 
-export interface DeviceRegistrationStatsDTO {
+/**
+ * Data Transfer Object for Device Registration Token
+ */
+export interface DeviceRegistrationTokenDTO {
+  token: string;
+  customerId: string;
+  expiresAt: string;
+  maxDevices: number;
+  devicesRegistered: number;
+  isActive: boolean;
+  createdAt: string;
+  createdBy: string;
+}
+
+/**
+ * Data Transfer Object for creating a Device Registration Token
+ */
+export interface CreateDeviceRegistrationTokenDTO {
+  customerId: string;
+  expiresAt?: string;
+  maxDevices?: number;
+  description?: string;
+}
+
+/**
+ * Data Transfer Object for Device Registration Batch
+ * Used for registering multiple devices at once
+ */
+export interface DeviceRegistrationBatchDTO {
+  customerId: string;
+  devices: {
+    name: string;
+    ipAddress: string;
+    sshUsername: string;
+    sshPassword?: string;
+    sshPrivateKey?: string;
+    deviceType?: string;
+    tags?: string[];
+    description?: string;
+  }[];
+}
+
+/**
+ * Data Transfer Object for Device Registration Batch Result
+ */
+export interface DeviceRegistrationBatchResultDTO {
   totalDevices: number;
-  pendingRegistrations: number;
-  approvedRegistrations: number;
-  rejectedRegistrations: number;
-  registrationsToday: number;
-  registrationsThisWeek: number;
-  registrationsThisMonth: number;
+  successCount: number;
+  failureCount: number;
+  results: {
+    name: string;
+    ipAddress: string;
+    success: boolean;
+    deviceId?: string;
+    error?: string;
+  }[];
+}
+
+/**
+ * Data Transfer Object for Device Auto-Discovery
+ */
+export interface DeviceAutoDiscoveryDTO {
+  customerId: string;
+  networkRange: string;
+  sshUsername: string;
+  sshPassword?: string;
+  sshPrivateKey?: string;
+  timeout?: number;
+  namePrefix?: string;
+  tags?: string[];
+}
+
+/**
+ * Data Transfer Object for Device Auto-Discovery Result
+ */
+export interface DeviceAutoDiscoveryResultDTO {
+  customerId: string;
+  devicesFound: number;
+  devicesRegistered: number;
+  scanDuration: number; // in seconds
+  devices: {
+    ipAddress: string;
+    hostname?: string;
+    macAddress?: string;
+    deviceType?: string;
+    osInfo?: string;
+    status: 'registered' | 'discovered' | 'failed';
+    deviceId?: string;
+    error?: string;
+  }[];
 }

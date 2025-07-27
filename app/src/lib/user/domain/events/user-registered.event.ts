@@ -1,7 +1,7 @@
 import {DomainEventBase} from '@/lib/shared/domain/events/domain.event';
 import {UserId} from '../value-objects/user-id.vo';
 import {Email} from '../value-objects/email.vo';
-import {UserRole} from '../value-objects/user-role.vo';
+import {UserRole} from '../../../shared/domain/value-objects/user-role.vo';
 import {CustomerId} from '@/lib/shared/domain/value-objects/customer-id.vo';
 
 export class UserRegisteredEvent extends DomainEventBase {

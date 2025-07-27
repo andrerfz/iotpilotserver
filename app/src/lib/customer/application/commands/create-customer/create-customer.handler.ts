@@ -1,53 +1,37 @@
-import { Injectable } from '@nestjs/common';
-import { CommandHandler } from '@/lib/shared/application/interfaces/command.interface';
-import { CreateCustomerCommand } from './create-customer.command';
-import { CustomerCreator } from '@/lib/customer/domain/services/customer-creator.service';
-import { TenantRepository } from '@/lib/shared/domain/interfaces/tenant-repository.interface';
-import { Customer } from '@/lib/customer/domain/entities/customer.entity';
-import { CustomerId } from '@/lib/shared/domain/value-objects/customer-id.vo';
-import { CustomerAlreadyExistsException } from '@/lib/customer/domain/exceptions/customer.exception';
-import { TenantAccessDeniedException } from '@/lib/shared/domain/exceptions/tenant.exception';
+import {CreateCustomerCommand} from './create-customer.command';
+import {CustomerEntity} from '../../../domain/entities/customer.entity';
+import {CustomerName} from '../../../domain/value-objects/customer-name.vo';
+import {CustomerId} from '../../../domain/value-objects/customer-id.vo';
+import {Uuid} from '@/lib/shared/domain/value-objects/uuid.vo';
+import {CustomerRepository} from '@/lib/customer/domain/interfaces/customer.repository';
+import {CryptoService} from '@/lib/shared/domain/interfaces/crypto-service.interface';
 
-@Injectable()
-export class CreateCustomerHandler implements CommandHandler<CreateCustomerCommand, void> {
+export class CreateCustomerHandler {
   constructor(
-    private readonly customerCreator: CustomerCreator,
-    private readonly customerRepository: TenantRepository<Customer, CustomerId>
+    private readonly customerRepository: CustomerRepository,
+    private readonly cryptoService: CryptoService
   ) {}
 
-  /**
-   * Handles the CreateCustomerCommand
-   * @throws CustomerAlreadyExistsException if a customer with the same ID already exists
-   * @throws TenantAccessDeniedException if the tenant context does not have permission to create customers
-   */
-  async handle(command: CreateCustomerCommand): Promise<void> {
-    // Only super admins can create customers
-    if (!command.canBypassTenantRestrictions()) {
-      throw new TenantAccessDeniedException(
-        command.tenantContext.getUserId().toString(),
-        command.customerId,
-        'Only super admins can create customers'
-      );
+  async handle(command: CreateCustomerCommand): Promise<CustomerEntity> {
+    const { name, description, contactEmail } = command;
+    const tenantContext = command.getTenantContext();
+    
+    // Generate UUID for customer ID
+    const customerId = CustomerId.create(Uuid.random(this.cryptoService).getValue());
+    const customerName = CustomerName.create(name);
+
+    const customer = CustomerEntity.create(customerId, customerName);
+    
+    // Update additional properties
+    if (contactEmail) {
+      customer.updateContact(contactEmail);
+    }
+    if (description) {
+      customer.updateDescription(description);
     }
 
-    // Check if customer already exists
-    const exists = await this.customerRepository.existsInTenant(
-      command.customerId,
-      command.customerId // Customer ID is the same as tenant ID for customers
-    );
+    await this.customerRepository.save(customer, tenantContext);
 
-    // Validate that customer does not exist
-    this.customerCreator.validateCustomerDoesNotExist(command.customerId, exists);
-
-    // Create the customer
-    const customer = this.customerCreator.create(
-      command.customerId,
-      command.customerName,
-      command.settings,
-      command.tenantContext
-    );
-
-    // Save the customer
-    await this.customerRepository.save(customer, command.tenantContext);
+    return customer;
   }
 }

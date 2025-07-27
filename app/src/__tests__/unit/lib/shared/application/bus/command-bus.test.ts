@@ -1,4 +1,4 @@
-import { InMemoryCommandBus } from '../../../../../../lib/shared/application/bus/command.bus';
+import {InMemoryCommandBus} from '@/lib/shared/application/bus/command.bus';
 
 class TestCommand {
     constructor(public readonly id: string) {}

@@ -6,10 +6,24 @@ export class BcryptPasswordHasher implements PasswordHasher {
     private readonly saltRounds = 12;
 
     async hash(password: Password): Promise<string> {
-        return await bcrypt.hash(password.getValue(), this.saltRounds);
+        const plainPassword = password.getValue();
+        const hashed = await bcrypt.hash(plainPassword, 12);
+        
+        if (process.env.NODE_ENV === 'development') {
+            console.log('Password hashing completed');
+        }
+        
+        return hashed;
     }
 
-    async verify(password: Password, hashedPassword: string): Promise<boolean> {
-        return await bcrypt.compare(password.getValue(), hashedPassword);
+    async verify(password: Password, hashed: string): Promise<boolean> {
+        const plainPassword = password.getValue();
+        const isValid = await bcrypt.compare(plainPassword, hashed);
+        
+        if (process.env.NODE_ENV === 'development') {
+            console.log(`Password verification result: ${isValid ? 'valid' : 'invalid'}`);
+        }
+        
+        return isValid;
     }
 }

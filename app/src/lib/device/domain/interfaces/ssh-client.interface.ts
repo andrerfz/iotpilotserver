@@ -1,8 +1,8 @@
-import { DeviceId } from '../value-objects/device-id.vo';
-import { IpAddress } from '../value-objects/ip-address.vo';
-import { Port } from '../value-objects/port.vo';
-import { SshCredentials } from '../value-objects/ssh-credentials.vo';
-import { SSHSession } from '../entities/ssh-session.entity';
+import {DeviceId} from '../value-objects/device-id.vo';
+import {IpAddress} from '../value-objects/ip-address.vo';
+import {Port} from '../value-objects/port.vo';
+import {SshCredentials} from '../value-objects/ssh-credentials.vo';
+import {SSHSession} from '../entities/ssh-session.entity';
 
 export interface SSHClient {
     connect(
@@ -20,6 +20,11 @@ export interface SSHClient {
     ): Promise<{ output: string; error: string | null }>;
     
     isConnected(sessionId: string): Promise<boolean>;
+    
+    isDeviceConnected(
+        ipAddress: IpAddress,
+        credentials: SshCredentials
+    ): Promise<boolean>;
     
     getActiveSessions(): Promise<SSHSession[]>;
 }

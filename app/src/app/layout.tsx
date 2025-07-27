@@ -2,6 +2,7 @@ import type {Metadata} from 'next';
 import './globals.css';
 import {AuthProvider} from '@/contexts/auth-context';
 import {Providers} from "./providers";
+import {Toaster} from 'sonner';
 
 export const metadata: Metadata = {
     title: 'IoT Pilot',
@@ -22,6 +23,7 @@ export default function RootLayout({children,}: { children: React.ReactNode; })
                 {children}
             </AuthProvider>
         </Providers>
+        <Toaster position="top-right" richColors />
         </body>
         </html>
     );

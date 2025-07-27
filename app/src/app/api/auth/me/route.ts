@@ -1,73 +1,62 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-import { verifyToken } from '@/lib/auth';
+import {AuthenticatedRequest, withAuthMiddleware} from '@/lib/shared/infrastructure/middleware/auth-middleware';
+import {ServiceContainer} from '@/lib/shared/infrastructure/container/service-container';
+import {ApiResponse} from '@/lib/shared/infrastructure/http/api-response.util';
 
-const prisma = new PrismaClient();
+// Ensure this route is always dynamic (uses cookies)
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
 
-export async function GET(request: NextRequest) {
+// GET /api/auth/me - Get current user using DDD architecture
+export const GET = withAuthMiddleware(async (request: AuthenticatedRequest) => {
     try {
-        const token = request.cookies.get('auth-token')?.value ||
-            request.headers.get('authorization')?.replace('Bearer ', '');
 
-        if (!token) {
-            return NextResponse.json(
-                { error: 'No token provided' },
-                { status: 401 }
-            );
+        const serviceContainer = ServiceContainer.getInstance();
+        const queryBus = serviceContainer.getQueryBus();
+
+        // Import GetCurrentUserQuery here to avoid circular imports
+        const { GetCurrentUserQuery } = await import('@/lib/user/application/queries/get-current-user/get-current-user.query');
+
+        // Create and execute GetCurrentUser query
+        const getCurrentUserQuery = request.user?.customerId
+            ? GetCurrentUserQuery.createForTenant(request.user.id, request.user.customerId)
+            : GetCurrentUserQuery.createSuperAdmin(request.user!.id);
+
+        const user = await queryBus.execute(getCurrentUserQuery);
+
+        if (!user) {
+            return ApiResponse.notFound('User not found');
         }
 
-        // Verify token
-        const payload = verifyToken(token);
-        if (!payload) {
-            return NextResponse.json(
-                { error: 'Invalid token' },
-                { status: 401 }
-            );
-        }
-
-        // Check session exists and is valid
-        const session = await prisma.session.findFirst({
-            where: {
-                token,
-                expiresAt: {
-                    gt: new Date()
-                }
-            },
-            include: {
-                user: {
-                    select: {
-                        id: true,
-                        email: true,
-                        username: true,
-                        role: true,
-                        createdAt: true,
-                        _count: {
-                            select: {
-                                devices: true,
-                                alerts: true
-                            }
-                        }
-                    }
-                }
+        // Convert domain entity to API response format
+        const userData = {
+            id: user.getId().getValue(),
+            email: user.getEmail().getValue(),
+            username: user.getUsername(),  // Returns string directly, not a VO
+            role: user.getRole().getValue(),
+            customerId: user.getCustomerId()?.getValue() || null,
+            createdAt: user.getCreatedAt(),
+            // TODO: Implement device and alert counts via separate queries
+            _count: {
+                devices: 0,
+                alerts: 0
             }
-        });
+        };
 
-        if (!session) {
-            return NextResponse.json(
-                { error: 'Session expired' },
-                { status: 401 }
-            );
-        }
-
-        return NextResponse.json({
-            user: session.user
-        });
+        return ApiResponse.ok({ user: userData });
 
     } catch (error) {
-        console.error('Me route error:', error);
-        return NextResponse.json(
-            { error: 'Internal server error' },
-            { status: 500 }
-        );
+        
+        if (error instanceof Error) {
+            // Handle specific domain errors
+            if (error.message.includes('not found')) {
+                return ApiResponse.notFound('User not found');
+            }
+            if (error.message.includes('Tenant access violation')) {
+                return ApiResponse.forbidden('Access denied');
+            }
+        }
+
+        return ApiResponse.internalError('Internal server error');
     }
-}
+}, ServiceContainer.getInstance().getQueryBus());

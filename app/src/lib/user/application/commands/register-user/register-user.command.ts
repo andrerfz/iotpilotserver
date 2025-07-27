@@ -1,79 +1,88 @@
-import {Command} from '@/lib/shared/application/interfaces/command.interface';
-import {Email} from '@/lib/user/domain/value-objects/email.vo';
-import {Password} from '@/lib/user/domain/value-objects/password.vo';
-import {UserRole} from '@/lib/user/domain/value-objects/user-role.vo';
+import {TenantAwareCommand} from '@/lib/shared/application/commands/tenant-aware-command';
+import {TenantContext} from '@/lib/shared/domain/tenant-context';
+import {Email} from '../../../domain/value-objects/email.vo';
 import {CustomerId} from '@/lib/shared/domain/value-objects/customer-id.vo';
 
-export class RegisterUserCommand implements Command {
-    private constructor(
-        public readonly email: Email,
-        public readonly password: Password,
-        public readonly role: UserRole,
-        public readonly customerId: CustomerId | null,
-        public readonly username?: string
-    ) {}
+export class RegisterUserCommand extends TenantAwareCommand {
+  /** Static type identifier that survives minification */
+  static readonly type = 'RegisterUserCommand';
 
-    static create(
-        email: string,
-        password: string,
-        role: string = 'USER',
-        customerId?: string,
-        username?: string
-    ): RegisterUserCommand {
-        const userRole = UserRole.create(role);
+  constructor(
+    tenantContext: TenantContext,
+    public readonly email: string,
+    public readonly password: string,
+    public readonly firstName: string,
+    public readonly lastName: string,
+    public readonly phoneNumber?: string,
+    public readonly role?: string
+  ) {
+    super(tenantContext);
+  }
 
-        // SUPERADMIN cannot have customerId
-        if (userRole.isSuperAdmin() && customerId) {
-            throw new Error('SUPERADMIN users cannot be associated with a customer');
-        }
+  static fromRequest(request: any, tenantContext: TenantContext): RegisterUserCommand {
+    const { 
+      email, 
+      password, 
+      firstName, 
+      lastName, 
+      phoneNumber, 
+      role = 'USER' 
+    } = request.body;
 
-        // Non-SUPERADMIN must have customerId
-        if (!userRole.isSuperAdmin() && !customerId) {
-            throw new Error('Non-SUPERADMIN users must be associated with a customer');
-        }
-
-        return new RegisterUserCommand(
-            Email.create(email),
-            Password.create(password),
-            userRole,
-            customerId ? CustomerId.create(customerId) : null,
-            username
-        );
+    // Basic validation
+    if (!email || !password || !firstName) {
+      throw new Error('Email, password, and first name are required');
     }
 
-    static createForTenant(
-        email: string,
-        password: string,
-        customerId: string,
-        role: string = 'USER',
-        username?: string
-    ): RegisterUserCommand {
-        const userRole = UserRole.create(role);
+    return new RegisterUserCommand(
+      tenantContext,
+      email, 
+      password, 
+      firstName, 
+      lastName, 
+      phoneNumber, 
+      role
+    );
+  }
 
-        if (userRole.isSuperAdmin()) {
-            throw new Error('Cannot create SUPERADMIN users for tenants');
-        }
-
-        return new RegisterUserCommand(
-            Email.create(email),
-            Password.create(password),
-            userRole,
-            CustomerId.create(customerId),
-            username
-        );
+  // Factory method to create with validated value objects
+  static create(
+    tenantContext: TenantContext,
+    email: string,
+    password: string,
+    firstName: string,
+    lastName: string,
+    customerId: string,
+    phoneNumber?: string,
+    role: string = 'USER'
+  ): RegisterUserCommand {
+    // Validate email format
+    try {
+      Email.fromString(email);
+    } catch (error) {
+      throw new Error('Invalid email format');
     }
 
-    static createSuperAdmin(
-        email: string,
-        password: string,
-        username?: string
-    ): RegisterUserCommand {
-        return new RegisterUserCommand(
-            Email.create(email),
-            Password.create(password),
-            UserRole.superAdmin(),
-            null,
-            username
-        );
+    // Validate customer ID
+    try {
+      CustomerId.fromString(customerId);
+    } catch (error) {
+      throw new Error('Invalid customer ID format');
     }
+
+    // Basic password validation
+    if (password.length < 8) {
+      throw new Error('Password must be at least 8 characters long');
+    }
+
+    return new RegisterUserCommand(
+      tenantContext,
+      email,
+      password,
+      firstName,
+      lastName,
+      phoneNumber,
+      role
+    );
+  }
 }

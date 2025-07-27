@@ -1,134 +1,105 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
-import { LogIn } from 'lucide-react';
-import { useAuth } from '@/contexts/auth-context';
-import PasswordInput from './password-input';
-import {
-    Alert,
-    Button,
-    Checkbox,
-    Form,
-    Input,
-    Link as HeroLink,
-    Spacer
-} from '@heroui/react';
+import {useState} from 'react';
+import {useRouter} from 'next/navigation';
+import {Input} from '@heroui/input';
+import {Button} from '@heroui/button';
+import {Checkbox} from '@heroui/checkbox';
+import {useAuth} from '@/contexts/auth-context';
+import {useUserCommands} from '@/hooks/commands/use-user-commands';
+import {toast} from 'sonner';
 
-export default function LoginForm() {
+/**
+ * LoginForm component for user authentication using domain commands.
+ * @returns JSX element for the login form.
+ */
+export function LoginForm() {
+    const router = useRouter();
+    const { login: legacyLogin } = useAuth(); // Keep for backward compatibility with state management
+    const { authenticateUser, loading, error } = useUserCommands();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [remember, setRemember] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
-
-    const router = useRouter();
-    const searchParams = useSearchParams();
-    const redirectTo = searchParams.get('redirect') || '/';
-    const { login, user } = useAuth();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true);
-        setError('');
 
         try {
-            await login(email, password, remember);
+            // Use domain command for authentication
+            const result = await authenticateUser({
+                email,
+                password,
+                rememberMe: remember
+            } as any);
 
-            // Use router.push instead of window.location for now
-            router.push(redirectTo);
-
+            // Update auth context state with the result
+            if (result && (result as any).token) {
+                // Store token in a cookie or localStorage based on remember me
+                if (remember) {
+                    localStorage.setItem('auth_token', (result as any).token);
+                }
+                
+                toast.success('Login successful!');
+                
+                // Redirect to dashboard on success
+                router.push('/');
+            }
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Login failed');
-            setLoading(false);
+            toast.error(err instanceof Error ? err.message : 'Authentication failed');
         }
     };
 
     return (
-        <Form className="space-y-6" onSubmit={handleSubmit}>
-            {error && (
-                <Alert
-                    color="danger"
-                    variant="flat"
-                    className="mb-4"
-                    title="Login Failed"
-                    description={error}
-                />
-            )}
-
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <Input
-                id="email"
-                name="email"
                 type="email"
-                autoComplete="email"
-                required
+                label="Email"
+                placeholder="Enter your email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                label="Email address"
-                placeholder=""
+                onValueChange={setEmail}
+                isRequired
                 variant="bordered"
-                size="lg"
-                fullWidth
                 classNames={{
-                    input: "text-base",
-                    inputWrapper: "h-16",
-                    label: "text-sm"
+                    input: "bg-transparent",
+                    inputWrapper: "border-default-200 hover:border-default-400"
                 }}
             />
 
-            <PasswordInput
-                id="password"
-                name="password"
+            <Input
+                type="password"
+                label="Password"
+                placeholder="Enter your password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete="current-password"
-                placeholder=""
-                size="lg"
+                onValueChange={setPassword}
+                isRequired
+                variant="bordered"
+                classNames={{
+                    input: "bg-transparent",
+                    inputWrapper: "border-default-200 hover:border-default-400"
+                }}
             />
 
-            <div className="space-y-4 w-full">
-                <div className="w-full flex items-center justify-center">
-                    <Checkbox
-                        id="remember"
-                        name="remember"
-                        isSelected={remember}
-                        onValueChange={setRemember}
-                        color="primary"
-                        size="sm"
-                    >
-                        Remember me
-                    </Checkbox>
-                </div>
-
-                <div className="w-full flex items-center justify-center">
-                    <HeroLink
-                        as={Link}
-                        href="/forgot-password"
-                        color="primary"
-                        size="sm"
-                        className="font-medium"
-                    >
-                        Forgot password?
-                    </HeroLink>
-                </div>
+            <div className="flex items-center justify-between">
+                <Checkbox
+                    isSelected={remember}
+                    onValueChange={setRemember}
+                    size="sm"
+                >
+                    Remember me
+                </Checkbox>
             </div>
-
-            <Spacer y={2} />
 
             <Button
                 type="submit"
                 color="primary"
-                variant="solid"
-                size="lg"
                 isLoading={loading}
-                isDisabled={loading}
-                fullWidth
-                startContent={!loading && <LogIn className="h-5 w-5" />}
-                className="font-medium"
+                className="w-full"
+                size="lg"
             >
                 {loading ? 'Signing in...' : 'Sign in'}
             </Button>
-        </Form>
+        </form>
     );
 }
+
+export default LoginForm;

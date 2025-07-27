@@ -1,0 +1,219 @@
+@startuml Monitoring Domain Components
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam package {
+    BackgroundColor #FFF3E0
+    BorderColor #E65100
+    BorderThickness 2
+}
+
+title Monitoring Domain Component Architecture
+
+package "Monitoring Bounded Context" as MonitoringContext {
+
+    package "Application Layer" as App {
+        package "Commands" as Commands {
+            class CreateThresholdCommand
+            class UpdateThresholdCommand
+            class AcknowledgeAlertCommand
+            class ResolveAlertCommand
+            class GenerateReportCommand
+        }
+
+        package "Queries" as Queries {
+            class ListAlertsQuery
+            class GetAlertQuery
+            class ListMetricsQuery
+            class GetMonitoringReportQuery
+            class ListThresholdsQuery
+        }
+
+        class CommandBus
+        class QueryBus
+        class EventBus
+    }
+
+    package "Domain Layer" as Domain {
+
+        package "Entities" as Entities {
+            class Metric
+            class Alert <<Aggregate Root>>
+            class Threshold <<Aggregate Root>>
+            class MonitoringReport
+        }
+
+        package "Value Objects" as ValueObjects {
+            class MetricId
+            class AlertId
+            class ThresholdId
+            class MetricValue
+            class AlertSeverity
+            class AlertStatus
+            class TimeRange
+        }
+
+        package "Domain Services" as DomainServices {
+            class AlertingService
+            class MetricsCollectionService
+            class ReportGenerationService
+        }
+
+        package "Domain Events" as DomainEvents {
+            class AlertTriggeredEvent
+            class AlertAcknowledgedEvent
+            class AlertResolvedEvent
+            class MetricCollectedEvent
+            class ThresholdBreachedEvent
+        }
+
+        package "Interfaces" as Interfaces {
+            interface MetricRepository
+            interface AlertRepository
+            interface ThresholdRepository
+            interface MonitoringReportRepository
+        }
+
+        package "Policies" as Policies {
+            class AlertEscalationPolicy
+            class MetricsRetentionPolicy
+            class ThresholdValidationPolicy
+        }
+    }
+
+    package "Infrastructure Layer" as Infra {
+
+        package "Repositories" as Repositories {
+            class InfluxMetricRepository
+            class PrismaAlertRepository
+            class PrismaThresholdRepository
+            class PrismaMonitoringReportRepository
+        }
+
+        package "Mappers" as Mappers {
+            class MetricMapper
+            class AlertMapper
+            class ThresholdMapper
+            class ReportMapper
+        }
+
+        package "Services" as InfraServices {
+            class PrometheusMetricsCollector
+            class TelegrafMetricsCollector
+            class EmailAlertNotifier
+            class SmsAlertNotifier
+            class WebhookAlertNotifier
+        }
+
+        package "DTOs" as DTOs {
+            class MetricDTO
+            class AlertDTO
+            class ThresholdDTO
+            class MonitoringReportDTO
+            class AlertSummaryDTO
+        }
+    }
+}
+
+' External Dependencies
+package "Shared Kernel" as Shared {
+    class TenantContext
+    class DomainEvent
+    class ValueObject
+    class Entity
+    interface Repository
+}
+
+package "Infrastructure Services" as External {
+    database PostgreSQL
+    database InfluxDB
+    queue MQTT
+    interface EmailService
+    interface SmsService
+    interface WebhookService
+    interface Prometheus
+}
+
+' Internal Relationships
+Alert ..> AlertId : has
+Alert ..> DeviceId : targets
+Alert ..> ThresholdId : triggered by
+Alert ..> AlertSeverity : has
+Alert ..> AlertStatus : has
+
+Threshold ..> ThresholdId : has
+Threshold ..> DeviceId : monitors
+Threshold ..> AlertSeverity : triggers
+Threshold ..> MetricValue : compares against
+
+Metric ..> MetricId : has
+Metric ..> DeviceId : collected from
+Metric ..> MetricValue : measures
+
+AlertingService ..> ThresholdRepository : evaluates
+AlertingService ..> AlertRepository : creates alerts
+AlertingService ..> MetricRepository : reads metrics
+
+MetricsCollectionService ..> MetricRepository : stores metrics
+MetricsCollectionService ..> DeviceId : collects from
+
+ReportGenerationService ..> MetricRepository : aggregates
+ReportGenerationService ..> AlertRepository : summarizes
+ReportGenerationService ..> MonitoringReportRepository : saves
+
+' External Relationships
+MonitoringContext --> Shared : depends on
+Infra --> External : integrates with
+
+' Alerting Flow
+TelegrafMetricsCollector --> InfluxDB : collects metrics
+note right: Device metrics collected via Telegraf agent
+
+AlertingService --> InfluxMetricRepository : queries latest metrics
+InfluxMetricRepository --> InfluxDB : retrieves metrics
+AlertingService --> ThresholdRepository : gets active thresholds
+ThresholdRepository --> PostgreSQL : queries thresholds
+AlertingService --> AlertingService : evaluates conditions
+
+AlertingService --> Alert : creates alert
+Alert --> DomainEvents : publishes AlertTriggeredEvent
+DomainEvents --> EventBus : sent to
+
+EventBus --> EmailAlertNotifier : sends notification
+EventBus --> SmsAlertNotifier : sends SMS
+EventBus --> WebhookAlertNotifier : sends webhook
+
+' Reporting Flow
+GenerateReportCommand --> CommandBus : submitted
+CommandBus --> GenerateReportHandler : routed to
+GenerateReportHandler --> ReportGenerationService : delegates
+ReportGenerationService --> MetricRepository : aggregates metrics
+ReportGenerationService --> AlertRepository : gets alerts
+ReportGenerationService --> MonitoringReport : creates report
+ReportGenerationService --> MonitoringReportRepository : saves report
+
+' Component Notes
+note right of Alert : Aggregate Root\nManages alert lifecycle\nSupports acknowledgment
+note right of Threshold : Aggregate Root\nDefines monitoring rules\nEvaluates metrics
+note right of AlertingService : Domain Service\nEvaluates thresholds\nCreates alerts
+note right of MetricsCollectionService : Collects metrics from devices\nValidates data integrity
+
+' Data Flow Notes
+note as DataFlow
+    **Data Flow:**
+    1. Telegraf collects device metrics
+    2. Metrics stored in InfluxDB
+    3. Alerting service evaluates thresholds
+    4. Alerts created and notifications sent
+    5. Reports generated from historical data
+end note
+
+' Integration Notes
+note as Integration
+    **External Integrations:**
+    - InfluxDB for time-series data
+    - PostgreSQL for alerts/thresholds
+    - Email/SMS/Webhook for notifications
+    - Prometheus for system metrics
+end note
+
+@enduml

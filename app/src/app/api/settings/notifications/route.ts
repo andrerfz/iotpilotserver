@@ -1,15 +1,22 @@
-import {NextResponse} from 'next/server';
-import {z} from 'zod';
-import {AuthenticatedRequest, withCustomerContext} from '@/lib/api-middleware';
+import {validator} from '@/lib/shared/infrastructure/validation/validation-helper';
+import {AuthenticatedRequest, withCustomerContext} from '@/lib/shared/infrastructure/middleware/api-middleware';
 import {tenantPrisma} from '@/lib/tenant-middleware';
 import {getUserPreferences} from '@/lib/user-preferences';
+import {ApiResponse} from '@/lib/shared/infrastructure/http/api-response.util';
+import {z} from 'zod';
+
+// Dynamic route: reads auth from cookies
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
 
 // Validation schema for notifications settings
-const notificationsSettingsSchema = z.object({
-    emailNotifications: z.enum(['true', 'false']),
-    pushNotifications: z.enum(['true', 'false']),
-    alertNotifications: z.enum(['true', 'false']),
-    deviceOfflineNotifications: z.enum(['true', 'false'])
+const v = validator();
+const notificationsSettingsSchema = v.object({
+    emailNotifications: v.enum(['true', 'false'] as const),
+    pushNotifications: v.enum(['true', 'false'] as const),
+    alertNotifications: v.enum(['true', 'false'] as const),
+    deviceOfflineNotifications: v.enum(['true', 'false'] as const)
 });
 
 // GET /api/settings/notifications - Get notifications settings
@@ -17,22 +24,16 @@ export const GET = withCustomerContext(async (request: AuthenticatedRequest) => 
     try {
         const user = request.user;
         if (!user) {
-            return NextResponse.json(
-                {error: 'Authentication required'},
-                {status: 401}
-            );
+            return ApiResponse.unauthorized('Authentication required');
         }
 
         // Get notifications preferences with defaults
         const preferences = await getUserPreferences(user.id, 'NOTIFICATIONS');
 
-        return NextResponse.json(preferences);
+        return ApiResponse.ok(preferences);
     } catch (error) {
         console.error('Failed to fetch notifications settings:', error);
-        return NextResponse.json(
-            {error: 'Failed to fetch notifications settings'},
-            {status: 500}
-        );
+        return ApiResponse.internalError('Failed to fetch notifications settings');
     }
 });
 
@@ -41,10 +42,7 @@ export const PUT = withCustomerContext(async (request: AuthenticatedRequest) => 
     try {
         const user = request.user;
         if (!user) {
-            return NextResponse.json(
-                {error: 'Authentication required'},
-                {status: 401}
-            );
+            return ApiResponse.unauthorized('Authentication required');
         }
 
         // Parse and validate request body
@@ -73,28 +71,19 @@ export const PUT = withCustomerContext(async (request: AuthenticatedRequest) => 
 
         await Promise.all(updatePromises);
 
-        return NextResponse.json({
+        return ApiResponse.ok({
             message: 'Notifications settings updated successfully',
             settings: validatedData
         });
     } catch (error) {
         if (error instanceof z.ZodError) {
-            return NextResponse.json(
-                {
-                    error: 'Invalid input',
-                    details: error.errors.map(err => ({
-                        path: err.path.join('.'),
-                        message: err.message
-                    }))
-                },
-                {status: 400}
-            );
+            return ApiResponse.badRequest('Invalid input', error.errors.map(err => ({
+                path: err.path.join('.'),
+                message: err.message
+            })));
         }
 
         console.error('Failed to update notifications settings:', error);
-        return NextResponse.json(
-            {error: 'Failed to update notifications settings'},
-            {status: 500}
-        );
+        return ApiResponse.internalError('Failed to update notifications settings');
     }
 });

@@ -1,16 +1,30 @@
-import {NextResponse} from 'next/server';
-import {AuthenticatedRequest, withCustomerContext} from '@/lib/api-middleware';
+import {AuthenticatedRequest, withCustomerContext} from '@/lib/shared/infrastructure/middleware/api-middleware';
 import {tenantPrisma} from '@/lib/tenant-middleware';
+import {ApiResponse} from '@/lib/shared/infrastructure/http/api-response.util';
+import {Pagination} from '@/lib/shared/infrastructure/http/pagination.util';
+
+// Dynamic route: uses auth context and cookies
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
 
 // Handler for listing users with optional filtering
 export const GET = withCustomerContext(async (request: AuthenticatedRequest) => {
     try {
-        // Get query parameters
-        const url = new URL(request.url);
+        // Get query parameters - AuthenticatedRequest extends NextRequest which has url
+        const url = new URL((request as any).url || (request as any).nextUrl?.href || '');
         const status = url.searchParams.get('status');
-        const page = parseInt(url.searchParams.get('page') || '1');
-        const limit = parseInt(url.searchParams.get('limit') || '10');
-        const skip = (page - 1) * limit;
+        
+        // Parse and validate pagination
+        const { page, limit, skip, validation } = Pagination.fromQueryParams(
+            url.searchParams,
+            10,  // default limit
+            100  // max limit
+        );
+
+        if (!validation.isValid) {
+            return ApiResponse.badRequest('Invalid pagination', validation.errors);
+        }
 
         // Build filter based on query parameters
         const filter: any = {};
@@ -23,12 +37,12 @@ export const GET = withCustomerContext(async (request: AuthenticatedRequest) => 
         // Get current user context
         const currentUser = request.user;
         if (!currentUser) {
-            return NextResponse.json({error: 'Authentication required'}, {status: 401});
+            return ApiResponse.unauthorized('Authentication required');
         }
 
         // Only ADMIN or SUPERADMIN can list users
         if (currentUser.role !== 'ADMIN' && currentUser.role !== 'SUPERADMIN') {
-            return NextResponse.json({error: 'Insufficient permissions'}, {status: 403});
+            return ApiResponse.forbidden('Insufficient permissions');
         }
 
         // Get users with pagination
@@ -56,20 +70,12 @@ export const GET = withCustomerContext(async (request: AuthenticatedRequest) => 
             where: filter
         });
 
-        return NextResponse.json({
-            users,
-            pagination: {
-                total: totalCount,
-                page,
-                limit,
-                pages: Math.ceil(totalCount / limit)
-            }
-        });
+        // Create standardized pagination
+        const pagination = Pagination.create(page, limit, totalCount);
+
+        return ApiResponse.okPaginated(users, pagination);
     } catch (error) {
         console.error('List users error:', error);
-        return NextResponse.json(
-            {error: 'Internal server error'},
-            {status: 500}
-        );
+        return ApiResponse.internalError('Internal server error');
     }
 }, {requiredRole: 'ADMIN'}); // Only ADMIN or higher can access this endpoint

@@ -1,13 +1,15 @@
-import { Injectable, NestMiddleware } from '@nestjs/common';
-import { Request, Response, NextFunction } from 'express';
-import { PrismaClient, UserRole } from '@prisma/client';
-import { TenantContext } from '@/lib/shared/application/context/tenant-context.vo';
-import { TenantContextProvider } from '@/lib/shared/application/context/tenant-context-provider.service';
-import { TenantScopedLoggingService } from '../logging/tenant-scoped-logging.service';
-import { tenantPrisma, withTenant, TenantContext as TenantContextInterface } from '@/lib/tenant-middleware';
-import { CustomerId } from '@/lib/shared/domain/value-objects/customer-id.vo';
-import { UserId } from '@/lib/user/domain/value-objects/user-id.vo';
-import { UserRole as UserRoleVO } from '@/lib/user/domain/value-objects/user-role.vo';
+import {Injectable, NestMiddleware} from '@nestjs/common';
+import {NextFunction, Request, Response} from 'express';
+import {TenantContext} from '@/lib/shared/domain/tenant-context';
+import {TenantContextProvider} from '@/lib/shared/application/context/tenant-context-provider.service';
+import {TenantScopedLoggingService} from '../logging/tenant-scoped-logging.service';
+import {TenantContext as TenantContextInterface, tenantPrisma, withTenant} from '@/lib/tenant-middleware';
+import {CustomerId} from '@/lib/shared/domain/value-objects/customer-id.vo';
+import {UserId} from '@/lib/user/domain/value-objects/user-id.vo';
+import {UserRole, UserRoleType} from '@/lib/shared/domain/value-objects/user-role.vo';
+import {PrismaService} from '../database/prisma.service';
+
+type PrismaClient = ReturnType<PrismaService['getClient']>;
 
 /**
  * Middleware for handling tenant context in API requests
@@ -53,13 +55,8 @@ export class TenantApiMiddleware implements NestMiddleware {
       // Create tenant context
       const tenantContext = await this.createTenantContext(user, req);
 
-      // Convert TenantContext class to TenantContextInterface
-      const tenantContextAdapter: TenantContextInterface = {
-        customerId: tenantContext.getCustomerId()?.getValue() || null,
-        userId: tenantContext.getUserId().getValue(),
-        role: tenantContext.getRole().getValue() as UserRole,
-        isSuperAdmin: tenantContext.isSuperAdminUser()
-      };
+      // Use the TenantContext directly instead of converting
+      const tenantContextAdapter = tenantContext as any as TenantContextInterface;
 
       // Run the rest of the request with tenant context
       await withTenant(tenantContextAdapter, async () => {
@@ -113,7 +110,7 @@ export class TenantApiMiddleware implements NestMiddleware {
    * @returns The tenant context
    */
   private async createTenantContext(
-    user: { id: string; customerId: string | null; role: UserRole },
+    user: { id: string; customerId: string | null; role: UserRoleType },
     req: Request
   ): Promise<TenantContext> {
     // Check if user is SUPERADMIN
@@ -141,7 +138,7 @@ export class TenantApiMiddleware implements NestMiddleware {
     // Create and return the tenant context
     return this.tenantContextProvider.createContext(
       UserId.create(user.id),
-      UserRoleVO.create(user.role),
+      UserRole.create(user.role),
       customerId,
       isSuperAdmin
     );

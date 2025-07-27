@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Add node_modules/.bin to PATH so we can use prisma and other tools
+export PATH="/app/node_modules/.bin:$PATH"
+
 echo "🚀 Starting IoT Pilot..."
 
 # Wait for database to be ready
@@ -39,7 +42,7 @@ apply_initial_migration() {
         # Initialize Prisma migrations table manually if needed
         if ! has_prisma_migrations; then
             echo "🔧 Initializing Prisma migrations table..."
-            npx prisma migrate resolve --applied 20240101000000_initial_setup 2>/dev/null || echo "⚠️ Could not initialize Prisma tracking"
+            npm run db:migrate:resolve 20240101000000_initial_setup 2>/dev/null || echo "⚠️ Could not initialize Prisma tracking"
         fi
 
         return 0
@@ -56,7 +59,7 @@ if has_tables; then
     # Check if we have Prisma migrations to run
     if [ -d "prisma/migrations" ] && [ "$(ls -A prisma/migrations 2>/dev/null)" ]; then
         echo "🔄 Running Prisma migrations (for updates)..."
-        if npx prisma migrate deploy; then
+        if npm run db:migrate:deploy; then
             echo "✅ Prisma migrations completed"
         else
             echo "⚠️ Some migrations failed, but continuing with existing schema"
@@ -73,7 +76,7 @@ elif [ -f "prisma/migration/001_initial_setup.sql" ]; then
 
 else
     echo "🔧 No initial migration found, using Prisma schema push..."
-    if npx prisma db push --accept-data-loss; then
+    if npm run db:push; then
         echo "✅ Database schema pushed successfully"
     else
         echo "❌ Database schema push failed"
@@ -84,7 +87,7 @@ fi
 # Always try to run any pending Prisma migrations for updates
 if [ -d "prisma/migrations" ] && [ "$(ls -A prisma/migrations 2>/dev/null)" ]; then
     echo "🔄 Checking for pending Prisma migrations..."
-    if npx prisma migrate deploy 2>/dev/null; then
+    if npm run db:migrate:deploy 2>/dev/null; then
         echo "✅ All migrations are up to date"
     else
         echo "⚠️ Migration check completed with warnings"
@@ -93,7 +96,7 @@ fi
 
 # Generate Prisma client
 echo "🔧 Generating Prisma client..."
-if npx prisma generate; then
+if npm run db:generate; then
     echo "✅ Prisma client generated"
 else
     echo "⚠️ Prisma client generation failed, continuing anyway"

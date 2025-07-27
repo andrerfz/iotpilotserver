@@ -1,14 +1,21 @@
-import {NextResponse} from 'next/server';
-import {z} from 'zod';
-import {AuthenticatedRequest, withCustomerContext} from '@/lib/api-middleware';
+import {validator} from '@/lib/shared/infrastructure/validation/validation-helper';
+import {AuthenticatedRequest, withCustomerContext} from '@/lib/shared/infrastructure/middleware/api-middleware';
 import {tenantPrisma} from '@/lib/tenant-middleware';
 import {getUserPreferences} from '@/lib/user-preferences';
+import {ApiResponse} from '@/lib/shared/infrastructure/http/api-response.util';
+import {z} from 'zod';
+
+// Dynamic route: reads auth from cookies
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
 
 // Validation schema for profile settings
-const profileSettingsSchema = z.object({
-    language: z.string().min(2).max(5),
-    timezone: z.string().min(1),
-    dateFormat: z.string().min(1)
+const v = validator();
+const profileSettingsSchema = v.object({
+    language: v.string({ min: 2, max: 5 }),
+    timezone: v.string({ min: 1 }),
+    dateFormat: v.string({ min: 1 })
 });
 
 // GET /api/settings/profile - Get profile settings
@@ -16,22 +23,16 @@ export const GET = withCustomerContext(async (request: AuthenticatedRequest) => 
     try {
         const user = request.user;
         if (!user) {
-            return NextResponse.json(
-                {error: 'Authentication required'},
-                {status: 401}
-            );
+            return ApiResponse.unauthorized('Authentication required');
         }
 
         // Get profile preferences with defaults
         const preferences = await getUserPreferences(user.id, 'PROFILE');
 
-        return NextResponse.json(preferences);
+        return ApiResponse.ok(preferences);
     } catch (error) {
         console.error('Failed to fetch profile settings:', error);
-        return NextResponse.json(
-            {error: 'Failed to fetch profile settings'},
-            {status: 500}
-        );
+        return ApiResponse.internalError('Failed to fetch profile settings');
     }
 });
 
@@ -40,10 +41,7 @@ export const PUT = withCustomerContext(async (request: AuthenticatedRequest) => 
     try {
         const user = request.user;
         if (!user) {
-            return NextResponse.json(
-                {error: 'Authentication required'},
-                {status: 401}
-            );
+            return ApiResponse.unauthorized('Authentication required');
         }
 
         // Parse and validate request body
@@ -72,28 +70,19 @@ export const PUT = withCustomerContext(async (request: AuthenticatedRequest) => 
 
         await Promise.all(updatePromises);
 
-        return NextResponse.json({
+        return ApiResponse.ok({
             message: 'Profile settings updated successfully',
             settings: validatedData
         });
     } catch (error) {
         if (error instanceof z.ZodError) {
-            return NextResponse.json(
-                {
-                    error: 'Invalid input',
-                    details: error.errors.map(err => ({
-                        path: err.path.join('.'),
-                        message: err.message
-                    }))
-                },
-                {status: 400}
-            );
+            return ApiResponse.badRequest('Invalid input', error.errors.map(err => ({
+                path: err.path.join('.'),
+                message: err.message
+            })));
         }
 
         console.error('Failed to update profile settings:', error);
-        return NextResponse.json(
-            {error: 'Failed to update profile settings'},
-            {status: 500}
-        );
+        return ApiResponse.internalError('Failed to update profile settings');
     }
 });

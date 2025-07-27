@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { ArrowLeft, Terminal, Wifi, WifiOff } from 'lucide-react';
-import { Button, Card, CardBody, Chip } from '@heroui/react';
+import {useEffect, useState} from 'react';
+import {useRouter} from 'next/navigation';
+import {ArrowLeft, Terminal, Wifi, WifiOff} from 'lucide-react';
+import {Button, Card, CardBody, Chip} from '@heroui/react';
 import SSHTerminal from '@/components/ssh-terminal';
 
 interface DeviceTerminalPageProps {
@@ -172,8 +172,6 @@ export default function DeviceTerminalPage({ params }: DeviceTerminalPageProps) 
                 {showTerminal ? (
                     <SSHTerminal
                         deviceId={device.deviceId}
-                        hostname={device.hostname}
-                        onClose={handleCloseTerminal}
                     />
                 ) : (
                     <Card className="h-full">

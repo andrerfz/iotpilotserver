@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom';
-import { vi } from 'vitest';
+import {vi} from 'vitest';
 
 // Mock environment variables for tests
 process.env.INFLUXDB_URL = 'http://localhost:8087';
@@ -13,10 +13,10 @@ process.env.NODE_ENV = 'test';
 // Mock fetch globally (using vi instead of jest)
 global.fetch = vi.fn();
 
-// Mock console methods to reduce noise in tests
+// Mock console methods to reduce noise in tests (but allow log for debugging)
 global.console = {
     ...console,
-    log: vi.fn(),
+    // log: vi.fn(), // Commented out to allow debugging
     warn: vi.fn(),
     error: vi.fn(),
 };

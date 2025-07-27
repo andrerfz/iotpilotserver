@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Alert, AlertStats } from '@/types/alerts';
+import {useEffect, useState} from 'react';
+import {Alert, AlertStats} from '@/lib/monitoring/infrastructure/dto/frontend-alert.types';
 
 export function useAlertStats(deviceId: string, refreshInterval: number = 60000) {
     const [stats, setStats] = useState<AlertStats | null>(null);

@@ -1,6 +1,6 @@
-import { useEffect, useState, useCallback } from 'react';
-import { toast } from 'sonner';
-import { Alert } from '@/types/alerts';
+import {useCallback, useEffect, useState} from 'react';
+import {toast} from 'sonner';
+import {Alert, AlertSeverityType} from '@/lib/monitoring/infrastructure/dto/frontend-alert.types';
 
 interface UseRealTimeAlertsOptions {
     deviceId?: string;
@@ -18,7 +18,7 @@ export function useRealTimeAlerts(options: UseRealTimeAlertsOptions = {}) {
     useEffect(() => {
         if (!deviceId) return;
 
-        let intervalId: NodeJS.Timeout;
+        let intervalId: ReturnType<typeof setInterval>;
         let isActive = true;
 
         const connectToAlertStream = () => {
@@ -41,13 +41,13 @@ export function useRealTimeAlerts(options: UseRealTimeAlertsOptions = {}) {
 
                     // Process new alerts
                     if (data.alerts && data.alerts.length > 0) {
-                        const recentAlerts = data.alerts.filter((alert: Alert) => {
+                        const recentAlerts = (data.alerts as Alert[]).filter((alert) => {
                             const alertTime = new Date(alert.createdAt).getTime();
                             const fiveMinutesAgo = Date.now() - (5 * 60 * 1000);
                             return alertTime > fiveMinutesAgo && !alert.resolved;
                         });
 
-                        recentAlerts.forEach((alert: Alert) => {
+                        recentAlerts.forEach((alert) => {
                             if (onNewAlert) {
                                 onNewAlert(alert);
                             }
@@ -89,14 +89,14 @@ export function useRealTimeAlerts(options: UseRealTimeAlertsOptions = {}) {
     }, [deviceId, onNewAlert, onAlertResolved, enableNotifications]);
 
     const showAlertNotification = useCallback((alert: Alert) => {
-        const severityConfig = {
+        const severityConfig: Record<AlertSeverityType, { color: string; icon: string }> = {
             INFO: { color: 'info', icon: '💡' },
             WARNING: { color: 'warning', icon: '⚠️' },
             ERROR: { color: 'error', icon: '❌' },
             CRITICAL: { color: 'error', icon: '🚨' }
         };
 
-        const config = severityConfig[alert.severity];
+        const config = severityConfig[alert.severity as AlertSeverityType];
 
         if (alert.severity === 'CRITICAL') {
             toast.error(`${config.icon} ${alert.title}`, {

@@ -1,0 +1,332 @@
+@startuml Monitoring Domain Model
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam sequenceParticipant underline
+
+title Monitoring & Alerting Domain Model
+
+' Value Objects
+class MetricId {
+    +value: string
+    +create(value: string): MetricId
+    +getValue(): string
+    +equals(other: ValueObject): boolean
+}
+
+class AlertId {
+    +value: string
+    +create(value: string): AlertId
+    +getValue(): string
+    +equals(other: ValueObject): boolean
+}
+
+class ThresholdId {
+    +value: string
+    +create(value: string): ThresholdId
+    +getValue(): string
+    +equals(other: ValueObject): boolean
+}
+
+class MetricValue {
+    +value: number
+    +unit: string
+    +create(value: number, unit?: string): MetricValue
+    +getValue(): number
+    +getUnit(): string
+    +validate(): void
+}
+
+class AlertSeverity {
+    +value: AlertSeverityEnum
+    +create(value: string): AlertSeverity
+    +getValue(): AlertSeverityEnum
+    +getPriority(): number
+}
+
+class AlertStatus {
+    +value: AlertStatusEnum
+    +create(value: string): AlertStatus
+    +getValue(): AlertStatusEnum
+}
+
+class TimeRange {
+    +startDate: Date
+    +endDate: Date
+    +create(startDate: Date, endDate: Date): TimeRange
+    +getStartDate(): Date
+    +getEndDate(): Date
+    +getDuration(): number
+    +contains(date: Date): boolean
+}
+
+' Entities
+class Metric {
+    -id: MetricId
+    -deviceId: DeviceId
+    -customerId: CustomerId
+    -metricType: string
+    -value: MetricValue
+    -timestamp: Date
+    -tags: Record<string, string>
+    +create(params: MetricCreationParams): Metric
+    +getId(): MetricId
+    +getDeviceId(): DeviceId
+    +getMetricType(): string
+    +getValue(): MetricValue
+    +getTimestamp(): Date
+    +getTags(): Record<string, string>
+}
+
+class Alert {
+    -id: AlertId
+    -deviceId: DeviceId
+    -customerId: CustomerId
+    -thresholdId: ThresholdId
+    -metricType: string
+    -metricValue: MetricValue
+    -thresholdValue: number
+    -operator: string
+    -severity: AlertSeverity
+    -status: AlertStatus
+    -message: string
+    -acknowledgedAt?: Date
+    -acknowledgedBy?: UserId
+    -resolvedAt?: Date
+    -createdAt: Date
+    -updatedAt: Date
+    +create(params: AlertCreationParams): Alert
+    +acknowledge(userId: UserId): void
+    +resolve(): void
+    +escalate(newSeverity: AlertSeverity): void
+    +getId(): AlertId
+    +getDeviceId(): DeviceId
+    +getSeverity(): AlertSeverity
+    +getStatus(): AlertStatus
+}
+
+class Threshold {
+    -id: ThresholdId
+    -deviceId: DeviceId
+    -customerId: CustomerId
+    -metricType: string
+    -operator: string
+    -thresholdValue: number
+    -severity: AlertSeverity
+    -enabled: boolean
+    -description?: string
+    -createdAt: Date
+    -updatedAt: Date
+    +create(params: ThresholdCreationParams): Threshold
+    +updateValue(newValue: number): void
+    +enable(): void
+    +disable(): void
+    +evaluate(metric: Metric): boolean
+    +getId(): ThresholdId
+    +getDeviceId(): DeviceId
+    +getMetricType(): string
+    +getThresholdValue(): number
+    +isEnabled(): boolean
+}
+
+class MonitoringReport {
+    -id: ReportId
+    -customerId: CustomerId
+    -timeRange: TimeRange
+    -status: ReportStatus
+    -generatedAt: Date
+    -metricsCount: number
+    -alertsCount: number
+    -summary: ReportSummary
+    +create(customerId: CustomerId, timeRange: TimeRange): MonitoringReport
+    +addMetrics(metrics: Metric[]): void
+    +addAlerts(alerts: Alert[]): void
+    +generate(): Promise<void>
+    +complete(): void
+    +fail(reason: string): void
+    +getId(): ReportId
+    +getStatus(): ReportStatus
+    +getSummary(): ReportSummary
+}
+
+' Domain Services
+class AlertingService {
+    +evaluateThresholds(deviceId: DeviceId): Promise<Alert[]>
+    +createAlert(threshold: Threshold, metric: Metric): Promise<Alert>
+    +escalateAlert(alert: Alert): Promise<void>
+    +resolveAlert(alert: Alert): Promise<void>
+}
+
+class MetricsCollectionService {
+    +collectDeviceMetrics(deviceId: DeviceId): Promise<Metric[]>
+    +validateMetricData(metric: Metric): Promise<boolean>
+    +aggregateMetrics(metrics: Metric[], timeRange: TimeRange): Promise<AggregatedMetrics>
+}
+
+class ReportGenerationService {
+    +generateCustomerReport(customerId: CustomerId, timeRange: TimeRange): Promise<MonitoringReport>
+    +generateDeviceReport(deviceId: DeviceId, timeRange: TimeRange): Promise<MonitoringReport>
+    +exportReport(report: MonitoringReport, format: ExportFormat): Promise<Blob>
+}
+
+' Domain Events
+class AlertTriggeredEvent {
+    +alertId: AlertId
+    +deviceId: DeviceId
+    +thresholdId: ThresholdId
+    +metricValue: MetricValue
+    +severity: AlertSeverity
+    +eventType: "AlertTriggered"
+    +aggregateId: string
+    +occurredOn: Date
+}
+
+class AlertAcknowledgedEvent {
+    +alertId: AlertId
+    +userId: UserId
+    +eventType: "AlertAcknowledged"
+    +aggregateId: string
+    +occurredOn: Date
+}
+
+class AlertResolvedEvent {
+    +alertId: AlertId
+    +eventType: "AlertResolved"
+    +aggregateId: string
+    +occurredOn: Date
+}
+
+class MetricCollectedEvent {
+    +metricId: MetricId
+    +deviceId: DeviceId
+    +metricType: string
+    +value: MetricValue
+    +eventType: "MetricCollected"
+    +aggregateId: string
+    +occurredOn: Date
+}
+
+class ThresholdBreachedEvent {
+    +thresholdId: ThresholdId
+    +deviceId: DeviceId
+    +metricValue: MetricValue
+    +eventType: "ThresholdBreached"
+    +aggregateId: string
+    +occurredOn: Date
+}
+
+' Domain Policies
+class AlertEscalationPolicy {
+    +shouldEscalate(alert: Alert, timeElapsed: number): boolean
+    +getNextSeverity(currentSeverity: AlertSeverity): AlertSeverity
+}
+
+class MetricsRetentionPolicy {
+    +shouldRetain(metric: Metric): boolean
+    +getRetentionPeriod(metricType: string): number
+}
+
+class ThresholdValidationPolicy {
+    +validateThreshold(threshold: Threshold): boolean
+    +checkThresholdConflicts(thresholds: Threshold[]): ThresholdConflict[]
+}
+
+' Repositories
+interface MetricRepository {
+    +findById(id: MetricId): Promise<Metric | null>
+    +findByDevice(deviceId: DeviceId, timeRange?: TimeRange): Promise<Metric[]>
+    +findByType(metricType: string, timeRange?: TimeRange): Promise<Metric[]>
+    +save(metric: Metric): Promise<void>
+    +delete(id: MetricId): Promise<void>
+    +aggregate(type: string, timeRange: TimeRange): Promise<AggregatedMetric>
+}
+
+interface AlertRepository {
+    +findById(id: AlertId): Promise<Alert | null>
+    +findActiveAlerts(deviceId?: DeviceId): Promise<Alert[]>
+    +findBySeverity(severity: AlertSeverity): Promise<Alert[]>
+    +findByTimeRange(timeRange: TimeRange): Promise<Alert[]>
+    +save(alert: Alert): Promise<void>
+    +countByStatus(status: AlertStatus): Promise<number>
+}
+
+interface ThresholdRepository {
+    +findById(id: ThresholdId): Promise<Threshold | null>
+    +findByDevice(deviceId: DeviceId): Promise<Threshold[]>
+    +findEnabled(): Promise<Threshold[]>
+    +save(threshold: Threshold): Promise<void>
+    +delete(id: ThresholdId): Promise<void>
+}
+
+interface MonitoringReportRepository {
+    +findById(id: ReportId): Promise<MonitoringReport | null>
+    +findByCustomer(customerId: CustomerId): Promise<MonitoringReport[]>
+    +findByTimeRange(timeRange: TimeRange): Promise<MonitoringReport[]>
+    +save(report: MonitoringReport): Promise<void>
+}
+
+' Relationships
+Metric --> MetricId : has
+Metric --> DeviceId : belongs to
+Metric --> CustomerId : belongs to
+Metric --> MetricValue : has
+
+Alert --> AlertId : has
+Alert --> DeviceId : belongs to
+Alert --> CustomerId : belongs to
+Alert --> ThresholdId : triggered by
+Alert --> AlertSeverity : has
+Alert --> AlertStatus : has
+Alert --> UserId : acknowledged by
+
+Threshold --> ThresholdId : has
+Threshold --> DeviceId : belongs to
+Threshold --> CustomerId : belongs to
+Threshold --> AlertSeverity : has
+
+MonitoringReport --> ReportId : has
+MonitoringReport --> CustomerId : belongs to
+MonitoringReport --> TimeRange : has
+MonitoringReport --> ReportStatus : has
+
+AlertingService --> ThresholdRepository : uses
+AlertingService --> AlertRepository : uses
+AlertingService --> MetricRepository : uses
+
+MetricsCollectionService --> MetricRepository : uses
+
+ReportGenerationService --> MetricRepository : uses
+ReportGenerationService --> AlertRepository : uses
+ReportGenerationService --> MonitoringReportRepository : uses
+
+MetricRepository --> Metric : manages
+AlertRepository --> Alert : manages
+ThresholdRepository --> Threshold : manages
+MonitoringReportRepository --> MonitoringReport : manages
+
+Alert --> AlertTriggeredEvent : publishes
+Alert --> AlertAcknowledgedEvent : publishes
+Alert --> AlertResolvedEvent : publishes
+Metric --> MetricCollectedEvent : publishes
+Threshold --> ThresholdBreachedEvent : publishes
+
+note right of Alert
+    Aggregate Root
+    Manages alert lifecycle
+    Supports acknowledgment
+    and resolution
+end note
+
+note right of MetricsCollectionService
+    Domain Service
+    Handles metric collection
+    and validation logic
+end note
+
+note right of Threshold
+    Aggregate Root
+    Defines monitoring rules
+    Evaluates metrics against
+    threshold conditions
+end note
+
+@enduml

@@ -1,5 +1,5 @@
-import { PreferenceCategory } from '@prisma/client';
-import { tenantPrisma } from '@/lib/tenant-middleware';
+type PreferenceCategory = 'PROFILE' | 'NOTIFICATIONS' | 'SECURITY' | 'DASHBOARD' | 'SYSTEM' | 'APPEARANCE' | 'ACCESSIBILITY' | 'DEVICE_SETTINGS';
+import {tenantPrisma} from '@/lib/tenant-middleware';
 
 // Helper function to get default preferences for a category
 function getDefaultPreferences(category: PreferenceCategory): Record<string, string> {
@@ -60,12 +60,12 @@ export async function getUserPreferences(
   const preferences = await tenantPrisma.client.userPreference.findMany({
     where: {
       userId,
-      category
+      category: category as any
     }
   });
 
   // Convert to key-value object
-  const existingPrefs = preferences.reduce((acc, pref) => {
+  const existingPrefs = preferences.reduce((acc: Record<string, string>, pref: any) => {
     acc[pref.key] = pref.value;
     return acc;
   }, {} as Record<string, string>);
@@ -83,7 +83,7 @@ export async function getUserPreferences(
     await tenantPrisma.client.userPreference.createMany({
       data: missingKeys.map(key => ({
         userId,
-        category,
+        category: category as any,
         key,
         value: defaultPrefs[key]
       })),

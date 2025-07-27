@@ -1,60 +1,124 @@
-import { Device } from '../entities/device.entity';
-import { DeviceId } from '../value-objects/device-id.vo';
-import { DeviceName } from '../value-objects/device-name.vo';
-import { IpAddress } from '../value-objects/ip-address.vo';
-import { DeviceStatus } from '../value-objects/device-status.vo';
-import { SshCredentials } from '../value-objects/ssh-credentials.vo';
-import { DeviceRepository } from '../interfaces/device-repository.interface';
-import { DeviceNotFoundException } from '../exceptions/device-not-found.exception';
-import { DeviceAlreadyExistsException } from '../exceptions/device-already-exists.exception';
+import {DeviceId} from '../value-objects/device-id.vo';
+import {DeviceRepository} from '../interfaces/device.repository';
+import {TenantContext} from '../../../shared/domain/tenant-context';
+import {DeviceEntity} from '../entities/device.entity';
+import {IpAddress} from '../../../shared/domain/value-objects/ip-address.vo';
+import {DeviceName} from '../value-objects/device-name.vo';
 
-export class DeviceUpdater {
-  constructor(private readonly deviceRepository: DeviceRepository) {}
+export class DeviceUpdaterService {
+  constructor(
+    private readonly deviceRepository: DeviceRepository
+  ) {}
 
-  async update(
-    id: DeviceId,
-    name?: DeviceName,
-    ipAddress?: IpAddress,
-    status?: DeviceStatus,
-    sshCredentials?: SshCredentials
-  ): Promise<Device> {
-    // Find the device by ID
-    const device = await this.deviceRepository.findById(id);
+  async updateDeviceName(deviceId: string, newName: string, tenantContext?: TenantContext): Promise<DeviceEntity> {
+    const deviceIdVO = DeviceId.fromString(deviceId);
+    const device = await this.deviceRepository.findById(deviceIdVO, tenantContext);
+    
     if (!device) {
-      throw new DeviceNotFoundException(`Device with ID ${id.value} not found`);
+      throw new Error(`Device ${deviceId} not found`);
     }
 
-    // Check if the new name is already used by another device
-    if (name && !name.equals(device.name)) {
-      const existingDeviceByName = await this.deviceRepository.findByName(name.value);
-      if (existingDeviceByName && !existingDeviceByName.id.equals(id)) {
-        throw new DeviceAlreadyExistsException(`Device with name ${name.value} already exists`);
+    const name = DeviceName.fromString(newName);
+    device.updateName(name);
+    await this.deviceRepository.save(device, tenantContext);
+    
+    return device;
+  }
+
+  async updateDeviceNetwork(
+    deviceId: string, 
+    ipAddress?: string, 
+    tailscaleIp?: string, 
+    hostname?: string,
+    tenantContext?: TenantContext
+  ): Promise<DeviceEntity> {
+    const deviceIdVO = DeviceId.fromString(deviceId);
+    const device = await this.deviceRepository.findById(deviceIdVO, tenantContext);
+    
+    if (!device) {
+      throw new Error(`Device ${deviceId} not found`);
+    }
+
+    device.updateNetwork(ipAddress, tailscaleIp, hostname);
+    await this.deviceRepository.save(device, tenantContext);
+    
+    return device;
+  }
+
+  async updateDeviceSshCredentials(
+    deviceId: DeviceId, 
+    credentials: any, 
+    tenantContext: TenantContext
+  ): Promise<DeviceEntity> {
+    const device = await this.deviceRepository.findById(deviceId, tenantContext);
+    if (!device) {
+      throw new Error(`Device ${deviceId.getValue()} not found`);
+    }
+
+    // Update SSH credentials directly on entity
+    device.sshCredentials = credentials;
+    device.updatedAt = new Date();
+
+    // Save device
+    await this.deviceRepository.save(device, tenantContext);
+    
+    return device;
+  }
+
+  // Legacy method for backward compatibility
+  async updateDevice(
+    deviceId: DeviceId,
+    updates: Partial<{
+      name: string;
+      ipAddress: string;
+      tailscaleIp: string;
+      hostname: string;
+      sshCredentials: any;
+    }>,
+    tenantContext: TenantContext
+  ): Promise<DeviceEntity> {
+    const device = await this.deviceRepository.findById(deviceId, tenantContext);
+    if (!device) {
+      throw new Error(`Device ${deviceId.getValue()} not found`);
+    }
+
+    if (updates.name) {
+      const nameVO = DeviceName.fromString(updates.name);
+      device.updateName(nameVO);
+    }
+
+    if (updates.ipAddress) {
+      try {
+        const ipVO = IpAddress.fromString(updates.ipAddress);
+        device.updateNetwork(updates.ipAddress, undefined, undefined);
+      } catch (error) {
+        throw new Error(`Invalid IP address: ${updates.ipAddress}`);
       }
-      device.updateName(name);
     }
 
-    // Check if the new IP address is already used by another device
-    if (ipAddress && !ipAddress.equals(device.ipAddress)) {
-      const existingDeviceByIp = await this.deviceRepository.findByIpAddress(ipAddress.value);
-      if (existingDeviceByIp && !existingDeviceByIp.id.equals(id)) {
-        throw new DeviceAlreadyExistsException(`Device with IP address ${ipAddress.value} already exists`);
+    if (updates.tailscaleIp) {
+      try {
+        const tailscaleVO = IpAddress.fromString(updates.tailscaleIp);
+        device.updateNetwork(undefined, updates.tailscaleIp, undefined);
+      } catch (error) {
+        throw new Error(`Invalid tailscale IP: ${updates.tailscaleIp}`);
       }
-      device.updateIpAddress(ipAddress);
     }
 
-    // Update status if provided
-    if (status) {
-      device.updateStatus(status);
+    if (updates.hostname) {
+      device.updateNetwork(undefined, undefined, updates.hostname);
     }
 
-    // Update SSH credentials if provided
-    if (sshCredentials) {
-      device.updateSshCredentials(sshCredentials);
+    if (updates.sshCredentials) {
+      device.sshCredentials = updates.sshCredentials;
     }
 
-    // Save the updated device
-    await this.deviceRepository.save(device);
+    // Update timestamps
+    device.updatedAt = new Date();
 
+    // Save device
+    await this.deviceRepository.save(device, tenantContext);
+    
     return device;
   }
 }

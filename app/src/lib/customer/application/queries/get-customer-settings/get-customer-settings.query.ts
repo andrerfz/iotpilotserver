@@ -1,12 +1,10 @@
-import { TenantAwareQuery } from '@/lib/shared/application/queries/tenant-aware-query';
-import { TenantContext } from '@/lib/shared/application/context/tenant-context.vo';
-import { CustomerId } from '@/lib/shared/domain/value-objects/customer-id.vo';
-import { OrganizationSettings } from '@/lib/customer/domain/value-objects/organization-settings.vo';
+import {TenantAwareQuery} from '@/lib/shared/application/queries/tenant-aware-query';
+import {TenantContext} from '@/lib/shared/domain/tenant-context';
 
-export class GetCustomerSettingsQuery extends TenantAwareQuery<OrganizationSettings | null> {
-  private constructor(
+export class GetCustomerSettingsQuery extends TenantAwareQuery<any> {
+  constructor(
     tenantContext: TenantContext,
-    public readonly customerId: CustomerId
+    public readonly customerId: string
   ) {
     super(tenantContext);
   }
@@ -20,7 +18,7 @@ export class GetCustomerSettingsQuery extends TenantAwareQuery<OrganizationSetti
   ): GetCustomerSettingsQuery {
     return new GetCustomerSettingsQuery(
       tenantContext,
-      new CustomerId(customerId)
+      customerId
     );
   }
 }

@@ -1,16 +1,18 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { Device } from '../device.entity';
-import { DeviceId } from '../../value-objects/device-id.vo';
-import { DeviceName } from '../../value-objects/device-name.vo';
-import { IpAddress } from '../../value-objects/ip-address.vo';
-import { DeviceStatus } from '../../value-objects/device-status.vo';
-import { SshCredentials } from '../../value-objects/ssh-credentials.vo';
+import {beforeEach, describe, expect, it} from 'vitest';
+import {Device} from '../device.entity';
+import {DeviceId} from '../../value-objects/device-id.vo';
+import {DeviceName} from '../../value-objects/device-name.vo';
+import {IpAddress} from '../../value-objects/ip-address.vo';
+import {DeviceStatus} from '../../value-objects/device-status.vo';
+import {SshCredentials} from '../../value-objects/ssh-credentials.vo';
+import {CustomerId} from '@/lib/shared/domain/value-objects/customer-id.vo';
 
 describe('Device Entity', () => {
   let deviceId: DeviceId;
   let deviceName: DeviceName;
   let ipAddress: IpAddress;
   let sshCredentials: SshCredentials;
+  let tenantId: CustomerId;
   let device: Device;
 
   beforeEach(() => {
@@ -18,7 +20,8 @@ describe('Device Entity', () => {
     deviceName = DeviceName.create('Test Device');
     ipAddress = IpAddress.create('192.168.1.1');
     sshCredentials = SshCredentials.create('user', 'password');
-    device = Device.create(deviceId, deviceName, ipAddress, sshCredentials);
+    tenantId = CustomerId.create('tenant-123');
+    device = Device.create(deviceId, deviceName, ipAddress, sshCredentials, tenantId);
   });
 
   it('should create a device with correct values', () => {

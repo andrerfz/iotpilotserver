@@ -1,7 +1,7 @@
-import { DeviceId } from '../value-objects/device-id.vo';
-import { DeviceRepository } from '../interfaces/device-repository.interface';
-import { DeviceExistsPolicy } from './device-exists.policy';
-import { InvalidDeviceDataException } from '../exceptions/invalid-device-data.exception';
+import {DeviceId} from '../value-objects/device-id.vo';
+import {DeviceRepository} from '../interfaces/device.repository';
+import {DeviceExistsPolicy} from './device-exists.policy';
+import {InvalidDeviceDataException} from '../exceptions/invalid-device-data.exception';
 
 export class MetricCollectionPolicy {
     private readonly deviceExistsPolicy: DeviceExistsPolicy;
@@ -12,10 +12,10 @@ export class MetricCollectionPolicy {
 
     async validate(deviceId: DeviceId): Promise<void> {
         // First check if the device exists
-        await this.deviceExistsPolicy.validate(deviceId);
+        await this.deviceExistsPolicy.validate(deviceId.getValue());
 
         // Then check if the device is in a state that allows metric collection
-        const device = await this.deviceRepository.findById(deviceId);
+        const device = await this.deviceRepository.findById(deviceId, undefined);
         if (device && device.status.isInactive()) {
             throw new InvalidDeviceDataException(
                 `Cannot collect metrics for inactive device ${deviceId.getValue()}`

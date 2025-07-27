@@ -1,18 +1,18 @@
-import { getServerSession, sessionIsSuperAdmin } from '@/lib/auth';
-import { tenantPrisma, withTenant } from '@/lib/tenant-middleware';
-import { getCurrentTenant } from '@/lib/tenant-middleware';
-import { Card } from '@heroui/card';
-import { 
-  Users, 
-  HardDrive, 
-  AlertTriangle, 
-  Activity 
-} from 'lucide-react';
+import {getServerSession, sessionIsSuperAdmin} from '@/lib/shared/infrastructure/authentication/auth.service';
+import {tenantPrisma, withTenant} from '@/lib/tenant-middleware';
+import {TenantContextImpl} from '@/lib/shared/domain/tenant-context';
+import {CustomerId} from '@/lib/shared/domain/value-objects/customer-id.vo';
+import {Card} from '@heroui/card';
+import {Activity, AlertTriangle, HardDrive, Users} from 'lucide-react';
 
 export const metadata = {
   title: 'Admin Dashboard - IoT Pilot',
   description: 'Admin dashboard for IoT Pilot platform',
 };
+
+// This page uses getServerSession() which reads cookies
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 async function getAdminStats() {
   const session = await getServerSession();
@@ -31,12 +31,9 @@ async function getAdminStats() {
   const customerId = session.customerId;
 
   // Create tenant context
-  const tenantContext = {
-    customerId,
-    userId: session.userId,
-    role: session.role,
-    isSuperAdmin
-  };
+  const tenantContext = customerId
+    ? TenantContextImpl.create(CustomerId.create(customerId))
+    : TenantContextImpl.createSuperAdmin();
 
   // Run queries with tenant context
   return await withTenant(tenantContext, async () => {

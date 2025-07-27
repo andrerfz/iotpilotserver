@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { DeviceCommand, CommandStatus } from '@/lib/device/domain/entities/device-command.entity';
-import { DeviceId } from '@/lib/device/domain/value-objects/device-id.vo';
+import {beforeEach, describe, expect, it, vi} from 'vitest';
+import {CommandStatus, DeviceCommand} from '@/lib/device/domain/entities/device-command.entity';
+import {DeviceId} from '@/lib/device/domain/value-objects/device-id.vo';
 
 // Mock the value objects
 vi.mock('@/lib/device/domain/value-objects/device-id.vo');
@@ -42,7 +42,8 @@ describe('DeviceCommand Entity', () => {
   describe('markAsExecuting', () => {
     it('should update the status to EXECUTING and set executedAt timestamp', () => {
       const now = new Date();
-      vi.spyOn(global, 'Date').mockImplementationOnce(() => now as unknown as string);
+      // Properly mock Date constructor while preserving Date.now
+      vi.spyOn(global, 'Date').mockImplementationOnce(() => now);
 
       deviceCommand.markAsExecuting();
 
@@ -55,7 +56,8 @@ describe('DeviceCommand Entity', () => {
     it('should update the status to COMPLETED, set output and completedAt timestamp', () => {
       const now = new Date();
       const output = 'Command output';
-      vi.spyOn(global, 'Date').mockImplementationOnce(() => now as unknown as string);
+      // Properly mock Date constructor while preserving Date.now
+      vi.spyOn(global, 'Date').mockImplementationOnce(() => now);
 
       deviceCommand.markAsCompleted(output);
 
@@ -69,7 +71,8 @@ describe('DeviceCommand Entity', () => {
     it('should update the status to FAILED, set error and completedAt timestamp', () => {
       const now = new Date();
       const error = 'Command failed: permission denied';
-      vi.spyOn(global, 'Date').mockImplementationOnce(() => now as unknown as string);
+      // Properly mock Date constructor while preserving Date.now
+      vi.spyOn(global, 'Date').mockImplementationOnce(() => now);
 
       deviceCommand.markAsFailed(error);
 

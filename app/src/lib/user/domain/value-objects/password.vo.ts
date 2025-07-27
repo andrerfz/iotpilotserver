@@ -1,4 +1,5 @@
 import {ValueObject} from '@/lib/shared/domain/interfaces/value-object.interface';
+import zxcvbn from 'zxcvbn';
 
 export class Password extends ValueObject {
     constructor(private readonly value: string, private readonly isHashed: boolean = false) {
@@ -25,8 +26,8 @@ export class Password extends ValueObject {
     }
 
     private validate(value: string): void {
-        if (!value || value.length < 8) {
-            throw new Error('Password must be at least 8 characters long');
+        if (!value || value.length < 12) {
+            throw new Error('Password must be at least 12 characters long');
         }
         if (!/[A-Z]/.test(value)) {
             throw new Error('Password must contain at least one uppercase letter');
@@ -39,6 +40,18 @@ export class Password extends ValueObject {
         }
         if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(value)) {
             throw new Error('Password must contain at least one special character');
+        }
+        
+        // Use zxcvbn for sophisticated password strength validation
+        // Score: 0 (too guessable) to 4 (very unguessable)
+        // We require minimum score of 3 (safely unguessable)
+        const result = zxcvbn(value);
+        
+        if (result.score < 3) {
+            const feedback = result.feedback.warning || 
+                           result.feedback.suggestions.join('. ') || 
+                           'Password is too weak';
+            throw new Error(`Password strength insufficient: ${feedback}`);
         }
     }
 

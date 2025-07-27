@@ -1,9 +1,9 @@
-import { Injectable, NestMiddleware } from '@nestjs/common';
-import { Request, Response, NextFunction } from 'express';
-import { TenantContextProvider } from '@/lib/shared/application/context/tenant-context-provider.service';
-import { CustomerId } from '@/lib/shared/domain/value-objects/customer-id.vo';
-import { UserId } from '@/lib/user/domain/value-objects/user-id.vo';
-import { UserRole } from '@/lib/user/domain/value-objects/user-role.vo';
+import {Injectable, NestMiddleware} from '@nestjs/common';
+import {NextFunction, Request, Response} from 'express';
+import {TenantContextProvider} from '@/lib/shared/application/context/tenant-context-provider.service';
+import {CustomerId} from '@/lib/shared/domain/value-objects/customer-id.vo';
+import {UserId} from '@/lib/user/domain/value-objects/user-id.vo';
+import {UserRole} from '@/lib/shared/domain/value-objects/user-role.vo';
 
 @Injectable()
 export class TenantScopeMiddleware implements NestMiddleware {
@@ -46,21 +46,21 @@ export class TenantScopeMiddleware implements NestMiddleware {
     // In a real implementation, this would extract the user ID from the JWT token or session
     // For now, we'll use a header for demonstration purposes
     const userIdStr = req.headers['x-user-id'] as string;
-    return userIdStr ? new UserId(userIdStr) : null;
+    return userIdStr ? UserId.fromString(userIdStr) : null;
   }
 
   private extractUserRole(req: Request): UserRole | null {
     // In a real implementation, this would extract the role from the JWT token or session
     // For now, we'll use a header for demonstration purposes
     const roleStr = req.headers['x-user-role'] as string;
-    return roleStr ? UserRole.create(roleStr) : null;
+    return roleStr ? UserRole.fromString(roleStr as any) : null;
   }
 
   private extractCustomerId(req: Request): CustomerId | null {
     // In a real implementation, this would extract the customer ID from the JWT token or session
     // For now, we'll use a header for demonstration purposes
     const customerIdStr = req.headers['x-customer-id'] as string;
-    return customerIdStr ? new CustomerId(customerIdStr) : null;
+    return customerIdStr ? CustomerId.fromString(customerIdStr) : null;
   }
 
   private isSuperAdmin(req: Request): boolean {

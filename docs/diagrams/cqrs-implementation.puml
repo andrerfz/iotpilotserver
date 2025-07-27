@@ -1,0 +1,169 @@
+@startuml CQRS Implementation
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam sequenceParticipant underline
+
+title CQRS Architecture Implementation
+
+' External Interfaces
+actor "REST API" as API
+actor "WebSocket" as WS
+actor "CLI" as CLI
+
+' Application Layer
+rectangle "Application Layer" as App {
+    rectangle "Command Bus" as CommandBus
+    rectangle "Query Bus" as QueryBus
+    rectangle "Event Bus" as EventBus
+}
+
+' Command Side
+rectangle "Write Model (Commands)" as Write {
+    rectangle "RegisterDeviceCommand" as RegDeviceCmd
+    rectangle "UpdateDeviceCommand" as UpdateDeviceCmd
+    rectangle "ExecuteCommand" as ExecCmd
+    rectangle "AuthenticateUserCommand" as AuthCmd
+}
+
+rectangle "Command Handlers" as CmdHandlers {
+    rectangle "RegisterDeviceHandler" as RegDeviceHandler
+    rectangle "UpdateDeviceHandler" as UpdateDeviceHandler
+    rectangle "ExecuteCommandHandler" as ExecCmdHandler
+    rectangle "AuthenticateUserHandler" as AuthHandler
+}
+
+' Query Side
+rectangle "Read Model (Queries)" as Read {
+    rectangle "ListDevicesQuery" as ListDevicesQuery
+    rectangle "GetDeviceQuery" as GetDeviceQuery
+    rectangle "GetDeviceMetricsQuery" as GetMetricsQuery
+    rectangle "ListUsersQuery" as ListUsersQuery
+}
+
+rectangle "Query Handlers" as QueryHandlers {
+    rectangle "ListDevicesHandler" as ListDevicesHandler
+    rectangle "GetDeviceHandler" as GetDeviceHandler
+    rectangle "GetDeviceMetricsHandler" as GetMetricsHandler
+    rectangle "ListUsersHandler" as ListUsersHandler
+}
+
+' Domain Layer
+rectangle "Domain Layer" as Domain {
+    rectangle "Device Aggregate" as DeviceAgg
+    rectangle "User Aggregate" as UserAgg
+    rectangle "Domain Services" as DomainSvc
+    rectangle "Domain Events" as DomainEvents
+}
+
+' Infrastructure Layer
+rectangle "Infrastructure Layer" as Infra {
+    rectangle "PrismaDeviceRepository" as DeviceRepo
+    rectangle "PrismaUserRepository" as UserRepo
+    rectangle "Redis Cache" as Redis
+    rectangle "PostgreSQL" as Postgres
+    rectangle "InfluxDB" as InfluxDB
+}
+
+' Event Handlers
+rectangle "Event Handlers" as EventHandlers {
+    rectangle "DeviceRegisteredHandler" as DeviceRegHandler
+    rectangle "UserAuthenticatedHandler" as UserAuthHandler
+    rectangle "MetricCollectedHandler" as MetricHandler
+}
+
+' Flow: API Request -> Command Processing
+API -> CommandBus: RegisterDeviceCommand
+CommandBus -> RegDeviceHandler: handle(command)
+RegDeviceHandler -> DeviceAgg: Device.create()
+DeviceAgg -> DomainEvents: publish(DeviceRegisteredEvent)
+DomainEvents -> EventBus: publish(event)
+RegDeviceHandler -> DeviceRepo: save(device)
+DeviceRepo -> Postgres: INSERT device
+
+' Flow: Event Processing
+EventBus -> DeviceRegHandler: handle(event)
+DeviceRegHandler -> DomainSvc: initializeMonitoring()
+DomainSvc -> InfluxDB: create measurement
+
+' Flow: Query Processing
+API -> QueryBus: ListDevicesQuery
+QueryBus -> ListDevicesHandler: handle(query)
+ListDevicesHandler -> DeviceRepo: findAll()
+DeviceRepo -> Redis: get cached devices
+Redis -> DeviceRepo: return cached data
+DeviceRepo -> ListDevicesHandler: return devices
+ListDevicesHandler -> API: return DeviceDTO[]
+
+' Flow: Cache Invalidation
+EventBus -> EventHandlers: DeviceUpdatedEvent
+EventHandlers -> Redis: invalidate cache keys
+
+' Flow: WebSocket Real-time Updates
+DomainEvents -> WS: broadcast device status
+WS -> API: real-time notifications
+
+' Flow: CLI Commands
+CLI -> CommandBus: execute command
+CommandBus -> CmdHandlers: handle command
+
+' Data Flow Annotations
+note right of CommandBus
+    Command Bus
+    - Validates commands
+    - Routes to handlers
+    - Manages transactions
+    - Publishes events
+end note
+
+note right of QueryBus
+    Query Bus
+    - Optimizes reads
+    - Uses cached data
+    - Returns DTOs
+    - No side effects
+end note
+
+note right of EventBus
+    Event Bus
+    - Asynchronous processing
+    - Loose coupling
+    - Cross-service communication
+    - Event sourcing
+end note
+
+' CQRS Principles
+note as CQRS_Principles
+    **CQRS Principles:**
+    - Commands mutate state
+    - Queries return data
+    - Separate models for read/write
+    - Event-driven communication
+    - Independent scaling
+end note
+
+' Database Schema Notes
+note right of Postgres
+    **Write Database:**
+    - Normalized schema
+    - ACID transactions
+    - Domain integrity
+    - Audit trails
+end note
+
+note right of Redis
+    **Read Cache:**
+    - Denormalized data
+    - Fast retrieval
+    - Session storage
+    - Cache invalidation
+end note
+
+note right of InfluxDB
+    **Time-Series Data:**
+    - Metrics storage
+    - Historical data
+    - Aggregation queries
+    - Retention policies
+end note
+
+@enduml

@@ -3,6 +3,9 @@ import {UserId} from '@/lib/user/domain/value-objects/user-id.vo';
 import {CustomerId} from '@/lib/shared/domain/value-objects/customer-id.vo';
 
 export class GetCurrentUserQuery implements Query {
+    /** Static type identifier that survives minification */
+    static readonly type = 'GetCurrentUserQuery';
+
     private constructor(
         public readonly userId: UserId,
         public readonly customerId: CustomerId | null

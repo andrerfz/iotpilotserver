@@ -1,7 +1,7 @@
-import {NextResponse} from 'next/server';
-import {z} from 'zod';
-import {AuthenticatedRequest, withCustomerContext} from '@/lib/api-middleware';
+import {validator} from '@/lib/shared/infrastructure/validation/validation-helper';
+import {AuthenticatedRequest, withCustomerContext} from '@/lib/shared/infrastructure/middleware/api-middleware';
 import {tenantPrisma} from '@/lib/tenant-middleware';
+import {ApiResponse} from '@/lib/shared/infrastructure/http/api-response.util';
 
 // Define UserStatus enum values directly since there's an issue with importing from @prisma/client
 enum UserStatus {
@@ -12,22 +12,24 @@ enum UserStatus {
 }
 
 // Validation schema for approval action
-const approvalSchema = z.object({
-    action: z.enum(['approve', 'reject']),
-    reason: z.string().optional()
+const v = validator();
+const approvalSchema = v.object({
+    action: v.enum(['approve', 'reject'] as const),
+    reason: v.optional(v.string())
 });
 
 // Handler for approving or rejecting a user
 export const POST = withCustomerContext(async (request: AuthenticatedRequest) => {
     try {
         // Get user ID from URL
-        const id = request.url.split('/').pop()?.split('/')[0];
+        const url = (request as any).url || (request as any).nextUrl?.href || '';
+        const id = url.split('/').pop()?.split('/')[0];
         if (!id) {
-            return NextResponse.json({error: 'User ID is required'}, {status: 400});
+            return ApiResponse.badRequest('User ID is required');
         }
 
         // Parse request body
-        const body = await request.json();
+        const body = await (request as any).json();
         const {
             action,
             reason
@@ -36,12 +38,12 @@ export const POST = withCustomerContext(async (request: AuthenticatedRequest) =>
         // Get current user context
         const currentUser = request.user;
         if (!currentUser) {
-            return NextResponse.json({error: 'Authentication required'}, {status: 401});
+            return ApiResponse.unauthorized('Authentication required');
         }
 
         // Only ADMIN or SUPERADMIN can approve/reject users
         if (currentUser.role !== 'ADMIN' && currentUser.role !== 'SUPERADMIN') {
-            return NextResponse.json({error: 'Insufficient permissions'}, {status: 403});
+            return ApiResponse.forbidden('Insufficient permissions');
         }
 
         // Find the user to approve/reject
@@ -59,7 +61,7 @@ export const POST = withCustomerContext(async (request: AuthenticatedRequest) =>
         };
 
         if (!userToUpdate) {
-            return NextResponse.json({error: 'User not found'}, {status: 404});
+            return ApiResponse.notFound('User not found');
         }
 
         // Check if user is already in the requested state
@@ -67,7 +69,7 @@ export const POST = withCustomerContext(async (request: AuthenticatedRequest) =>
             (action === 'approve' && userToUpdate.status === UserStatus.ACTIVE) ||
             (action === 'reject' && userToUpdate.status === UserStatus.INACTIVE)
         ) {
-            return NextResponse.json({
+            return ApiResponse.ok({
                 message: `User is already ${action === 'approve' ? 'approved' : 'rejected'}`
             });
         }
@@ -95,25 +97,16 @@ export const POST = withCustomerContext(async (request: AuthenticatedRequest) =>
         // In a real implementation, we would send an email here
         // For now, we'll just log it
 
-        return NextResponse.json({
+        return ApiResponse.ok({
             message: `User ${action === 'approve' ? 'approved' : 'rejected'} successfully`,
             user: updatedUser
         });
     } catch (error) {
-        if (error instanceof z.ZodError) {
-            return NextResponse.json(
-                {
-                    error: 'Invalid input',
-                    details: error.errors
-                },
-                {status: 400}
-            );
+        if (error && typeof error === 'object' && 'errors' in error && Array.isArray((error as any).errors)) {
+            return ApiResponse.badRequest('Invalid input', (error as any).errors);
         }
 
         console.error('User approval error:', error);
-        return NextResponse.json(
-            {error: 'Internal server error'},
-            {status: 500}
-        );
+        return ApiResponse.internalError('Internal server error');
     }
 }, {requiredRole: 'ADMIN'}); // Only ADMIN or higher can access this endpoint

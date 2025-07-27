@@ -1,0 +1,117 @@
+@startuml Bounded Contexts Relationship
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam rectangle {
+    BackgroundColor #E1F5FE
+    BorderColor #01579B
+    BorderThickness 2
+}
+
+title IoT Pilot Bounded Contexts
+
+' Core Bounded Contexts
+rectangle "Device Management Context" as DeviceContext {
+    rectangle "Device" as Device
+    rectangle "SSH Session" as SshSession
+    rectangle "Device Command" as DeviceCommand
+}
+
+rectangle "User Management Context" as UserContext {
+    rectangle "User" as User
+    rectangle "Session" as Session
+    rectangle "Authentication" as Auth
+}
+
+rectangle "Customer Management Context" as CustomerContext {
+    rectangle "Customer" as Customer
+    rectangle "Subscription" as Subscription
+    rectangle "Billing" as Billing
+}
+
+rectangle "Monitoring Context" as MonitoringContext {
+    rectangle "Metric" as Metric
+    rectangle "Alert" as Alert
+    rectangle "Threshold" as Threshold
+}
+
+' Shared Kernel
+rectangle "Shared Kernel" as SharedKernel {
+    rectangle "Tenant Context" as TenantContext
+    rectangle "Domain Events" as DomainEvents
+    rectangle "Value Objects" as ValueObjects
+}
+
+' Supporting Contexts
+rectangle "Analytics Context" as AnalyticsContext {
+    rectangle "Reports" as Reports
+    rectangle "Dashboards" as Dashboards
+    rectangle "Data Export" as DataExport
+}
+
+rectangle "Notification Context" as NotificationContext {
+    rectangle "Email Service" as Email
+    rectangle "SMS Service" as SMS
+    rectangle "Webhook Service" as Webhook
+}
+
+' Infrastructure Services
+rectangle "Infrastructure Services" as Infra {
+    rectangle "Message Queue" as Queue
+    rectangle "Cache Service" as Cache
+    rectangle "File Storage" as Storage
+}
+
+' Context Relationships
+DeviceContext --> UserContext : User executes\ncommands on devices
+DeviceContext --> CustomerContext : Devices belong\nto customers
+DeviceContext --> MonitoringContext : Device metrics\nand alerts
+DeviceContext --> SharedKernel : Uses shared\nvalue objects
+
+UserContext --> CustomerContext : Users belong\nto customers
+UserContext --> SharedKernel : Uses tenant\ncontext
+
+CustomerContext --> SharedKernel : Uses tenant\ncontext
+
+MonitoringContext --> DeviceContext : Monitors\ndevice health
+MonitoringContext --> CustomerContext : Customer-specific\nthresholds
+MonitoringContext --> NotificationContext : Sends alerts
+MonitoringContext --> SharedKernel : Uses shared\nevents
+
+AnalyticsContext --> MonitoringContext : Analyzes\nmetrics data
+AnalyticsContext --> DeviceContext : Device\nusage analytics
+AnalyticsContext --> CustomerContext : Customer\nusage reports
+
+NotificationContext --> UserContext : Notifies\nusers of events
+NotificationContext --> CustomerContext : Customer-specific\nnotifications
+
+' Anti-Corruption Layer
+SharedKernel --> Infra : Infrastructure\nabstraction
+
+' Upstream Dependencies
+Infra --> DeviceContext : Device connectivity
+Infra --> MonitoringContext : Metrics collection
+Infra --> UserContext : Session storage
+Infra --> NotificationContext : Message delivery
+
+' Context Map Legend
+legend right
+    |= Context |= Responsibility |
+    | Device | Device lifecycle & connectivity |
+    | User | Authentication & authorization |
+    | Customer | Multi-tenant management |
+    | Monitoring | Metrics & alerting |
+    | Analytics | Reporting & insights |
+    | Notification | Alert delivery |
+    | Shared Kernel | Cross-cutting concerns |
+    | Infrastructure | External services |
+endlegend
+
+' Context Boundaries
+note right of DeviceContext : Device Management\n- Device registration\n- SSH connections\n- Command execution\n- Device lifecycle
+note right of UserContext : User Management\n- Authentication\n- Authorization\n- Session management\n- User profiles
+note right of CustomerContext : Customer Management\n- Multi-tenancy\n- Subscriptions\n- Resource quotas\n- Billing
+note right of MonitoringContext : Monitoring & Alerting\n- Metrics collection\n- Threshold evaluation\n- Alert management\n- Health monitoring
+note right of SharedKernel : Shared Kernel\n- Tenant isolation\n- Domain events\n- Common value objects\n- Base classes
+note right of AnalyticsContext : Analytics & Reporting\n- Data aggregation\n- Report generation\n- Dashboard creation\n- Data export
+
+@enduml

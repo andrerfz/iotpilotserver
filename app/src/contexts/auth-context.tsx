@@ -1,14 +1,14 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import {UserRole} from '@prisma/client';
+import React, {createContext, useContext, useEffect, useState} from 'react';
+import {useRouter} from 'next/navigation';
+import {UserRoleType} from '@/lib/shared/domain/value-objects/user-role.vo';
 
 interface User {
     id: string;
     email: string;
     username: string;
-    role: UserRole;
+    role: UserRoleType;
     profileImage?: string;
     createdAt: string;
     _count: {
@@ -68,7 +68,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
             if (response.ok) {
                 const data = await response.json();
-                console.log('✅ AUTH: User authenticated:', data.user.email);
+                console.log('✅ AUTH: User authenticated:', data.user?.email);
                 setUser(data.user);
             } else if (response.status === 401) {
                 console.log('❌ AUTH: Session expired (401)');
@@ -103,15 +103,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
         });
 
         const data = await response.json();
-        console.log('📡 AUTH: Login response:', response.status, response.ok);
+        console.log('📡 AUTH: Login response:', response.status, response.ok, data);
 
         if (!response.ok) {
             console.log('❌ AUTH: Login failed:', data.error);
             throw new Error(data.error || 'Login failed');
         }
 
-        console.log('✅ AUTH: Login successful, setting user:', data.user.email);
-        setUser(data.user);
+        // API returns: { success: true, data: { user, token }, timestamp }
+        console.log('✅ AUTH: Login successful, setting user:', data.data?.user?.email);
+        setUser(data.data?.user || data.user); // Support both formats for backward compatibility
         setLoading(false);
     };
 

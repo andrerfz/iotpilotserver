@@ -1,14 +1,23 @@
-import {NextResponse} from 'next/server';
-import {z} from 'zod';
-import {AuthenticatedRequest, withCustomerContext} from '@/lib/api-middleware';
+import {validator} from '@/lib/shared/infrastructure/validation/validation-helper';
+import {AuthenticatedRequest, withCustomerContext} from '@/lib/shared/infrastructure/middleware/api-middleware';
 import {tenantPrisma} from '@/lib/tenant-middleware';
 import {getUserPreferences} from '@/lib/user-preferences';
+import {ApiResponse} from '@/lib/shared/infrastructure/http/api-response.util';
+import {z} from 'zod'; // Keep for regex validation
+
+// Dynamic route: reads auth from cookies
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
 
 // Validation schema for security settings
-const securitySettingsSchema = z.object({
-    twoFactorAuth: z.enum(['true', 'false']),
-    sessionTimeout: z.string().regex(/^\d+$/), // numeric string
-    loginNotifications: z.enum(['true', 'false'])
+// Note: Regex validation - using fromZodSchema for now
+const v = validator();
+const regexStringSchema = z.string().regex(/^\d+$/);
+const securitySettingsSchema = v.object({
+    twoFactorAuth: v.enum(['true', 'false'] as const),
+    sessionTimeout: (v as any).fromZodSchema(regexStringSchema), // numeric string
+    loginNotifications: v.enum(['true', 'false'] as const)
 });
 
 // GET /api/settings/security - Get security settings
@@ -16,22 +25,16 @@ export const GET = withCustomerContext(async (request: AuthenticatedRequest) => 
     try {
         const user = request.user;
         if (!user) {
-            return NextResponse.json(
-                {error: 'Authentication required'},
-                {status: 401}
-            );
+            return ApiResponse.unauthorized('Authentication required');
         }
 
         // Get security preferences with defaults
         const preferences = await getUserPreferences(user.id, 'SECURITY');
 
-        return NextResponse.json(preferences);
+        return ApiResponse.ok(preferences);
     } catch (error) {
         console.error('Failed to fetch security settings:', error);
-        return NextResponse.json(
-            {error: 'Failed to fetch security settings'},
-            {status: 500}
-        );
+        return ApiResponse.internalError('Failed to fetch security settings');
     }
 });
 
@@ -40,10 +43,7 @@ export const PUT = withCustomerContext(async (request: AuthenticatedRequest) => 
     try {
         const user = request.user;
         if (!user) {
-            return NextResponse.json(
-                {error: 'Authentication required'},
-                {status: 401}
-            );
+            return ApiResponse.unauthorized('Authentication required');
         }
 
         // Parse and validate request body
@@ -51,12 +51,10 @@ export const PUT = withCustomerContext(async (request: AuthenticatedRequest) => 
         const validatedData = securitySettingsSchema.parse(body);
 
         // Additional validation for sessionTimeout
-        const sessionTimeout = parseInt(validatedData.sessionTimeout);
+        // Type assertion for sessionTimeout from fromZodSchema (TypeScript can't infer the type)
+        const sessionTimeout = parseInt(validatedData.sessionTimeout as string);
         if (isNaN(sessionTimeout) || sessionTimeout < 5 || sessionTimeout > 1440) {
-            return NextResponse.json(
-                {error: 'Session timeout must be between 5 and 1440 minutes'},
-                {status: 400}
-            );
+            return ApiResponse.badRequest('Session timeout must be between 5 and 1440 minutes');
         }
 
         // Update each preference
@@ -88,28 +86,19 @@ export const PUT = withCustomerContext(async (request: AuthenticatedRequest) => 
             console.log(`Two-factor authentication enabled for user ${user.id}`);
         }
 
-        return NextResponse.json({
+        return ApiResponse.ok({
             message: 'Security settings updated successfully',
             settings: validatedData
         });
     } catch (error) {
         if (error instanceof z.ZodError) {
-            return NextResponse.json(
-                {
-                    error: 'Invalid input',
-                    details: error.errors.map(err => ({
-                        path: err.path.join('.'),
-                        message: err.message
-                    }))
-                },
-                {status: 400}
-            );
+            return ApiResponse.badRequest('Invalid input', error.errors.map(err => ({
+                path: err.path.join('.'),
+                message: err.message
+            })));
         }
 
         console.error('Failed to update security settings:', error);
-        return NextResponse.json(
-            {error: 'Failed to update security settings'},
-            {status: 500}
-        );
+        return ApiResponse.internalError('Failed to update security settings');
     }
 });

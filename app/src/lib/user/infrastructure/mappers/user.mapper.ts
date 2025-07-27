@@ -1,70 +1,65 @@
-import {User} from '@/lib/user/domain/entities/user.entity';
-import {UserId} from '@/lib/user/domain/value-objects/user-id.vo';
-import {Email} from '@/lib/user/domain/value-objects/email.vo';
-import {Password} from '@/lib/user/domain/value-objects/password.vo';
-import {UserRole} from '@/lib/user/domain/value-objects/user-role.vo';
-import {UserRoleEnum} from '@/lib/user/domain/value-objects/user-role.vo';
+import {UserEntity} from '../../domain/entities/user.entity';
+import {UserId} from '../../domain/value-objects/user-id.vo';
+import {Email} from '../../domain/value-objects/email.vo';
+import {UserRole} from '../../../shared/domain/value-objects/user-role.vo';
 import {CustomerId} from '@/lib/shared/domain/value-objects/customer-id.vo';
-import {User as PrismaUser, UserRole as PrismaUserRole, UserStatus} from '@prisma/client';
 
 export class UserMapper {
-    // Helper method to map domain role to Prisma role
-    private mapToPrismaRole(domainRole: UserRoleEnum): PrismaUserRole {
-        switch (domainRole) {
-            case UserRoleEnum.SUPERADMIN:
-                return PrismaUserRole.SUPERADMIN;
-            case UserRoleEnum.CUSTOMER_ADMIN:
-                return PrismaUserRole.ADMIN;
-            case UserRoleEnum.USER:
-                return PrismaUserRole.USER;
-            case UserRoleEnum.GUEST:
-                return PrismaUserRole.READONLY;
-            default:
-                throw new Error(`Unsupported user role: ${domainRole}`);
-        }
+
+    toDomain(prismaUser: any): UserEntity {
+        const id = UserId.fromString(prismaUser.id);
+        const email = Email.fromString(prismaUser.email);
+        const role = UserRole.fromString(prismaUser.role);
+        const customerId = prismaUser.customerId ? CustomerId.fromString(prismaUser.customerId) : undefined;
+
+        const credentials = {
+            passwordHash: prismaUser.password || '',  // DB column is 'password', not 'passwordHash'
+            salt: prismaUser.salt || '',
+            failedLoginAttempts: prismaUser.failedLoginAttempts || 0,
+            isLocked: prismaUser.isLocked || false,
+            lockedUntil: prismaUser.lockedUntil
+        };
+
+        const user = new UserEntity(id, email, role, customerId, credentials, prismaUser.username);
+        user.firstName = prismaUser.firstName;
+        user.lastName = prismaUser.lastName;
+        user.phoneNumber = prismaUser.phoneNumber;
+        user.isActive = prismaUser.isActive !== false; // Default to true if not specified
+        user.lastLogin = prismaUser.lastLogin;
+        user.createdAt = prismaUser.createdAt || new Date();
+        user.updatedAt = prismaUser.updatedAt || new Date();
+        user.deletedAt = prismaUser.deletedAt;
+
+        return user;
     }
 
-    toDomain(prismaUser: PrismaUser): User {
-        return new User(
-            UserId.fromString(prismaUser.id),
-            Email.create(prismaUser.email),
-            prismaUser.username,
-            Password.create(prismaUser.password),
-            UserRole.create(prismaUser.role),
-            prismaUser.customerId ? CustomerId.create(prismaUser.customerId) : null,
-            prismaUser.createdAt,
-            prismaUser.updatedAt,
-            prismaUser.lastLoginAt,
-            prismaUser.status
-        );
-    }
-
-    toPersistence(user: User): Omit<PrismaUser, 'id'> & { id: string } & { customer?: { connect: { id: string } } } {
-        const customerId = user.getCustomerId()?.getValue() || null;
-        const domainRole = user.getRole().getValue();
-        const prismaRole = this.mapToPrismaRole(domainRole);
-
+    toPersistence(user: UserEntity): any {
         return {
             id: user.getId().getValue(),
-            email: user.getEmail().getValue(),
-            username: user.getUsername(),
-            password: user.getPassword().getValue(),
-            role: prismaRole,
-            status: user.isActive() ? UserStatus.ACTIVE : UserStatus.INACTIVE,
-            profileImage: null, // Default value
-            lastLoginAt: user.getLastLoginAt(),
-            deletedAt: null, // Default value
-            customerId: customerId,
-            customer: customerId ? { connect: { id: customerId } } : undefined,
-            createdAt: user.getCreatedAt(),
-            updatedAt: user.getUpdatedAt()
+            email: user.email.getValue(),
+            username: user.username,
+            role: user.role.getValue(),
+            customerId: user.getCustomerId()?.getValue(),
+            firstName: user.firstName,
+            lastName: user.lastName,
+            phoneNumber: user.phoneNumber,
+            isActive: user.isActive,
+            password: user.credentials.passwordHash,  // DB column is 'password'
+            salt: user.credentials.salt,
+            failedLoginAttempts: user.credentials.failedLoginAttempts,
+            lastFailedLogin: user.credentials.lastFailedLogin,
+            isLocked: user.credentials.isLocked,
+            lockedUntil: user.credentials.lockedUntil,
+            lastLogin: user.lastLogin,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt,
+            deletedAt: user.deletedAt
         };
     }
 
-    toDTO(user: User): {
+    toDTO(user: UserEntity): {
         id: string;
         email: string;
-        username: string;
         role: string;
         customerId: string | null;
         createdAt: string;
@@ -74,14 +69,13 @@ export class UserMapper {
     } {
         return {
             id: user.getId().getValue(),
-            email: user.getEmail().getValue(),
-            username: user.getUsername(),
-            role: user.getRole().getValue(),
+            email: user.email.getValue(),
+            role: user.role.getValue(),
             customerId: user.getCustomerId()?.getValue() || null,
-            createdAt: user.getCreatedAt().toISOString(),
-            lastLoginAt: user.getLastLoginAt()?.toISOString() || null,
-            active: user.isActive(),
-            status: user.isActive() ? 'ACTIVE' : 'INACTIVE'
+            createdAt: user.createdAt.toISOString(),
+            lastLoginAt: user.lastLogin ? user.lastLogin.toISOString() : null,
+            active: user.isActive,
+            status: user.isActive ? 'ACTIVE' : 'INACTIVE'
         };
     }
 }

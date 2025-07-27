@@ -1,7 +1,14 @@
-import { ReactNode } from 'react';
-import { redirect } from 'next/navigation';
-import { getServerSession, sessionIsAdmin, sessionIsSuperAdmin } from '@/lib/auth';
+import {ReactNode} from 'react';
+import {redirect} from 'next/navigation';
+import {
+    getServerSession,
+    sessionIsAdmin,
+    sessionIsSuperAdmin
+} from '@/lib/shared/infrastructure/authentication/auth.service';
 import AdminSidebar from '@/components/admin/admin-sidebar';
+
+// Force dynamic rendering since we use server-side session/cookie access
+export const dynamic = 'force-dynamic';
 
 export const metadata = {
   title: 'Admin Panel - IoT Pilot',

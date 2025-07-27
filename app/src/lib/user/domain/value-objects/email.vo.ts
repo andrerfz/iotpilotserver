@@ -31,4 +31,8 @@ export class Email extends ValueObject {
     static create(value: string): Email {
         return new Email(value.toLowerCase().trim());
     }
+
+    static fromString(value: string): Email {
+        return Email.create(value);
+    }
 }

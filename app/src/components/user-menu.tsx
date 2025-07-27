@@ -1,6 +1,7 @@
 'use client';
 
 import {useAuth} from '@/contexts/auth-context';
+// UserRoleType removed} from '@/lib/shared/domain/value-objects/user-role.vo';
 import {useRouter} from 'next/navigation';
 import {
     BarChart3,

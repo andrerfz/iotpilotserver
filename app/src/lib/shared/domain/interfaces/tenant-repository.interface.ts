@@ -1,28 +1,27 @@
-import { Repository } from './repository.interface';
-import { ITenantScoped } from './tenant-scoped.interface';
-import { CustomerId } from '@/lib/shared/domain/value-objects/customer-id.vo';
-import { TenantContext } from '@/lib/shared/application/context/tenant-context.vo';
+import {ITenantScoped} from './tenant-scoped.interface';
+import {CustomerId} from '@/lib/shared/domain/value-objects/customer-id.vo';
+import {TenantContext} from '@/lib/shared/domain/tenant-context';
 
-export interface TenantRepository<T extends ITenantScoped, ID> extends Repository<T, ID> {
+export interface TenantRepository<T extends ITenantScoped, ID> {
   /**
    * Finds an entity by its ID within the tenant context
    */
-  findById(id: ID, tenantContext: TenantContext): Promise<T | null>;
+  findById(id: ID, tenantContext?: TenantContext): Promise<T | null>;
 
   /**
    * Finds all entities within the tenant context
    */
-  findAll(tenantContext: TenantContext): Promise<T[]>;
+  findAll(tenantContext?: TenantContext): Promise<T[]>;
 
   /**
    * Saves an entity within the tenant context
    */
-  save(entity: T, tenantContext: TenantContext): Promise<void>;
+  save(entity: T, tenantContext?: TenantContext): Promise<void>;
 
   /**
    * Deletes an entity by its ID within the tenant context
    */
-  delete(id: ID, tenantContext: TenantContext): Promise<void>;
+  delete(id: ID, tenantContext?: TenantContext): Promise<void>;
 
   /**
    * Finds all entities belonging to a specific tenant

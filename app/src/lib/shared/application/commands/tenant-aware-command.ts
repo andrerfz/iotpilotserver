@@ -1,7 +1,7 @@
-import { Command } from '../interfaces/command.interface';
-import { TenantContext } from '../context/tenant-context.vo';
-import { CustomerId } from '@/lib/shared/domain/value-objects/customer-id.vo';
-import { TenantAccessDeniedException } from '@/lib/shared/domain/policies/tenant-validation.policy';
+import {Command} from '../interfaces/command.interface';
+import {TenantContext} from '@/lib/shared/domain/tenant-context';
+import {CustomerId} from '@/lib/shared/domain/value-objects/customer-id.vo';
+import {TenantAccessDeniedException} from '@/lib/shared/domain/policies/tenant-validation.policy';
 
 /**
  * Base class for all tenant-aware commands
@@ -9,8 +9,16 @@ import { TenantAccessDeniedException } from '@/lib/shared/domain/policies/tenant
  */
 export abstract class TenantAwareCommand implements Command {
   constructor(
-    public readonly tenantContext: TenantContext
+    protected readonly tenantContext: TenantContext
   ) {}
+  
+  /**
+   * Gets the tenant context
+   */
+  public getTenantContext(): TenantContext {
+    return this.tenantContext;
+  }
+  
 
   /**
    * Validates that the tenant context has access to the specified tenant

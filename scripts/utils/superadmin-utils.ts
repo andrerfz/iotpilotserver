@@ -1,4 +1,4 @@
-import { PrismaClient, UserRole, UserStatus } from '@prisma/client';
+import {PrismaClient, UserRole, UserStatus} from '@prisma/client';
 import * as readline from 'readline';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -20,10 +20,11 @@ export function createInterface() {
 export const emailSchema = zod.string().email('Invalid email format');
 export const usernameSchema = zod.string().min(3, 'Username must be at least 3 characters').max(50, 'Username must be at most 50 characters');
 export const passwordSchema = zod.string()
-  .min(8, 'Password must be at least 8 characters')
+  .min(12, 'Password must be at least 12 characters')
   .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
   .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
-  .regex(/\d/, 'Password must contain at least one number');
+  .regex(/\d/, 'Password must contain at least one number')
+  .regex(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/, 'Password must contain at least one special character');
 
 // Ask a question and return the answer
 export async function askQuestion(rl: readline.Interface, question: string): Promise<string> {

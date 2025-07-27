@@ -4,6 +4,19 @@ export interface QueryBus {
     execute<T extends Query<R>, R = any>(query: T): Promise<R>;
 }
 
+/**
+ * Gets a stable identifier for a query class that survives minification.
+ * Uses static 'type' property if available, otherwise falls back to constructor name.
+ */
+function getQueryType(queryClass: any): string {
+    // Check for static type property first (survives minification)
+    if (queryClass.type) {
+        return queryClass.type;
+    }
+    // Fallback to name (will break in production if minified)
+    return queryClass.name;
+}
+
 export class InMemoryQueryBus implements QueryBus {
     private handlers = new Map<string, QueryHandler<any, any>>();
 
@@ -11,17 +24,21 @@ export class InMemoryQueryBus implements QueryBus {
         queryClass: new (...args: any[]) => T,
         handler: QueryHandler<T, R>
     ): void {
-        this.handlers.set(queryClass.name, handler);
+        const queryType = getQueryType(queryClass);
+        this.handlers.set(queryType, handler);
     }
 
     async execute<T extends Query<R>, R = any>(query: T): Promise<R> {
-        const queryName = query.constructor.name;
-        const handler = this.handlers.get(queryName);
+        // Get type from static property or constructor
+        const queryType = getQueryType(query.constructor);
+        const handler = this.handlers.get(queryType);
 
         if (!handler) {
-            throw new Error(`No handler found for ${queryName}`);
+            console.error(`[QueryBus] No handler for query type: ${queryType}`);
+            console.error(`[QueryBus] Registered types: ${Array.from(this.handlers.keys()).join(', ')}`);
+            throw new Error(`No handler found for ${queryType}`);
         }
 
-        return await handler.handle(query);
+        return handler.handle(query);
     }
 }

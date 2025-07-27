@@ -2,212 +2,124 @@
 
 import {useState} from 'react';
 import {useRouter} from 'next/navigation';
-import Link from 'next/link';
-import {Check, UserPlus, X} from 'lucide-react';
-import PasswordInput from './password-input';
-import PasswordRequirements from './password-requirements';
-import {Alert, Button, Form, Input, Link as HeroLink, Spacer} from '@heroui/react';
+import {Input} from '@heroui/input';
+import {Button} from '@heroui/button';
+import {useUserCommands} from '@/hooks/commands/use-user-commands';
+import {toast} from 'sonner';
 
-export default function RegistrationForm() {
-    const [formData, setFormData] = useState({
-        email: '',
-        username: '',
-        password: '',
-        confirmPassword: ''
-    });
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
-
+/**
+ * RegistrationForm component for new user registration.
+ * @returns JSX element for the registration form.
+ */
+export function RegistrationForm() {
     const router = useRouter();
-
-    // Password validation
-    const passwordRequirements = [
-        {
-            test: (pwd: string) => pwd.length >= 8,
-            text: 'At least 8 characters'
-        },
-        {
-            test: (pwd: string) => /[A-Z]/.test(pwd),
-            text: 'One uppercase letter'
-        },
-        {
-            test: (pwd: string) => /[a-z]/.test(pwd),
-            text: 'One lowercase letter'
-        },
-        {
-            test: (pwd: string) => /\d/.test(pwd),
-            text: 'One number'
-        }
-    ];
-
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setFormData(prev => ({
-            ...prev,
-            [e.target.name]: e.target.value
-        }));
-    };
+    const { registerUser, loading, error } = useUserCommands();
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [username, setUsername] = useState('');
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true);
-        setError('');
 
-        // Validation
-        if (formData.password !== formData.confirmPassword) {
-            setError('Passwords do not match');
-            setLoading(false);
-            return;
-        }
-
-        if (!passwordRequirements.every(req => req.test(formData.password))) {
-            setError('Password does not meet requirements');
-            setLoading(false);
+        // Validate password match
+        if (password !== confirmPassword) {
+            toast.error('Passwords do not match');
             return;
         }
 
         try {
-            const response = await fetch('/api/auth/register', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    email: formData.email,
-                    username: formData.username,
-                    password: formData.password
-                }),
-            });
+            // Call the API to register
+            await registerUser({
+                email,
+                password,
+                username
+            } as any);
 
-            const data = await response.json();
+            toast.success('Registration successful! Please log in.');
 
-            if (!response.ok) {
-                throw new Error(data.error || 'Registration failed');
-            }
-
-            // Redirect to dashboard
-            router.push('/');
+            // Redirect to login on success
+            router.push('/login');
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Registration failed');
-        } finally {
-            setLoading(false);
+            toast.error(err instanceof Error ? err.message : 'Registration failed');
         }
     };
 
-    const isPasswordValid = passwordRequirements.every(req => req.test(formData.password));
-    const passwordsMatch = formData.password === formData.confirmPassword && formData.confirmPassword !== '';
-
     return (
-        <Form className="space-y-6" onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <Input
+                type="text"
+                label="Username"
+                placeholder="Choose a username"
+                value={username}
+                onValueChange={setUsername}
+                isRequired
+                variant="bordered"
+                classNames={{
+                    input: "bg-transparent",
+                    inputWrapper: "border-default-200 hover:border-default-400"
+                }}
+            />
+
+            <Input
+                type="email"
+                label="Email"
+                placeholder="Enter your email"
+                value={email}
+                onValueChange={setEmail}
+                isRequired
+                variant="bordered"
+                classNames={{
+                    input: "bg-transparent",
+                    inputWrapper: "border-default-200 hover:border-default-400"
+                }}
+            />
+
+            <Input
+                type="password"
+                label="Password"
+                placeholder="Create a password"
+                value={password}
+                onValueChange={setPassword}
+                isRequired
+                variant="bordered"
+                classNames={{
+                    input: "bg-transparent",
+                    inputWrapper: "border-default-200 hover:border-default-400"
+                }}
+            />
+
+            <Input
+                type="password"
+                label="Confirm Password"
+                placeholder="Confirm your password"
+                value={confirmPassword}
+                onValueChange={setConfirmPassword}
+                isRequired
+                variant="bordered"
+                classNames={{
+                    input: "bg-transparent",
+                    inputWrapper: "border-default-200 hover:border-default-400"
+                }}
+            />
+
             {error && (
-                <Alert color="danger" variant="flat" className="mb-4">
+                <div className="text-sm text-danger bg-danger-50 border border-danger-200 rounded-lg p-3">
                     {error}
-                </Alert>
+                </div>
             )}
-
-            <div className="mb-4">
-                <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    required
-                    value={formData.email}
-                    onChange={handleChange}
-                    label="Email address"
-                    placeholder="your@email.com"
-                    variant="bordered"
-                    fullWidth
-                />
-            </div>
-
-            <div className="mb-4">
-                <Input
-                    id="username"
-                    name="username"
-                    type="text"
-                    autoComplete="username"
-                    required
-                    value={formData.username}
-                    onChange={handleChange}
-                    label="Username"
-                    placeholder="Choose a username"
-                    variant="bordered"
-                    fullWidth
-                />
-            </div>
-
-            <div className="mb-4">
-                <PasswordInput
-                    id="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    autoComplete="new-password"
-                    placeholder="Create a strong password"
-                    label="Password"
-                />
-
-                {/* Password requirements */}
-                <PasswordRequirements
-                    password={formData.password}
-                    requirements={passwordRequirements}
-                />
-            </div>
-
-            <div className="mb-4">
-                <PasswordInput
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    autoComplete="new-password"
-                    placeholder="Confirm your password"
-                    label="Confirm Password"
-                />
-
-                {/* Password match indicator */}
-                {formData.confirmPassword && (
-                    <div className="mt-1 flex items-center">
-                        {passwordsMatch ? (
-                            <>
-                                <Check className="w-3 h-3 text-success mr-1"/>
-                                <span className="text-xs text-success">Passwords match</span>
-                            </>
-                        ) : (
-                            <>
-                                <X className="w-3 h-3 text-danger mr-1"/>
-                                <span className="text-xs text-danger">Passwords do not match</span>
-                            </>
-                        )}
-                    </div>
-                )}
-            </div>
-
-            <Spacer y={2}/>
 
             <Button
                 type="submit"
                 color="primary"
                 isLoading={loading}
-                isDisabled={loading || !isPasswordValid || !passwordsMatch}
-                fullWidth
-                startContent={<UserPlus className="h-5 w-5"/>}
+                className="w-full"
+                size="lg"
             >
                 {loading ? 'Creating account...' : 'Create account'}
             </Button>
-
-            <div className="text-center">
-                <p className="text-xs text-default-500">
-                    By creating an account, you agree to our{' '}
-                    <HeroLink as={Link} href="/terms" color="primary" size="sm">
-                        Terms of Service
-                    </HeroLink>{' '}
-                    and{' '}
-                    <HeroLink as={Link} href="/privacy" color="primary" size="sm">
-                        Privacy Policy
-                    </HeroLink>
-                </p>
-            </div>
-        </Form>
+        </form>
     );
 }
+
+export default RegistrationForm;

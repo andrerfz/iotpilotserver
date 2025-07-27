@@ -1,266 +1,46 @@
-import React from 'react';
-import { Alert } from '@/types/alerts';
-import {
-    Card,
-    CardBody,
-    Chip,
-    Button,
-    Dropdown,
-    DropdownTrigger,
-    DropdownMenu,
-    DropdownItem
-} from '@heroui/react';
-import {
-    AlertTriangle,
-    CheckCircle,
-    XCircle,
-    Clock,
-    MoreVertical,
-    Eye,
-    MessageSquare,
-    UserCheck
-} from 'lucide-react';
+import {AlertEntity} from '@/lib/monitoring/domain/entities/alert.entity';
 
 interface AlertCardProps {
-    alert: Alert; // Now uses the shared Alert type
-    onView?: (alert: Alert) => void;
-    onAcknowledge?: (alertId: string) => void;
-    onResolve?: (alertId: string) => void;
-    onComment?: (alertId: string) => void;
-    compact?: boolean;
+    alert: AlertEntity;
+    onAcknowledge?: (id: string) => void;
+    onResolve?: (id: string) => void;
 }
 
-interface AlertCardProps {
-    alert: Alert;
-    onView?: (alert: Alert) => void;
-    onAcknowledge?: (alertId: string) => void;
-    onResolve?: (alertId: string) => void;
-    onComment?: (alertId: string) => void;
-    compact?: boolean;
-}
-
-const SEVERITY_CONFIG = {
-    INFO: {
-        color: 'primary' as const,
-        icon: Clock,
-        bgColor: 'bg-blue-50',
-        textColor: 'text-blue-700'
-    },
-    WARNING: {
-        color: 'warning' as const,
-        icon: AlertTriangle,
-        bgColor: 'bg-yellow-50',
-        textColor: 'text-yellow-700'
-    },
-    ERROR: {
-        color: 'danger' as const,
-        icon: XCircle,
-        bgColor: 'bg-red-50',
-        textColor: 'text-red-700'
-    },
-    CRITICAL: {
-        color: 'danger' as const,
-        icon: XCircle,
-        bgColor: 'bg-red-100',
-        textColor: 'text-red-800'
-    }
-};
-
-export function AlertCard({
-    alert,
-    onView,
-    onAcknowledge,
-    onResolve,
-    onComment,
-    compact = false
-}: AlertCardProps) {
-    const severityConfig = SEVERITY_CONFIG[alert.severity];
-    const IconComponent = severityConfig.icon;
-
-    const formatTimeAgo = (dateString: string) => {
-        const date = new Date(dateString);
-        const now = new Date();
-        const diffMs = now.getTime() - date.getTime();
-        const diffMinutes = Math.floor(diffMs / (1000 * 60));
-        const diffHours = Math.floor(diffMinutes / 60);
-        const diffDays = Math.floor(diffHours / 24);
-
-        if (diffDays > 0) return `${diffDays}d ago`;
-        if (diffHours > 0) return `${diffHours}h ago`;
-        if (diffMinutes > 0) return `${diffMinutes}m ago`;
-        return 'Just now';
-    };
+/**
+ * AlertCard component to display individual alert information.
+ * @param props The component props including the alert data and optional action handlers.
+ * @returns JSX element displaying the alert details.
+ */
+export function AlertCard({ alert, onAcknowledge, onResolve }: AlertCardProps) {
+    const severityClass = alert.severity as any === 'CRITICAL' ? 'bg-red-100 text-red-800' : 
+                         alert.severity as any === 'WARNING' ? 'bg-yellow-100 text-yellow-800' : 
+                         'bg-blue-100 text-blue-800';
 
     return (
-        <Card
-            className={`w-full hover:shadow-md transition-shadow ${
-                alert.severity === 'CRITICAL' && !alert.resolved ? 'ring-2 ring-red-500' : ''
-            }`}
-        >
-            <CardBody className={compact ? 'p-4' : 'p-6'}>
-                <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-3 flex-1">
-                        {/* Severity Icon */}
-                        <div className={`p-2 rounded-full ${severityConfig.bgColor}`}>
-                            <IconComponent className={`w-4 h-4 ${severityConfig.textColor}`}/>
-                        </div>
-
-                        {/* Alert Content */}
-                        <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                <h4 className="font-semibold text-foreground truncate">
-                                    {alert.title}
-                                </h4>
-                                <Chip
-                                    color={severityConfig.color}
-                                    variant="flat"
-                                    size="sm"
-                                >
-                                    {alert.severity}
-                                </Chip>
-                                {alert.resolved ? (
-                                    <Chip color="success" variant="flat" size="sm">
-                                        Resolved
-                                    </Chip>
-                                ) : alert.acknowledgedAt ? (
-                                    <Chip color="warning" variant="flat" size="sm">
-                                        Acknowledged
-                                    </Chip>
-                                ) : (
-                                    <Chip color="danger" variant="flat" size="sm">
-                                        Active
-                                    </Chip>
-                                )}
-                            </div>
-
-                            <p className="text-sm text-default-600 mb-2 line-clamp-2">
-                                {alert.message}
-                            </p>
-
-                            <div className="flex items-center gap-4 text-xs text-default-500">
-                                <span>{formatTimeAgo(alert.createdAt)}</span>
-                                <span className="capitalize">
-                                    {alert.type.toLowerCase().replace('_', ' ')}
-                                </span>
-                                {alert.metadata?.threshold && (
-                                    <span>
-                                        Threshold: {alert.metadata.threshold}%
-                                    </span>
-                                )}
-                                {alert.resolvedAt && (
-                                    <span>
-                                        Resolved {formatTimeAgo(alert.resolvedAt)}
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex items-center gap-2">
-                        {!compact && (
-                            <>
-                                <Button
-                                    size="sm"
-                                    variant="light"
-                                    startContent={<Eye className="w-4 h-4"/>}
-                                    onClick={() => onView?.(alert)}
-                                >
-                                    View
-                                </Button>
-
-                                {!alert.resolved && (
-                                    <>
-                                        {!alert.acknowledgedAt && onAcknowledge && (
-                                            <Button
-                                                size="sm"
-                                                variant="bordered"
-                                                color="warning"
-                                                startContent={<UserCheck className="w-4 h-4"/>}
-                                                onClick={() => onAcknowledge(alert.id)}
-                                            >
-                                                Acknowledge
-                                            </Button>
-                                        )}
-
-                                        {onResolve && (
-                                            <Button
-                                                size="sm"
-                                                color="success"
-                                                variant="bordered"
-                                                startContent={<CheckCircle className="w-4 h-4"/>}
-                                                onClick={() => onResolve(alert.id)}
-                                            >
-                                                Resolve
-                                            </Button>
-                                        )}
-                                    </>
-                                )}
-                            </>
-                        )}
-
-                        <DropdownMenu>
-                            {(() => {
-                                type MenuItem = {
-                                    key: string;
-                                    startContent: React.ReactNode;
-                                    onClick: () => void;
-                                    label: string;
-                                    className?: string;
-                                };
-
-                                const items: MenuItem[] = [
-                                    {
-                                        key: "view",
-                                        startContent: <Eye className="w-4 h-4"/>,
-                                        onClick: () => onView?.(alert),
-                                        label: "View Details"
-                                    }
-                                ];
-
-                                if (onComment) {
-                                    items.push({
-                                        key: "comment",
-                                        startContent: <MessageSquare className="w-4 h-4"/>,
-                                        onClick: () => onComment(alert.id),
-                                        label: "Add Comment"
-                                    });
-                                }
-
-                                if (!alert.resolved && !alert.acknowledgedAt && onAcknowledge) {
-                                    items.push({
-                                        key: "acknowledge",
-                                        startContent: <UserCheck className="w-4 h-4"/>,
-                                        onClick: () => onAcknowledge(alert.id),
-                                        label: "Acknowledge"
-                                    });
-                                }
-
-                                if (!alert.resolved && onResolve) {
-                                    items.push({
-                                        key: "resolve",
-                                        startContent: <CheckCircle className="w-4 h-4"/>,
-                                        onClick: () => onResolve(alert.id),
-                                        label: "Resolve Alert",
-                                        className: "text-success"
-                                    });
-                                }
-
-                                return items.map(item => (
-                                    <DropdownItem
-                                        key={item.key}
-                                        startContent={item.startContent}
-                                        onClick={item.onClick}
-                                        className={item.className}
-                                    >
-                                        {item.label}
-                                    </DropdownItem>
-                                ));
-                            })()}
-                        </DropdownMenu>
-                    </div>
-                </div>
-            </CardBody>
-        </Card>
+        <div className={`alert-card p-4 rounded-lg shadow-md ${severityClass}`}>
+            <h3 className="text-lg font-semibold">{alert.title}</h3>
+            <p className="text-sm">{alert.message}</p>
+            <p className="text-xs text-gray-600">Triggered: {new Date(alert.createdAt).toLocaleString()}</p>
+            <p className="text-xs">Status: {alert.status as any}</p>
+            {alert.deviceId && <p className="text-xs">Device ID: {alert.deviceId as any}</p>}
+            <div className="mt-2 flex space-x-2">
+                {alert.status as any === 'ACTIVE' && onAcknowledge && (
+                    <button 
+                        onClick={() => onAcknowledge(alert.id as any)} 
+                        className="text-xs bg-white text-black px-2 py-1 rounded hover:bg-gray-200"
+                    >
+                        Acknowledge
+                    </button>
+                )}
+                {alert.status as any !== 'RESOLVED' && onResolve && (
+                    <button 
+                        onClick={() => onResolve(alert.id as any)} 
+                        className="text-xs bg-white text-black px-2 py-1 rounded hover:bg-gray-200"
+                    >
+                        Resolve
+                    </button>
+                )}
+            </div>
+        </div>
     );
 }

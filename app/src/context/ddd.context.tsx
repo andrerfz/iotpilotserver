@@ -1,9 +1,10 @@
 'use client';
 
-import React, {createContext, useContext, ReactNode, useMemo} from 'react';
-import {CommandBus, InMemoryCommandBus} from '@/lib/shared/application/bus/command.bus';
-import {QueryBus, InMemoryQueryBus} from '@/lib/shared/application/bus/query.bus';
-import {EventBus, InMemoryEventBus} from '@/lib/shared/application/bus/event.bus';
+import React, {createContext, ReactNode, useContext, useMemo} from 'react';
+import {CommandBus} from '@/lib/shared/application/bus/command.bus';
+import {QueryBus} from '@/lib/shared/application/bus/query.bus';
+import {EventBus} from '@/lib/shared/application/bus/event.bus';
+import {ServiceContainer} from '@/lib/shared/infrastructure/container/service-container';
 
 interface DDDContextType {
     commandBus: CommandBus;
@@ -17,17 +18,14 @@ export function DDDProvider({children}: {
     children: ReactNode
 }) {
     const buses = useMemo(() => {
-        const commandBus = new InMemoryCommandBus();
-        const queryBus = new InMemoryQueryBus();
-        const eventBus = new InMemoryEventBus();
-
-        // Register handlers here when available
-        // TODO: This will be populated in later phases
-
+        // Use the ServiceContainer singleton to get the buses
+        // This ensures consistency between frontend and backend
+        const serviceContainer = ServiceContainer.getInstance();
+        
         return {
-            commandBus,
-            queryBus,
-            eventBus
+            commandBus: serviceContainer.getCommandBus(),
+            queryBus: serviceContainer.getQueryBus(),
+            eventBus: serviceContainer.getEventBus()
         };
     }, []);
 

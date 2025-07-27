@@ -6,8 +6,10 @@ export interface EntityInterface<T> {
 
 export abstract class Entity<T> implements EntityInterface<T> {
     private events: any[] = [];
+    protected readonly _entityId: T;
 
-    constructor(protected readonly id: T) {
+    constructor(id: T) {
+        this._entityId = id;
     }
 
     abstract getId(): T;

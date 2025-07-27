@@ -1,7 +1,6 @@
-import {describe, it, expect, beforeEach, vi} from 'vitest';
-import {InMemoryEventBus} from '../event.bus';
-import {DomainEvent, DomainEventBase} from '@/lib/customer/shared/events/domain.event';
-import {EventHandler} from '../event.bus';
+import {beforeEach, describe, expect, it, vi} from 'vitest';
+import {EventHandler, InMemoryEventBus} from '../event.bus';
+import {DomainEventBase} from '@/lib/shared/domain/events/domain.event';
 
 class TestEvent extends DomainEventBase {
     constructor(public readonly value: string) {

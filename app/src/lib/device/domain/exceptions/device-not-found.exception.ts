@@ -1,6 +1,11 @@
-export class DeviceNotFoundException extends Error {
-    constructor(id: string) {
-        super(`Device with ID ${id} not found`);
-        this.name = 'DeviceNotFoundException';
-    }
+import {DomainException} from '../../../shared/domain/exceptions/domain.exception';
+
+export class DeviceNotFoundException extends DomainException {
+  constructor(deviceId: string) {
+    super(
+      `Device with ID ${deviceId} not found`,
+      'DEVICE_NOT_FOUND',
+      { deviceId }
+    );
+  }
 }

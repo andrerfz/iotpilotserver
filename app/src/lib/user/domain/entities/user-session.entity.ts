@@ -41,7 +41,7 @@ export class UserSession extends Entity<SessionId> {
     }
 
     getId(): SessionId {
-        return this.id;
+        return this._entityId;
     }
 
     getUserId(): UserId {
@@ -109,6 +109,6 @@ export class UserSession extends Entity<SessionId> {
     }
 
     equals(other: Entity<SessionId>): boolean {
-        return other instanceof UserSession && this.id.equals(other.id);
+        return other instanceof UserSession && this.getId().equals(other.getId());
     }
 }

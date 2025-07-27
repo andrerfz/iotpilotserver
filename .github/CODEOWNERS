@@ -1,0 +1,29 @@
+# Code owners for automatic PR reviews
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/managing-repository-settings/about-code-owners
+
+# Global owners (must review all changes)
+* @your-username  # Replace with actual GitHub username
+
+# Domain-specific owners
+app/src/lib/device/ @your-username
+app/src/lib/user/ @your-username
+app/src/lib/monitoring/ @your-username
+app/src/lib/customer/ @your-username
+
+# Infrastructure and configuration
+app/prisma/ @your-username
+docker/ @your-username
+.github/ @your-username
+Makefile @your-username
+
+# Testing infrastructure
+app/src/__tests__/ @your-username
+app/src/lib/shared/testing/ @your-username
+
+# Frontend components
+app/src/components/ @your-username
+app/src/hooks/ @your-username
+
+# Documentation
+*.md @your-username
+docs/ @your-username

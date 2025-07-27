@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import {NextRequest} from 'next/server';
+import {ApiResponse} from '@/lib/shared/infrastructure/http/api-response.util';
 
 interface Alert {
     id: string;
@@ -32,20 +33,14 @@ export async function GET(
         const alert = alerts.find(a => a.id === alertId);
 
         if (!alert) {
-            return NextResponse.json(
-                { error: 'Alert not found' },
-                { status: 404 }
-            );
+            return ApiResponse.notFound('Alert not found');
         }
 
-        return NextResponse.json(alert);
+        return ApiResponse.ok(alert);
 
     } catch (error) {
         console.error('Error fetching alert:', error);
-        return NextResponse.json(
-            { error: 'Failed to fetch alert' },
-            { status: 500 }
-        );
+        return ApiResponse.internalError('Failed to fetch alert');
     }
 }
 
@@ -61,10 +56,7 @@ export async function PATCH(
         const alertIndex = alerts.findIndex(a => a.id === alertId);
 
         if (alertIndex === -1) {
-            return NextResponse.json(
-                { error: 'Alert not found' },
-                { status: 404 }
-            );
+            return ApiResponse.notFound('Alert not found');
         }
 
         const alert = alerts[alertIndex];
@@ -72,10 +64,7 @@ export async function PATCH(
         // Handle different actions
         if (body.action === 'acknowledge') {
             if (alert.resolved) {
-                return NextResponse.json(
-                    { error: 'Cannot acknowledge a resolved alert' },
-                    { status: 400 }
-                );
+                return ApiResponse.badRequest('Cannot acknowledge a resolved alert');
             }
 
             alert.acknowledgedAt = new Date().toISOString();
@@ -83,10 +72,7 @@ export async function PATCH(
 
         } else if (body.action === 'resolve') {
             if (alert.resolved) {
-                return NextResponse.json(
-                    { error: 'Alert is already resolved' },
-                    { status: 400 }
-                );
+                return ApiResponse.badRequest('Alert is already resolved');
             }
 
             alert.resolved = true;
@@ -104,24 +90,18 @@ export async function PATCH(
             alert.updatedAt = new Date().toISOString();
 
         } else {
-            return NextResponse.json(
-                { error: 'Invalid action. Supported actions: acknowledge, resolve, update' },
-                { status: 400 }
-            );
+            return ApiResponse.badRequest('Invalid action. Supported actions: acknowledge, resolve, update');
         }
 
         // Update the alert in storage
         alerts[alertIndex] = alert;
         alertsStore.set(deviceId, alerts);
 
-        return NextResponse.json(alert);
+        return ApiResponse.ok(alert);
 
     } catch (error) {
         console.error('Error updating alert:', error);
-        return NextResponse.json(
-            { error: 'Failed to update alert' },
-            { status: 500 }
-        );
+        return ApiResponse.internalError('Failed to update alert');
     }
 }
 
@@ -136,23 +116,17 @@ export async function DELETE(
         const alertIndex = alerts.findIndex(a => a.id === alertId);
 
         if (alertIndex === -1) {
-            return NextResponse.json(
-                { error: 'Alert not found' },
-                { status: 404 }
-            );
+            return ApiResponse.notFound('Alert not found');
         }
 
         // Remove the alert
         alerts.splice(alertIndex, 1);
         alertsStore.set(deviceId, alerts);
 
-        return NextResponse.json({ message: 'Alert deleted successfully' });
+        return ApiResponse.ok({ message: 'Alert deleted successfully' });
 
     } catch (error) {
         console.error('Error deleting alert:', error);
-        return NextResponse.json(
-            { error: 'Failed to delete alert' },
-            { status: 500 }
-        );
+        return ApiResponse.internalError('Failed to delete alert');
     }
 }

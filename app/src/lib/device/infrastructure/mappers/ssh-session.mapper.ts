@@ -1,129 +1,107 @@
-import { SSHSession } from '@/lib/device/domain/entities/ssh-session.entity';
-import { DeviceId } from '@/lib/device/domain/value-objects/device-id.vo';
-import { IpAddress } from '@/lib/device/domain/value-objects/ip-address.vo';
-import { SshCredentials } from '@/lib/device/domain/value-objects/ssh-credentials.vo';
+import {SSHSession} from '../../domain/entities/ssh-session.entity';
+import {DeviceId} from '../../domain/value-objects/device-id.vo';
+import {IpAddress} from '../../domain/value-objects/ip-address.vo';
+import {SshCredentials} from '../../domain/value-objects/ssh-credentials.vo';
+import {CreateSSHSessionDTO, SSHCommandResultDTO, SSHSessionDTO, SSHSessionHistoryDTO} from '../dto/ssh-command.dto';
 
-// Define the shape of the SSH session data in the database
-export interface SSHSessionPersistence {
-  id: string;
-  deviceId: string;
-  startTime: Date;
-  endTime: Date | null;
-  userId: string;
-  commandCount: number;
-  status: string;
-}
-
-export interface SSHSessionDTO {
-  id: string;
-  deviceId: string;
-  startTime: string;
-  endTime: string | null;
-  userId: string;
-  commandCount: number;
-  status: string;
-  duration: number; // in seconds
-}
-
-export interface SSHSessionListItemDTO {
-  id: string;
-  deviceId: string;
-  deviceName: string;
-  startTime: string;
-  endTime: string | null;
-  userId: string;
-  status: string;
-  duration: number; // in seconds
-}
-
+/**
+ * Mapper for converting between SSHSession domain entity and various data formats
+ */
 export class SSHSessionMapper {
-  static toDomain(persistence: SSHSessionPersistence): SSHSession {
-    // Create default values for missing fields
-    const deviceId = DeviceId.fromString(persistence.deviceId);
-    const ipAddress = IpAddress.create('127.0.0.1'); // Default IP address
-    const sshCredentials = SshCredentials.create('default-user', 'default-password'); // Default credentials
-
-    // Create the session using the static create method
-    const session = SSHSession.create(
-      persistence.id,
-      deviceId,
-      ipAddress,
-      sshCredentials
-    );
-
-    // If the session has ended, close it
-    if (persistence.endTime !== null && persistence.status === 'closed') {
-      session.closeSession();
-    }
-
-    return session;
-  }
-
-  static toPersistence(domain: SSHSession): SSHSessionPersistence {
+  /**
+   * Converts an SSHSession domain entity to an SSHSessionDTO
+   */
+  toDTO(session: SSHSession, deviceName: string, username: string): SSHSessionDTO {
     return {
-      id: domain.id,
-      deviceId: domain.deviceId.value,
-      startTime: domain.startTime,
-      endTime: domain.endTime,
-      userId: 'system', // Default value since SSHSession doesn't have userId
-      commandCount: domain.commands.length, // Use the length of the commands array
-      status: domain.isActive ? 'active' : 'closed' // Map isActive to status
-    };
-  }
-
-  static toDTO(domain: SSHSession, deviceName?: string): SSHSessionDTO {
-    const duration = domain.endTime 
-      ? Math.floor((domain.endTime.getTime() - domain.startTime.getTime()) / 1000)
-      : Math.floor((new Date().getTime() - domain.startTime.getTime()) / 1000);
-
-    return {
-      id: domain.id,
-      deviceId: domain.deviceId.value,
-      startTime: domain.startTime.toISOString(),
-      endTime: domain.endTime ? domain.endTime.toISOString() : null,
-      userId: 'system', // Default value since SSHSession doesn't have userId
-      commandCount: domain.commands.length, // Use the length of the commands array
-      status: domain.isActive ? 'active' : 'closed', // Map isActive to status
-      duration
-    };
-  }
-
-  static toListItemDTO(domain: SSHSession, deviceName: string): SSHSessionListItemDTO {
-    const duration = domain.endTime 
-      ? Math.floor((domain.endTime.getTime() - domain.startTime.getTime()) / 1000)
-      : Math.floor((new Date().getTime() - domain.startTime.getTime()) / 1000);
-
-    return {
-      id: domain.id,
-      deviceId: domain.deviceId.value,
+      id: session.id,
+      deviceId: session.deviceId.getValue(),
       deviceName,
-      startTime: domain.startTime.toISOString(),
-      endTime: domain.endTime ? domain.endTime.toISOString() : null,
-      userId: 'system', // Default value since SSHSession doesn't have userId
-      status: domain.isActive ? 'active' : 'closed', // Map isActive to status
-      duration
+      ipAddress: session.ipAddress.getValue(),
+      port: 22, // Default SSH port since port is not available in SSHSession
+      startTime: session.startTime.toISOString(),
+      endTime: session.endTime ? session.endTime.toISOString() : null,
+      status: this.getSessionStatus(session),
+      username
     };
   }
-
-  static fromDTO(dto: SSHSessionDTO): SSHSession {
-    // Create default values for missing fields
-    const deviceId = DeviceId.fromString(dto.deviceId);
-    const ipAddress = IpAddress.create('127.0.0.1'); // Default IP address
-    const sshCredentials = SshCredentials.create('default-user', 'default-password'); // Default credentials
-
-    // Create the session using the static create method
-    const session = SSHSession.create(
-      dto.id,
-      deviceId,
-      ipAddress,
-      sshCredentials
+  
+  /**
+   * Converts an SSHSession domain entity to an SSHSessionHistoryDTO
+   */
+  toHistoryDTO(
+    session: SSHSession, 
+    deviceName: string, 
+    username: string, 
+    commandCount: number
+  ): SSHSessionHistoryDTO {
+    const duration = session.endTime 
+      ? Math.round((session.endTime.getTime() - session.startTime.getTime()) / 1000) 
+      : null;
+    
+    return {
+      sessionId: session.id,
+      deviceId: session.deviceId.getValue(),
+      deviceName,
+      startTime: session.startTime.toISOString(),
+      endTime: session.endTime ? session.endTime.toISOString() : null,
+      duration,
+      commandCount,
+      username
+    };
+  }
+  
+  /**
+   * Creates an SSHCommandResultDTO from command execution results
+   */
+  toCommandResultDTO(
+    sessionId: string,
+    command: string,
+    output: string,
+    error: string | null,
+    exitCode: number,
+    executionTime: number
+  ): SSHCommandResultDTO {
+    return {
+      sessionId,
+      command,
+      output,
+      error,
+      exitCode,
+      executionTime,
+      timestamp: new Date().toISOString()
+    };
+  }
+  
+  /**
+   * Converts a CreateSSHSessionDTO to an SSHSession domain entity
+   */
+  fromCreateDTO(
+    dto: CreateSSHSessionDTO, 
+    sessionId: string, 
+    ipAddress: string
+  ): SSHSession {
+    return SSHSession.create(
+      sessionId,
+      DeviceId.create(dto.deviceId),
+      IpAddress.create(ipAddress),
+      SshCredentials.create(
+        dto.username || 'root',
+        dto.password,
+        dto.privateKey
+      )
     );
-
-    // If the session has ended, close it
-    if (dto.endTime !== null && dto.status === 'closed') {
-      session.closeSession();
+  }
+  
+  /**
+   * Determines the status of an SSH session
+   */
+  private getSessionStatus(session: SSHSession): 'active' | 'closed' | 'error' {
+    if (!session.endTime) {
+      return 'active';
     }
-
-    return session;
+    
+    // If the session ended abruptly (e.g., due to an error), we might have additional information
+    // in a real implementation to determine if it was an error or a normal closure
+    return 'closed';
   }
 }

@@ -1,10 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { Device } from '@/lib/device/domain/entities/device.entity';
-import { DeviceId } from '@/lib/device/domain/value-objects/device-id.vo';
-import { DeviceName } from '@/lib/device/domain/value-objects/device-name.vo';
-import { IpAddress } from '@/lib/device/domain/value-objects/ip-address.vo';
-import { DeviceStatus } from '@/lib/device/domain/value-objects/device-status.vo';
-import { SshCredentials } from '@/lib/device/domain/value-objects/ssh-credentials.vo';
+import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
+import {Device} from '@/lib/device/domain/entities/device.entity';
+import {DeviceId} from '@/lib/device/domain/value-objects/device-id.vo';
+import {DeviceName} from '@/lib/device/domain/value-objects/device-name.vo';
+import {IpAddress} from '@/lib/device/domain/value-objects/ip-address.vo';
+import {DeviceStatus} from '@/lib/device/domain/value-objects/device-status.vo';
+import {SshCredentials} from '@/lib/device/domain/value-objects/ssh-credentials.vo';
+import {CustomerId} from '@/lib/shared/domain/value-objects/customer-id.vo';
 
 // Mock the value objects
 vi.mock('@/lib/device/domain/value-objects/device-id.vo');
@@ -12,6 +13,7 @@ vi.mock('@/lib/device/domain/value-objects/device-name.vo');
 vi.mock('@/lib/device/domain/value-objects/ip-address.vo');
 vi.mock('@/lib/device/domain/value-objects/device-status.vo');
 vi.mock('@/lib/device/domain/value-objects/ssh-credentials.vo');
+vi.mock('@/lib/shared/domain/value-objects/customer-id.vo');
 
 describe('Device Entity', () => {
   let deviceId: DeviceId;
@@ -19,6 +21,7 @@ describe('Device Entity', () => {
   let ipAddress: IpAddress;
   let deviceStatus: DeviceStatus;
   let sshCredentials: SshCredentials;
+  let tenantId: CustomerId;
   let device: Device;
 
   beforeEach(() => {
@@ -33,12 +36,13 @@ describe('Device Entity', () => {
       username: 'user',
       password: 'pass'
     } as unknown as SshCredentials;
+    tenantId = { getValue: 'tenant-123' } as unknown as CustomerId;
 
     // Mock static methods
     (DeviceStatus.create as ReturnType<typeof vi.fn>).mockReturnValue(deviceStatus);
 
     // Create a device instance
-    device = Device.create(deviceId, deviceName, ipAddress, sshCredentials);
+    device = Device.create(deviceId, deviceName, ipAddress, sshCredentials, tenantId);
   });
 
   describe('create', () => {

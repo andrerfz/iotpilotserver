@@ -1,28 +1,15 @@
-import { createContext, useContext, useMemo, ReactNode } from 'react';
-import { PrismaClient } from '@prisma/client';
-import { CommandBus, InMemoryCommandBus } from '../lib/shared/application/bus/command.bus';
-import { PrismaDeviceRepository } from '../lib/device/infrastructure/repositories/prisma-device.repository';
-
-// Example command and handler imports (these would need to be created)
-// import { RegisterDeviceCommand } from '../lib/device/application/commands/register-device/register-device.command';
-// import { RegisterDeviceHandler } from '../lib/device/application/commands/register-device/register-device.handler';
-
-// Create a singleton PrismaClient instance
-const prisma = new PrismaClient();
+import {createContext, ReactNode, useContext, useMemo} from 'react';
+import {CommandBus} from '../lib/shared/application/bus/command.bus';
+import {ServiceContainer} from '../lib/shared/infrastructure/container/service-container';
 
 const CommandBusContext = createContext<CommandBus | null>(null);
 
 export function CommandBusProvider({ children }: { children: ReactNode }) {
     const commandBus = useMemo(() => {
-        const bus = new InMemoryCommandBus();
-
-        // Register handlers
-        // Example: 
-        // bus.register(RegisterDeviceCommand, new RegisterDeviceHandler(
-        //     new PrismaDeviceRepository(prisma)
-        // ));
-
-        return bus;
+        // Use the ServiceContainer singleton to get the command bus
+        // This ensures consistency between frontend and backend
+        const serviceContainer = ServiceContainer.getInstance();
+        return serviceContainer.getCommandBus();
     }, []);
 
     return (

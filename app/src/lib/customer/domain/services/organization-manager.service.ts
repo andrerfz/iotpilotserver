@@ -1,34 +1,29 @@
-import { Injectable } from '@nestjs/common';
-import { Customer } from '../entities/customer.entity';
-import { OrganizationSettings, OrganizationSettingsProps } from '../value-objects/organization-settings.vo';
-import { CustomerInvalidSettingsException } from '../exceptions/customer.exception';
-import { TenantContext } from '@/lib/shared/application/context/tenant-context.vo';
-import { TenantAccessDeniedException, TenantQuotaExceededException } from '@/lib/shared/domain/exceptions/tenant.exception';
+import {Customer} from '../entities/customer.entity';
+import {OrganizationSettings, OrganizationSettingsProps} from '../value-objects/organization-settings.vo';
+import {CustomerInvalidSettingsException} from '../exceptions/customer.exception';
+import {TenantContext} from '@/lib/shared/domain/tenant-context';
 
-@Injectable()
 export class OrganizationManager {
   /**
    * Updates the organization settings for a customer
-   * @throws TenantAccessDeniedException if the tenant context does not have access to the customer
+   * @throws Error if the tenant context does not have access to the customer
    * @throws CustomerInvalidSettingsException if the settings are invalid
    */
   updateSettings(
     customer: Customer,
-    settingsProps: OrganizationSettingsProps,
+    settingsProps: Partial<OrganizationSettingsProps>,
     tenantContext: TenantContext
   ): Customer {
     // Validate tenant access
     if (!tenantContext.hasAccess(customer.getId()) && !tenantContext.canBypassTenantRestrictions()) {
-      throw new TenantAccessDeniedException(
-        tenantContext.getUserId().toString(),
-        customer.getId(),
-        `User ${tenantContext.getUserId().toString()} does not have access to customer ${customer.getId().toString()}`
+      throw new Error(
+        `User ${tenantContext.getUserId().getValue()} does not have access to customer ${customer.getId().getValue()}`
       );
     }
 
     try {
       // Create new settings value object
-      const settings = new OrganizationSettings(settingsProps);
+      const settings = OrganizationSettings.create(settingsProps);
 
       // Update customer settings
       customer.updateSettings(settings);
@@ -38,40 +33,31 @@ export class OrganizationManager {
       // Convert validation errors to domain exceptions
       let errorMessage = 'Invalid organization settings';
 
-      // Check if error is an Error object with a message property
       if (error instanceof Error) {
         errorMessage = error.message;
       } else if (typeof error === 'object' && error !== null && 'message' in error) {
-        // Handle case where error is an object with a message property
-        errorMessage = String(error.message);
+        errorMessage = String((error as any).message);
       } else if (typeof error === 'string') {
-        // Handle case where error is a string
         errorMessage = error;
       }
 
-      throw new CustomerInvalidSettingsException(errorMessage);
+      throw new CustomerInvalidSettingsException('settings', errorMessage);
     }
   }
 
   /**
    * Validates that the organization settings are within allowed limits
-   * @throws TenantQuotaExceededException if any quota is exceeded
+   * @throws Error if any quota is exceeded
    */
   validateQuotas(settings: OrganizationSettings, limits: { maxUsers: number, maxDevices: number }): void {
     if (settings.getMaxUsers() > limits.maxUsers) {
-      throw new TenantQuotaExceededException(
-        'global',
-        'maxUsers',
-        limits.maxUsers,
+      throw new Error(
         `Maximum users quota exceeded. Requested: ${settings.getMaxUsers()}, Limit: ${limits.maxUsers}`
       );
     }
 
     if (settings.getMaxDevices() > limits.maxDevices) {
-      throw new TenantQuotaExceededException(
-        'global',
-        'maxDevices',
-        limits.maxDevices,
+      throw new Error(
         `Maximum devices quota exceeded. Requested: ${settings.getMaxDevices()}, Limit: ${limits.maxDevices}`
       );
     }

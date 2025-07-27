@@ -1,0 +1,173 @@
+@startuml Device Domain Components
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam package {
+    BackgroundColor #E8F5E8
+    BorderColor #2E7D32
+    BorderThickness 2
+}
+
+title Device Domain Component Architecture
+
+package "Device Bounded Context" as DeviceContext {
+
+    package "Application Layer" as App {
+        package "Commands" as Commands {
+            class RegisterDeviceCommand
+            class UpdateDeviceCommand
+            class RemoveDeviceCommand
+            class ExecuteDeviceCommand
+            class ConnectToDeviceCommand
+        }
+
+        package "Queries" as Queries {
+            class ListDevicesQuery
+            class GetDeviceQuery
+            class GetDeviceStatusQuery
+            class ListDeviceCommandsQuery
+        }
+
+        class CommandBus
+        class QueryBus
+        class EventBus
+    }
+
+    package "Domain Layer" as Domain {
+
+        package "Entities" as Entities {
+            class Device <<Aggregate Root>>
+            class SshSession
+            class DeviceCommand
+        }
+
+        package "Value Objects" as ValueObjects {
+            class DeviceId
+            class DeviceName
+            class IpAddress
+            class SshCredentials
+            class DeviceType
+            class DeviceStatus
+        }
+
+        package "Domain Services" as DomainServices {
+            class DeviceRegistrationService
+            class SshConnectionService
+            class DeviceConnectivityPolicy
+            class DeviceExistsPolicy
+        }
+
+        package "Domain Events" as DomainEvents {
+            class DeviceRegisteredEvent
+            class DeviceConnectedEvent
+            class DeviceDisconnectedEvent
+            class DeviceCommandExecutedEvent
+        }
+
+        package "Interfaces" as Interfaces {
+            interface DeviceRepository
+            interface SshSessionRepository
+            interface DeviceCommandRepository
+        }
+    }
+
+    package "Infrastructure Layer" as Infra {
+
+        package "Repositories" as Repositories {
+            class PrismaDeviceRepository
+            class PrismaSshSessionRepository
+            class PrismaDeviceCommandRepository
+        }
+
+        package "Mappers" as Mappers {
+            class DeviceMapper
+            class SshSessionMapper
+            class DeviceCommandMapper
+        }
+
+        package "Services" as InfraServices {
+            class NodeSshClient
+            class TelegrafMetricsCollector
+            class MqttDeviceNotifier
+            class WebSocketDeviceNotifier
+        }
+
+        package "DTOs" as DTOs {
+            class DeviceDTO
+            class DeviceSummaryDTO
+            class DeviceCommandDTO
+            class SshSessionDTO
+        }
+    }
+}
+
+' External Dependencies
+package "Shared Kernel" as Shared {
+    class TenantContext
+    class DomainEvent
+    class ValueObject
+    class Entity
+    interface Repository
+}
+
+package "Infrastructure Services" as External {
+    database PostgreSQL
+    database Redis
+    queue MQTT
+    cloud InfluxDB
+    interface WebSocket
+}
+
+' Internal Relationships
+Device ..> DeviceId : uses
+Device ..> DeviceName : uses
+Device ..> IpAddress : uses
+Device ..> SshCredentials : uses
+Device ..> DeviceType : uses
+Device ..> DeviceStatus : uses
+
+RegisterDeviceCommand ..> DeviceRegistrationService : executes
+DeviceRegistrationService ..> DeviceRepository : uses
+DeviceRegistrationService ..> DeviceConnectivityPolicy : validates with
+
+PrismaDeviceRepository ..> PostgreSQL : persists to
+PrismaDeviceRepository ..> DeviceMapper : uses
+
+NodeSshClient ..> SshCredentials : authenticates with
+TelegrafMetricsCollector ..> InfluxDB : writes to
+MqttDeviceNotifier ..> MQTT : publishes to
+WebSocketDeviceNotifier ..> WebSocket : broadcasts to
+
+' External Relationships
+DeviceContext --> Shared : depends on
+Infra --> External : integrates with
+
+' Data Flow
+RegisterDeviceCommand --> CommandBus : submitted to
+CommandBus --> RegisterDeviceHandler : routed to
+RegisterDeviceHandler --> DeviceRegistrationService : delegates to
+DeviceRegistrationService --> Device : creates
+Device --> DomainEvents : publishes
+DomainEvents --> EventBus : sent to
+
+ListDevicesQuery --> QueryBus : submitted to
+QueryBus --> ListDevicesHandler : routed to
+ListDevicesHandler --> DeviceRepository : queries
+DeviceRepository --> Redis : checks cache
+Redis --> DeviceRepository : returns cached data
+DeviceRepository --> ListDevicesHandler : returns devices
+
+' Component Notes
+note right of Device : Aggregate Root\nManages device lifecycle\nEnforces business rules
+note right of DeviceRegistrationService : Domain Service\nComplex registration logic\nConnectivity validation
+note right of PrismaDeviceRepository : Infrastructure\nData persistence\nTenant filtering
+note right of NodeSshClient : External Integration\nSSH connectivity\nCommand execution
+
+' Layer Boundaries
+note as LayerBoundaries
+    **Layer Boundaries:**
+    - Application: Use cases & orchestration
+    - Domain: Business logic & rules
+    - Infrastructure: External concerns
+end note
+
+@enduml

@@ -32,6 +32,9 @@ class IgnorePlugin {
 }
 
 const nextConfig = {
+    // Exclude SSH2 from server components bundling (Next.js 14+)
+    serverComponentsExternalPackages: ['ssh2', 'ssh2-streams', 'node-ssh'],
+    
     images: {
         domains: ['localhost', 'iotpilot.app', 'iotpilotserver.test', 'dashboarddev.iotpilot.app'],
         unoptimized: true,
@@ -48,12 +51,14 @@ const nextConfig = {
             },
         ]
     },
-    webpack: (config, { isServer, dev }) => {
-        // Add resolve alias to use the mock ssh2 library during build
-        config.resolve = config.resolve || {};
+    webpack: (config, { isServer, dev, webpack }) => {
+        // Use mock SSH2 modules ALWAYS to avoid bundling native .node files
+        // The real SSH2 will be loaded at runtime via require() in NodeSSHConnectorService
         config.resolve.alias = config.resolve.alias || {};
-        config.resolve.alias['ssh2'] = require.resolve('./src/lib/ssh2-mock.cjs');
-
+        config.resolve.alias['ssh2'] = require.resolve('./src/lib/__mocks__/ssh2.js');
+        config.resolve.alias['node-ssh'] = require.resolve('./src/lib/__mocks__/node-ssh.js');
+        config.resolve.alias['ssh2-streams'] = require.resolve('./src/lib/__mocks__/ssh2.js');
+        
         // Client-side polyfills
         if (!isServer) {
             config.resolve.fallback = {
@@ -70,93 +75,10 @@ const nextConfig = {
                 assert: false,
                 os: false,
                 path: false,
+                'child_process': false,
             };
         }
 
-        // Handle native modules for both client and server
-        config.externals = config.externals || [];
-
-        // Add ssh2 and related modules as external modules for both client and server
-        const externalsToAdd = ['ssh2', 'ssh2-streams'];
-
-        // Function to handle .node files and ssh2 modules
-        const externalFunc = ({ context, request }, callback) => {
-            if (request.includes('ssh2') || request.endsWith('.node')) {
-                // Externalize to a commonjs module
-                return callback(null, 'commonjs ' + request);
-            }
-            callback();
-        };
-
-        if (Array.isArray(config.externals)) {
-            config.externals.push(externalFunc);
-            config.externals.push(...externalsToAdd);
-        } else if (typeof config.externals === 'function') {
-            const prevExternals = config.externals;
-            config.externals = (ctx, cb) => {
-                externalFunc(ctx, (err, result) => {
-                    if (err || result) return cb(err, result);
-                    prevExternals(ctx, cb);
-                });
-            };
-        } else {
-            config.externals = [
-                externalFunc,
-                ...externalsToAdd,
-                ...(config.externals ? [config.externals] : [])
-            ];
-        }
-
-        // Create a rule for .node files
-        config.module = config.module || {};
-        config.module.rules = config.module.rules || [];
-
-        // Remove any existing rules for .node files
-        config.module.rules = config.module.rules.filter(rule => 
-            !(rule.test && rule.test.toString().includes('.node'))
-        );
-
-        // Add a rule to handle .node files
-        if (!isServer) {
-            // On the client, use null-loader for all .node files
-            config.module.rules.push({
-                test: /\.node$/,
-                use: 'null-loader'
-            });
-        } else {
-            // On the server, add a function to the externals to handle .node files
-            if (Array.isArray(config.externals)) {
-                config.externals.push(({ request }, callback) => {
-                    if (request.endsWith('.node')) {
-                        return callback(null, 'commonjs ' + request);
-                    }
-                    callback();
-                });
-            } else {
-                const existingExternals = config.externals;
-                config.externals = [
-                    ({ request }, callback) => {
-                        if (request.endsWith('.node')) {
-                            return callback(null, 'commonjs ' + request);
-                        }
-                        callback();
-                    },
-                    ...(existingExternals ? [existingExternals] : [])
-                ];
-            }
-        }
-
-        // Add specific rules for ssh2 and its dependencies
-        config.module.rules.push(
-            {
-                test: /\.node$/,
-                loader: 'null-loader',
-            },
-            {
-                test: /node_modules\/ssh2/,
-                loader: 'null-loader',
-            }
-        );
 
         // Suppress browser extension errors in development
         if (dev) {
@@ -178,7 +100,8 @@ const nextConfig = {
         pagesBufferLength: 2,
     },
 
-    output: 'standalone',
+    // Note: 'standalone' output doesn't work well with custom servers (server.cjs)
+    // output: 'standalone',
 
     // Disable source maps for chrome extensions in dev
     devIndicators: {

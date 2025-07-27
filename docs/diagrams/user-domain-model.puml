@@ -1,0 +1,249 @@
+@startuml User Domain Model
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam sequenceParticipant underline
+
+title User Management Domain Model
+
+' Value Objects
+class UserId {
+    +value: string
+    +create(value: string): UserId
+    +getValue(): string
+    +equals(other: ValueObject): boolean
+}
+
+class Email {
+    +value: string
+    +create(value: string): Email
+    +getValue(): string
+    +validate(): void
+}
+
+class Username {
+    +value: string
+    +create(value: string): Username
+    +getValue(): string
+    +validate(): void
+}
+
+class Password {
+    +value: string (hashed)
+    +create(value: string): Password
+    +getValue(): string
+    +validate(): void
+    +hash(): Promise<string>
+}
+
+class UserRole {
+    +value: UserRoleEnum
+    +create(value: string): UserRole
+    +getValue(): UserRoleEnum
+    +isSuperAdmin(): boolean
+    +isCustomerAdmin(): boolean
+}
+
+class UserStatus {
+    +value: UserStatusEnum
+    +create(value: string): UserStatus
+    +getValue(): UserStatusEnum
+}
+
+class SessionToken {
+    +value: string
+    +create(): SessionToken
+    +getValue(): string
+    +isExpired(): boolean
+}
+
+' Entities
+class User {
+    -id: UserId
+    -email: Email
+    -username: Username
+    -password: Password
+    -role: UserRole
+    -status: UserStatus
+    -customerId?: CustomerId
+    -lastLoginAt?: Date
+    -createdAt: Date
+    -updatedAt: Date
+    +create(params: UserCreationParams): User
+    +changePassword(newPassword: Password): void
+    +updateEmail(email: Email): void
+    +activate(): void
+    +deactivate(): void
+    +suspend(): void
+    +recordLogin(): void
+    +getId(): UserId
+    +getEmail(): Email
+    +getUsername(): Username
+    +getRole(): UserRole
+    +getStatus(): UserStatus
+    +getCustomerId(): CustomerId
+}
+
+class Session {
+    -id: SessionId
+    -userId: UserId
+    -token: SessionToken
+    -ipAddress: string
+    -userAgent: string
+    -createdAt: Date
+    -expiresAt: Date
+    -isActive: boolean
+    +create(userId: UserId, ipAddress: string): Session
+    +extend(): void
+    +invalidate(): void
+    +isExpired(): boolean
+    +getId(): SessionId
+    +getUserId(): UserId
+    +getToken(): SessionToken
+}
+
+' Domain Services
+class AuthenticationService {
+    +authenticate(credentials: LoginCredentials): Promise<AuthenticationResult>
+    +validatePassword(password: string, hash: string): Promise<boolean>
+    +generateAccessToken(user: User): string
+    +generateRefreshToken(user: User): string
+    +validateToken(token: string): Promise<TokenPayload>
+}
+
+class AuthorizationService {
+    +checkPermission(user: User, resource: string, action: string): boolean
+    +getUserPermissions(user: User): string[]
+    +isSuperAdmin(user: User): boolean
+    +canAccessTenant(user: User, customerId: CustomerId): boolean
+}
+
+class PasswordPolicyService {
+    +validatePasswordStrength(password: string): PasswordValidationResult
+    +enforcePasswordHistory(user: User, newPassword: Password): Promise<void>
+    +requirePasswordChange(user: User): boolean
+}
+
+' Domain Events
+class UserRegisteredEvent {
+    +userId: UserId
+    +email: Email
+    +role: UserRole
+    +customerId?: CustomerId
+    +eventType: "UserRegistered"
+    +aggregateId: string
+    +occurredOn: Date
+}
+
+class UserAuthenticatedEvent {
+    +userId: UserId
+    +ipAddress: string
+    +userAgent: string
+    +eventType: "UserAuthenticated"
+    +aggregateId: string
+    +occurredOn: Date
+}
+
+class PasswordChangedEvent {
+    +userId: UserId
+    +changedBy: UserId
+    +eventType: "PasswordChanged"
+    +aggregateId: string
+    +occurredOn: Date
+}
+
+class UserDeactivatedEvent {
+    +userId: UserId
+    +reason: string
+    +eventType: "UserDeactivated"
+    +aggregateId: string
+    +occurredOn: Date
+}
+
+' Domain Policies
+class PasswordComplexityPolicy {
+    +validate(password: string): boolean
+    +getRequirements(): PasswordRequirements
+}
+
+class UserUniquenessPolicy {
+    +checkEmailUniqueness(email: Email): Promise<boolean>
+    +checkUsernameUniqueness(username: Username): Promise<boolean>
+}
+
+class SessionSecurityPolicy {
+    +validateSession(session: Session): boolean
+    +checkConcurrentSessions(userId: UserId): Promise<boolean>
+    +enforceSessionTimeout(session: Session): boolean
+}
+
+' Repositories
+interface UserRepository {
+    +findById(id: UserId): Promise<User | null>
+    +findByEmail(email: Email): Promise<User | null>
+    +findByUsername(username: Username): Promise<User | null>
+    +findByCustomer(customerId: CustomerId): Promise<User[]>
+    +findActiveUsers(): Promise<User[]>
+    +save(user: User): Promise<void>
+    +exists(id: UserId): Promise<boolean>
+    +count(): Promise<number>
+    +delete(id: UserId): Promise<void>
+}
+
+interface SessionRepository {
+    +findById(id: SessionId): Promise<Session | null>
+    +findByToken(token: string): Promise<Session | null>
+    +findActiveByUser(userId: UserId): Promise<Session[]>
+    +findExpired(): Promise<Session[]>
+    +save(session: Session): Promise<void>
+    +delete(id: SessionId): Promise<void>
+    +deleteExpired(): Promise<number>
+    +countActiveSessions(userId: UserId): Promise<number>
+}
+
+' Relationships
+User --> UserId : has
+User --> Email : has
+User --> Username : has
+User --> Password : has
+User --> UserRole : has
+User --> UserStatus : has
+User --> CustomerId : belongs to
+
+Session --> UserId : belongs to
+Session --> SessionToken : has
+
+AuthenticationService --> UserRepository : uses
+AuthenticationService --> SessionRepository : uses
+AuthenticationService --> PasswordPolicyService : uses
+
+AuthorizationService --> UserRepository : uses
+
+UserRepository --> User : manages
+SessionRepository --> Session : manages
+
+User --> UserRegisteredEvent : publishes
+User --> UserAuthenticatedEvent : publishes
+User --> PasswordChangedEvent : publishes
+User --> UserDeactivatedEvent : publishes
+
+PasswordPolicyService --> PasswordComplexityPolicy : uses
+
+note right of User
+    Aggregate Root
+    Manages user lifecycle
+    Handles authentication
+end note
+
+note right of AuthenticationService
+    Domain Service
+    Handles complex authentication
+    logic and token management
+end note
+
+note right of Session
+    Aggregate Root
+    Manages user sessions
+    Enforces security policies
+end note
+
+@enduml

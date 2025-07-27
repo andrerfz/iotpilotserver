@@ -1,34 +1,30 @@
 // app/src/app/api/devices/[id]/metrics/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import {AuthenticatedRequest, withAuthMiddleware} from '@/lib/shared/infrastructure/middleware/auth-middleware';
+import {ServiceContainer} from '@/lib/shared/infrastructure/container/service-container';
+import {TenantContextImpl} from '@/lib/shared/domain/tenant-context';
+import {CustomerId} from '@/lib/shared/domain/value-objects/customer-id.vo';
+import {ApiResponse} from '@/lib/shared/infrastructure/http/api-response.util';
 
-const prisma = new PrismaClient();
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
-// GET /api/devices/:id/metrics - Get device metrics
-export async function GET(
-    request: NextRequest,
-    { params }: { params: { id: string } }
-) {
+// GET /api/devices/:id/metrics - Get device metrics using DDD architecture
+export const GET = withAuthMiddleware(async (
+    request: AuthenticatedRequest
+) => {
     try {
-        const id = params.id;
+        const serviceContainer = ServiceContainer.getInstance();
+        const queryBus = serviceContainer.getQueryBus();
+
+        // Extract device ID from URL pathname
+        const urlParts = new URL(request.url).pathname.split('/');
+        const deviceId = urlParts[urlParts.indexOf('devices') + 1];
         const searchParams = new URL(request.url).searchParams;
 
         // Parse query parameters
         const metric = searchParams.get('metric') || 'all'; // 'all', 'cpu_usage', 'memory_usage', etc.
         const period = searchParams.get('period') || '24h'; // '1h', '24h', '7d', '30d'
         const resolution = searchParams.get('resolution') || 'auto'; // 'auto', 'raw', 'minute', 'hour', 'day'
-
-        // Check if device exists
-        const device = await prisma.device.findUnique({
-            where: { id },
-        });
-
-        if (!device) {
-            return NextResponse.json(
-                { error: 'Device not found' },
-                { status: 404 }
-            );
-        }
 
         // Calculate date range based on period
         const now = new Date();
@@ -51,46 +47,45 @@ export async function GET(
                 startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
         }
 
-        // Determine metrics to fetch
-        const metricsFilter = metric === 'all'
-            ? undefined
-            : {
-                metric: {
-                    in: metric.split(','),
-                },
-            };
+        // Create tenant context
+        const tenantContext = request.user?.customerId
+            ? TenantContextImpl.create(CustomerId.create(request.user.customerId))
+            : TenantContextImpl.createSuperAdmin();
 
-        // Query metrics from database with appropriate time range
-        const metrics = await prisma.deviceMetric.findMany({
-            where: {
-                deviceId: id,
-                timestamp: {
-                    gte: startDate,
-                },
-                ...metricsFilter,
+        // Import GetDeviceMetrics query here to avoid circular imports
+        const { GetDeviceMetricsQuery } = await import('@/lib/device/application/queries/get-device-metrics/get-device-metrics.query');
+
+        // Create and execute GetDeviceMetrics query
+        const getDeviceMetricsQuery = GetDeviceMetricsQuery.create(
+            deviceId,
+            {
+                from: startDate,
+                to: now
             },
-            orderBy: {
-                timestamp: 'asc',
-            },
-        });
+            metric === 'all' ? ['cpu', 'memory', 'disk', 'network'] : metric.split(','),
+            request.user?.customerId || undefined,
+            tenantContext
+        );
+
+        const metricsResult = await queryBus.execute(getDeviceMetricsQuery);
 
         // Process metrics based on resolution
-        let processedMetrics = metrics;
+        let processedMetrics = metricsResult.metrics;
 
         // Auto resolution adjustment based on data points
         if (resolution === 'auto') {
-            if (metrics.length > 1000) {
+            if (metricsResult.metrics.length > 1000) {
                 // Downsample to approximately 300-500 points
-                const downsampleFactor = Math.ceil(metrics.length / 400);
-                processedMetrics = downsampleMetrics(metrics, downsampleFactor);
+                const downsampleFactor = Math.ceil(metricsResult.metrics.length / 400);
+                processedMetrics = downsampleMetrics(metricsResult.metrics, downsampleFactor);
             }
         } else if (resolution !== 'raw') {
             // Apply specific resolution
-            processedMetrics = aggregateMetricsByResolution(metrics, resolution, startDate, now);
+            processedMetrics = aggregateMetricsByResolution(metricsResult.metrics, resolution, startDate, now);
         }
 
         // Group metrics by type
-        const metricsByType = processedMetrics.reduce((acc, metric) => {
+        const metricsByType = processedMetrics.reduce((acc: Record<string, Array<{ timestamp: Date; value: number; unit: string | null }>>, metric: any) => {
             if (!acc[metric.metric]) {
                 acc[metric.metric] = [];
             }
@@ -102,21 +97,30 @@ export async function GET(
             return acc;
         }, {} as Record<string, Array<{ timestamp: Date; value: number; unit: string | null }>>);
 
-        return NextResponse.json({
+        return ApiResponse.ok({
             metrics: metricsByType,
             period,
-            resolution: resolution === 'auto' && metrics.length > 1000 ? 'downsampled' : resolution,
-            total_points: metrics.length,
+            resolution: resolution === 'auto' && metricsResult.metrics.length > 1000 ? 'downsampled' : resolution,
+            total_points: metricsResult.metrics.length,
             processed_points: processedMetrics.length,
         });
+
     } catch (error) {
-        console.error('Failed to fetch device metrics:', error);
-        return NextResponse.json(
-            { error: 'Failed to fetch device metrics' },
-            { status: 500 }
-        );
+        console.error('❌ DEVICE METRICS GET: Failed to fetch device metrics with DDD:', error);
+        
+        if (error instanceof Error) {
+            // Handle specific domain errors
+            if (error.message.includes('not found')) {
+                return ApiResponse.notFound('Device not found');
+            }
+            if (error.message.includes('Tenant access violation')) {
+                return ApiResponse.forbidden('Access denied');
+            }
+        }
+
+        return ApiResponse.internalError('Failed to fetch device metrics');
     }
-}
+}, ServiceContainer.getInstance().getQueryBus());
 
 // Downsample metrics by taking every nth point
 function downsampleMetrics(metrics: any[], factor: number) {

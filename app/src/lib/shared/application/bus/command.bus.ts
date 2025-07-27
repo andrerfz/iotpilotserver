@@ -4,6 +4,19 @@ export interface CommandBus {
     execute<T extends Command, R = void>(command: T): Promise<R>;
 }
 
+/**
+ * Gets a stable identifier for a command class that survives minification.
+ * Uses static 'type' property if available, otherwise falls back to constructor name.
+ */
+function getCommandType(commandClass: any): string {
+    // Check for static type property first (survives minification)
+    if (commandClass.type) {
+        return commandClass.type;
+    }
+    // Fallback to name (will break in production if minified)
+    return commandClass.name;
+}
+
 export class InMemoryCommandBus implements CommandBus {
     private handlers = new Map<string, CommandHandler<any, any>>();
 
@@ -11,15 +24,19 @@ export class InMemoryCommandBus implements CommandBus {
         commandClass: new (...args: any[]) => T,
         handler: CommandHandler<T, R>
     ): void {
-        this.handlers.set(commandClass.name, handler);
+        const commandType = getCommandType(commandClass);
+        this.handlers.set(commandType, handler);
     }
 
     async execute<T extends Command, R = void>(command: T): Promise<R> {
-        const commandName = command.constructor.name;
-        const handler = this.handlers.get(commandName);
+        // Get type from static property or constructor
+        const commandType = getCommandType(command.constructor);
+        const handler = this.handlers.get(commandType);
 
         if (!handler) {
-            throw new Error(`No handler found for ${commandName}`);
+            console.error(`[CommandBus] No handler for command type: ${commandType}`);
+            console.error(`[CommandBus] Registered types: ${Array.from(this.handlers.keys()).join(', ')}`);
+            throw new Error(`No handler found for ${commandType}`);
         }
 
         return await handler.handle(command);

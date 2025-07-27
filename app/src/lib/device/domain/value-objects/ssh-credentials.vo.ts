@@ -35,6 +35,23 @@ export class SshCredentials {
     get port(): number {
         return this.props.port;
     }
+    
+    // Add methods used by DeviceMapper
+    getUsername(): string {
+        return this.props.username;
+    }
+    
+    getPassword(): string | undefined {
+        return this.props.password;
+    }
+    
+    getPrivateKey(): string | undefined {
+        return this.props.privateKey;
+    }
+    
+    getPort(): number {
+        return this.props.port;
+    }
 
     hasPassword(): boolean {
         return !!this.props.password;
@@ -53,12 +70,13 @@ export class SshCredentials {
         );
     }
 
-    static create(propsOrUsername: SshCredentialsProps | string, password?: string, port: number = 22): SshCredentials {
+    static create(propsOrUsername: SshCredentialsProps | string, password?: string, privateKey?: string, port: number = 22): SshCredentials {
         if (typeof propsOrUsername === 'string') {
             // Handle parameter-based creation pattern
             return new SshCredentials({
                 username: propsOrUsername,
                 password: password,
+                privateKey: privateKey,
                 port: port
             });
         } else {

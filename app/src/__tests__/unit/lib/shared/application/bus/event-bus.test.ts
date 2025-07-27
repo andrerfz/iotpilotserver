@@ -1,5 +1,5 @@
-import { InMemoryEventBus } from '../../../../../../lib/shared/application/bus/event.bus';
-import { DomainEvent } from '../../../../../../lib/shared/domain/events/domain.event';
+import {InMemoryEventBus} from '@/lib/shared/application/bus/event.bus';
+import {DomainEvent} from '@/lib/shared/domain/events/domain.event';
 
 class TestEvent implements DomainEvent {
     readonly eventType = 'TestEvent';

@@ -1,11 +1,11 @@
-import { NodeSSH } from 'node-ssh';
-import { DeviceId } from '@/lib/device/domain/value-objects/device-id.vo';
-import { IpAddress } from '@/lib/device/domain/value-objects/ip-address.vo';
-import { Port } from '@/lib/device/domain/value-objects/port.vo';
-import { SshCredentials } from '@/lib/device/domain/value-objects/ssh-credentials.vo';
-import { SSHSession } from '@/lib/device/domain/entities/ssh-session.entity';
-import { SSHClient } from '@/lib/device/domain/interfaces/ssh-client.interface';
-import { SSHConnectionFailedException } from '@/lib/device/domain/exceptions/ssh-connection-failed.exception';
+import {NodeSSH} from 'node-ssh';
+import {DeviceId} from '@/lib/device/domain/value-objects/device-id.vo';
+import {IpAddress} from '@/lib/device/domain/value-objects/ip-address.vo';
+import {Port} from '@/lib/device/domain/value-objects/port.vo';
+import {SshCredentials} from '@/lib/device/domain/value-objects/ssh-credentials.vo';
+import {SSHSession} from '@/lib/device/domain/entities/ssh-session.entity';
+import {SSHClient} from '@/lib/device/domain/interfaces/ssh-client.interface';
+import {SSHConnectionFailedException} from '@/lib/device/domain/exceptions/ssh-connection-failed.exception';
 
 // Note: Port.getValue is a getter property, not a method, so it should be accessed without parentheses
 
@@ -103,6 +103,32 @@ export class NodeSSHClientService implements SSHClient {
 
   async isConnected(sessionId: string): Promise<boolean> {
     return this.activeSessions.has(sessionId);
+  }
+
+  async isDeviceConnected(
+    ipAddress: IpAddress,
+    credentials: SshCredentials
+  ): Promise<boolean> {
+    try {
+      const ssh = new NodeSSH();
+      
+      await ssh.connect({
+        host: ipAddress.value,
+        port: 22, // Default SSH port
+        username: credentials.username,
+        password: credentials.password,
+        readyTimeout: 10000, // 10 seconds timeout for quick connection test
+        keepaliveInterval: 0, // Disable keepalive for test connection
+      });
+
+      // If we get here, connection was successful
+      // Immediately disconnect to clean up
+      ssh.dispose();
+      return true;
+    } catch (error) {
+      // Connection failed
+      return false;
+    }
   }
 
   async getActiveSessions(): Promise<SSHSession[]> {

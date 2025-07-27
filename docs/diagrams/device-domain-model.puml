@@ -1,0 +1,239 @@
+@startuml Device Domain Model
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam sequenceParticipant underline
+
+title Device Management Domain Model
+
+' Value Objects
+class DeviceId {
+    +value: string
+    +create(value: string): DeviceId
+    +getValue(): string
+    +equals(other: ValueObject): boolean
+}
+
+class DeviceName {
+    +value: string
+    +create(value: string): DeviceName
+    +getValue(): string
+    +validate(): void
+}
+
+class IpAddress {
+    +value: string
+    +create(value: string): IpAddress
+    +getValue(): string
+    +validate(): void
+}
+
+class SshCredentials {
+    +username: string
+    +password: string
+    +create(username: string, password: string): SshCredentials
+    +getUsername(): string
+    +getPassword(): string
+}
+
+class DeviceType {
+    +value: DeviceTypeEnum
+    +create(value: string): DeviceType
+    +getValue(): DeviceTypeEnum
+}
+
+class DeviceStatus {
+    +value: DeviceStatusEnum
+    +create(value: string): DeviceStatus
+    +getValue(): DeviceStatusEnum
+}
+
+' Entities
+class Device {
+    -id: DeviceId
+    -deviceId: DeviceId
+    -hostname: DeviceName
+    -ipAddress: IpAddress
+    -sshCredentials: SshCredentials
+    -deviceType: DeviceType
+    -status: DeviceStatus
+    -customerId: CustomerId
+    -userId: UserId
+    -createdAt: Date
+    -updatedAt: Date
+    +create(params: DeviceCreationParams): Device
+    +updateHostname(hostname: DeviceName): void
+    +updateIpAddress(ipAddress: IpAddress): void
+    +connect(): void
+    +disconnect(): void
+    +getId(): DeviceId
+    +getDeviceId(): DeviceId
+    +getHostname(): DeviceName
+    +getIpAddress(): IpAddress
+    +getSshCredentials(): SshCredentials
+    +getStatus(): DeviceStatus
+    +getCustomerId(): CustomerId
+}
+
+class SshSession {
+    -id: SshSessionId
+    -deviceId: DeviceId
+    -userId: UserId
+    -status: SessionStatus
+    -startedAt: Date
+    -endedAt?: Date
+    +create(deviceId: DeviceId, userId: UserId): SshSession
+    +start(): void
+    +end(): void
+    +getId(): SshSessionId
+    +getDeviceId(): DeviceId
+    +getUserId(): UserId
+    +getStatus(): SessionStatus
+}
+
+class DeviceCommand {
+    -id: DeviceCommandId
+    -deviceId: DeviceId
+    -userId: UserId
+    -command: string
+    -parameters: Record<string, any>
+    -status: CommandStatus
+    -executedAt?: Date
+    -result?: CommandResult
+    +create(deviceId: DeviceId, command: string): DeviceCommand
+    +execute(): Promise<void>
+    +getId(): DeviceCommandId
+    +getDeviceId(): DeviceId
+    +getCommand(): string
+    +getStatus(): CommandStatus
+    +getResult(): CommandResult
+}
+
+' Domain Services
+class DeviceRegistrationService {
+    +registerDevice(params: DeviceRegistrationData): Promise<Device>
+    +validateDeviceConnectivity(deviceData: DeviceData): Promise<void>
+    +checkDeviceUniqueness(ipAddress: IpAddress): Promise<void>
+}
+
+class SshConnectionService {
+    +establishConnection(device: Device): Promise<SshClient>
+    +executeCommand(client: SshClient, command: string): Promise<CommandResult>
+    +closeConnection(client: SshClient): Promise<void>
+}
+
+' Domain Events
+class DeviceRegisteredEvent {
+    +deviceId: DeviceId
+    +customerId: CustomerId
+    +deviceType: DeviceType
+    +eventType: "DeviceRegistered"
+    +aggregateId: string
+    +occurredOn: Date
+}
+
+class DeviceConnectedEvent {
+    +deviceId: DeviceId
+    +ipAddress: IpAddress
+    +eventType: "DeviceConnected"
+    +aggregateId: string
+    +occurredOn: Date
+}
+
+class DeviceDisconnectedEvent {
+    +deviceId: DeviceId
+    +reason: string
+    +eventType: "DeviceDisconnected"
+    +aggregateId: string
+    +occurredOn: Date
+}
+
+class DeviceCommandExecutedEvent {
+    +deviceId: DeviceId
+    +commandId: DeviceCommandId
+    +success: boolean
+    +eventType: "DeviceCommandExecuted"
+    +aggregateId: string
+    +occurredOn: Date
+}
+
+' Domain Policies
+class DeviceExistsPolicy {
+    +checkDeviceExists(deviceId: DeviceId): Promise<boolean>
+}
+
+class DeviceConnectivityPolicy {
+    +validateConnectivity(device: Device): Promise<boolean>
+}
+
+' Repositories
+interface DeviceRepository {
+    +findById(id: DeviceId): Promise<Device | null>
+    +findByIpAddress(ipAddress: IpAddress): Promise<Device | null>
+    +findByDeviceId(deviceId: DeviceId): Promise<Device | null>
+    +findAll(): Promise<Device[]>
+    +findActive(): Promise<Device[]>
+    +findInactive(): Promise<Device[]>
+    +save(device: Device): Promise<void>
+    +exists(id: DeviceId): Promise<boolean>
+    +count(): Promise<number>
+    +delete(id: DeviceId): Promise<void>
+}
+
+interface SshSessionRepository {
+    +findById(id: SshSessionId): Promise<SshSession | null>
+    +findActiveByDevice(deviceId: DeviceId): Promise<SshSession[]>
+    +findByUser(userId: UserId): Promise<SshSession[]>
+    +save(session: SshSession): Promise<void>
+    +delete(id: SshSessionId): Promise<void>
+}
+
+interface DeviceCommandRepository {
+    +findById(id: DeviceCommandId): Promise<DeviceCommand | null>
+    +findByDevice(deviceId: DeviceId): Promise<DeviceCommand[]>
+    +findPending(): Promise<DeviceCommand[]>
+    +save(command: DeviceCommand): Promise<void>
+}
+
+' Relationships
+Device --> DeviceId : has
+Device --> DeviceName : has
+Device --> IpAddress : has
+Device --> SshCredentials : has
+Device --> DeviceType : has
+Device --> DeviceStatus : has
+Device --> CustomerId : belongs to
+Device --> UserId : belongs to
+
+DeviceCommand --> DeviceId : targets
+DeviceCommand --> UserId : executed by
+
+SshSession --> DeviceId : connects to
+SshSession --> UserId : initiated by
+
+DeviceRepository --> Device : manages
+SshSessionRepository --> SshSession : manages
+DeviceCommandRepository --> DeviceCommand : manages
+
+DeviceRegistrationService --> DeviceRepository : uses
+DeviceRegistrationService --> DeviceConnectivityPolicy : uses
+
+SshConnectionService --> SshSessionRepository : uses
+
+Device --> DeviceRegisteredEvent : publishes
+Device --> DeviceConnectedEvent : publishes
+Device --> DeviceDisconnectedEvent : publishes
+DeviceCommand --> DeviceCommandExecutedEvent : publishes
+
+note right of Device
+    Aggregate Root
+    Manages device lifecycle
+    Enforces business rules
+end note
+
+note right of DeviceRegistrationService
+    Domain Service
+    Handles complex device
+    registration logic
+end note
+
+@enduml

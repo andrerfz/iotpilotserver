@@ -1,52 +1,75 @@
-import { ValueObject, ValueObjectInterface } from '@/lib/shared/domain/interfaces/value-object.interface';
+import {ValueObject} from '@/lib/shared/domain/base.value-object';
 
-export enum CustomerStatusEnum {
-  ACTIVE = 'ACTIVE',
-  INACTIVE = 'INACTIVE',
-  SUSPENDED = 'SUSPENDED',
-  PENDING = 'PENDING'
+export type CustomerStatusType = 'active' | 'inactive' | 'suspended' | 'pending';
+
+export interface CustomerStatusData {
+  value: CustomerStatusType;
 }
 
-export class CustomerStatus extends ValueObject {
-  constructor(private readonly value: CustomerStatusEnum) {
-    super();
-    this.validate();
+export class CustomerStatus extends ValueObject<CustomerStatusData> {
+  private constructor(value: CustomerStatusType) {
+    super({ value });
   }
 
-  private validate(): void {
-    if (!Object.values(CustomerStatusEnum).includes(this.value)) {
-      throw new Error(`Invalid customer status: ${this.value}`);
+  static create(value: CustomerStatusType): CustomerStatus {
+    const validStatuses: CustomerStatusType[] = ['active', 'inactive', 'suspended', 'pending'];
+    
+    if (!validStatuses.includes(value)) {
+      throw new Error(`Invalid customer status: ${value}`);
     }
+
+    return new CustomerStatus(value);
   }
 
-  getValue(): CustomerStatusEnum {
+  static active(): CustomerStatus {
+    return CustomerStatus.create('active');
+  }
+
+  static inactive(): CustomerStatus {
+    return CustomerStatus.create('inactive');
+  }
+
+  static suspended(): CustomerStatus {
+    return CustomerStatus.create('suspended');
+  }
+
+  static pending(): CustomerStatus {
+    return CustomerStatus.create('pending');
+  }
+
+  static fromString(value: string): CustomerStatus {
+    return CustomerStatus.create(value as CustomerStatusType);
+  }
+
+  get value(): CustomerStatusType {
+    return this.props.value;
+  }
+
+  getValue(): CustomerStatusType {
     return this.value;
   }
 
   isActive(): boolean {
-    return this.value === CustomerStatusEnum.ACTIVE;
+    return this.value === 'active';
   }
 
   isInactive(): boolean {
-    return this.value === CustomerStatusEnum.INACTIVE;
+    return this.value === 'inactive';
   }
 
   isSuspended(): boolean {
-    return this.value === CustomerStatusEnum.SUSPENDED;
+    return this.value === 'suspended';
   }
 
   isPending(): boolean {
-    return this.value === CustomerStatusEnum.PENDING;
+    return this.value === 'pending';
   }
 
-  equals(other: ValueObjectInterface): boolean {
-    if (!(other instanceof CustomerStatus)) {
-      return false;
-    }
-    return this.value === other.getValue();
+  equals(other: CustomerStatus): boolean {
+    return this.value === other.value;
   }
 
-  toString(): string {
-    return this.value;
+  toJSON(): CustomerStatusData {
+    return { value: this.value };
   }
 }

@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
+import {NextRequest} from 'next/server';
+import {ApiResponse} from '@/lib/shared/infrastructure/http/api-response.util';
+import {Pagination} from '@/lib/shared/infrastructure/http/pagination.util';
 
 interface Alert {
     id: string;
@@ -103,11 +105,12 @@ function generateMockAlerts(deviceId: string): Alert[] {
 }
 
 export async function GET(
-    request: NextRequest,
-    { params }: { params: { id: string } }
+    request: NextRequest
 ) {
     try {
-        const deviceId = params.id;
+        // Extract device ID from URL pathname
+        const urlParts = new URL(request.url).pathname.split('/');
+        const deviceId = urlParts[urlParts.indexOf('devices') + 1];
         const url = new URL(request.url);
 
         // Parse query parameters
@@ -160,39 +163,31 @@ export async function GET(
             }
         };
 
-        return NextResponse.json({
-            alerts: paginatedAlerts,
-            total,
-            limit,
-            offset,
-            stats
-        });
+        // Create standardized pagination
+        const pagination = Pagination.fromOffset(offset, limit, total);
+
+        return ApiResponse.okPaginated(paginatedAlerts, pagination, undefined, { stats });
 
     } catch (error) {
         console.error('Error fetching device alerts:', error);
-        return NextResponse.json(
-            { error: 'Failed to fetch device alerts' },
-            { status: 500 }
-        );
+        return ApiResponse.internalError('Failed to fetch device alerts');
     }
 }
 
 export async function POST(
-    request: NextRequest,
-    { params }: { params: { id: string } }
+    request: NextRequest
 ) {
     try {
-        const deviceId = params.id;
+        // Extract device ID from URL pathname
+        const urlParts = new URL(request.url).pathname.split('/');
+        const deviceId = urlParts[urlParts.indexOf('devices') + 1];
         const body = await request.json();
 
         // Validate required fields
         const requiredFields = ['type', 'severity', 'title', 'message'];
         for (const field of requiredFields) {
             if (!body[field]) {
-                return NextResponse.json(
-                    { error: `Missing required field: ${field}` },
-                    { status: 400 }
-                );
+                return ApiResponse.badRequest(`Missing required field: ${field}`);
             }
         }
 
@@ -223,13 +218,10 @@ export async function POST(
             alertsStore.set(deviceId, alerts.slice(0, 1000));
         }
 
-        return NextResponse.json(newAlert, { status: 201 });
+        return ApiResponse.created(newAlert);
 
     } catch (error) {
         console.error('Error creating alert:', error);
-        return NextResponse.json(
-            { error: 'Failed to create alert' },
-            { status: 500 }
-        );
+        return ApiResponse.internalError('Failed to create alert');
     }
 }

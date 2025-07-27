@@ -1,4 +1,4 @@
-import { InMemoryQueryBus } from '../../../../../../lib/shared/application/bus/query.bus';
+import {InMemoryQueryBus} from '@/lib/shared/application/bus/query.bus';
 
 class TestQuery {
     constructor(public readonly id: string) {}

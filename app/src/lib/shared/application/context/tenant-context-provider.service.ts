@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
-import { TenantContext } from './tenant-context.vo';
-import { CustomerId } from '@/lib/shared/domain/value-objects/customer-id.vo';
-import { UserId } from '@/lib/user/domain/value-objects/user-id.vo';
-import { UserRole } from '@/lib/user/domain/value-objects/user-role.vo';
+import {Injectable} from '@nestjs/common';
+import {TenantContext} from '@/lib/shared/domain/tenant-context';
+import {TenantContextImpl} from '@/lib/shared/application/context/tenant-context.vo';
+import {CustomerId} from '@/lib/shared/domain/value-objects/customer-id.vo';
+import {UserId} from '@/lib/user/domain/value-objects/user-id.vo';
+import {UserRole} from '@/lib/shared/domain/value-objects/user-role.vo';
 
 @Injectable()
 export class TenantContextProvider {
@@ -17,12 +18,13 @@ export class TenantContextProvider {
     customerId: CustomerId | null = null,
     isSuperAdmin: boolean = false
   ): TenantContext {
-    const context = new TenantContext(
-      customerId,
-      userId,
-      role,
-      isSuperAdmin
-    );
+    const context = isSuperAdmin
+      ? TenantContextImpl.createSuperAdmin(userId)
+      : TenantContextImpl.create(
+          customerId || CustomerId.create(''),
+          userId,
+          role
+        );
     
     this.currentContext = context;
     return context;

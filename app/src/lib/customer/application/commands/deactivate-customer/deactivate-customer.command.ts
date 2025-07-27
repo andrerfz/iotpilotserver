@@ -1,25 +1,21 @@
-import { TenantAwareCommand } from '@/lib/shared/application/commands/tenant-aware-command';
-import { TenantContext } from '@/lib/shared/application/context/tenant-context.vo';
-import { CustomerId } from '@/lib/shared/domain/value-objects/customer-id.vo';
+import {TenantAwareCommand} from '@/lib/shared/application/commands/tenant-aware-command';
+import {TenantContext} from '@/lib/shared/domain/tenant-context';
 
 export class DeactivateCustomerCommand extends TenantAwareCommand {
-  private constructor(
+  constructor(
     tenantContext: TenantContext,
-    public readonly customerId: CustomerId
+    public readonly customerId: string
   ) {
     super(tenantContext);
   }
 
-  /**
-   * Factory method to create a new DeactivateCustomerCommand
-   */
-  static create(
-    tenantContext: TenantContext,
-    customerId: string
-  ): DeactivateCustomerCommand {
-    return new DeactivateCustomerCommand(
-      tenantContext,
-      new CustomerId(customerId)
-    );
+  static fromRequest(request: any, tenantContext: TenantContext): DeactivateCustomerCommand {
+    const { customerId } = request.body;
+    
+    if (!customerId) {
+      throw new Error('Customer ID is required');
+    }
+
+    return new DeactivateCustomerCommand(tenantContext, customerId);
   }
 }

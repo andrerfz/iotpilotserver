@@ -1,494 +1,247 @@
-import {NextRequest, NextResponse} from 'next/server';
-import {AlertSeverity, AlertType, DeviceStatus, DeviceType, PrismaClient} from '@prisma/client';
+import {validator} from '@/lib/shared/infrastructure/validation/validation-helper';
+import {ServiceContainer} from '@/lib/shared/infrastructure/container/service-container';
+import {AuthenticatedRequest, withAuthMiddleware} from '@/lib/shared/infrastructure/middleware/auth-middleware';
+import {ListDevicesQuery} from '@/lib/device/application/queries/list-devices/list-devices.query';
+import {
+    DeviceRegistrationData,
+    RegisterDeviceCompleteCommand
+} from '@/lib/device/application/commands/register-device-complete/register-device-complete.command';
+import {TenantContextImpl} from '@/lib/shared/domain/tenant-context';
+import {CustomerId} from '@/lib/shared/domain/value-objects/customer-id.vo';
+import {Pagination} from '@/lib/shared/infrastructure/http/pagination.util';
+import {ApiResponse} from '@/lib/shared/infrastructure/http/api-response.util';
 import {z} from 'zod';
-import {authenticate, validateApiKey} from '@/lib/auth';
-import { DeviceCapabilityDetector } from '@/lib/command-executor';
 
-const prisma = new PrismaClient();
+// Dynamic route: uses auth and cookies
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
 
-const deviceRegistrationSchema = z.object({
-    device_id: z.string(),
-    hostname: z.string(),
-    device_type: z.string(),
-    device_model: z.string().optional(),
-    architecture: z.string(),
-    location: z.string().optional(),
-    ip_address: z.string().optional(),
-    tailscale_ip: z.string().optional(),
-    mac_address: z.string().optional()
+const v = validator();
+const deviceRegistrationSchema = v.object({
+    device_id: v.string({ min: 1, message: 'Device ID is required' }),
+    hostname: v.string({ min: 1, message: 'Hostname is required' }),
+    device_type: v.string({ min: 1, message: 'Device type is required' }),
+    device_model: v.optional(v.string()),
+    architecture: v.string({ min: 1, message: 'Architecture is required' }),
+    location: v.optional(v.string()),
+    ip_address: v.optional(v.string()),
+    tailscale_ip: v.optional(v.string()),
+    mac_address: v.optional(v.string())
 });
 
-// GET /api/devices - List all devices with direct JWT validation
-export async function GET(request: NextRequest) {
+// GET /api/devices - List all devices using DDD architecture
+export const GET = withAuthMiddleware(async (request: AuthenticatedRequest) => {
     try {
-        console.log('🔐 DEVICES GET: Starting direct authentication');
+        const serviceContainer = ServiceContainer.getInstance();
+        const queryBus = serviceContainer.getQueryBus();
 
-        // Extract token directly
-        const cookieToken = request.cookies.get('auth-token')?.value;
-        const authHeader = request.headers.get('authorization');
-        const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.replace('Bearer ', '') : null;
-
-        const token = cookieToken || bearerToken;
-
-        console.log('🔐 DEVICES GET: Token sources:', {
-            cookieToken: !!cookieToken,
-            bearerToken: !!bearerToken,
-            finalToken: !!token
-        });
-
-        if (!token) {
-            return NextResponse.json({error: 'No token provided'}, {status: 401});
-        }
-
-        // Validate session directly in database
-        console.log('🔍 DEVICES GET: Validating session in database');
-        const session = await prisma.session.findFirst({
-            where: {
-                token,
-                expiresAt: {
-                    gt: new Date()
-                },
-                deletedAt: null
-            },
-            include: {
-                user: {
-                    select: {
-                        id: true,
-                        email: true,
-                        username: true,
-                        role: true,
-                        customerId: true,
-                        deletedAt: true
-                    }
-                }
-            }
-        });
-
-        if (!session || session.user.deletedAt) {
-            console.log('❌ DEVICES GET: No valid session found');
-            return NextResponse.json({error: 'Session expired or invalid'}, {status: 401});
-        }
-
-        console.log('✅ DEVICES GET: Valid session found:', {
-            userId: session.user.id,
-            email: session.user.email,
-            role: session.user.role,
-            customerId: session.user.customerId
-        });
-
-        const userId = session.user.id;
-        const userRole = session.user.role;
-        const userCustomerId = session.user.customerId;
-
+        // Extract query parameters
         const url = new URL(request.url);
-        const status = url.searchParams.get('status');
+        const statusParam = url.searchParams.get('status') || 'all';
+        const status = ['active', 'inactive', 'all'].includes(statusParam) ? statusParam as 'active' | 'inactive' | 'all' : 'all';
+        const search = url.searchParams.get('search') || '';
         const page = parseInt(url.searchParams.get('page') || '1');
         const limit = Math.min(parseInt(url.searchParams.get('limit') || '50'), 100);
-        const skip = (page - 1) * limit;
+        const offset = (page - 1) * limit;
+        const sortBy = url.searchParams.get('sortBy') || 'name';
+        const sortDirection = url.searchParams.get('sortDirection') || 'asc';
 
-        // Build device filter
-        const deviceFilter: any = {
-            deletedAt: null // Only show non-deleted devices
-        };
+        // Create tenant context
+        const tenantContext = request.user?.customerId
+            ? TenantContextImpl.create(CustomerId.create(request.user.customerId))
+            : TenantContextImpl.createSuperAdmin();
 
-        // Add status filter if provided
-        if (status) {
-            deviceFilter.status = status;
-        }
+        // Create and execute ListDevices query
+        const listDevicesQuery = ListDevicesQuery.create(
+            {
+                status: status === 'all' ? undefined : status,
+                search,
+                limit,
+                offset,
+                sortBy,
+                sortDirection: sortDirection as 'asc' | 'desc'
+            },
+            request.user?.customerId || undefined,
+            tenantContext
+        );
 
-        // CRITICAL: Multi-tenant filtering
-        // SUPERADMIN can see all devices, others only see their customer's devices
-        if (userRole !== 'SUPERADMIN') {
-            if (!userCustomerId) {
-                return NextResponse.json(
-                    {error: 'Missing customer context'},
-                    {status: 400}
-                );
-            }
-            deviceFilter.customerId = userCustomerId;
-        }
+        const deviceListResult = await queryBus.execute(listDevicesQuery);
 
-        console.log('🏢 DEVICES GET: Filter applied:', {
-            userRole,
-            userCustomerId,
-            deviceFilter: JSON.stringify(deviceFilter)
-        });
-
-        // Fetch devices with pagination and tenant filtering
-        const devices = await prisma.device.findMany({
-            where: deviceFilter,
-            orderBy: {lastSeen: 'desc'},
-            skip,
-            take: limit,
-            include: {
-                user: {
-                    select: {
-                        id: true,
-                        username: true,
-                        email: true
-                    }
-                },
-                customer: {
-                    select: {
-                        id: true,
-                        name: true,
-                        slug: true
-                    }
-                },
-                _count: {
-                    select: {
-                        alerts: {
-                            where: {
-                                resolved: false,
-                                deletedAt: null
-                            }
-                        }
-                    }
-                }
-            }
-        });
-
-        // Get total count for pagination
-        const totalCount = await prisma.device.count({
-            where: deviceFilter
-        });
-
-        // Format devices for response
-        const formattedDevices = devices.map(device => ({
+        // Convert DeviceDto objects to API response format
+        const formattedDevices = deviceListResult.devices.map((device: any) => ({
             id: device.id,
-            deviceId: device.deviceId,
+            deviceId: device.id, // Using id as deviceId for backward compatibility
             hostname: device.hostname,
-            deviceType: device.deviceType,
-            deviceModel: device.deviceModel,
-            architecture: device.architecture,
-            location: device.location,
-            description: device.description,
+            name: device.name,
+            deviceType: 'Unknown', // Not available in current entity - would need to be added if needed
+            deviceModel: null,
+            architecture: null,
+            location: null,
+            description: null,
             ipAddress: device.ipAddress,
             tailscaleIp: device.tailscaleIp,
-            macAddress: device.macAddress,
-            status: device.status,
+            macAddress: null,
+            status: device.status?.value || 'UNKNOWN',
             lastSeen: device.lastSeen,
-            lastBoot: device.lastBoot,
-            uptime: device.uptime,
-            cpuUsage: device.cpuUsage,
-            cpuTemp: device.cpuTemp,
-            memoryUsage: device.memoryUsage,
-            memoryTotal: device.memoryTotal,
-            diskUsage: device.diskUsage,
-            diskTotal: device.diskTotal,
-            loadAverage: device.loadAverage,
-            appStatus: device.appStatus,
-            agentVersion: device.agentVersion,
-            registeredAt: device.registeredAt,
+            lastBoot: null,
+            uptime: null,
+            cpuUsage: null,
+            cpuTemp: null,
+            memoryUsage: null,
+            memoryTotal: null,
+            diskUsage: null,
+            diskTotal: null,
+            loadAverage: null,
+            appStatus: device.status?.value || 'UNKNOWN',
+            agentVersion: null,
+            registeredAt: device.createdAt,
             updatedAt: device.updatedAt,
-            user: device.user,
-            customer: device.customer,
-            alertsCount: device._count.alerts
+            isOnline: device.isOnline,
+            isActive: device.isActive,
+            connectionQuality: device.connectionQuality,
+            user: null,
+            customer: device.customerId ? {
+                id: device.customerId,
+                name: 'Customer',
+                slug: 'customer'
+            } : null,
+            alertsCount: 0
         }));
 
-        // Calculate stats
+        // Calculate stats based on online status
         const stats = {
-            total: formattedDevices.length,
-            online: formattedDevices.filter((d: {status: string;}) => d.status === 'ONLINE').length,
-            offline: formattedDevices.filter((d: {status: string;}) => d.status === 'OFFLINE').length,
-            maintenance: formattedDevices.filter((d: {status: string;}) => d.status === 'MAINTENANCE').length,
-            error: formattedDevices.filter((d: {status: string;}) => d.status === 'ERROR').length
+            total: deviceListResult.total,
+            online: formattedDevices.filter((d: any) => d.isOnline).length,
+            offline: formattedDevices.filter((d: any) => !d.isOnline).length,
+            maintenance: 0,
+            error: 0
         };
 
-        console.log('📊 DEVICES GET: Results:', {
-            totalDevices: formattedDevices.length,
-            userRole,
-            userCustomerId,
-            stats
-        });
+        // Create standardized pagination
+        const pagination = Pagination.create(page, limit, deviceListResult.total);
 
-        return NextResponse.json({
-            devices: formattedDevices,
-            stats,
-            pagination: {
-                total: totalCount,
-                page,
-                limit,
-                pages: Math.ceil(totalCount / limit)
-            }
-        });
+        return ApiResponse.okPaginated(formattedDevices, pagination, undefined, { stats });
 
     } catch (error) {
-        console.error('Failed to fetch devices:', error);
-        return NextResponse.json(
-            {error: 'Failed to fetch devices'},
-            {status: 500}
-        );
+        console.error('Failed to fetch devices with DDD:', error);
+        return ApiResponse.internalError('Failed to fetch devices');
     }
-}
+}, ServiceContainer.getInstance().getQueryBus());
 
-// POST /api/devices - Register new device with multi-tenant support
-export async function POST(request: NextRequest) {
+// POST /api/devices - Register new device using DDD architecture with dual authentication
+export const POST = withAuthMiddleware(async (request: AuthenticatedRequest) => {
     try {
-        let userId: string | null = null;
-        let authUser: any = null;
+        process.stdout.write(`🔍 DEVICES POST: Route handler started\n`);
 
-        // Try API key authentication first (for device agents)
-        const apiKey = request.headers.get('x-api-key') ||
-            request.headers.get('authorization')?.replace('ApiKey ', '');
+        const serviceContainer = ServiceContainer.getInstance();
+        const commandBus = serviceContainer.getCommandBus();
+        process.stdout.write(`🔍 DEVICES POST: Got commandBus\n`);
 
-        if (apiKey) {
-            console.log('🔑 DEVICES: Using API key authentication');
-            const { valid, user, apiKeyRecord } = await validateApiKey(apiKey);
-            if (valid && user && apiKeyRecord) {
-                userId = user.id;
-                authUser = {
-                    ...user,
-                    // Use customerId from API key record (which inherits from user)
-                    customerId: apiKeyRecord.customerId || user.customerId
-                };
-                console.log('🔑 DEVICES POST: API key context:', {
-                    userId,
-                    userRole: authUser.role,
-                    userCustomerId: authUser.customerId,
-                    apiKeyCustomerId: apiKeyRecord.customerId
-                });
-            } else {
-                return NextResponse.json({error: 'Invalid API key'}, {status: 401});
-            }
-        } else {
-            // Try JWT authentication (from middleware headers)
-            console.log('🔐 DEVICES: Using JWT authentication');
-            userId = request.headers.get('x-user-id');
-            const userEmail = request.headers.get('x-user-email');
-            const userRole = request.headers.get('x-user-role');
-            const userCustomerId = request.headers.get('x-customer-id');
-
-            if (!userId) {
-                return NextResponse.json({error: 'Unauthorized'}, {status: 401});
-            }
-
-            authUser = {
-                id: userId,
-                email: userEmail,
-                role: userRole,
-                customerId: userCustomerId
-            };
-        }
+        // Use authenticated user from middleware
+        const authUser = request.user;
+        process.stdout.write(`🔍 DEVICES POST: Got authUser: ${authUser?.id}\n`);
 
         const body = await request.json();
+        process.stdout.write(`🔍 DEVICES POST: Parsed body\n`);
         const data = deviceRegistrationSchema.parse(body);
-        const deviceTypeEnum = data.device_type as DeviceType;
+        process.stdout.write(`🔍 DEVICES POST: Validated data\n`);
 
         // CRITICAL: Ensure user has a customerId (except SUPERADMIN)
-        if (!authUser.customerId && authUser.role !== 'SUPERADMIN') {
-            console.error('🚨 DEVICES: User lacks customerId:', {
-                userId: authUser.id,
-                email: authUser.email,
-                role: authUser.role,
-                customerId: authUser.customerId
+        if (!authUser?.customerId && authUser?.role !== 'SUPERADMIN') {
+            console.error('🚨 DEVICES POST: User lacks customerId:', {
+                userId: authUser?.id,
+                email: authUser?.email,
+                role: authUser?.role,
+                customerId: authUser?.customerId
             });
-            return NextResponse.json(
-                {error: 'Missing customer context. Please contact support.'},
-                {status: 400}
-            );
+            return ApiResponse.badRequest('Missing customer context. Please contact support.');
         }
 
         // For SUPERADMIN without customerId, require explicit customerId in request
-        let targetCustomerId = authUser.customerId;
-        if (authUser.role === 'SUPERADMIN' && !targetCustomerId) {
+        let targetCustomerId: string | null = authUser?.customerId || null;
+        if (authUser?.role === 'SUPERADMIN' && !targetCustomerId) {
             const explicitCustomerId = request.headers.get('x-target-customer-id') ||
                 body.customerId;
             if (explicitCustomerId) {
                 targetCustomerId = explicitCustomerId;
             } else {
-                return NextResponse.json(
-                    {error: 'SUPERADMIN must specify target customerId'},
-                    {status: 400}
-                );
+                return ApiResponse.badRequest('SUPERADMIN must specify target customerId');
             }
         }
 
-        console.log('🏢 DEVICES: Device registration context:', {
-            userRole: authUser.role,
-            userCustomerId: authUser.customerId,
-            targetCustomerId,
-            deviceId: data.device_id
-        });
+        // Create tenant context
+        const tenantContext = targetCustomerId
+            ? TenantContextImpl.create(CustomerId.create(targetCustomerId))
+            : TenantContextImpl.createSuperAdmin();
 
-        // Check if device already exists (include soft deleted to prevent conflicts)
-        const existingDevice = await prisma.device.findFirst({
-            where: {deviceId: data.device_id}
-        });
-
-        if (existingDevice) {
-            // If device is soft deleted, restore it
-            if (existingDevice.deletedAt) {
-                console.log('🔄 DEVICES: Restoring soft-deleted device');
-
-                // Detect device capabilities
-                const capabilities = await DeviceCapabilityDetector.detectCapabilities({
-                    deviceType: deviceTypeEnum,
-                    architecture: data.architecture,
-                    deviceModel: data.device_model,
-                    ipAddress: data.ip_address,
-                    tailscaleIp: data.tailscale_ip
-                });
-
-                console.log('🔍 DEVICES: Detected capabilities for restoration:', capabilities);
-
-                // Create update data with capabilities
-                const updateData: any = {
-                    hostname: data.hostname,
-                    deviceType: deviceTypeEnum,
-                    deviceModel: data.device_model,
-                    architecture: data.architecture,
-                    location: data.location,
-                    ipAddress: data.ip_address,
-                    tailscaleIp: data.tailscale_ip,
-                    macAddress: data.mac_address,
-                    capabilities: capabilities,
-                    status: DeviceStatus.ONLINE,
-                    lastSeen: new Date(),
-                    userId: authUser.id,
-                    customerId: targetCustomerId,
-                    updatedAt: new Date(),
-                    deletedAt: null // Restore the device
-                };
-
-                const restoredDevice = await prisma.device.update({
-                    where: {id: existingDevice.id},
-                    data: updateData
-                });
-
-                return NextResponse.json({
-                    device: restoredDevice,
-                    action: 'restored',
-                    message: 'Device restored and updated successfully'
-                });
-            }
-
-            // Check if the existing device belongs to the same customer
-            if (existingDevice.customerId === targetCustomerId) {
-                // Same customer - update the device
-                console.log('🔄 DEVICES: Updating existing device for same customer');
-
-                // Detect device capabilities
-                const capabilities = await DeviceCapabilityDetector.detectCapabilities({
-                    deviceType: deviceTypeEnum,
-                    architecture: data.architecture,
-                    deviceModel: data.device_model,
-                    ipAddress: data.ip_address,
-                    tailscaleIp: data.tailscale_ip
-                });
-
-                console.log('🔍 DEVICES: Detected capabilities for update:', capabilities);
-
-                // Create update data with capabilities
-                const updateData: any = {
-                    hostname: data.hostname,
-                    deviceType: deviceTypeEnum,
-                    deviceModel: data.device_model,
-                    architecture: data.architecture,
-                    location: data.location,
-                    ipAddress: data.ip_address,
-                    tailscaleIp: data.tailscale_ip,
-                    macAddress: data.mac_address,
-                    capabilities: capabilities,
-                    status: DeviceStatus.ONLINE,
-                    lastSeen: new Date(),
-                    userId: authUser.id,
-                    updatedAt: new Date()
-                };
-
-                const updatedDevice = await prisma.device.update({
-                    where: {id: existingDevice.id},
-                    data: updateData
-                });
-
-                return NextResponse.json({
-                    device: updatedDevice,
-                    action: 'updated',
-                    message: 'Device updated successfully'
-                });
-            } else {
-                // Different customer - reject registration
-                console.log('🚫 DEVICES: Device already belongs to different customer');
-                return NextResponse.json(
-                    {
-                        error: 'Device already registered by another customer',
-                        action: 'duplicate_rejected',
-                        existing_customer_different: true
-                    },
-                    {status: 409}
-                );
-            }
-        }
-
-        // Create new device with proper customerId
-        console.log('✨ DEVICES: Creating new device');
-
-        // Detect device capabilities
-        const capabilities = await DeviceCapabilityDetector.detectCapabilities({
-            deviceType: deviceTypeEnum,
-            architecture: data.architecture,
-            deviceModel: data.device_model,
-            ipAddress: data.ip_address,
-            tailscaleIp: data.tailscale_ip
-        });
-
-        console.log('🔍 DEVICES: Detected capabilities:', capabilities);
-
-        // Create device data with capabilities
-        const createData: any = {
+        // Prepare device registration data
+        const deviceData: DeviceRegistrationData = {
             deviceId: data.device_id,
             hostname: data.hostname,
-            deviceType: deviceTypeEnum,
+            deviceType: data.device_type,
             deviceModel: data.device_model,
             architecture: data.architecture,
             location: data.location,
             ipAddress: data.ip_address,
             tailscaleIp: data.tailscale_ip,
             macAddress: data.mac_address,
-            capabilities: capabilities,
-            status: DeviceStatus.ONLINE,
-            lastSeen: new Date(),
-            userId: authUser.id,
-            customerId: targetCustomerId, // CRITICAL: Set the customerId
-            registeredAt: new Date(),
-            updatedAt: new Date()
+            ownerId: authUser?.id!,
+            customerId: targetCustomerId!
         };
 
-        const device = await prisma.device.create({
-            data: createData
-        });
+        // Create and execute RegisterDeviceComplete command
+        process.stdout.write(`🔍 DEVICES POST: Creating RegisterDeviceCompleteCommand...\n`);
+        const registerCommand = RegisterDeviceCompleteCommand.create(
+            deviceData,
+            tenantContext
+        );
+        process.stdout.write(`🔍 DEVICES POST: Command created, executing via commandBus...\n`);
 
-        console.log('✅ DEVICES: Device created successfully:', {
-            deviceId: device.deviceId,
-            customerId: device.customerId,
-            hostname: device.hostname
-        });
+        const registrationResult = await commandBus.execute<typeof registerCommand, { deviceId: string; message: string; capabilities?: string[] }>(registerCommand);
+        process.stdout.write(`🔍 DEVICES POST: Command executed successfully\n`);
 
-        // Create initial alert for new device registration
-        await prisma.alert.create({
-            data: {
-                type: AlertType.DEVICE_REGISTERED,
-                severity: AlertSeverity.INFO,
-                title: 'New Device Registered',
-                message: `Device ${device.hostname} (${device.deviceId}) has been registered`,
-                source: 'device_registration',
-                deviceId: device.id,
-                userId: authUser.id,
-                customerId: targetCustomerId
-            }
+        return ApiResponse.created({
+            device: {
+                id: registrationResult.deviceId,
+                deviceId: registrationResult.deviceId,
+                hostname: deviceData.hostname,
+                deviceType: deviceData.deviceType,
+                customerId: targetCustomerId!,
+                status: 'ONLINE'
+            },
+            message: registrationResult.message,
+            capabilities: registrationResult.capabilities
         });
-
-        return NextResponse.json({
-            device,
-            action: 'created',
-            message: 'Device registered successfully'
-        }, {status: 201});
 
     } catch (error) {
-        console.error('Device registration error:', error);
-        return NextResponse.json(
-            {error: 'Failed to register device'},
-            {status: 500}
-        );
+        console.error('❌ DEVICES POST: Failed to register device with DDD:', error);
+        process.stdout.write(`❌ DEVICES POST: Exception: ${(error as any)?.message}\n`);
+        process.stdout.write(`❌ DEVICES POST: Stack: ${(error as any)?.stack}\n`);
+        
+        // Handle Zod validation errors
+        if (error instanceof z.ZodError) {
+            return ApiResponse.badRequest('Validation failed', error.errors.map(e => ({
+                path: e.path.join('.'),
+                message: e.message
+            })));
+        }
+        
+        // Handle command validation errors (like empty device ID)
+        if ((error as any)?.message && ((error as any).message.includes('Device ID is required') || (error as any).message.includes('required'))) {
+            return ApiResponse.badRequest('Validation failed', [{ message: (error as any).message }]);
+        }
+        
+        if (error instanceof Error) {
+            // Handle specific validation errors
+            if (error.message.includes('already exists')) {
+                return ApiResponse.conflict(error.message);
+            }
+            if (error.message.includes('required') || error.message.includes('Tenant access violation') || error.message.includes('Invalid')) {
+                return ApiResponse.badRequest(error.message);
+            }
+        }
+
+        return ApiResponse.internalError('Failed to register device');
     }
-}
+}, ServiceContainer.getInstance().getQueryBus());

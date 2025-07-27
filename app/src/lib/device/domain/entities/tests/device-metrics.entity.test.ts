@@ -1,6 +1,9 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { DeviceMetrics } from '../device-metrics.entity';
-import { DeviceId } from '@/lib/device/value-objects/device-id.vo';
+/**
+ * @vitest-environment node
+ */
+import {beforeEach, describe, expect, it} from 'vitest';
+import {DeviceMetrics} from '../device-metrics.entity';
+import {DeviceId} from '@/lib/device/domain/value-objects/device-id.vo';
 
 describe('DeviceMetrics Entity', () => {
   let deviceId: DeviceId;

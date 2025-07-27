@@ -16,8 +16,8 @@ export default function PasswordRequirements({
     password,
     requirements = [
         {
-            test: (pwd: string) => pwd.length >= 8,
-            text: 'At least 8 characters'
+            test: (pwd: string) => pwd.length >= 12,
+            text: 'At least 12 characters'
         },
         {
             test: (pwd: string) => /[A-Z]/.test(pwd),
@@ -30,6 +30,10 @@ export default function PasswordRequirements({
         {
             test: (pwd: string) => /\d/.test(pwd),
             text: 'One number'
+        },
+        {
+            test: (pwd: string) => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pwd),
+            text: 'One special character'
         }
     ]
 }: PasswordRequirementsProps) {

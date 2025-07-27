@@ -1,6 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { CustomerId } from '@/lib/shared/domain/value-objects/customer-id.vo';
-import { TenantContext } from '@/lib/shared/application/context/tenant-context.vo';
+import {Injectable} from '@nestjs/common';
+import {TenantContext} from '@/lib/shared/domain/tenant-context';
 
 export enum LogLevel {
   DEBUG = 'DEBUG',

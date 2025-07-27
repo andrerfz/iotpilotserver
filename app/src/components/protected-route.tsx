@@ -5,11 +5,11 @@ import {useRouter} from 'next/navigation';
 import {useAuth} from '@/contexts/auth-context';
 import {Server} from 'lucide-react';
 import {Card, CardBody, Spinner} from '@heroui/react';
-import { hasRole } from '@/lib/permissions';
+import {UserRole, UserRoleType} from '@/lib/shared/domain/value-objects/user-role.vo';
 
 interface ProtectedRouteProps {
     children: React.ReactNode;
-    requiredRole?: 'ADMIN' | 'USER' | 'READONLY';
+    requiredRole?: UserRoleType;
     fallback?: React.ReactNode;
 }
 
@@ -58,7 +58,9 @@ export default function ProtectedRoute({
     }
 
     // Check role requirements
-    if (requiredRole && !hasRole(user.role, requiredRole)) {
+    if (requiredRole) {
+      const userRole = UserRole.fromString(user.role);
+      if (!userRole.hasRole(requiredRole)) {
         return fallback || (
             <div className="min-h-screen bg-default-50 flex items-center justify-center">
                 <Card className="max-w-md w-full bg-danger-50 border-danger">
@@ -75,6 +77,7 @@ export default function ProtectedRoute({
                 </Card>
             </div>
         );
+      }
     }
 
     return <>{children}</>;

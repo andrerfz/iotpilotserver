@@ -1,6 +1,6 @@
 import React from 'react';
-import { ALERT_TYPES } from '@/types/alerts';
-import {Input, Select, SelectItem, Button} from '@heroui/react';
+import {ALERT_TYPES} from '@/lib/monitoring/infrastructure/dto/frontend-alert.types';
+import {Button, Input, Select, SelectItem} from '@heroui/react';
 import {Filter, X} from 'lucide-react';
 
 interface AlertFiltersProps {

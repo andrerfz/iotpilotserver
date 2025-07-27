@@ -64,5 +64,6 @@ export const environment = {
     maxDevices: 50,
     maxConcurrentSSH: 5,
     maxMetricsPoints: 500,
+    maxApiKeysPerUser: parseInt(process.env.MAX_API_KEYS_PER_USER || '5', 10),
   }
 } as const;

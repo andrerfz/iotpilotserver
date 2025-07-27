@@ -1,0 +1,69 @@
+@startuml User Authentication Sequence
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam sequenceParticipant underline
+
+title User Authentication Flow
+
+actor "User" as User
+participant "Login Form" as Form
+participant "REST API" as API
+participant "CommandBus" as CmdBus
+participant "AuthenticateUserHandler" as Handler
+participant "AuthenticationService" as AuthSvc
+participant "UserRepository" as UserRepo
+participant "SessionRepository" as SessionRepo
+participant "PasswordPolicyService" as PasswordPolicy
+participant "PrismaClient" as Prisma
+participant "PostgreSQL" as DB
+participant "Redis" as Redis
+participant "EventBus" as EventBus
+
+== Login Request ==
+User -> Form: Enter credentials\n(username, password)
+Form -> API: POST /api/auth/login\n{\n  "username": "john",\n  "password": "secret123"\n}
+API -> CmdBus: AuthenticateUserCommand
+
+== Command Processing ==
+CmdBus -> Handler: handle(command)
+Handler -> AuthSvc: authenticate(credentials)
+
+== User Lookup ==
+AuthSvc -> UserRepo: findByUsername(username)
+UserRepo -> Prisma: SELECT * FROM users WHERE username = ?
+Prisma -> DB: Query execution
+DB --> Prisma: User record
+Prisma --> UserRepo: User entity
+UserRepo --> AuthSvc: User
+
+== Password Validation ==
+AuthSvc -> PasswordPolicy: validatePassword(password, user.hash)
+PasswordPolicy -> PasswordPolicy: bcrypt.compare()
+PasswordPolicy --> AuthSvc: password valid
+
+== Session Creation ==
+AuthSvc -> AuthSvc: generate tokens
+AuthSvc -> SessionRepo: create(userId, ipAddress)
+SessionRepo -> Redis: SET session:{id} user_data
+Redis --> SessionRepo: OK
+
+== Event Publishing ==
+AuthSvc -> EventBus: publish(UserAuthenticatedEvent)
+
+== Response ==
+AuthSvc --> Handler: AuthenticationResult\n{\n  accessToken,\n  refreshToken,\n  user\n}
+Handler --> CmdBus: success
+CmdBus --> API: 200 OK\n{\n  "accessToken": "...",\n  "refreshToken": "...",\n  "user": {...}\n}
+API --> Form: tokens + user data
+Form --> User: Login successful
+
+== Token Storage ==
+Form -> Form: store tokens in localStorage
+
+== Subsequent Requests ==
+note over User, API
+    Future API calls include:
+    Authorization: Bearer {accessToken}
+end note
+
+@enduml

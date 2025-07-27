@@ -44,7 +44,7 @@ CREATE TABLE "customers" (
                              CONSTRAINT "customers_pkey" PRIMARY KEY ("id")
 );
 
--- Users table
+-- Users' table
 CREATE TABLE "users" (
                          "id" TEXT NOT NULL,
                          "email" TEXT NOT NULL,
@@ -53,7 +53,8 @@ CREATE TABLE "users" (
                          "role" "UserRole" NOT NULL DEFAULT 'USER',
                          "status" "UserStatus" NOT NULL DEFAULT 'ACTIVE',
                          "profileImage" TEXT,
-                         "customerId" TEXT, -- Nullable for SUPERADMIN only
+                         "customerId" TEXT,
+                         "lastLoginAt" TIMESTAMP(3),
                          "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
                          "updatedAt" TIMESTAMP(3) NOT NULL,
                          "deletedAt" TIMESTAMP(3),
@@ -65,6 +66,7 @@ CREATE TABLE "users" (
 CREATE TABLE "sessions" (
                             "id" TEXT NOT NULL,
                             "userId" TEXT NOT NULL,
+                            "customerId" TEXT,
                             "token" TEXT NOT NULL,
                             "expiresAt" TIMESTAMP(3) NOT NULL,
                             "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -117,6 +119,7 @@ CREATE TABLE "devices" (
                            "diskTotal" TEXT,
                            "loadAverage" TEXT,
                            "appStatus" "AppStatus" NOT NULL DEFAULT 'UNKNOWN',
+                           "capabilities" JSONB NOT NULL DEFAULT '{}',
                            "agentVersion" TEXT,
                            "userId" TEXT,
                            "customerId" TEXT NOT NULL,
@@ -180,7 +183,7 @@ CREATE TABLE "alerts" (
                           "id" TEXT NOT NULL,
                           "deviceId" TEXT,
                           "userId" TEXT,
-                          "customerId" TEXT NOT NULL, -- Required for multi-tenant
+                          "customerId" TEXT NOT NULL,
                           "type" "AlertType" NOT NULL,
                           "severity" "AlertSeverity" NOT NULL DEFAULT 'INFO',
                           "title" TEXT NOT NULL,
@@ -193,6 +196,29 @@ CREATE TABLE "alerts" (
                           "deletedAt" TIMESTAMP(3),
 
                           CONSTRAINT "alerts_pkey" PRIMARY KEY ("id")
+);
+
+-- Thresholds table
+CREATE TABLE "thresholds" (
+                              "id" TEXT NOT NULL,
+                              "deviceId" TEXT,
+                              "customerId" TEXT NOT NULL,
+                              "name" TEXT NOT NULL,
+                              "description" TEXT,
+                              "metricName" TEXT NOT NULL,
+                              "operator" TEXT NOT NULL,
+                              "value" DOUBLE PRECISION NOT NULL,
+                              "unit" TEXT,
+                              "severity" TEXT NOT NULL,
+                              "enabled" BOOLEAN NOT NULL DEFAULT true,
+                              "type" TEXT NOT NULL,
+                              "cooldownMinutes" INTEGER NOT NULL DEFAULT 5,
+                              "metadata" JSONB,
+                              "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                              "updatedAt" TIMESTAMP(3) NOT NULL,
+                              "deletedAt" TIMESTAMP(3),
+
+                              CONSTRAINT "thresholds_pkey" PRIMARY KEY ("id")
 );
 
 -- =====================================================
@@ -240,6 +266,8 @@ CREATE INDEX "users_customerId_idx" ON "users" ("customerId") WHERE "deletedAt" 
 
 -- Sessions indexes
 CREATE UNIQUE INDEX "sessions_token_key" ON "sessions" ("token") WHERE "deletedAt" IS NULL;
+CREATE UNIQUE INDEX "sessions_userId_key" ON "sessions" ("userId") WHERE "deletedAt" IS NULL;
+CREATE INDEX "sessions_customerId_idx" ON "sessions" ("customerId");
 
 -- API Keys indexes
 CREATE UNIQUE INDEX "api_keys_key_key" ON "api_keys" ("key") WHERE "deletedAt" IS NULL;
@@ -261,6 +289,12 @@ CREATE INDEX "alerts_deviceId_resolved_createdAt_idx" ON "alerts" ("deviceId", "
 CREATE INDEX "alerts_customerId_idx" ON "alerts" ("customerId") WHERE "deletedAt" IS NULL;
 CREATE INDEX "alerts_customerId_resolved_idx" ON "alerts" ("customerId", "resolved") WHERE "deletedAt" IS NULL;
 
+-- Thresholds indexes
+CREATE INDEX "thresholds_deviceId_metricName_idx" ON "thresholds" ("deviceId", "metricName") WHERE "deletedAt" IS NULL;
+CREATE INDEX "thresholds_customerId_idx" ON "thresholds" ("customerId") WHERE "deletedAt" IS NULL;
+CREATE INDEX "thresholds_customerId_enabled_idx" ON "thresholds" ("customerId", "enabled") WHERE "deletedAt" IS NULL;
+CREATE INDEX "thresholds_metricName_enabled_idx" ON "thresholds" ("metricName", "enabled") WHERE "deletedAt" IS NULL;
+
 -- User preferences indexes
 CREATE UNIQUE INDEX "user_preferences_userId_category_key_key" ON "user_preferences" ("userId", "category", "key") WHERE "deletedAt" IS NULL;
 CREATE INDEX "user_preferences_userId_category_idx" ON "user_preferences" ("userId", "category") WHERE "deletedAt" IS NULL;
@@ -277,7 +311,7 @@ ALTER TABLE "users" ADD CONSTRAINT "superadmin_customer_constraint"
     CHECK (("role" = 'SUPERADMIN') OR ("customerId" IS NOT NULL));
 
 -- =====================================================
--- FOREIGN KEYS (NO CASCADE DELETES)
+-- FOREIGN KEYS
 -- =====================================================
 
 -- User relationships
@@ -287,6 +321,9 @@ ALTER TABLE "users" ADD CONSTRAINT "users_customerId_fkey"
 -- Session relationships
 ALTER TABLE "sessions" ADD CONSTRAINT "sessions_userId_fkey"
     FOREIGN KEY ("userId") REFERENCES "users" ("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+ALTER TABLE "sessions" ADD CONSTRAINT "sessions_customerId_fkey"
+    FOREIGN KEY ("customerId") REFERENCES "customers" ("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- API Key relationships
 ALTER TABLE "api_keys" ADD CONSTRAINT "api_keys_userId_fkey"
@@ -324,6 +361,13 @@ ALTER TABLE "alerts" ADD CONSTRAINT "alerts_userId_fkey"
 ALTER TABLE "alerts" ADD CONSTRAINT "alerts_customerId_fkey"
     FOREIGN KEY ("customerId") REFERENCES "customers" ("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
+-- Threshold relationships
+ALTER TABLE "thresholds" ADD CONSTRAINT "thresholds_deviceId_fkey"
+    FOREIGN KEY ("deviceId") REFERENCES "devices" ("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+ALTER TABLE "thresholds" ADD CONSTRAINT "thresholds_customerId_fkey"
+    FOREIGN KEY ("customerId") REFERENCES "customers" ("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
 -- User preferences relationships
 ALTER TABLE "user_preferences" ADD CONSTRAINT "user_preferences_userId_fkey"
     FOREIGN KEY ("userId") REFERENCES "users" ("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -335,7 +379,7 @@ ALTER TABLE "user_preferences" ADD CONSTRAINT "user_preferences_userId_fkey"
 -- Create default customer
 INSERT INTO "customers" ("id", "name", "slug", "status", "createdAt", "updatedAt")
 VALUES (
-           'default-customer',
+           'c09826bc-39e4-4084-8e32-7ba728268915',
            'Default Customer',
            'default',
            'ACTIVE',
@@ -343,20 +387,25 @@ VALUES (
            CURRENT_TIMESTAMP
        );
 
--- Insert the default SUPERADMIN user (no customerId - platform admin)
+-- Insert the default SUPERADMIN user
+-- Note: Password is bcrypt hashed. For security, change password immediately after first login.
+-- Use the superadmin management scripts in app_scripts/ to manage SUPERADMIN users securely.
 INSERT INTO "users" ("id", "email", "username", "password", "role", "status", "createdAt", "updatedAt")
 VALUES (
            'default-admin-user',
            'manager@iotpilot.app',
            'manager',
-           '$2a$12$6AqdbjYxNrBnTRJ6wlTIgO/.h4FpO5YCOPtVEHEiMvaOgR.JHiWJq',
+           '$2a$12$/kVthwk.MBWMioZNkADg6.QenB7RjfYSw/BSi8ePiDHp.zxKZnYCW',
            'SUPERADMIN',
            'ACTIVE',
            CURRENT_TIMESTAMP,
            CURRENT_TIMESTAMP
        );
 
--- Insert the default api key for tests.
+-- Insert the default api key for LOCAL DEVELOPMENT ONLY
+-- WARNING: This API key is for local development and testing purposes only.
+-- DO NOT use this key in production environments.
+-- Generate new API keys using the API keys management UI or API endpoints.
 INSERT INTO "api_keys" (
     "id",
     "userId",
@@ -368,8 +417,8 @@ INSERT INTO "api_keys" (
 ) VALUES (
              'test-api-key-1',
              'default-admin-user',
-             'default-customer',
-             'Test Device API Key',
+             'c09826bc-39e4-4084-8e32-7ba728268915',
+             'Test Device API Key (LOCAL DEV ONLY)',
              'local-kCs945S6Lq11CNTRL-28USAxy6dUQXxPrpq-u9ruoL',
              CURRENT_TIMESTAMP,
              NULL
@@ -400,22 +449,22 @@ VALUES
     ('pref-4', 'default-admin-user', 'APPEARANCE', 'theme', 'dark', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- =====================================================
--- VIEWS (Optional - for easier querying)
+-- VIEWS
 -- =====================================================
 
--- Active users view (excluding soft deleted)
+-- Active users view
 CREATE VIEW "active_users" AS
 SELECT * FROM "users" WHERE "deletedAt" IS NULL;
 
--- Active devices view (excluding soft deleted)
+-- Active devices view
 CREATE VIEW "active_devices" AS
 SELECT * FROM "devices" WHERE "deletedAt" IS NULL;
 
--- Active customers view (excluding soft deleted)
+-- Active customers view
 CREATE VIEW "active_customers" AS
 SELECT * FROM "customers" WHERE "deletedAt" IS NULL;
 
--- Active API keys view (excluding soft deleted)
+-- Active API keys view
 CREATE VIEW "active_api_keys" AS
 SELECT * FROM "api_keys" WHERE "deletedAt" IS NULL;
 
@@ -428,15 +477,23 @@ COMMENT ON TABLE "users" IS 'Platform users with role-based access';
 COMMENT ON TABLE "devices" IS 'IoT devices registered to customers';
 COMMENT ON TABLE "api_keys" IS 'API keys for device authentication';
 COMMENT ON TABLE "alerts" IS 'System alerts and notifications';
+COMMENT ON TABLE "thresholds" IS 'Alert threshold rules and configurations';
 
 COMMENT ON COLUMN "users"."customerId" IS 'NULL for SUPERADMIN, required for all other roles';
 COMMENT ON COLUMN "api_keys"."customerId" IS 'Inherited from user for easier validation';
 COMMENT ON COLUMN "devices"."customerId" IS 'Required - all devices belong to a customer';
 COMMENT ON COLUMN "alerts"."customerId" IS 'Required - all alerts belong to a customer';
+COMMENT ON COLUMN "thresholds"."customerId" IS 'Required - all thresholds belong to a customer';
 
--- Add deletedAt comments
 COMMENT ON COLUMN "users"."deletedAt" IS 'Soft delete timestamp';
 COMMENT ON COLUMN "devices"."deletedAt" IS 'Soft delete timestamp';
 COMMENT ON COLUMN "customers"."deletedAt" IS 'Soft delete timestamp';
 COMMENT ON COLUMN "api_keys"."deletedAt" IS 'Soft delete timestamp';
 COMMENT ON COLUMN "alerts"."deletedAt" IS 'Soft delete timestamp';
+COMMENT ON COLUMN "thresholds"."deletedAt" IS 'Soft delete timestamp';
+COMMENT ON COLUMN "sessions"."deletedAt" IS 'Soft delete timestamp';
+COMMENT ON COLUMN "device_metrics"."deletedAt" IS 'Soft delete timestamp';
+COMMENT ON COLUMN "device_logs"."deletedAt" IS 'Soft delete timestamp';
+COMMENT ON COLUMN "device_commands"."deletedAt" IS 'Soft delete timestamp';
+COMMENT ON COLUMN "user_preferences"."deletedAt" IS 'Soft delete timestamp';
+COMMENT ON COLUMN "system_config"."deletedAt" IS 'Soft delete timestamp';

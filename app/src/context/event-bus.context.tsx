@@ -1,27 +1,16 @@
-import { createContext, useContext, useMemo, ReactNode, useEffect } from 'react';
-import { EventBus, InMemoryEventBus } from '../lib/shared/application/bus/event.bus';
-import { DomainEvent } from '../lib/shared/domain/events/domain.event';
-
-// Example event handler imports (these would need to be created)
-// import { DeviceRegisteredEvent } from '../lib/device/domain/events/device-registered.event';
+import {createContext, ReactNode, useContext, useEffect, useMemo} from 'react';
+import {EventBus} from '../lib/shared/application/bus/event.bus';
+import {DomainEvent} from '../lib/shared/domain/events/domain.event';
+import {ServiceContainer} from '../lib/shared/infrastructure/container/service-container';
 
 const EventBusContext = createContext<EventBus | null>(null);
 
 export function EventBusProvider({ children }: { children: ReactNode }) {
     const eventBus = useMemo(() => {
-        const bus = new InMemoryEventBus();
-
-        // Register event handlers
-        // Example:
-        // bus.subscribe<DeviceRegisteredEvent>(
-        //     'DeviceRegisteredEvent',
-        //     async (event) => {
-        //         console.log('Device registered:', event);
-        //         // Perform side effects like notifications, analytics, etc.
-        //     }
-        // );
-
-        return bus;
+        // Use the ServiceContainer singleton to get the event bus
+        // This ensures consistency between frontend and backend
+        const serviceContainer = ServiceContainer.getInstance();
+        return serviceContainer.getEventBus();
     }, []);
 
     return (

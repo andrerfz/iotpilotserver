@@ -1,33 +1,35 @@
-import { TenantAwareCommand } from '@/lib/shared/application/commands/tenant-aware-command';
-import { TenantContext } from '@/lib/shared/application/context/tenant-context.vo';
-import { CustomerId } from '@/lib/shared/domain/value-objects/customer-id.vo';
-import { CustomerName } from '@/lib/customer/domain/value-objects/customer-name.vo';
-import { OrganizationSettings, OrganizationSettingsProps } from '@/lib/customer/domain/value-objects/organization-settings.vo';
+import {TenantAwareCommand} from '@/lib/shared/application/commands/tenant-aware-command';
+import {TenantContext} from '@/lib/shared/domain/tenant-context';
 
 export class CreateCustomerCommand extends TenantAwareCommand {
-  private constructor(
+  /** Static type identifier that survives minification */
+  static readonly type = 'CreateCustomerCommand';
+
+  constructor(
     tenantContext: TenantContext,
-    public readonly customerId: CustomerId,
-    public readonly customerName: CustomerName,
-    public readonly settings: OrganizationSettings
+    public readonly name: string,
+    public readonly description?: string,
+    public readonly contactEmail?: string
   ) {
     super(tenantContext);
   }
 
-  /**
-   * Factory method to create a new CreateCustomerCommand
-   */
   static create(
+    name: string,
     tenantContext: TenantContext,
-    customerId: string,
-    customerName: string,
-    settings: OrganizationSettingsProps
+    description?: string,
+    contactEmail?: string
   ): CreateCustomerCommand {
-    return new CreateCustomerCommand(
-      tenantContext,
-      new CustomerId(customerId),
-      new CustomerName(customerName),
-      new OrganizationSettings(settings)
-    );
+    if (!name || name.trim().length === 0) {
+      throw new Error('Customer name is required');
+    }
+
+    return new CreateCustomerCommand(tenantContext, name, description, contactEmail);
+  }
+
+  static fromRequest(request: any, tenantContext: TenantContext): CreateCustomerCommand {
+    const { name, description, contactEmail } = request.body;
+
+    return CreateCustomerCommand.create(name, tenantContext, description, contactEmail);
   }
 }

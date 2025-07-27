@@ -1,7 +1,12 @@
-import {NextResponse} from 'next/server';
-import {AuthenticatedRequest, withCustomerContext} from '@/lib/api-middleware';
+import {AuthenticatedRequest, withCustomerContext} from '@/lib/shared/infrastructure/middleware/api-middleware';
 import {tenantPrisma} from '@/lib/tenant-middleware';
+import {ApiResponse} from '@/lib/shared/infrastructure/http/api-response.util';
 import os from 'os';
+
+// Dynamic route: uses auth context and cookies
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
 
 // Handler for getting system health metrics
 export const GET = withCustomerContext(async (request: AuthenticatedRequest) => {
@@ -9,12 +14,12 @@ export const GET = withCustomerContext(async (request: AuthenticatedRequest) => 
         // Get current user context
         const currentUser = request.user;
         if (!currentUser) {
-            return NextResponse.json({error: 'Authentication required'}, {status: 401});
+            return ApiResponse.unauthorized('Authentication required');
         }
 
         // Only ADMIN or SUPERADMIN can access system health
         if (currentUser.role !== 'ADMIN' && currentUser.role !== 'SUPERADMIN') {
-            return NextResponse.json({error: 'Insufficient permissions'}, {status: 403});
+            return ApiResponse.forbidden('Insufficient permissions');
         }
 
         // Get system metrics
@@ -43,17 +48,14 @@ export const GET = withCustomerContext(async (request: AuthenticatedRequest) => 
         // Get application metrics
         const appMetrics = await getApplicationMetrics(currentUser.role === 'SUPERADMIN');
 
-        return NextResponse.json({
+        return ApiResponse.ok({
             system: systemMetrics,
             database: dbMetrics,
             application: appMetrics
         });
     } catch (error) {
         console.error('System health error:', error);
-        return NextResponse.json(
-            {error: 'Internal server error'},
-            {status: 500}
-        );
+        return ApiResponse.internalError('Internal server error');
     }
 }, {requiredRole: 'ADMIN'}); // Only ADMIN or higher can access this endpoint
 
