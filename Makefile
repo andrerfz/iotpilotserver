@@ -410,8 +410,14 @@ local-clean:
 dev: local-start
 
 test:
-	@echo "🧪 Running tests in Docker..."
-	@docker exec iotpilot-server-app npm test
+	@echo "🧪 Running tests..."
+	@if command -v docker >/dev/null 2>&1 && docker ps -q --filter name=iotpilot-server-app >/dev/null 2>&1; then \
+		echo "Using Docker container..."; \
+		docker exec iotpilot-server-app npm test; \
+	else \
+		echo "Running tests locally (Docker not available)..."; \
+		cd app && npm test; \
+	fi
 	@echo "✅ Tests complete!"
 
 fix-npm-deps:
@@ -425,12 +431,20 @@ lint:
 	@echo "✅ Linting complete!"
 
 test-unit:
-	@echo "🧪 Running unit tests in Docker..."
-	@docker exec iotpilot-server-app npm test -- --testPathPattern=unit
+	@echo "🧪 Running unit tests..."
+	@if command -v docker >/dev/null 2>&1 && docker ps -q --filter name=iotpilot-server-app >/dev/null 2>&1; then \
+		docker exec iotpilot-server-app npm test -- --testPathPattern=unit; \
+	else \
+		cd app && npm test -- --testPathPattern=unit; \
+	fi
 
 test-integration:
-	@echo "🧪 Running integration tests in Docker..."
-	@docker exec iotpilot-server-app npm test -- --testPathPattern=integration
+	@echo "🧪 Running integration tests..."
+	@if command -v docker >/dev/null 2>&1 && docker ps -q --filter name=iotpilot-server-app >/dev/null 2>&1; then \
+		docker exec iotpilot-server-app npm test -- --testPathPattern=integration; \
+	else \
+		cd app && npm test -- --testPathPattern=integration; \
+	fi
 
 test-influxdb:
 	@echo "🧪 Running InfluxDB tests in Docker..."
@@ -469,7 +483,11 @@ test-watch: check-env
 
 test-coverage: check-env
 	@echo "📊 Generating test coverage..."
-	@docker exec iotpilot-server-app npm test -- --coverage --watchAll=false
+	@if command -v docker >/dev/null 2>&1 && docker ps -q --filter name=iotpilot-server-app >/dev/null 2>&1; then \
+		docker exec iotpilot-server-app npm test -- --coverage --watchAll=false; \
+	else \
+		cd app && npm test -- --coverage --watchAll=false; \
+	fi
 
 test-env-check:
 	@echo "🔍 Checking test environment..."
