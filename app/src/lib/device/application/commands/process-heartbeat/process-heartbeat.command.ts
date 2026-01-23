@@ -1,4 +1,4 @@
-import {TenantAwareCommand} from '@/lib/shared/application/tenant-aware.command';
+import {TenantAwareCommand} from '@/lib/shared/application/commands/tenant-aware-command';
 import {TenantContext} from '@/lib/shared/domain/tenant-context';
 
 /**

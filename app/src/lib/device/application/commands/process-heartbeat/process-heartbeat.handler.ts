@@ -26,7 +26,8 @@ export class ProcessHeartbeatHandler implements CommandHandler<ProcessHeartbeatC
     }
 
     async handle(command: ProcessHeartbeatCommand): Promise<HeartbeatResult> {
-        const { data, userId, tenantContext } = command;
+        const { data, userId } = command;
+        const tenantContext = command.getTenantContext();
 
         // Find the device
         const device = await this.prisma.device.findUnique({

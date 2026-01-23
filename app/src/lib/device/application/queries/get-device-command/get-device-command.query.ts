@@ -1,10 +1,19 @@
-import {TenantAwareQuery} from '@/lib/shared/application/tenant-aware.query';
+import {TenantAwareQuery} from '@/lib/shared/application/queries/tenant-aware-query';
 import {TenantContext} from '@/lib/shared/domain/tenant-context';
+
+export interface DeviceCommandResult {
+    id: string;
+    deviceId: string;
+    command: string;
+    status: string;
+    output?: string;
+    createdAt: Date;
+}
 
 /**
  * Query to get device command details
  */
-export class GetDeviceCommandQuery extends TenantAwareQuery {
+export class GetDeviceCommandQuery extends TenantAwareQuery<DeviceCommandResult | null> {
     constructor(
         public readonly deviceId: string,
         public readonly commandId: string,

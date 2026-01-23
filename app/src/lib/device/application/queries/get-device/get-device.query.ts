@@ -1,12 +1,13 @@
-import {TenantAwareCommand} from '@/lib/shared/application/commands/tenant-aware-command';
+import {TenantAwareQuery} from '@/lib/shared/application/queries/tenant-aware-query';
 import {TenantContext} from '@/lib/shared/domain/tenant-context';
 import {DeviceId} from '@/lib/device/domain/value-objects/device-id.vo';
 import {CustomerId} from '@/lib/shared/domain/value-objects/customer-id.vo';
+import {Device} from '@/lib/device/domain/entities/device.entity';
 
 /**
  * Query for retrieving a single device by ID
  */
-export class GetDeviceQuery extends TenantAwareCommand {
+export class GetDeviceQuery extends TenantAwareQuery<Device> {
   /** Static type identifier that survives minification */
   static readonly type = 'GetDeviceQuery';
 

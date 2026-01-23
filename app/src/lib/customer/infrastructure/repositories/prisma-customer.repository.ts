@@ -86,7 +86,7 @@ export class PrismaCustomerRepository implements CustomerRepository {
     // SUPERADMIN can list all customers
     if (tenantContext?.isSuperAdminUser?.() || !tenantContext) {
       const rows = await this.prisma.customer.findMany();
-      return rows.map((row: PrismaCustomer) => this.toDomain(row));
+      return rows.map(row => this.toDomain(row as PrismaCustomer));
     }
 
     // Regular users can only fetch their own tenant root
