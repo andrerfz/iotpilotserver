@@ -26,7 +26,7 @@ jobs:
       - name: Install dependencies
         run: |
           cd app
-          npm ci --legacy-peer-deps --omit=optional --ignore-scripts
+          npm install --legacy-peer-deps
 
       - name: Run linting
         run: |
