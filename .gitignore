@@ -55,6 +55,17 @@ coverage/
 *.swo
 *~
 
+# AI Agent Skills
+.agent/
+.agents/
+.claude/
+.cursor/
+.gemini/
+.github/
+.kiro/
+.opencode/
+.windsurf/
+
 # OS generated files
 .DS_Store
 .DS_Store?

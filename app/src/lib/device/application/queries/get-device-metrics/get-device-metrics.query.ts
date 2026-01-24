@@ -1,4 +1,4 @@
-import {TenantAwareCommand} from '@/lib/shared/application/commands/tenant-aware-command';
+import {TenantAwareQuery} from '@/lib/shared/application/queries/tenant-aware-query';
 import {TenantContext} from '@/lib/shared/domain/tenant-context';
 import {DeviceId} from '@/lib/device/domain/value-objects/device-id.vo';
 import {CustomerId} from '@/lib/shared/domain/value-objects/customer-id.vo';
@@ -11,10 +11,16 @@ export interface MetricsTimeRange {
   to: Date;
 }
 
+export interface DeviceMetricsResult {
+  deviceId: string;
+  metrics: any[];
+  timeRange: MetricsTimeRange;
+}
+
 /**
  * Query for retrieving metrics for a device
  */
-export class GetDeviceMetricsQuery extends TenantAwareCommand {
+export class GetDeviceMetricsQuery extends TenantAwareQuery<DeviceMetricsResult> {
   /** Static type identifier that survives minification */
   static readonly type = 'GetDeviceMetricsQuery';
 

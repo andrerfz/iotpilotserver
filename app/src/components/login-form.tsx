@@ -15,7 +15,7 @@ import {toast} from 'sonner';
  */
 export function LoginForm() {
     const router = useRouter();
-    const { login: legacyLogin } = useAuth(); // Keep for backward compatibility with state management
+    const { refreshUser } = useAuth(); // Get refreshUser to update auth state
     const { authenticateUser, loading, error } = useUserCommands();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -38,6 +38,9 @@ export function LoginForm() {
                 if (remember) {
                     localStorage.setItem('auth_token', (result as any).token);
                 }
+                
+                // CRITICAL: Refresh user data in AuthContext before redirecting
+                await refreshUser();
                 
                 toast.success('Login successful!');
                 

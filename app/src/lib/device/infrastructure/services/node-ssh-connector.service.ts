@@ -1,9 +1,11 @@
-import {NodeSSH} from 'node-ssh';
 import {randomUUID} from 'crypto';
 import {SSHConnector} from '@/lib/device/domain/services/ssh-connector.service';
 import {DeviceId} from '@/lib/device/domain/value-objects/device-id.vo';
 import {DeviceRepository} from '@/lib/device/domain/interfaces/device.repository';
 import {TenantContext} from '@/lib/shared/domain/tenant-context';
+
+// Dynamic import to avoid webpack bundling issues
+type NodeSSH = any;
 
 type ActiveSession = {
   ssh: NodeSSH;
@@ -35,7 +37,10 @@ export class NodeSSHConnectorService implements SSHConnector {
       throw new Error(`No SSH credentials available for device ${deviceId.getValue()}`);
     }
 
-    const ssh = new NodeSSH();
+    // Dynamically load NodeSSH to avoid webpack bundling
+    // @ts-ignore - Runtime dependency only
+    const {NodeSSH: NodeSSHClass} = eval('require')('node-ssh');
+    const ssh = new NodeSSHClass();
     await ssh.connect({
       host,
       port: creds.port ?? 22,

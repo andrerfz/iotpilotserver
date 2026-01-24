@@ -57,20 +57,26 @@ jobs:
       - name: Create test environment file
         run: |
           cd app
-          cp .env.local .env.test
-          echo "NODE_ENV=test" >> .env.test
-          echo "DATABASE_URL=postgresql://iotpilot:iotpilot@localhost:5432/iotpilot_test" >> .env.test
-          echo "REDIS_URL=redis://localhost:6379" >> .env.test
-          echo "JWT_SECRET=test-jwt-secret-for-ci" >> .env.test
-          echo "INFLUXDB_URL=http://localhost:8087" >> .env.test
-          echo "INFLUXDB_TOKEN=test-token" >> .env.test
-          echo "INFLUXDB_ORG=iotpilot" >> .env.test
-          echo "INFLUXDB_BUCKET=devices" >> .env.test
+          # Create .env.test from scratch (don't rely on .env.local which isn't in repo)
+          cat > .env.test <<EOF
+          NODE_ENV=test
+          DATABASE_URL=postgresql://iotpilot:iotpilot@localhost:5432/iotpilot_test
+          REDIS_URL=redis://localhost:6379
+          JWT_SECRET=test-jwt-secret-for-ci
+          INFLUXDB_URL=http://localhost:8087
+          INFLUXDB_TOKEN=test-token
+          INFLUXDB_ORG=iotpilot
+          INFLUXDB_BUCKET=devices
+          TAILSCALE_AUTH_KEY=tskey-test
+          DOMAIN=localhost
+          API_URL=http://localhost:3000
+          NEXT_PUBLIC_API_URL=http://localhost:3000
+          EOF
 
       - name: Install dependencies
         run: |
           cd app
-          npm ci
+          npm ci --legacy-peer-deps --omit=optional --ignore-scripts
 
       - name: Setup test database
         run: |
@@ -148,7 +154,7 @@ jobs:
       - name: Install dependencies
         run: |
           cd app
-          npm ci
+          npm ci --legacy-peer-deps --omit=optional --ignore-scripts
 
       - name: Run npm audit
         run: |
@@ -182,6 +188,16 @@ jobs:
         run: |
           docker compose -f ${{ env.DOCKER_COMPOSE_FILE }} config
 
+      - name: Install dependencies for build
+        run: |
+          cd app
+          npm ci --legacy-peer-deps --omit=optional --ignore-scripts
+          
+      - name: Generate Prisma client
+        run: |
+          cd app
+          npx prisma generate
+          
       - name: Build frontend assets
         run: |
           cd app
@@ -229,7 +245,7 @@ jobs:
       - name: Install dependencies
         run: |
           cd app
-          npm ci
+          npm ci --legacy-peer-deps --omit=optional --ignore-scripts
 
       - name: Setup performance test database
         run: |

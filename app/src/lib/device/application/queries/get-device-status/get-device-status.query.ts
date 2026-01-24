@@ -1,12 +1,18 @@
-import {TenantAwareCommand} from '@/lib/shared/application/commands/tenant-aware-command';
+import {TenantAwareQuery} from '@/lib/shared/application/queries/tenant-aware-query';
 import {TenantContext} from '@/lib/shared/domain/tenant-context';
 import {DeviceId} from '@/lib/device/domain/value-objects/device-id.vo';
 import {CustomerId} from '@/lib/shared/domain/value-objects/customer-id.vo';
 
+export interface DeviceStatusResponse {
+  status: string;
+  lastSeen: Date | null;
+  metrics?: any;
+}
+
 /**
  * Query for retrieving the current status of a device
  */
-export class GetDeviceStatusQuery extends TenantAwareCommand {
+export class GetDeviceStatusQuery extends TenantAwareQuery<DeviceStatusResponse> {
   /** Static type identifier that survives minification */
   static readonly type = 'GetDeviceStatusQuery';
 
