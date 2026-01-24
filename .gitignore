@@ -55,13 +55,12 @@ coverage/
 *.swo
 *~
 
-# AI Agent Skills
+# AI Agent Skills (NOT .github/ - that's for GitHub Actions!)
 .agent/
 .agents/
 .claude/
 .cursor/
 .gemini/
-.github/
 .kiro/
 .opencode/
 .windsurf/

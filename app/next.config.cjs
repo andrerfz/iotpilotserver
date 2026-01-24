@@ -33,12 +33,7 @@ class IgnorePlugin {
 
 const nextConfig = {
     // Exclude SSH2 from server components bundling (Next.js 14+)
-    serverComponentsExternalPackages: ['ssh2', 'ssh2-streams', 'node-ssh'],
-    
-    // Mark as external - don't bundle at all
-    experimental: {
-        serverComponentsExternalPackages: ['ssh2', 'ssh2-streams', 'node-ssh', 'cpu-features'],
-    },
+    serverComponentsExternalPackages: ['ssh2', 'ssh2-streams', 'node-ssh', 'cpu-features'],
     
     images: {
         domains: ['localhost', 'iotpilot.app', 'iotpilotserver.test', 'dashboarddev.iotpilot.app'],
@@ -61,24 +56,42 @@ const nextConfig = {
         if (isServer) {
             const externalPackages = ['ssh2', 'node-ssh', 'ssh2-streams', 'cpu-features'];
             
-            // Wrap existing externals function
+            // Wrap existing externals (properly handle callback pattern)
             const originalExternals = config.externals;
-            config.externals = async (context, request, callback) => {
+            config.externals = (context, request, callback) => {
                 // Check if request matches any external package
                 if (externalPackages.some(pkg => request === pkg || request.startsWith(`${pkg}/`))) {
-                    return callback(null, `commonjs ${request}`);
+                    callback(null, `commonjs ${request}`);
+                    return;
                 }
                 
-                // Handle original externals
+                // Handle original externals properly
                 if (typeof originalExternals === 'function') {
-                    return originalExternals(context, request, callback);
-                } else if (Array.isArray(originalExternals)) {
-                    if (originalExternals.includes(request)) {
-                        return callback(null, `commonjs ${request}`);
+                    originalExternals(context, request, callback);
+                    return;
+                }
+                
+                if (Array.isArray(originalExternals)) {
+                    // Handle all types: strings, RegExp, and functions
+                    for (const external of originalExternals) {
+                        if (typeof external === 'string' && external === request) {
+                            callback(null, `commonjs ${request}`);
+                            return;
+                        }
+                        if (external instanceof RegExp && external.test(request)) {
+                            callback(null, `commonjs ${request}`);
+                            return;
+                        }
+                        if (typeof external === 'function') {
+                            // Delegate to the external function
+                            external(context, request, callback);
+                            return;
+                        }
                     }
                 }
                 
-                return callback();
+                // No match found, continue normally
+                callback();
             };
         }
         
