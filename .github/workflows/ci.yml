@@ -76,7 +76,7 @@ jobs:
       - name: Install dependencies
         run: |
           cd app
-          npm ci --legacy-peer-deps --no-optional
+          npm ci --legacy-peer-deps --omit=optional --ignore-scripts
 
       - name: Setup test database
         run: |
@@ -154,7 +154,7 @@ jobs:
       - name: Install dependencies
         run: |
           cd app
-          npm ci --legacy-peer-deps --no-optional
+          npm ci --legacy-peer-deps --omit=optional --ignore-scripts
 
       - name: Run npm audit
         run: |
@@ -191,7 +191,7 @@ jobs:
       - name: Install dependencies for build
         run: |
           cd app
-          npm ci --legacy-peer-deps --no-optional
+          npm ci --legacy-peer-deps --omit=optional --ignore-scripts
           
       - name: Generate Prisma client
         run: |
@@ -245,7 +245,7 @@ jobs:
       - name: Install dependencies
         run: |
           cd app
-          npm ci --legacy-peer-deps --no-optional
+          npm ci --legacy-peer-deps --omit=optional --ignore-scripts
 
       - name: Setup performance test database
         run: |
