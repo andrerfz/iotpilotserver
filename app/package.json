@@ -80,7 +80,7 @@
     "@hookform/resolvers": "^3.3.2",
     "@nestjs/common": "^10.3.3",
     "@nestjs/config": "^3.2.2",
-    "@prisma/client": "^6.19.0",
+    "@prisma/client": "^6.19.2",
     "@types/axios": "^0.9.36",
     "@types/ioredis": "^4.28.10",
     "@types/zxcvbn": "^4.4.5",
