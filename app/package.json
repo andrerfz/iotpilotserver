@@ -164,7 +164,7 @@
     "ts-jest": "^29.4.0",
     "tsc-alias": "^1.8.16",
     "typescript": "5.8.3",
-    "vitest": "^1.6.1"
+    "vitest": "^4.0.18"
   },
   "engines": {
     "node": ">=18.0.0",
