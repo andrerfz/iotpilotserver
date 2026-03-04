@@ -56,7 +56,7 @@ jobs:
           npx tsc --noEmit --strict --noUnusedLocals --noUnusedParameters || true
 
       - name: Upload quality reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: code-quality-reports
           path: |
@@ -112,7 +112,7 @@ jobs:
           npm run test:performance -- --run --reporter=json > performance-results.json || true
 
       - name: Upload comprehensive reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: comprehensive-analysis-reports
           path: |
