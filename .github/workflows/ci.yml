@@ -119,7 +119,7 @@ jobs:
           REDIS_URL: redis://localhost:6379
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v6
         with:
           directory: ./app/coverage/
           fail_ci_if_error: false
