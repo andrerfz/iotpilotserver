@@ -8,6 +8,9 @@
 .env.production.local
 .junie.features.md
 
+# Manufacturing flash log (local state)
+scripts/.flash-log.csv
+
 # Application data
 /data/
 /logs/
@@ -28,10 +31,14 @@ known_hosts
 
 # Node.js
 node_modules/
+packages/node_modules
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+
+# Turborepo
+.turbo/
 
 # Next.js
 .next/
@@ -280,3 +287,4 @@ yarn-error.log
 yarn-debug.log*
 
 .opencode.json
+apps/node_modules

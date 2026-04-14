@@ -112,16 +112,16 @@ start_services() {
     header "Building and starting services..."
 
     info "Building Docker images..."
-    docker-compose -f docker/docker-compose.local.yml --env-file .env build --no-cache
+    docker-compose -f infra/docker/docker-compose.local.yml --env-file .env build --no-cache
 
     info "Starting services..."
-    docker-compose -f docker/docker-compose.local.yml --env-file .env up -d
+    docker-compose -f infra/docker/docker-compose.local.yml --env-file .env up -d
 
     info "Waiting for services to start..."
     sleep 15
 
     # Check service health
-    docker-compose -f docker/docker-compose.local.yml ps
+    docker-compose -f infra/docker/docker-compose.local.yml ps
 }
 
 # Show final information
@@ -152,7 +152,7 @@ show_final_info() {
     echo "  2. Set up Grafana dashboards for your metrics"
     echo "  3. Test data flow from your IoT device"
     echo ""
-    echo "For logs: docker-compose -f docker/docker-compose.local.yml logs -f iotpilot-app"
+    echo "For logs: docker-compose -f infra/docker/docker-compose.local.yml logs -f iotpilot-app"
     echo ""
 }
 

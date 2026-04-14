@@ -1,0 +1,15 @@
+{
+  "name": "@iotpilot/worker",
+  "version": "0.1.0",
+  "private": true,
+  "description": "IoT Pilot — BullMQ worker process",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "dev": "tsx watch src/index.ts",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint src --ext .ts"
+  },
+  "dependencies": {
+    "@iotpilot/core": "workspace:*"
+  }
+}

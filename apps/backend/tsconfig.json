@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "module": "CommonJS",
+    "baseUrl": ".",
+    "paths": {
+      "@iotpilot/core/*": ["../../packages/core/src/*"]
+    }
+  },
+  "include": ["src/**/*"]
+}

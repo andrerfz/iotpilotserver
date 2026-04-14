@@ -1,0 +1,60 @@
+{
+  "name": "@iotpilot/core",
+  "version": "0.1.0",
+  "private": true,
+  "description": "IoT Pilot — DDD bounded contexts (device, user, customer, monitoring, notification, shared)",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*"
+  },
+  "scripts": {
+    "type-check": "tsc --noEmit",
+    "test:unit": "vitest run --config vitest.config.ts",
+    "db:generate": "prisma generate --schema=../../apps/backend/prisma/schema.prisma"
+  },
+  "dependencies": {
+    "@asteasolutions/zod-to-openapi": "^8.5.0",
+    "@bull-board/api": "^6.5.0",
+    "@bull-board/express": "^6.5.0",
+    "@influxdata/influxdb-client": "^1.33.2",
+    "@nestjs/common": "^10.3.3",
+    "@nestjs/config": "^3.2.2",
+    "@paralleldrive/cuid2": "^2.2.2",
+    "@prisma/client": "^6.19.0",
+    "axios": "^1.10.0",
+    "bcryptjs": "^2.4.3",
+    "bullmq": "^5.34.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.2",
+    "eventemitter3": "^5.0.1",
+    "express": "^4.18.2",
+    "ioredis": "^5.7.0",
+    "jsonwebtoken": "^9.0.2",
+    "mqtt": "^5.3.4",
+    "node-ssh": "^13.1.0",
+    "nodemailer": "^8.0.5",
+    "reflect-metadata": "^0.2.2",
+    "socket.io": "^4.7.4",
+    "tsyringe": "^4.8.0",
+    "uuid": "^11.1.0",
+    "winston": "^3.11.0",
+    "winston-daily-rotate-file": "^4.7.1",
+    "ws": "^8.14.2",
+    "zod": "^3.25.67",
+    "zod-to-json-schema": "^3.25.2",
+    "zxcvbn": "^4.4.2"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/node": "^20.10.4",
+    "@types/nodemailer": "^8.0.0",
+    "@types/ws": "^8.5.10",
+    "prisma": "^6.19.0",
+    "typescript": "5.8.3",
+    "vitest": "^1.6.1"
+  }
+}

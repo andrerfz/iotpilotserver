@@ -1,0 +1,405 @@
+name: iotpilotserver
+
+services:
+  # Tailscale Sidecar - Core networking component
+  tailscale:
+    image: tailscale/tailscale:latest
+    container_name: iotpilot-server-tailscale
+    volumes:
+      - tailscale-state:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    network_mode: "service:traefik"
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    environment:
+      - TS_AUTHKEY=${TAILSCALE_AUTH_KEY}
+      - TS_EXTRA_ARGS=--hostname=${HOST_NAME:-iotpilotserver-test} --reset --accept-routes
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_USERSPACE=false
+    restart: unless-stopped
+
+  # Main IotPilot Application
+  iotpilot-app:
+    build:
+      context: ../..
+      dockerfile: ./infra/docker/Dockerfile
+      target: development
+      args:
+        - NODE_ENV=development
+    container_name: iotpilot-server-app
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://iotpilot:${POSTGRES_PASSWORD}@postgres:5432/iotpilot
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN}
+      - JWT_SECRET=${JWT_SECRET}
+      - DEVICE_API_KEY=${DEVICE_API_KEY}
+      - DOMAIN=iotpilotserver.test
+      - DOMAIN_TUNEL=dashboarddev.iotpilot.app
+      - APP_URL=${APP_URL:-https://dashboarddev.iotpilot.app}
+      - TAILSCALE_DOMAIN=${NEXT_PUBLIC_TAILSCALE_DOMAIN}
+      # Clear OrbStack's proxy — frontend only talks to internal Docker services
+      # undici (Next.js built-in fetch) doesn't honor NO_PROXY, so clear all proxy vars
+      - HTTP_PROXY=
+      - HTTPS_PROXY=
+      - http_proxy=
+      - https_proxy=
+      - ALL_PROXY=
+      - all_proxy=
+    ports:
+      - "3001:3000"
+    volumes:
+      # Source-only mounts — node_modules stay in image (pnpm symlinks)
+      - ../../apps/frontend/src:/app/apps/frontend/src
+      - ../../apps/frontend/public:/app/apps/frontend/public
+      - ../../apps/frontend/next.config.cjs:/app/apps/frontend/next.config.cjs
+      - ../../apps/frontend/tsconfig.json:/app/apps/frontend/tsconfig.json
+      - ../../apps/frontend/vitest.config.ts:/app/apps/frontend/vitest.config.ts
+      - ../../apps/frontend/tailwind.config.cjs:/app/apps/frontend/tailwind.config.cjs
+      - ../../apps/frontend/package.json:/app/apps/frontend/package.json
+      - ../../apps/frontend/.eslintrc.json:/app/apps/frontend/.eslintrc.json
+      - ../../packages/core/src:/app/packages/core/src
+      - ../../packages/core/package.json:/app/packages/core/package.json
+      - ../../apps/backend/prisma:/app/apps/backend/prisma
+      - ../../data:/app/data
+      - ../../logs:/app/logs
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      influxdb:
+        condition: service_healthy
+      grafana:
+        condition: service_healthy
+      loki:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - iotpilot-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.iotpilot-app.loadbalancer.server.port=3000"
+      # Local development - simple routing
+      - "traefik.http.routers.iotpilot-app-local.rule=Host(`iotpilotserver.test`)"
+      - "traefik.http.routers.iotpilot-app-local.entrypoints=websecure"
+      - "traefik.http.routers.iotpilot-app-local.tls=true"
+      - "traefik.http.routers.iotpilot-app-local.priority=100"
+      # CloudFlare tunnel - main domain
+      - "traefik.http.routers.iotpilot-app-cf.rule=Host(`dashboarddev.iotpilot.app`)"
+      - "traefik.http.routers.iotpilot-app-cf.entrypoints=web,websecure"
+      - "traefik.http.routers.iotpilot-app-cf.priority=100"
+
+  # Express API Backend
+  iotpilot-backend:
+    build:
+      context: ../..
+      dockerfile: ./infra/docker/Dockerfile
+      target: development
+      args:
+        - NODE_ENV=development
+    container_name: iotpilot-server-backend
+    command: ["/bin/sh", "/app/apps/backend/start.sh"]
+    environment:
+      - NODE_ENV=development
+      - PORT=3100
+      - DATABASE_URL=postgresql://iotpilot:${POSTGRES_PASSWORD}@postgres:5432/iotpilot
+      - REDIS_URL=redis://redis:6379
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN}
+      - JWT_SECRET=${JWT_SECRET}
+      - DEVICE_API_KEY=${DEVICE_API_KEY}
+      - DOMAIN=iotpilotserver.test
+      - DOMAIN_TUNEL=dashboarddev.iotpilot.app
+      - APP_URL=https://dashboarddev.iotpilot.app
+    ports:
+      - "3102:3100"
+    volumes:
+      - ../../apps/backend/src:/app/apps/backend/src
+      - ../../apps/backend/prisma:/app/apps/backend/prisma
+      - ../../packages/core/src:/app/packages/core/src
+      - ../../packages/core/package.json:/app/packages/core/package.json
+      - ../../data:/app/data
+      - ../../logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3100/api/health"]
+      interval: 30s
+      timeout: 3s
+      start_period: 40s
+      retries: 3
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - iotpilot-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.iotpilot-backend.loadbalancer.server.port=3100"
+      # Local: api.iotpilotserver.test (any path) OR iotpilotserver.test/api/*
+      - "traefik.http.routers.iotpilot-backend-local.rule=Host(`api.iotpilotserver.test`) || (Host(`iotpilotserver.test`) && PathPrefix(`/api`))"
+      - "traefik.http.routers.iotpilot-backend-local.entrypoints=websecure"
+      - "traefik.http.routers.iotpilot-backend-local.tls=true"
+      - "traefik.http.routers.iotpilot-backend-local.priority=200"
+      # CloudFlare: dashboarddev.iotpilot.app/api/* — path-based split on same domain
+      # Priority 200 > frontend priority 100 so /api/* goes to backend first
+      - "traefik.http.routers.iotpilot-backend-cf.rule=Host(`dashboarddev.iotpilot.app`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.iotpilot-backend-cf.entrypoints=web,websecure"
+      - "traefik.http.routers.iotpilot-backend-cf.priority=200"
+
+  # BullMQ Worker — runs job processors from packages/core
+  iotpilot-worker:
+    build:
+      context: ../..
+      dockerfile: ./infra/docker/Dockerfile
+      target: development
+      args:
+        - NODE_ENV=development
+    container_name: iotpilot-server-worker
+    command: ["/bin/sh", "/app/apps/worker/start.sh"]
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://iotpilot:${POSTGRES_PASSWORD}@postgres:5432/iotpilot
+      - REDIS_URL=redis://redis:6379
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN}
+      - JWT_SECRET=${JWT_SECRET}
+      - DEVICE_API_KEY=${DEVICE_API_KEY}
+    volumes:
+      - ../../apps/worker/src:/app/apps/worker/src
+      - ../../packages/core/src:/app/packages/core/src
+      - ../../packages/core/package.json:/app/packages/core/package.json
+      - ../../data:/app/data
+      - ../../logs:/app/logs
+    healthcheck:
+      disable: true
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - iotpilot-network
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: iotpilot-server-postgres
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ../database/init:/docker-entrypoint-initdb.d
+      - ../../apps/backend/prisma/migration:/docker-entrypoint-initdb.d/prisma
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U iotpilot -d iotpilot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - iotpilot-network
+
+  # Redis for caching and sessions
+  redis:
+    image: redis:7-alpine
+    container_name: iotpilot-server-redis
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    networks:
+      - iotpilot-network
+
+  # Grafana for monitoring dashboards - SIMPLE DIRECT ACCESS
+  grafana:
+    image: grafana/grafana:latest
+    container_name: iotpilot-server-grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      - GF_SERVER_ROOT_URL=http://localhost:3000/
+      - GF_SERVER_SERVE_FROM_SUB_PATH=false
+      - GF_SECURITY_ALLOW_EMBEDDING=true
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+    ports:
+      - "3002:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ../grafana/provisioning:/etc/grafana/provisioning
+      - ../grafana/dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      postgres:
+        condition: service_healthy
+      influxdb:
+        condition: service_healthy
+      loki:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - iotpilot-network
+    # CloudFlare tunnel for subdomain access
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+      - "traefik.http.routers.grafana-cf.rule=Host(`dashboarddev-grafana.iotpilot.app`)"
+      - "traefik.http.routers.grafana-cf.entrypoints=web,websecure"
+      - "traefik.http.routers.grafana-cf.service=grafana"
+      - "traefik.http.routers.grafana-cf.priority=200"
+
+  # InfluxDB for time-series metrics - SIMPLE DIRECT ACCESS
+  influxdb:
+    image: influxdb:2.7-alpine
+    container_name: iotpilot-server-influxdb
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUXDB_PASSWORD}
+      - DOCKER_INFLUXDB_INIT_ORG=iotpilot
+      - DOCKER_INFLUXDB_INIT_BUCKET=devices
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=${INFLUXDB_TOKEN}
+      - DOCKER_INFLUXDB_INIT_RETENTION=8760h
+      - INFLUXD_LOG_LEVEL=warn
+    ports:
+      - "8087:8086"
+    volumes:
+      - influxdb-data:/var/lib/influxdb2
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "influx ping --host http://localhost:8086" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+    networks:
+      - iotpilot-network
+    # CloudFlare tunnel for subdomain access
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.influxdb.loadbalancer.server.port=8086"
+      - "traefik.http.routers.influxdb-cf.rule=Host(`dashboarddev-influxdb.iotpilot.app`)"
+      - "traefik.http.routers.influxdb-cf.entrypoints=web,websecure"
+      - "traefik.http.routers.influxdb-cf.service=influxdb"
+      - "traefik.http.routers.influxdb-cf.priority=200"
+
+  # Loki for log aggregation
+  loki:
+    image: grafana/loki:2.9.8
+    container_name: iotpilot-server-loki
+    ports:
+      - "3101:3100"
+    volumes:
+      - ../loki/config.yml:/etc/loki/local-config.yaml:ro
+      - loki-data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3100/ready || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - iotpilot-network
+
+  # Traefik reverse proxy
+  traefik:
+    image: traefik:v3
+    container_name: iotpilot-server-traefik
+    environment:
+      # OrbStack's Docker daemon requires API version >= 1.40
+      - DOCKER_API_VERSION=1.41
+      # Clear OrbStack's proxy vars — Traefik only talks to internal Docker services
+      # The Docker network (192.168.97.0/24) is not in NO_PROXY, so requests would
+      # go through OrbStack's proxy and get intercepted
+      - HTTP_PROXY=
+      - HTTPS_PROXY=
+      - http_proxy=
+      - https_proxy=
+      - ALL_PROXY=
+      - all_proxy=
+      # Domain used by file-provider dynamic routes (routers.yml)
+      - DOMAIN=iotpilotserver.test
+      # Dummy basic-auth for local dashboard (production sets a real hash via .env)
+      - TRAEFIK_AUTH=${TRAEFIK_AUTH:-admin:$$apr1$$xyz$$dummyhashedpassword}
+    ports:
+      - "8081:8080"
+      - "9080:80"
+      - "9443:443"
+    volumes:
+      - ../traefik/traefik.local.yml:/etc/traefik/traefik.yml:ro
+      - ../traefik/dynamic:/etc/traefik/dynamic:ro
+      - ../traefik/certs:/etc/traefik/certs:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped
+    networks:
+      - iotpilot-network
+
+  # Mailpit - Email testing for local development
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: iotpilot-mailpit
+    ports:
+      - "8025:8025"
+      - "1026:1025"
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    restart: unless-stopped
+    networks:
+      - iotpilot-network
+
+  # Cloudflared tunnel
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: iotpilot-cloudflared
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    restart: unless-stopped
+    depends_on:
+      iotpilot-app:
+        condition: service_healthy
+    networks:
+      - iotpilot-network
+
+volumes:
+  tailscale-state:
+    driver: local
+  postgres-data:
+    driver: local
+  grafana-data:
+    driver: local
+  influxdb-data:
+    driver: local
+  loki-data:
+    driver: local
+  redis-data:
+    driver: local
+
+networks:
+  iotpilot-network:
+    name: iotpilot-network
+    driver: bridge

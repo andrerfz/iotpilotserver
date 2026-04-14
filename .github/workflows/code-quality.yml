@@ -26,33 +26,33 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '22'
           cache: 'npm'
-          cache-dependency-path: app/package-lock.json
+          cache-dependency-path: apps/frontend/package-lock.json
 
       - name: Install dependencies
         run: |
-          cd app
+          cd apps/frontend
           npm ci
 
       - name: Run ESLint with detailed reporting
         run: |
-          cd app
+          cd apps/frontend
           npx eslint --ext .ts,.tsx --format=json --output-file=eslint-report.json src/ || true
 
       - name: Check for unused dependencies
         run: |
-          cd app
+          cd apps/frontend
           npx depcheck --json > depcheck-report.json || true
 
       - name: Analyze bundle size
         run: |
-          cd app
+          cd apps/frontend
           npx webpack-bundle-analyzer --mode=production --output=json > bundle-analysis.json || true
 
       - name: Check TypeScript strictness
         run: |
-          cd app
+          cd apps/frontend
           npx tsc --noEmit --strict --noUnusedLocals --noUnusedParameters || true
 
       - name: Upload quality reports
@@ -60,9 +60,9 @@ jobs:
         with:
           name: code-quality-reports
           path: |
-            app/eslint-report.json
-            app/depcheck-report.json
-            app/bundle-analysis.json
+            apps/frontend/eslint-report.json
+            apps/frontend/depcheck-report.json
+            apps/frontend/bundle-analysis.json
           retention-days: 30
 
   # ==========================================
@@ -80,34 +80,34 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '22'
           cache: 'npm'
-          cache-dependency-path: app/package-lock.json
+          cache-dependency-path: apps/frontend/package-lock.json
 
       - name: Install dependencies
         run: |
-          cd app
+          cd apps/frontend
           npm ci
 
       - name: Run comprehensive test coverage analysis
         run: |
-          cd app
+          cd apps/frontend
           npm run test -- --coverage --run --reporter=json --outputFile=test-results.json
 
       - name: Analyze test coverage trends
         run: |
-          cd app
+          cd apps/frontend
           # This would typically compare against previous runs
           npx istanbul report --include coverage/coverage-final.json text-summary
 
       - name: Check for security vulnerabilities
         run: |
-          cd app
+          cd apps/frontend
           npm audit --audit-level=moderate --json > security-audit.json || true
 
       - name: Performance analysis
         run: |
-          cd app
+          cd apps/frontend
           # Run performance tests
           npm run test:performance -- --run --reporter=json > performance-results.json || true
 
@@ -116,10 +116,10 @@ jobs:
         with:
           name: comprehensive-analysis-reports
           path: |
-            app/test-results.json
-            app/security-audit.json
-            app/performance-results.json
-            app/coverage/
+            apps/frontend/test-results.json
+            apps/frontend/security-audit.json
+            apps/frontend/performance-results.json
+            apps/frontend/coverage/
           retention-days: 30
 
       - name: Generate quality summary
@@ -128,10 +128,10 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Test Coverage" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          cd app && npx istanbul report --include coverage/coverage-final.json text-summary || echo "Coverage report not available" >> $GITHUB_STEP_SUMMARY
+          cd apps/frontend && npx istanbul report --include coverage/coverage-final.json text-summary || echo "Coverage report not available" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Security Audit" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          cd app && npm audit --audit-level=moderate || echo "No critical vulnerabilities found" >> $GITHUB_STEP_SUMMARY
+          cd apps/frontend && npm audit --audit-level=moderate || echo "No critical vulnerabilities found" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY

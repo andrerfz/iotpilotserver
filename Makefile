@@ -1,6 +1,10 @@
 # IotPilot Server Management Makefile
 
 .PHONY: help install start stop restart logs status clean build deploy backup restore update
+.PHONY: device-preregister device-flash device-toolchain-install
+.PHONY: device-flash-esp32c3 device-toolchain-install-esp32c3
+.PHONY: device-flash-heltec32v3 device-toolchain-install-heltec32v3
+.PHONY: device-serial
 .PHONY: local-install local-start local-stop local-restart local-restart-app local-recreate-app local-status local-clean
 .PHONY: dev-start dev-stop dev-restart dev-logs dev-shell
 .PHONY: local-logs-app local-logs-influxdb local-logs-loki local-logs-postgres local-logs-redis local-logs-traefik local-logs-tailscale
@@ -9,12 +13,16 @@
 .PHONY: test lint route-list test-api test-ci test-db test-influxdb test-integration test-unit test-fresh test-file test-debug test-watch test-coverage test-env-check test-integration-full test-performance test-security test-clean test-db-with-data test-influxdb-connection test-services test-smoke test-all
 .PHONY: create-superadmin list-superadmins reset-superadmin-password delete-superadmin
 .PHONY: sync-node-modules clean-dev
+.PHONY: queue-status queue-failed queue-retry queue-clean queue-drain queue-dashboard
 
 # Variables - Using .env for both production and local
-COMPOSE_FILE = docker/docker-compose.yml --env-file .env
-LOCAL_COMPOSE_FILE = docker/docker-compose.local.yml --env-file .env.local
+COMPOSE_FILE = infra/docker/docker-compose.yml --env-file .env
+LOCAL_COMPOSE_FILE = infra/docker/docker-compose.local.yml --env-file .env.local
 SERVICE ?= iotpilot-app
 ENV_FILE = .env
+
+# Run a command inside the frontend package directory in the app container
+EXEC_FRONTEND = docker exec -w /app/apps/frontend iotpilot-server-app
 
 # Default target
 help:
@@ -44,9 +52,12 @@ help:
 	@echo "  apply-seeds          - Apply seed data if missing"
 	@echo ""
 	@echo "🧪 Testing (Docker-based):"
-	@echo "  test                 - Run all tests in Docker"
+	@echo "  test                 - Run all tests (with error summary)"
+	@echo "  test-summary         - Run tests, show top 10 failures"
+	@echo "  test-working         - Run only passing tests (fast)"
 	@echo "  test-unit            - Run unit tests only"
 	@echo "  test-integration     - Run integration tests only"
+	@echo "  test-debug           - Run tests with verbose output"
 	@echo "  test-influxdb        - Run InfluxDB tests"
 	@echo "  test-ci              - Run CI tests with coverage"
 	@echo "  test-fresh           - Run tests in fresh container"
@@ -109,6 +120,20 @@ help:
 	@echo "  health               - Health check"
 	@echo "  local-health         - Local health check"
 	@echo ""
+	@echo "📟 Device Manufacturing:"
+	@echo "  device-list                       - List devices by status (STATUS=UNCLAIMED)"
+	@echo "  device-preregister                - Pre-register devices in DB (COUNT=10)"
+	@echo "  device-flash                      - Flash ESP8266 (T-OI V1): ID=IOT-XXXX-YYYY PORT=/dev/..."
+	@echo "  device-toolchain-install          - Install arduino-cli + ESP8266 toolchain"
+	@echo "  device-flash-esp32c3              - Flash ESP32-C3 (T-OI Plus): ID=IOT-XXXX-YYYY PORT=/dev/..."
+	@echo "  device-toolchain-install-esp32c3  - Install arduino-cli + ESP32-C3 toolchain"
+	@echo "  device-flash-heltec32v3           - Flash Heltec WiFi LoRa 32 V3: ID=IOT-XXXX-YYYY PORT=/dev/..."
+	@echo "  device-toolchain-install-heltec32v3 - Install arduino-cli + Heltec toolchain"
+	@echo ""
+	@echo "⏰ Queue & Scheduled Tasks:"
+	@echo "  schedule-list        - List scheduled jobs (like Laravel schedule:list)"
+	@echo "  queue-worker         - Start queue worker (like artisan queue:work)"
+	@echo ""
 	@echo "🌐 Tailscale:"
 	@echo "  tailscale-status     - Show Tailscale status"
 	@echo "  tailscale-ip         - Show Tailscale IPs"
@@ -120,6 +145,14 @@ help:
 	@echo "  list-superadmins     - List all SUPERADMIN users"
 	@echo "  reset-superadmin-password - Reset a SUPERADMIN user's password"
 	@echo "  delete-superadmin    - Delete a SUPERADMIN user"
+	@echo ""
+	@echo "📨 Queue Management:"
+	@echo "  queue-status         - Show queue job counts"
+	@echo "  queue-failed         - List failed jobs"
+	@echo "  queue-retry          - Retry all failed jobs"
+	@echo "  queue-clean          - Clean completed/failed jobs"
+	@echo "  queue-drain          - Drain all waiting jobs"
+	@echo "  queue-dashboard      - Open Bull Board dashboard URL"
 	@echo ""
 	@echo "⚡ Quick Commands:"
 	@echo "  quick-dev            - Quick development setup"
@@ -144,12 +177,12 @@ check-env:
 # Database migration commands using Docker
 migrate: check-env
 	@echo "🗄️ Running database migrations in container..."
-	@docker exec iotpilot-server-app npx prisma migrate deploy
+	@docker exec iotpilot-server-backend npm run db:migrate
 	@echo "✅ Migrations complete!"
 
 migrate-reset: check-env
 	@echo "🔄 Resetting database in container..."
-	@docker exec iotpilot-server-app npx prisma migrate reset --force
+	@docker exec iotpilot-server-backend npx prisma migrate reset --force --schema=./prisma/schema.prisma
 	@echo "✅ Database reset complete!"
 
 migrate-dev: check-env
@@ -158,12 +191,12 @@ migrate-dev: check-env
 		echo "❌ Please provide migration name: make migrate-dev NAME=your_migration_name"; \
 		exit 1; \
 	fi
-	@docker exec iotpilot-server-app npx prisma migrate dev --name $(NAME)
+	@docker exec iotpilot-server-backend npm run db:migrate:dev -- --name $(NAME)
 	@echo "✅ Migration '$(NAME)' created!"
 
 db-push: check-env
 	@echo "📤 Pushing schema to database in container..."
-	@docker exec iotpilot-server-app npx prisma db push
+	@docker exec iotpilot-server-backend npm run db:push
 	@echo "✅ Schema pushed!"
 
 db-status: check-env
@@ -172,8 +205,8 @@ db-status: check-env
 
 db-setup: check-env
 	@echo "🏗️ Setting up database from scratch..."
-	@docker exec iotpilot-server-app npx prisma db push --force-reset
-	@docker exec iotpilot-server-app npx prisma generate
+	@docker exec iotpilot-server-backend npm run db:push
+	@docker exec iotpilot-server-backend npm run db:generate
 	@echo "✅ Database setup complete!"
 
 db-shell:
@@ -182,7 +215,7 @@ db-shell:
 
 apply-migration:
 	@echo "🔧 Applying migration manually..."
-	@docker exec -i iotpilot-server-postgres psql -U iotpilot -d iotpilot < app/prisma/migration/001_initial_setup.sql
+	@docker exec -i iotpilot-server-postgres psql -U iotpilot -d iotpilot < apps/backend/prisma/migration/001_initial_setup.sql
 	@echo "✅ Migration applied!"
 
 # Apply seed data for local development
@@ -192,18 +225,19 @@ apply-seeds:
 	@echo "🌱 Checking and applying seed data..."
 	@if ! docker exec iotpilot-server-postgres psql -U iotpilot -d iotpilot -t -c "SELECT COUNT(*) FROM users WHERE role = 'SUPERADMIN';" 2>/dev/null | grep -q "[1-9]"; then \
 		echo "📋 No SUPERADMIN user found, applying seed data..."; \
-		docker exec -i iotpilot-server-postgres psql -U iotpilot -d iotpilot -c " \
+		echo " \
 			INSERT INTO customers (id, name, slug, status, \"createdAt\", \"updatedAt\") \
-			VALUES ('default-customer', 'Default Customer', 'default', 'ACTIVE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) \
+			VALUES ('c5atmnwm7izyqp5jfv6ce6zgu', 'Default Customer', 'default', 'ACTIVE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) \
 			ON CONFLICT (id) DO NOTHING; \
 			\
 			INSERT INTO users (id, email, username, password, role, status, \"createdAt\", \"updatedAt\") \
-			VALUES ('default-admin-user', 'manager@iotpilot.app', 'manager', '\$2a\$12\$6AqdbjYxNrBnTRJ6wlTIgO/.h4FpO5YCOPtVEHEiMvaOgR.JHiWJq', 'SUPERADMIN', 'ACTIVE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) \
+			VALUES ('default-admin-user', 'manager@iotpilot.app', 'manager', '$$2a$$12$$/kVthwk.MBWMioZNkADg6.QenB7RjfYSw/BSi8ePiDHp.zxKZnYCW', 'SUPERADMIN', 'ACTIVE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) \
 			ON CONFLICT (id) DO NOTHING; \
 			\
 			INSERT INTO api_keys (id, \"userId\", \"customerId\", name, key, \"createdAt\", \"deletedAt\") \
-			VALUES ('test-api-key-1', 'default-admin-user', 'default-customer', 'Test Device API Key', 'local-kCs945S6Lq11CNTRL-28USAxy6dUQXxPrpq-u9ruoL', CURRENT_TIMESTAMP, NULL) \
-			ON CONFLICT (id) DO NOTHING;"; \
+			VALUES ('test-api-key-1', 'default-admin-user', 'c5atmnwm7izyqp5jfv6ce6zgu', 'Test Device API Key', 'local-kCs945S6Lq11CNTRL-28USAxy6dUQXxPrpq-u9ruoL', CURRENT_TIMESTAMP, NULL) \
+			ON CONFLICT (id) DO NOTHING; \
+		" | docker exec -i iotpilot-server-postgres psql -U iotpilot -d iotpilot; \
 		echo "✅ Seed data applied!"; \
 	else \
 		echo "✅ Seed data already exists, skipping..."; \
@@ -373,13 +407,14 @@ local-restart-app:
 
 local-recreate-app:
 	@echo "⏹️  Recreating local app..."
-	@echo "🧹 Cleaning local node_modules cache..."
-	@rm -rf app/node_modules app/.next 2>/dev/null || true
+	@echo "🧹 Cleaning Next.js build cache (host + container)..."
+	@rm -rf apps/frontend/.next 2>/dev/null || true
+	@docker exec iotpilot-server-app rm -rf /app/apps/frontend/.next 2>/dev/null || true
 	@docker compose -f $(LOCAL_COMPOSE_FILE) down iotpilot-app
-	@echo "🔨 Building app..."
+	@echo "🔨 Building app (frontend + backend + worker share same image)..."
 	@TMPFILE=$$(mktemp); \
 		set -o pipefail; \
-		if docker compose -f $(LOCAL_COMPOSE_FILE) build --no-cache iotpilot-app 2>&1 | tee $$TMPFILE; then \
+		if docker compose -f $(LOCAL_COMPOSE_FILE) build --no-cache iotpilot-app iotpilot-backend iotpilot-worker 2>&1 | tee $$TMPFILE; then \
 			BUILD_EXIT=0; \
 		else \
 			BUILD_EXIT=$$?; \
@@ -407,21 +442,22 @@ local-recreate-app:
 			exit $$BUILD_EXIT; \
 		fi
 	@docker compose -f $(LOCAL_COMPOSE_FILE) up -d iotpilot-app
+	@echo "🔄 Recreating backend and worker with new image..."
+	@docker compose -f $(LOCAL_COMPOSE_FILE) up -d --force-recreate iotpilot-backend iotpilot-worker
 	@make wait-for-app
-	@echo "📦 Copying node_modules from container to local..."
-	@docker cp iotpilot-server-app:/app/node_modules ./app/
+	@echo "ℹ️  node_modules are in pnpm workspace — run: pnpm install"
 	@make check-and-setup-db
 	@make apply-seeds
 	@echo "✅ App recreated and ready!"
 
 sync-node-modules: check-env
 	@echo "📦 Syncing node_modules from container..."
-	@docker cp iotpilot-server-app:/app/node_modules ./app/ 2>/dev/null || (echo "❌ Container not running. Start it first with: make local-start" && exit 1)
+	@echo "ℹ️  node_modules are in pnpm workspace — run: pnpm install" 2>/dev/null || (echo "❌ Container not running. Start it first with: make local-start" && exit 1)
 	@echo "✅ node_modules synced for IDE!"
 
 generate-prisma-client: check-env
 	@echo "🔧 Generating Prisma client in container..."
-	@docker exec iotpilot-server-app npx prisma generate || (echo "❌ Container not running. Start it first with: make local-start" && exit 1)
+	@docker exec iotpilot-server-backend npm run db:generate || (echo "❌ Backend container not running. Start it first with: make local-start" && exit 1)
 	@echo "✅ Prisma client generated!"
 
 ide-setup: check-env generate-prisma-client sync-node-modules
@@ -429,7 +465,7 @@ ide-setup: check-env generate-prisma-client sync-node-modules
 
 clean-dev:
 	@echo "🧹 Cleaning development artifacts..."
-	@rm -rf app/node_modules app/.next app/dist 2>/dev/null || true
+	@rm -rf apps/frontend/.next apps/frontend/dist 2>/dev/null || true
 	@echo "✅ Development cleanup complete!"
 
 local-status:
@@ -441,7 +477,7 @@ local-status:
 # Development mode commands (Hot Reload)
 dev-start: check-env
 	@echo "🔥 Starting development mode with hot reload..."
-	@docker compose -f docker/docker-compose.local.yml -f docker/docker-compose.dev.yml --env-file .env.local up -d --build
+	@docker compose -f infra/docker/docker-compose.local.yml -f infra/docker/docker-compose.dev.yml --env-file .env.local up -d --build
 	@echo "⏳ Waiting for app to start..."
 	@sleep 15
 	@echo "✅ Development mode started!"
@@ -454,11 +490,11 @@ dev-start: check-env
 
 dev-stop:
 	@echo "⏹️  Stopping development mode..."
-	@docker compose -f docker/docker-compose.local.yml -f docker/docker-compose.dev.yml --env-file .env.local down
+	@docker compose -f infra/docker/docker-compose.local.yml -f infra/docker/docker-compose.dev.yml --env-file .env.local down
 
 dev-restart:
 	@echo "🔄 Restarting development mode..."
-	@docker compose -f docker/docker-compose.local.yml -f docker/docker-compose.dev.yml --env-file .env.local restart iotpilot-app
+	@docker compose -f infra/docker/docker-compose.local.yml -f infra/docker/docker-compose.dev.yml --env-file .env.local restart iotpilot-app
 	@echo "✅ Development mode restarted!"
 
 dev-logs:
@@ -511,9 +547,46 @@ dev: local-start
 
 test:
 	@echo "🧪 Running tests in Docker..."
-	@docker exec iotpilot-server-app npm test -- --reporter=basic --bail=1
-	@make lint
-	@echo "✅ Tests complete!"
+	@TMPFILE=$$(mktemp); \
+		set -o pipefail; \
+		if $(EXEC_FRONTEND) npm test -- --reporter=basic --bail=1 2>&1 | tee $$TMPFILE; then \
+			TEST_EXIT=0; \
+		else \
+			TEST_EXIT=$$?; \
+		fi; \
+		set +o pipefail; \
+		echo ""; \
+		FAILED_COUNT=$$(grep -c "FAIL " $$TMPFILE 2>/dev/null || echo "0"); \
+		ERROR_COUNT=$$(grep -c "Error:" $$TMPFILE 2>/dev/null || echo "0"); \
+		if [ $$FAILED_COUNT -gt 0 ] || [ $$ERROR_COUNT -gt 0 ]; then \
+			echo "═══════════════════════════════════════════════════════════"; \
+			echo "❌ Test Failures Summary"; \
+			echo "═══════════════════════════════════════════════════════════"; \
+			echo ""; \
+			if [ $$FAILED_COUNT -gt 0 ]; then \
+				echo "📋 Failed Tests (showing first 10):"; \
+				echo ""; \
+				grep "FAIL " $$TMPFILE | head -n 10; \
+				if [ $$FAILED_COUNT -gt 10 ]; then \
+					echo ""; \
+					echo "... (showing 10 of $$FAILED_COUNT failures)"; \
+				fi; \
+				echo ""; \
+			fi; \
+			echo "📊 Test Summary:"; \
+			grep -E "Test Files|Tests " $$TMPFILE | tail -2 || echo "  No summary available"; \
+			echo ""; \
+			echo "═══════════════════════════════════════════════════════════"; \
+			echo "💡 Tip: Run 'make test-debug' for full verbose output"; \
+			echo "═══════════════════════════════════════════════════════════"; \
+		fi; \
+		rm -f $$TMPFILE; \
+		if [ $$TEST_EXIT -eq 0 ]; then \
+			make lint; \
+			echo "✅ Tests complete!"; \
+		else \
+			exit $$TEST_EXIT; \
+		fi
 
 fix-npm-deps:
 	@echo "🔧 Fixing npm dependencies bug..."
@@ -523,27 +596,31 @@ fix-npm-deps:
 lint:
 	@echo "🔍 Running linter..."
 	@if docker ps -q -f name=iotpilot-server-app | grep -q .; then \
-		docker exec iotpilot-server-app npm run lint; \
+		$(EXEC_FRONTEND) npm run lint; \
 	else \
-		cd app && npm install --legacy-peer-deps --no-optional --no-fund --no-audit && npm run lint; \
+		cd apps/frontend && npm install --legacy-peer-deps --no-optional --no-fund --no-audit && npm run lint; \
 	fi
 	@echo "✅ Linting complete!"
 
 route-list:
 	@echo "📋 Listing all routes..."
 	@if docker ps -q -f name=iotpilot-server-app | grep -q .; then \
-		docker exec iotpilot-server-app npm run route:list; \
+		$(EXEC_FRONTEND) npm run route:list; \
 	else \
-		cd app && node scripts/list-routes.js; \
+		cd apps/frontend && node scripts/list-routes.js; \
 	fi
 
 test-unit:
 	@echo "🧪 Running unit tests in Docker..."
-	@docker exec iotpilot-server-app npm test -- --run src/__tests__/unit
+	@$(EXEC_FRONTEND) npm test -- --run src/__tests__/unit
 
 test-integration:
 	@echo "🧪 Running integration tests in Docker..."
-	@docker exec iotpilot-server-app npm test -- --run src/__tests__/integration
+	@$(EXEC_FRONTEND) npm test -- --run src/__tests__/integration
+
+test-e2e:
+	@echo "🌐 Running E2E tests in Docker..."
+	@$(EXEC_FRONTEND) npm run test:e2e -- --run
 
 test-integration-auth:
 	@echo "🧪 Running tests in Docker..."
@@ -552,7 +629,7 @@ test-integration-auth:
 
 test-influxdb:
 	@echo "🧪 Running InfluxDB tests in Docker..."
-	@docker exec iotpilot-server-app npm test -- --run src/__tests__/influxdb --reporter=verbose
+	@$(EXEC_FRONTEND) npm test -- --run src/__tests__/influxdb --reporter=verbose
 
 test-ci: check-env
 	@echo "🧪 Running CI tests in Docker..."
@@ -575,11 +652,48 @@ test-file: check-env
 		echo "❌ Please provide test file: make test-file FILE=src/__tests__/auth.test.ts"; \
 		exit 1; \
 	fi
-	@docker exec iotpilot-server-app npm test -- --run $(FILE)
+	@$(EXEC_FRONTEND) npm test -- --run $(FILE)
 
 test-debug: check-env
 	@echo "🔍 Running tests with debug output..."
-	@docker exec iotpilot-server-app npm test -- --reporter=verbose --run
+	@$(EXEC_FRONTEND) npm test -- --reporter=verbose --run
+
+test-summary: check-env
+	@echo "📊 Running tests (summary mode, no lint)..."
+	@TMPFILE=$$(mktemp); \
+		set -o pipefail; \
+		if $(EXEC_FRONTEND) npm test -- --reporter=basic --bail=1 2>&1 | tee $$TMPFILE; then \
+			TEST_EXIT=0; \
+		else \
+			TEST_EXIT=$$?; \
+		fi; \
+		set +o pipefail; \
+		echo ""; \
+		FAILED_COUNT=$$(grep -c "FAIL " $$TMPFILE 2>/dev/null || echo "0"); \
+		if [ $$FAILED_COUNT -gt 0 ]; then \
+			echo "═══════════════════════════════════════════════════════════"; \
+			echo "❌ Failed Tests (top 10):"; \
+			echo "═══════════════════════════════════════════════════════════"; \
+			grep "FAIL " $$TMPFILE | head -n 10; \
+			if [ $$FAILED_COUNT -gt 10 ]; then \
+				echo "... (showing 10 of $$FAILED_COUNT)"; \
+			fi; \
+			echo ""; \
+			echo "📊 Summary:"; \
+			grep -E "Test Files|Tests " $$TMPFILE | tail -2; \
+			echo "═══════════════════════════════════════════════════════════"; \
+		else \
+			echo "✅ All tests passed!"; \
+		fi; \
+		rm -f $$TMPFILE; \
+		exit $$TEST_EXIT
+
+test-working: check-env
+	@echo "🧪 Running only passing tests..."
+	@$(EXEC_FRONTEND) npm test -- --run \
+		src/__tests__/integration/api-routes-auth.integration.test.ts \
+		src/lib/device/domain/entities/tests/ssh-session.entity.test.ts
+	@echo "✅ Working tests complete!"
 
 test-watch: check-env
 	@echo "👀 Running tests in watch mode..."
@@ -587,7 +701,7 @@ test-watch: check-env
 
 test-coverage: check-env
 	@echo "📊 Generating test coverage..."
-	@docker exec iotpilot-server-app npm test -- --coverage --run
+	@$(EXEC_FRONTEND) npm test -- --coverage --run
 
 test-env-check:
 	@echo "🔍 Checking test environment..."
@@ -601,12 +715,12 @@ test-integration-full: check-env
 
 test-performance: check-env
 	@echo "⚡ Running performance tests..."
-	@docker exec iotpilot-server-app npm test -- --run src/__tests__/performance
+	@$(EXEC_FRONTEND) npm test -- --run src/__tests__/performance
 
 test-security: check-env
 	@echo "🔒 Running security tests..."
-	@docker exec iotpilot-server-app npm audit
-	@docker exec iotpilot-server-app npm test -- --run src/__tests__/security
+	@$(EXEC_FRONTEND) npm audit
+	@$(EXEC_FRONTEND) npm test -- --run src/__tests__/security
 
 test-clean:
 	@echo "🧹 Cleaning test artifacts..."
@@ -619,7 +733,7 @@ test-db-with-data: check-env
 
 test-influxdb-connection: check-env
 	@echo "📊 Testing InfluxDB connection from app..."
-	@docker exec iotpilot-server-app npm test -- --run src/__tests__/influxdb-connection
+	@$(EXEC_FRONTEND) npm test -- --run src/__tests__/influxdb-connection
 
 test-services: check-env
 	@echo "🔧 Testing all service connections..."
@@ -634,9 +748,9 @@ test-smoke: check-env
 
 test-api: check-env
 	@echo "🌐 Testing API endpoints..."
-	@docker exec iotpilot-server-app npm test -- --run src/__tests__/api
+	@$(EXEC_FRONTEND) npm test -- --run src/__tests__/api
 
-test-all: test-env-check test-fresh test-services test-smoke
+when: test-env-check test-fresh test-services test-smoke
 	@echo "🎉 All tests completed!"
 
 # =============================================================================
@@ -759,6 +873,96 @@ delete-superadmin:
 	@./scripts/delete-superadmin.sh
 
 # =============================================================================
+# QUEUE MANAGEMENT
+# =============================================================================
+
+queue-status:
+	@echo "📊 Queue Status:"
+	@docker exec iotpilot-server-app node -e " \
+		const { Queue } = require('bullmq'); \
+		const IORedis = require('ioredis'); \
+		(async () => { \
+			const conn = new IORedis({ host: 'redis', port: 6379, db: 1, maxRetriesPerRequest: null }); \
+			const q = new Queue('iotpilot-jobs', { connection: conn }); \
+			const counts = await q.getJobCounts('waiting', 'active', 'completed', 'failed', 'delayed'); \
+			console.log('  Waiting:', counts.waiting); \
+			console.log('  Active:', counts.active); \
+			console.log('  Completed:', counts.completed); \
+			console.log('  Failed:', counts.failed); \
+			console.log('  Delayed:', counts.delayed); \
+			await q.close(); \
+			await conn.quit(); \
+			process.exit(0); \
+		})();"
+
+queue-failed:
+	@echo "❌ Failed Jobs:"
+	@docker exec iotpilot-server-app node -e " \
+		const { Queue } = require('bullmq'); \
+		const IORedis = require('ioredis'); \
+		(async () => { \
+			const conn = new IORedis({ host: 'redis', port: 6379, db: 1, maxRetriesPerRequest: null }); \
+			const q = new Queue('iotpilot-jobs', { connection: conn }); \
+			const failed = await q.getFailed(0, 20); \
+			failed.forEach(j => console.log('  [' + j.id + '] ' + j.name + ' - ' + j.failedReason)); \
+			if (!failed.length) console.log('  No failed jobs'); \
+			await q.close(); \
+			await conn.quit(); \
+			process.exit(0); \
+		})();"
+
+queue-retry:
+	@echo "🔄 Retrying all failed jobs..."
+	@docker exec iotpilot-server-app node -e " \
+		const { Queue } = require('bullmq'); \
+		const IORedis = require('ioredis'); \
+		(async () => { \
+			const conn = new IORedis({ host: 'redis', port: 6379, db: 1, maxRetriesPerRequest: null }); \
+			const q = new Queue('iotpilot-jobs', { connection: conn }); \
+			const failed = await q.getFailed(0, 1000); \
+			for (const job of failed) await job.retry(); \
+			console.log('  Retried ' + failed.length + ' jobs'); \
+			await q.close(); \
+			await conn.quit(); \
+			process.exit(0); \
+		})();"
+
+queue-clean:
+	@echo "🧹 Cleaning completed and failed jobs..."
+	@docker exec iotpilot-server-app node -e " \
+		const { Queue } = require('bullmq'); \
+		const IORedis = require('ioredis'); \
+		(async () => { \
+			const conn = new IORedis({ host: 'redis', port: 6379, db: 1, maxRetriesPerRequest: null }); \
+			const q = new Queue('iotpilot-jobs', { connection: conn }); \
+			await q.clean(0, 1000, 'completed'); \
+			await q.clean(0, 1000, 'failed'); \
+			console.log('  Queue cleaned'); \
+			await q.close(); \
+			await conn.quit(); \
+			process.exit(0); \
+		})();"
+
+queue-drain:
+	@echo "⚠️  Draining queue (removing all waiting jobs)..."
+	@docker exec iotpilot-server-app node -e " \
+		const { Queue } = require('bullmq'); \
+		const IORedis = require('ioredis'); \
+		(async () => { \
+			const conn = new IORedis({ host: 'redis', port: 6379, db: 1, maxRetriesPerRequest: null }); \
+			const q = new Queue('iotpilot-jobs', { connection: conn }); \
+			await q.drain(); \
+			console.log('  Queue drained'); \
+			await q.close(); \
+			await conn.quit(); \
+			process.exit(0); \
+		})();"
+
+queue-dashboard:
+	@echo "📊 Bull Board dashboard available at: http://localhost:3001/admin/queues"
+	@echo "   (Requires app to be running: make local-start)"
+
+# =============================================================================
 # UTILITY FUNCTIONS
 # =============================================================================
 
@@ -779,3 +983,133 @@ fix-permissions:
 	@echo "🔧 Fixing file permissions..."
 	@chmod +x scripts/*.sh
 	@echo "✅ Permissions fixed!"
+
+# ═══════════════════════════════════════════════════════════════
+# 📟 Device Manufacturing
+# ═══════════════════════════════════════════════════════════════
+
+COUNT ?= 10
+STATUS ?= UNCLAIMED
+
+device-list:
+ifdef API_URL
+	@curl -s "$(API_URL)/api/admin/devices?status=$(STATUS)" \
+		-H "Authorization: Bearer $(API_TOKEN)" | python3 -m json.tool
+else
+	@docker exec iotpilot-server-postgres psql -U iotpilot -d iotpilot -c \
+		"SELECT \"deviceId\", status, \"customerId\", \"registeredAt\" FROM devices WHERE status='$(STATUS)' ORDER BY \"registeredAt\" DESC;"
+endif
+
+device-preregister:
+	@echo "📟 Pre-registering $(COUNT) devices..."
+ifdef API_URL
+	@curl -s -X POST "$(API_URL)/api/admin/devices" \
+		-H "Authorization: Bearer $(API_TOKEN)" \
+		-H "Content-Type: application/json" \
+		-d '{"count":$(COUNT)}' | python3 -m json.tool
+else
+	@docker cp scripts/preregister-devices.ts iotpilot-server-app:/tmp/preregister-devices.ts
+	@docker exec iotpilot-server-app npx tsx /tmp/preregister-devices.ts --count=$(COUNT)
+endif
+
+device-flash:
+	@SERVER_URL=$(or $(SERVER_URL),http://192.168.0.168:3001) ./scripts/flash-device.sh $(ID) $(PORT)
+
+device-toolchain-install:
+	@echo "📟 Installing ESP8266 manufacturing toolchain..."
+	@if ! command -v arduino-cli &>/dev/null; then \
+		echo "Installing arduino-cli..."; \
+		brew install arduino-cli; \
+	else \
+		echo "✅ arduino-cli already installed"; \
+	fi
+	@echo "Installing ESP8266 core..."
+	@arduino-cli core update-index --additional-urls https://arduino.esp8266.com/stable/package_esp8266com_index.json
+	@arduino-cli core install esp8266:esp8266 --additional-urls https://arduino.esp8266.com/stable/package_esp8266com_index.json
+	@echo "Installing required libraries..."
+	@arduino-cli lib install "OneWire" "DallasTemperature" "ArduinoJson" "WiFiManager"
+	@echo ""
+	@echo "✅ Toolchain ready! Manufacturing workflow:"
+	@echo "   1. make device-preregister COUNT=10    # Generate device IDs"
+	@echo "   2. Plug in ESP8266 via USB"
+	@echo "   3. make device-flash ID=IOT-XXXX-YYYY # Compile + flash"
+	@echo "   4. Stick QR label on device"
+
+device-flash-esp32c3:
+	@SERVER_URL=$(or $(SERVER_URL),https://dashboarddev.iotpilot.app) BAUD_OVERRIDE=$(BAUD) PORT_OVERRIDE=$(PORT) ./scripts/flash-device-esp32c3.sh $(ID)
+
+device-toolchain-install-esp32c3:
+	@echo "📟 Installing ESP32-C3 manufacturing toolchain (LILYGO T-OI Plus)..."
+	@if ! command -v arduino-cli &>/dev/null; then \
+		echo "Installing arduino-cli..."; \
+		brew install arduino-cli; \
+	else \
+		echo "✅ arduino-cli already installed"; \
+	fi
+	@echo "Installing ESP32 core (Espressif)..."
+	@arduino-cli core update-index --additional-urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+	@arduino-cli core install esp32:esp32 --additional-urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+	@echo "Installing required libraries..."
+	@arduino-cli lib install "OneWire" "DallasTemperature" "ArduinoJson" "WiFiManager"
+	@echo ""
+	@echo "✅ Toolchain ready! Manufacturing workflow (T-OI Plus):"
+	@echo "   1. make device-preregister COUNT=10             # Generate device IDs"
+	@echo "   2. Plug in T-OI Plus via USB-C"
+	@echo "   3. make device-flash-esp32c3 ID=IOT-XXXX-YYYY  # Compile + flash"
+	@echo "   4. Stick QR label on device"
+	@echo ""
+	@echo "   If upload fails: hold BOOT, press RST, release BOOT, retry"
+
+device-serial:
+	@PORT=$${PORT:-$$(ls /dev/cu.usbserial* /dev/cu.wchusbserial* /dev/cu.SLAB* 2>/dev/null | head -1)}; \
+	if [ -z "$$PORT" ]; then echo "❌ No serial device found. Plug in the device first."; exit 1; fi; \
+	echo "📡 Opening serial monitor on $$PORT (Ctrl+A then K to exit)"; \
+	TERM=xterm screen $$PORT ${or $(BAUD),115200}
+
+device-flash-heltec32v3:
+	@SERVER_URL=$(or $(SERVER_URL),https://dashboarddev.iotpilot.app) BAUD_OVERRIDE=$(BAUD) PORT_OVERRIDE=$(PORT) WIFI_SSID_OVERRIDE="$(WIFI_SSID)" WIFI_PASS_OVERRIDE="$(WIFI_PASS)" TOKEN_OVERRIDE="$(TOKEN)" ERASE_OVERRIDE="$(ERASE)" ./scripts/flash-device-heltec32v3.sh $(ID)
+
+device-toolchain-install-heltec32v3:
+	@echo "📟 Installing Heltec WiFi LoRa 32 V3 manufacturing toolchain..."
+	@if ! command -v arduino-cli &>/dev/null; then \
+		echo "Installing arduino-cli..."; \
+		brew install arduino-cli; \
+	else \
+		echo "✅ arduino-cli already installed"; \
+	fi
+	@echo "Installing ESP32 core (Espressif)..."
+	@arduino-cli core update-index --additional-urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+	@arduino-cli core install esp32:esp32 --additional-urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+	@echo "Installing required libraries..."
+	@arduino-cli lib install "OneWire" "DallasTemperature" "ArduinoJson" "WiFiManager" "U8g2"
+	@echo ""
+	@echo "✅ Toolchain ready! Manufacturing workflow (Heltec WiFi LoRa 32 V3):"
+	@echo "   1. make device-preregister COUNT=10                  # Generate device IDs"
+	@echo "   2. Plug in Heltec via USB-C"
+	@echo "   3. make device-flash-heltec32v3 ID=IOT-XXXX-YYYY    # Compile + flash"
+	@echo "   4. Stick QR label on device"
+	@echo ""
+	@echo "   If upload fails: hold PRG, press RST, release PRG, retry"
+
+# ═══════════════════════════════════════════════════════════════
+# ⏰ Queue & Scheduled Tasks
+# ═══════════════════════════════════════════════════════════════
+
+queue-worker:
+	@echo "⏰ Starting queue worker..."
+	@docker exec -it iotpilot-server-app npm run worker
+
+schedule-list:
+	@echo "⏰ Scheduled Tasks (BullMQ Repeatable Jobs)"
+	@echo ""
+	@curl -s http://localhost:3001/api/schedule 2>/dev/null | python3 -c "\
+import sys,json; \
+d=json.load(sys.stdin); \
+ts=d.get('tasks',[]); \
+err=d.get('error'); \
+print(f'  {\"Task\":<30} {\"Schedule\":<20} {\"Next Run\"}') if ts else None; \
+print('  '+'-'*70) if ts else None; \
+[print(f'  {t[\"name\"]:<30} {t[\"schedule\"]:<20} {(t[\"nextRun\"] or \"pending\")[:19]}') for t in ts]; \
+print(f'\n  {len(ts)} scheduled task(s)') if ts else print(f'  No tasks. {err or \"Is the app running?\"}'); \
+" 2>/dev/null || echo "  Failed to connect. Is the app running?"
+

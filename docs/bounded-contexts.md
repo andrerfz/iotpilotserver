@@ -241,25 +241,43 @@ IoT Pilot Server is organized into several bounded contexts that represent disti
 
 ### 6. Notification Context
 
-**Primary Responsibility**: Delivering alerts and notifications through various channels.
+**Primary Responsibility**: Delivering alerts and system notifications across multiple channels. Owns the full delivery lifecycle — dispatch, retry, status tracking — and per-user channel preferences.
+
+**Design docs:** [`docs/domain/bc-notification/`](domain/bc-notification/)
+
+#### Aggregates
+- **NotificationRecord** _(primary)_ — one record per (notification, channel, recipient); tracks PENDING → SENDING → DELIVERED / FAILED / DEAD lifecycle
+- **NotificationPreference** _(secondary)_ — per-user opt-in/opt-out per (channel, NotificationType)
 
 #### Business Capabilities
-- Multi-channel notification delivery
-- Template-based message formatting
-- Delivery status tracking and retry logic
-- Notification preferences management
-- Integration with external notification services
+- Multi-channel notification dispatch: EMAIL, SLACK, SMS, WEBHOOK, PUSH (iOS/Android via Pusher)
+- Delivery status tracking and automatic retry with configurable max attempts
+- Per-user notification preferences (channel + type → enabled/disabled + custom destination)
+- Audit trail of all notification attempts and outcomes
+- Fan-out from domain events: subscribes to `AlertTriggeredEvent`, `AlertResolvedEvent`, `DeviceDisconnectedEvent`, `DeviceConnectedEvent`
 
-#### Key Components
-- **Notification**: Message to be delivered
-- **Channel**: Delivery mechanism (Email, SMS, Webhook)
-- **Template**: Message formatting rules
-- **DeliveryStatus**: Tracking of message delivery
+#### Value Objects
+- `NotificationRecordId` — UUID
+- `NotificationPreferenceId` — UUID
+- `NotificationDeliveryStatus` — PENDING | SENDING | DELIVERED | FAILED | DEAD | CANCELLED
+- `NotificationRecipient` — email / E.164 phone / HTTPS URL / Pusher token (≤ 500 chars, validated per channel)
+- `NotificationSubject` — ≤ 200 chars
+- `NotificationBody` — ≤ 10 000 chars
+- `NotificationAttemptCount` — integer ≥ 0
+- `NotificationMaxAttempts` — integer 1–10
+- `NotificationError` — nullable string ≤ 2 000 chars
+- `SourceEventId` / `SourceEntityId` — UUID strings correlating to the triggering event
+- Shared: `NotificationChannel`, `NotificationType` (from `shared/domain/value-objects/`)
 
 #### Integration Points
-- **Monitoring Context**: Receives alert notifications
-- **User Context**: User notification preferences
-- **External Services**: Email providers, SMS gateways
+- **Monitoring Context**: consumes `AlertTriggeredEvent`, `AlertResolvedEvent` — replaces the direct Slack dispatch currently in `monitoring/on-alert-triggered.handler.ts`
+- **Device Context**: consumes `DeviceConnectedEvent`, `DeviceDisconnectedEvent`
+- **User Context**: reads user email/phone to resolve `destination` when `NotificationPreference.destination` is null
+- **External Services**: SMTP provider (email), Twilio (SMS), Slack webhooks, Pusher (push)
+
+#### Open questions (blocking)
+- **Q1**: Push token storage model — gates PUSH channel
+- **Q3**: Migration of `monitoring/on-alert-triggered.handler.ts` — must be removed atomically when this BC goes live
 
 ---
 

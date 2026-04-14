@@ -7,14 +7,14 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
-    setupFiles: ['./src/__tests__/setup.ts'],
+    setupFiles: ['./apps/frontend/src/__tests__/setup.ts'],
     testTimeout: 15000,
     coverage: {
       provider: 'c8',
       reporter: ['text', 'html', 'lcov'],
       exclude: [
         'node_modules/',
-        'src/__tests__/',
+        'apps/frontend/src/__tests__/',
         '**/*.d.ts',
         '**/*.config.*'
       ]
@@ -22,9 +22,13 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
-      '@/lib': path.resolve(__dirname, './src/lib'),
-      '@/components': path.resolve(__dirname, './src/components'),
+      '@iotpilot/core': path.resolve(__dirname, './packages/core/src'),
+      '@': path.resolve(__dirname, './apps/frontend/src'),
+      '@/lib': path.resolve(__dirname, './apps/frontend/src/lib'),
+      '@/components': path.resolve(__dirname, './apps/frontend/src/components'),
+      '@/hooks': path.resolve(__dirname, './apps/frontend/src/hooks'),
+      '@/types': path.resolve(__dirname, './apps/frontend/src/types'),
+      '@/utils': path.resolve(__dirname, './apps/frontend/src/utils'),
     },
   },
 })

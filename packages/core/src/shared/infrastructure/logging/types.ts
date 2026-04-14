@@ -1,0 +1,138 @@
+/**
+ * Logging and audit trail types
+ */
+
+export enum LogLevel {
+  DEBUG = 0,
+  INFO = 1,
+  WARN = 2,
+  ERROR = 3,
+  CRITICAL = 4
+}
+
+export enum SecurityEventType {
+  // Authentication events
+  LOGIN_SUCCESS = 'LOGIN_SUCCESS',
+  LOGIN_FAILURE = 'LOGIN_FAILURE',
+  LOGOUT = 'LOGOUT',
+  SESSION_EXPIRED = 'SESSION_EXPIRED',
+  SESSION_INVALIDATED = 'SESSION_INVALIDATED',
+
+  // Authorization events
+  PERMISSION_DENIED = 'PERMISSION_DENIED',
+  ROLE_CHANGED = 'ROLE_CHANGED',
+  SUPERADMIN_ACTION = 'SUPERADMIN_ACTION',
+
+  // Password events
+  PASSWORD_CHANGE_SUCCESS = 'PASSWORD_CHANGE_SUCCESS',
+  PASSWORD_CHANGE_FAILURE = 'PASSWORD_CHANGE_FAILURE',
+  PASSWORD_RESET_REQUEST = 'PASSWORD_RESET_REQUEST',
+  PASSWORD_RESET_SUCCESS = 'PASSWORD_RESET_SUCCESS',
+  PASSWORD_RESET_FAILURE = 'PASSWORD_RESET_FAILURE',
+
+  // Tenant isolation events
+  TENANT_BOUNDARY_VIOLATION = 'TENANT_BOUNDARY_VIOLATION',
+  TENANT_CONTEXT_MISSING = 'TENANT_CONTEXT_MISSING',
+  CROSS_TENANT_ACCESS = 'CROSS_TENANT_ACCESS',
+
+  // Device security events
+  DEVICE_ACCESS_DENIED = 'DEVICE_ACCESS_DENIED',
+  DEVICE_COMMAND_BLOCKED = 'DEVICE_COMMAND_BLOCKED',
+  DEVICE_SSH_FAILED = 'DEVICE_SSH_FAILED',
+
+  // API security events
+  RATE_LIMIT_EXCEEDED = 'RATE_LIMIT_EXCEEDED',
+  API_KEY_INVALID = 'API_KEY_INVALID',
+  API_KEY_EXPIRED = 'API_KEY_EXPIRED',
+
+  // System security events
+  CONFIGURATION_CHANGED = 'CONFIGURATION_CHANGED',
+  BACKUP_STARTED = 'BACKUP_STARTED',
+  BACKUP_FAILED = 'BACKUP_FAILED',
+  SYSTEM_ACCESS = 'SYSTEM_ACCESS'
+}
+
+export enum AuditEventType {
+  // User management
+  USER_CREATED = 'USER_CREATED',
+  USER_UPDATED = 'USER_UPDATED',
+  USER_DELETED = 'USER_DELETED',
+  USER_ROLE_CHANGED = 'USER_ROLE_CHANGED',
+  USER_STATUS_CHANGED = 'USER_STATUS_CHANGED',
+
+  // Device management
+  DEVICE_CREATED = 'DEVICE_CREATED',
+  DEVICE_UPDATED = 'DEVICE_UPDATED',
+  DEVICE_DELETED = 'DEVICE_DELETED',
+  DEVICE_CONNECTED = 'DEVICE_CONNECTED',
+  DEVICE_DISCONNECTED = 'DEVICE_DISCONNECTED',
+
+  // Device operations
+  DEVICE_COMMAND_EXECUTED = 'DEVICE_COMMAND_EXECUTED',
+  DEVICE_COMMAND_FAILED = 'DEVICE_COMMAND_FAILED',
+  DEVICE_FILE_UPLOADED = 'DEVICE_FILE_UPLOADED',
+  DEVICE_FILE_DOWNLOADED = 'DEVICE_FILE_DOWNLOADED',
+
+  // Customer management
+  CUSTOMER_CREATED = 'CUSTOMER_CREATED',
+  CUSTOMER_UPDATED = 'CUSTOMER_UPDATED',
+  CUSTOMER_DELETED = 'CUSTOMER_DELETED',
+  CUSTOMER_SUBSCRIPTION_CHANGED = 'CUSTOMER_SUBSCRIPTION_CHANGED',
+
+  // Monitoring and alerting
+  THRESHOLD_CREATED = 'THRESHOLD_CREATED',
+  THRESHOLD_UPDATED = 'THRESHOLD_UPDATED',
+  THRESHOLD_DELETED = 'THRESHOLD_DELETED',
+  ALERT_ACKNOWLEDGED = 'ALERT_ACKNOWLEDGED',
+  ALERT_RESOLVED = 'ALERT_RESOLVED',
+
+  // System operations
+  BACKUP_CREATED = 'BACKUP_CREATED',
+  BACKUP_RESTORED = 'BACKUP_RESTORED',
+  CONFIGURATION_BACKUP = 'CONFIGURATION_BACKUP',
+  LOGS_EXPORTED = 'LOGS_EXPORTED',
+
+  // Security operations
+  SECURITY_POLICY_CHANGED = 'SECURITY_POLICY_CHANGED',
+  ACCESS_CONTROL_CHANGED = 'ACCESS_CONTROL_CHANGED',
+  AUDIT_LOG_ACCESSED = 'AUDIT_LOG_ACCESSED'
+}
+
+export interface LogEntry {
+  timestamp: Date;
+  level: LogLevel;
+  message: string;
+  service: string;
+  context?: Record<string, any>;
+  error?: {
+    name: string;
+    message: string;
+    stack?: string;
+  };
+}
+
+export interface SecurityLogEntry extends LogEntry {
+  eventType: SecurityEventType;
+  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  userId?: string;
+  customerId?: string;
+  ipAddress?: string;
+  userAgent?: string;
+  resource?: string;
+  action?: string;
+  details?: Record<string, any>;
+  correlationId?: string;
+}
+
+export interface AuditLogEntry extends LogEntry {
+  eventType: AuditEventType;
+  userId: string;
+  customerId?: string;
+  resource: string;
+  action: string;
+  oldValues?: Record<string, any>;
+  newValues?: Record<string, any>;
+  success: boolean;
+  errorMessage?: string;
+  correlationId?: string;
+}
