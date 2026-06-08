@@ -1,7 +1,16 @@
 import type {NextRequest} from 'next/server';
 import {NextResponse} from 'next/server';
 import {PrismaService} from '@iotpilot/core/shared/infrastructure/database/prisma.service';
-import {ApiResponse} from '@iotpilot/core/shared/infrastructure/http/api-response.util';
+
+const ts = () => new Date().toISOString();
+const ApiResponse = {
+    unauthorized: (message = 'Unauthorized') =>
+        NextResponse.json({ success: false, error: message, code: 'UNAUTHORIZED', timestamp: ts() }, { status: 401 }),
+    forbidden: (message = 'Forbidden') =>
+        NextResponse.json({ success: false, error: message, code: 'FORBIDDEN', timestamp: ts() }, { status: 403 }),
+    internalError: (message = 'Internal server error') =>
+        NextResponse.json({ success: false, error: message, code: 'INTERNAL_ERROR', timestamp: ts() }, { status: 500 }),
+};
 
 // Create PrismaService instance for middleware
 // Note: In Next.js middleware, we create a new instance as middleware runs in Edge runtime
@@ -112,10 +121,7 @@ export async function middleware(request: NextRequest) {
             }
         }
 
-        return ApiResponse.unauthorized(
-            'Authentication required',
-            { message: 'Provide either X-API-Key header or valid JWT token' }
-        );
+        return ApiResponse.unauthorized('Authentication required');
     }
 
     const token = request.cookies.get('auth-token')?.value ||
