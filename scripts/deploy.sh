@@ -12,7 +12,7 @@ header() { echo -e "\n${BLUE}▶ $1${NC}"; }
 DEPLOY_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 COMPOSE="docker compose -f infra/docker/docker-compose.yml --env-file .env"
 HEALTH_URL="http://localhost:3000/api/health"
-MAX_WAIT=24   # × 10s = 4 minutes
+MAX_WAIT=60   # × 10s = 10 minutes (t3.small needs more time)
 
 cd "$DEPLOY_DIR"
 
