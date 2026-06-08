@@ -1,0 +1,34 @@
+# Development mode with hot reload
+# Extends docker-compose.local.yml with development-specific overrides
+
+services:
+  iotpilot-app:
+    build:
+      context: ../..
+      dockerfile: ./infra/docker/Dockerfile
+      target: development  # Use development stage instead of runner
+      args:
+        - NODE_ENV=development
+    container_name: iotpilot-server-app  # Keep same name for Traefik/Cloudflare compatibility
+    user: root  # Run as root in dev mode for write permissions
+    environment:
+      - NODE_ENV=development
+    volumes:
+      # Mount source code for hot reload
+      - ../../apps/frontend/src:/app/src:delegated
+      - ../../apps/frontend/public:/app/public:delegated
+      - ../../apps/frontend/tailwind.config.cjs:/app/tailwind.config.cjs
+      - ../../apps/frontend/postcss.config.cjs:/app/postcss.config.cjs
+      - ../../apps/frontend/package.json:/app/package.json
+      - ../../apps/frontend/tsconfig.json:/app/tsconfig.json
+      - ../../apps/frontend/next.config.cjs:/app/next.config.cjs
+      - ../../apps/backend/prisma:/apps/backend/prisma
+      # Mount for data/logs
+      - ../../data:/app/data
+      - ../../logs:/app/logs
+      # Prevent node_modules override
+      - /app/node_modules
+      - /app/.next
+    command: ["./start-dev.sh"]
+    # Labels are inherited from docker-compose.local.yml
+    # This includes Traefik routing and Cloudflare tunnel configuration

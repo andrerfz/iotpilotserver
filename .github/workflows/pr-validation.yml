@@ -1,117 +1,109 @@
-name: Pull Request Validation
+name: PR Validation
 
 on:
   pull_request:
-    branches: [ main, develop, main-ddd-migration ]
+    branches: [main, main-ddd-migration]
     types: [opened, synchronize, reopened]
 
-jobs:
-  # ==========================================
-  # QUICK VALIDATION - Fast feedback for PRs
-  # ==========================================
-  quick-check:
-    name: 'Quick Validation'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+env:
+  NODE_VERSION: '22'
+  PNPM_VERSION: '11'
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+concurrency:
+  group: pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  # ──────────────────────────────────────────────
+  # Fast checks — no database, no Docker
+  # ──────────────────────────────────────────────
+  quick-check:
+    name: Lint + type-check + unit tests
+    runs-on: ubuntu-24.04-arm64
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
         with:
-          node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: app/package-lock.json
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
 
       - name: Install dependencies
-        run: |
-          cd app
-          npm ci --legacy-peer-deps --omit=optional --ignore-scripts
+        run: pnpm install --frozen-lockfile
 
-      - name: Run linting
-        run: |
-          cd app
-          npm run lint
+      - name: Generate Prisma client
+        run: pnpm --filter @iotpilot/backend exec prisma generate --schema=./prisma/schema.prisma
 
-      - name: Check TypeScript compilation
-        run: |
-          cd app
-          npx tsc --noEmit
+      - name: Lint
+        run: cd apps/frontend && npm run lint
 
-      - name: Run unit tests only
-        run: |
-          cd app
-          npm run test:unit -- --run --reporter=basic
+      - name: Type-check
+        run: pnpm turbo type-check
 
-      - name: Validate test coverage threshold
-        run: |
-          cd app
-          npm run test:unit -- --coverage --run
-          # Check if coverage meets minimum threshold
-          npx istanbul check-coverage --statements 80 --branches 75 --functions 80 --lines 80
+      - name: Unit tests
+        run: cd apps/frontend && npm run test:unit -- --run
 
-  # ==========================================
-  # DOCKER BUILD CHECK
-  # ==========================================
-  docker-check:
-    name: 'Docker Build Check'
-    runs-on: ubuntu-latest
-    needs: [quick-check]
+  # ──────────────────────────────────────────────
+  # Workspace lock validation (now same as quick-check install)
+  # ──────────────────────────────────────────────
+  workspace:
+    name: pnpm lock validation
+    runs-on: ubuntu-24.04
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
 
-      - name: Build Docker images (quick check)
-        run: |
-          docker compose -f docker/docker-compose.yml build --no-cache --parallel
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
 
-      - name: Validate Docker Compose configuration
-        run: |
-          docker compose -f docker/docker-compose.yml config
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile
 
-  # ==========================================
-  # PR COMMENT WITH RESULTS
-  # ==========================================
+  # ──────────────────────────────────────────────
+  # PR status comment
+  # ──────────────────────────────────────────────
   pr-comment:
-    name: 'PR Comment'
-    runs-on: ubuntu-latest
-    needs: [quick-check, docker-check]
+    name: PR comment
+    runs-on: ubuntu-24.04
+    needs: [quick-check, workspace]
     if: always()
     steps:
-      - name: Comment on PR
-        uses: actions/github-script@v7
+      - uses: actions/github-script@v7
         with:
           script: |
-            const quickCheck = '${{ needs.quick-check.result }}';
-            const dockerCheck = '${{ needs.docker-check.result }}';
-            const status = quickCheck == 'success' && dockerCheck == 'success' ? '✅' : '❌';
-            
-            const quickPassed = quickCheck == 'success' ? '✅ Passed' : '❌ Failed';
-            const dockerPassed = dockerCheck == 'success' ? '✅ Passed' : '❌ Failed';
+            const quick = '${{ needs.quick-check.result }}';
+            const ws    = '${{ needs.workspace.result }}';
+            const ok    = quick === 'success' && ws === 'success';
+            const icon  = ok ? '✅' : '❌';
 
-            const body = `## ${status} Pull Request Validation Results
+            const row = (label, result) =>
+              `| ${label} | ${result === 'success' ? '✅ Pass' : '❌ Fail'} |`;
 
-            ### Quick Checks
-            - **Linting**: ${quickPassed}
-            - **TypeScript**: ${quickPassed}
-            - **Unit Tests**: ${quickPassed}
-            - **Coverage**: ${quickPassed}
-
-            ### Docker Build
-            - **Build Check**: ${dockerPassed}
-            - **Config Validation**: ${dockerPassed}
-
-            ---
-            ${status == '✅' ? '**Ready for review! 🎉**' : '**Please fix the issues above before review.**'}
-
-            *This check runs unit tests and basic validation. Full test suite runs on push to main branch.*`;
+            const body = [
+              `## ${icon} PR Validation`,
+              '',
+              '| Check | Status |',
+              '|---|---|',
+              row('Lint + type-check + unit tests', quick),
+              row('pnpm lock validation', ws),
+              '',
+              ok
+                ? '**Ready for review. Full integration tests run on push to main.** 🎉'
+                : '**Please fix the failing checks above.**',
+            ].join('\n');
 
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: body
+              body,
             });

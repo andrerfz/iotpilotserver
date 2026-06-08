@@ -8,198 +8,165 @@ IoT Pilot is a production-ready IoT device management platform built with Next.j
 
 ## Essential Commands
 
-### Development Workflow
+All development happens in Docker containers. The app container is `iotpilot-server-app`.
+
+### Development
 ```bash
-make fresh-setup                    # Complete fresh setup with migrations
+make fresh-setup                    # Complete fresh setup (nukes volumes, rebuilds)
 make local-start-with-migration     # Start services with auto-migration
 make dev                            # Alias for local-start
 make local-restart-app              # Restart app container only
-make local-recreate-app             # Recreate app with clean build
-make route-list                     # List all routes (like Laravel route:list)
-```
-
-### Database Operations
-```bash
-make migrate                        # Run Prisma migrations in container
-make db-push                        # Push schema changes
-make db-status                      # Show database tables
-make db-shell                       # Open PostgreSQL shell
-make apply-migration                # Apply SQL migration manually
-make check-and-setup-db             # Auto-check and initialize DB
+make local-recreate-app             # Rebuild app from scratch (cleans node_modules/.next)
+make lint                           # Run ESLint (in container or locally)
+make local-logs-app                 # View app logs
 ```
 
 ### Testing
 ```bash
-make test                           # Run all tests in Docker
+make test                           # Run all tests + lint (bails on first failure)
 make test-unit                      # Unit tests only
 make test-integration               # Integration tests only
-make test-file FILE=path/to/test    # Run specific test file
+make test-file FILE=path/to/test    # Run specific test file (path relative to app/src/)
 make test-debug                     # Verbose test output
-make test-watch                     # Watch mode
+make test-watch                     # Watch mode (interactive)
 make test-coverage                  # Generate coverage report
 ```
 
-### Service Management
+Note: `make test` runs tests with `--bail=1` then runs `make lint` on success.
+
+### Database
 ```bash
-make local-logs-app                 # View app logs
-make local-health                   # Health check
-make test-db                        # Test database connection
-make test-services                  # Test all service connections
+make migrate                        # Run Prisma migrations in container
+make db-push                        # Push schema changes directly
+make apply-migration                # Apply SQL migration manually (001_initial_setup.sql)
+make db-shell                       # Open PostgreSQL shell
+make db-status                      # Show database tables
+make apply-seeds                    # Apply seed data if missing
+```
+
+### Build Verification
+```bash
+# Pre-commit hook runs: lint + type-check (docker exec npm run type-check)
+# Pre-push hook runs: unit tests
+# These require the Docker container to be running
 ```
 
 ## Architecture
 
+### Monorepo Layout
+
+```
+apps/
+├── frontend/   Next.js frontend (pages, components, hooks)
+├── backend/    Express API server (all /api/ routes)
+└── worker/     BullMQ background worker
+packages/
+└── core/       DDD bounded contexts shared by backend + worker
+```
+
+### Bounded Contexts
+
+Four bounded contexts under `packages/core/src/`:
+- **device** - Device registration, metrics, SSH, commands
+- **user** - Authentication, sessions, API keys
+- **customer** - Tenant management, onboarding
+- **monitoring** - Alerts, thresholds, metrics, reports
+
+Plus **shared** - Base classes, buses, tenant context, infrastructure
+
 ### DDD Layer Structure
 
-The codebase follows strict DDD layering with clear boundaries:
-
+Each bounded context follows:
 ```
-app/src/lib/
-├── {bounded-context}/              # e.g., device, user, customer, monitoring
-│   ├── domain/                     # Business logic (pure, no dependencies)
-│   │   ├── entities/               # Domain entities with behavior
-│   │   ├── value-objects/          # Immutable value objects
-│   │   ├── services/               # Domain services
-│   │   ├── events/                 # Domain events
-│   │   ├── exceptions/             # Domain-specific exceptions
-│   │   ├── policies/               # Business rules and policies
-│   │   └── interfaces/             # Repository/service interfaces
-│   │
-│   ├── application/                # Use cases and orchestration
-│   │   ├── commands/               # Write operations (CQRS)
-│   │   │   └── {action}/
-│   │   │       ├── {action}.command.ts     # Command DTO
-│   │   │       └── {action}.handler.ts     # Command handler
-│   │   ├── queries/                # Read operations (CQRS)
-│   │   │   └── {query-name}/
-│   │   │       ├── {query-name}.query.ts   # Query DTO
-│   │   │       └── {query-name}.handler.ts # Query handler
-│   │   └── services/               # Application services
-│   │
-│   └── infrastructure/             # External concerns
-│       ├── repositories/           # Data persistence (Prisma)
-│       ├── mappers/                # Domain ↔ Persistence mapping
-│       ├── services/               # External integrations
-│       └── dto/                    # Data transfer objects
-│
-└── shared/                         # Cross-cutting concerns
-    ├── domain/                     # Base classes, interfaces
-    ├── application/                # Command/Query buses, tenant context
-    └── infrastructure/             # Middleware, caching, logging
+{context}/
+├── domain/           # Pure business logic, no external dependencies
+│   ├── entities/     # Domain entities with behavior
+│   ├── value-objects/ # Immutable validated primitives (*.vo.ts)
+│   ├── interfaces/   # Repository/service contracts
+│   ├── services/     # Domain services
+│   ├── events/       # Domain events
+│   ├── exceptions/   # Domain-specific exceptions
+│   └── policies/     # Business rules
+├── application/      # Use cases and orchestration
+│   ├── commands/     # Write operations (CQRS)
+│   │   └── {action}/ # {action}.command.ts + {action}.handler.ts
+│   ├── queries/      # Read operations (CQRS)
+│   │   └── {query}/  # {query}.query.ts + {query}.handler.ts
+│   └── services/     # Application services
+└── infrastructure/   # External concerns
+    ├── repositories/ # Prisma implementations
+    ├── mappers/      # Domain ↔ Persistence mapping
+    ├── services/     # External integrations
+    └── dto/          # Data transfer objects
 ```
 
-### Key Architectural Concepts
+### CQRS Pattern
 
-#### 1. **CQRS Pattern**
-- **Commands**: Write operations that change state (execute-ssh-command, register-device)
-- **Queries**: Read operations that return data (get-device, list-devices)
-- Commands and queries are processed through separate buses (`CommandBus`, `QueryBus`)
-- Each command/query has its own handler implementing business logic
+Commands and queries are processed through separate buses (`CommandBus`, `QueryBus`) in `shared/application/bus/`. Each command/query has its own handler. Commands extend `TenantAwareCommand`, queries extend `TenantAwareQuery`.
 
-#### 2. **Multi-Tenancy**
+### Multi-Tenancy
+
 - Every entity is tenant-scoped via `customerId`
-- `TenantContext` tracks current tenant and enforces isolation
+- `TenantContext` (value object in `shared/application/context/`) tracks current tenant
 - `TenantScopedEntity` base class for domain entities
-- Repository queries automatically filter by tenant (see `PrismaDeviceRepository`)
-- SUPERADMIN role can bypass tenant restrictions
+- Repositories automatically filter by tenant; SUPERADMIN can bypass
+- Always pass `TenantContext` through application layers
 
-#### 3. **Value Objects**
-- Immutable, validated domain primitives (e.g., `DeviceId`, `IpAddress`, `Email`)
-- Validation happens in constructor, throwing exceptions on invalid data
-- Use factory methods like `DeviceId.create()` or `Email.fromString()`
+### Frontend Integration
 
-#### 4. **Domain Events**
-- Events like `DeviceRegisteredEvent`, `UserAuthenticatedEvent`
-- Published through `EventBus`
-- Enables loose coupling between bounded contexts
+React components interact through custom hooks in `apps/frontend/src/hooks/commands/` and `apps/frontend/src/hooks/queries/`. UI uses HeroUI component library.
 
-#### 5. **Repository Pattern**
-- Domain defines interfaces (e.g., `DeviceRepository`)
-- Infrastructure provides implementations (e.g., `PrismaDeviceRepository`)
-- Repositories accept `TenantContext` for multi-tenant filtering
+### Path Aliases
 
-### Frontend Integration (CQRS in React)
+TypeScript/Vitest path alias: `@` maps to `apps/frontend/src/` (configured in `vitest.config.ts` and `apps/frontend/tsconfig.json`). Sub-aliases: `@/components`, `@/hooks`, `@/lib`, `@/types`, `@/utils`, `@/app`.
 
-React components interact with the backend through custom hooks:
+### Database
 
-```typescript
-// For commands (writes)
-const { execute, loading, error } = useCommand<RegisterDeviceCommand>();
-await execute(new RegisterDeviceCommand({ ... }));
-
-// For queries (reads)
-const { execute, data, loading, error } = useQuery<GetDeviceQuery, DeviceDTO>();
-const device = await execute(new GetDeviceQuery({ deviceId }));
-```
-
-Hooks are located in:
-- `app/src/hooks/commands/` - Command execution hooks
-- `app/src/hooks/queries/` - Query execution hooks
-
-### Database Schema
-
-- **PostgreSQL** with Prisma ORM
+- **PostgreSQL** with Prisma ORM - schema at `apps/backend/prisma/schema.prisma`
+- Manual SQL migrations in `apps/backend/prisma/migration/`
 - All tables support soft deletes (`deletedAt`)
 - Multi-tenant via `customerId` foreign key
-- Schema: `app/prisma/schema.prisma`
-- Migrations: Manual SQL in `app/prisma/migration/`
-
-Main entities:
-- `Customer` - Tenant root
-- `User` - Users belong to customers (nullable for SUPERADMIN)
-- `Device` - IoT devices with metrics, commands, alerts
-- `Alert` - Monitoring alerts
-- `Threshold` - Alert thresholds
-- `Session` - User sessions with expiration
+- Main entities: `Customer`, `User`, `Device`, `Alert`, `Threshold`, `Session`
 
 ### Technology Stack
 
-- **Frontend**: Next.js 14 (App Router), React 18, TypeScript, Tailwind CSS
-- **Backend**: Next.js API Routes + Express server (`app/server.cjs`)
+- **Frontend**: Next.js 14 (App Router), React 18, TypeScript, Tailwind CSS, HeroUI — `apps/frontend/`
+- **Backend**: Express.js API server — `apps/backend/` (all `/api/` routes)
 - **Database**: PostgreSQL 15 with Prisma ORM
-- **Caching**: Redis 7 for sessions and caching
+- **Caching**: Redis 7 (sessions, caching)
 - **Monitoring**: InfluxDB 2.x (time-series), Grafana, Loki, Prometheus
-- **Real-time**: Socket.IO for device communication
+- **Real-time**: Socket.IO
+- **Testing**: Vitest with jsdom, 15s timeout
 - **Container**: Docker with multi-stage builds
 - **Reverse Proxy**: Traefik v3 with auto-SSL
-- **VPN**: Tailscale for device mesh networking
-- **Testing**: Vitest with jsdom for unit/integration tests
+- **DI**: tsyringe for dependency injection
+
+## Design Documentation
+
+When planning or implementing DDD work, always consult these docs first — they are the authoritative design contract:
+
+| Path | When to read |
+|---|---|
+| `docs/adr/` | Before any architectural decision — ADR-001 (monorepo), ADR-002 (frontend/backend), ADR-003 (packages/core migration) |
+| `docs/domain/` | Before implementing any bounded context — contains `aggregates.md`, `commands.md`, `events.md`, `open-questions.md` per BC |
+| `docs/bounded-contexts.md` | When a task touches cross-BC dependencies |
+| `docs/cqrs-implementation.md` | When adding commands or queries |
+
+If `docs/domain/bc-{name}/` does not exist for the BC you're working on, use `/bc-deepen` to create it before writing code.
 
 ## Development Guidelines
 
-### When Creating New Features
+### Creating New Features
 
-1. **Domain First**: Start with domain entities, value objects, and services
-2. **Application Layer**: Create command/query with handler
-3. **Infrastructure**: Implement repository or external service
-4. **API Route**: Wire up in Next.js API route (e.g., `app/src/app/api/devices/route.ts`)
-5. **React Hook**: Create specialized hook in `hooks/commands/` or `hooks/queries/`
-6. **UI Component**: Build UI using HeroUI components and custom hook
+1. **Domain First**: Entities, value objects, services in `domain/`
+2. **Application Layer**: Command/query with handler in `application/`
+3. **Infrastructure**: Repository or service implementation in `infrastructure/`
+4. **Express Route**: Wire up in `apps/backend/src/routes/` (Express Router)
+5. **React Hook**: Create in `apps/frontend/src/hooks/commands/` or `apps/frontend/src/hooks/queries/`
+6. **UI Component**: Build with HeroUI components
+7. **Acceptance Tests**: Run `/acceptance-pipeline <bc-name>` — **mandatory** after every new bounded context is materialized. A BC is not done until its acceptance tests pass and all domain-significant mutations are killed.
 
-### Tenant Isolation
-
-Always pass `TenantContext` through the application layers:
-- Commands/queries should include `customerId` or accept `TenantContext`
-- Repositories must filter by `customerId` unless SUPERADMIN bypass
-- Use `tenantPrisma` client which auto-applies tenant filtering
-
-### Error Handling
-
-- Domain exceptions extend `DomainException` (e.g., `DeviceNotFoundException`)
-- Throw descriptive errors with `throw new Error()` messages
-- Command/query handlers catch domain exceptions and transform to API responses
-- No placeholder errors or `console.error` - fix issues immediately
-
-### Testing Best Practices
-
-- Unit tests for domain logic (entities, value objects, services)
-- Integration tests for command/query handlers
-- Mock dependencies or seed database before tests
-- Each test must have its own seeded data
-- Verify data exists before assertions
-- See `.cursor/rules/iot-pilot.mdc` for testing rules
-
-### File Naming Conventions
+### File Naming
 
 - Commands: `{action}.command.ts` + `{action}.handler.ts`
 - Queries: `{query}.query.ts` + `{query}.handler.ts`
@@ -207,89 +174,32 @@ Always pass `TenantContext` through the application layers:
 - Entities: `{name}.entity.ts`
 - Repositories: `{impl}-{entity}.repository.ts` (e.g., `prisma-device.repository.ts`)
 - Mappers: `{entity}.mapper.ts`
+- Tests: co-located in `tests/` subdirectory or `*.test.ts` next to source
+
+### Error Handling
+
+- Domain exceptions extend `DomainException`
+- Use `throw new Error()` with descriptive messages - no placeholder errors
+- Fix issues immediately, don't mask them with console.error
+
+### Testing
+
+- Unit tests for domain logic, integration tests for handlers
+- Mock dependencies or seed database before tests
+- Each test must have its own seeded data
+- Verify data exists before assertions
+- Tests run inside Docker container via Makefile
 
 ### Environment Configuration
 
-- Development: `.env.local` (Docker Compose local)
-- Production: `.env` (Docker Compose production)
+- Development: `.env.local` (used by `docker-compose.local.yml`)
+- Production: `.env` (used by `docker-compose.yml`)
 - Copy from `.env.example` and customize
 - Key variables: `DATABASE_URL`, `REDIS_URL`, `INFLUXDB_URL`, `JWT_SECRET`
 
-## Common Patterns
+### Git Hooks (Husky)
 
-### Creating a New Command
-
-```typescript
-// 1. Command DTO
-export class RegisterDeviceCommand extends TenantAwareCommand {
-  constructor(
-    public readonly deviceId: string,
-    public readonly name: string,
-    public readonly ipAddress: string,
-    tenantContext: TenantContext
-  ) {
-    super(tenantContext);
-  }
-}
-
-// 2. Handler
-export class RegisterDeviceHandler implements CommandHandler<RegisterDeviceCommand> {
-  async handle(command: RegisterDeviceCommand): Promise<void> {
-    // Domain logic here
-  }
-}
-
-// 3. Register in CommandBus
-commandBus.register(RegisterDeviceCommand, new RegisterDeviceHandler(...));
-```
-
-### Creating a Repository
-
-```typescript
-// 1. Define interface in domain
-export interface DeviceRepository {
-  findById(id: DeviceId, tenantContext?: TenantContext): Promise<Device | null>;
-  save(device: Device, tenantContext?: TenantContext): Promise<void>;
-}
-
-// 2. Implement in infrastructure
-export class PrismaDeviceRepository implements DeviceRepository {
-  async findById(id: DeviceId, tenantContext?: TenantContext): Promise<Device | null> {
-    const device = await tenantPrisma.client.device.findUnique({
-      where: {
-        id: id.getValue(),
-        ...(tenantContext && {
-          customerId: tenantContext.getCustomerId()?.getValue()
-        })
-      }
-    });
-    return device ? this.mapper.toDomain(device) : null;
-  }
-}
-```
-
-## Important Notes
-
-- **Docker-First**: All development happens in containers. Use `docker exec iotpilot-server-app` for commands.
-- **Migrations**: Apply via `make apply-migration` (manual SQL) or `make migrate` (Prisma)
-- **Makefile**: Reference `Makefile` for all available commands and contexts
-- **Hot Reload**: Next.js dev mode has hot reload; changes reflect automatically
-- **Debugging**: Check logs with `make local-logs-app` or `docker logs iotpilot-server-app`
-
-## Access Points (Local Development)
-
-- Main Dashboard: `https://iotpilotserver.test:9443`
-- Grafana: `http://iotpilotserver.test:3002`
-- InfluxDB: `http://iotpilotserver.test:8087`
-- Traefik Dashboard: `http://iotpilotserver.test:8081`
-
-Default credentials (local):
-- Email: `manager@iotpilot.app`
-- Password: (bcrypt hashed in seed data)
-
-## Further Reading
-
-- DDD Concepts: Focus on entities, value objects, aggregates, domain services
-- CQRS: Commands mutate, queries read, separate buses
-- Multi-tenancy: Every operation is scoped to a customer
-- Testing: Use Vitest; see `app/src/__tests__/` for examples
+- **pre-commit**: Runs lint + TypeScript type-check in Docker container
+- **pre-push**: Runs unit tests
+- **lint-staged**: ESLint fix + Prettier on `*.{ts,tsx}` files
+- Hooks require the Docker container to be running

@@ -1,0 +1,719 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x", "darwin-arm64"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =====================================================
+// ENUMS
+// =====================================================
+
+enum UserRole {
+  SUPERADMIN
+  ADMIN
+  USER
+  READONLY
+}
+
+enum UserStatus {
+  ACTIVE
+  PENDING
+  SUSPENDED
+  INACTIVE
+}
+
+enum CustomerStatus {
+  ACTIVE
+  PENDING
+  SUSPENDED
+  INACTIVE
+}
+
+enum AuditEventType {
+  USER_CREATED
+  USER_UPDATED
+  USER_DELETED
+  USER_ROLE_CHANGED
+  USER_STATUS_CHANGED
+  DEVICE_CREATED
+  DEVICE_UPDATED
+  DEVICE_DELETED
+  DEVICE_CONNECTED
+  DEVICE_DISCONNECTED
+  DEVICE_COMMAND_EXECUTED
+  DEVICE_COMMAND_FAILED
+  DEVICE_FILE_UPLOADED
+  DEVICE_FILE_DOWNLOADED
+  CUSTOMER_CREATED
+  CUSTOMER_UPDATED
+  CUSTOMER_DELETED
+  CUSTOMER_SUBSCRIPTION_CHANGED
+  THRESHOLD_CREATED
+  THRESHOLD_UPDATED
+  THRESHOLD_DELETED
+  ALERT_ACKNOWLEDGED
+  ALERT_RESOLVED
+  BACKUP_CREATED
+  BACKUP_RESTORED
+  CONFIGURATION_BACKUP
+  LOGS_EXPORTED
+  SECURITY_POLICY_CHANGED
+  ACCESS_CONTROL_CHANGED
+  AUDIT_LOG_ACCESSED
+}
+
+enum SecurityEventType {
+  LOGIN_SUCCESS
+  LOGIN_FAILURE
+  LOGOUT
+  SESSION_EXPIRED
+  SESSION_INVALIDATED
+  PERMISSION_DENIED
+  ROLE_CHANGED
+  SUPERADMIN_ACTION
+  PASSWORD_CHANGE_SUCCESS
+  PASSWORD_CHANGE_FAILURE
+  PASSWORD_RESET_REQUEST
+  PASSWORD_RESET_SUCCESS
+  PASSWORD_RESET_FAILURE
+  TENANT_BOUNDARY_VIOLATION
+  TENANT_CONTEXT_MISSING
+  CROSS_TENANT_ACCESS
+  DEVICE_ACCESS_DENIED
+  DEVICE_COMMAND_BLOCKED
+  DEVICE_SSH_FAILED
+  RATE_LIMIT_EXCEEDED
+  API_KEY_INVALID
+  API_KEY_EXPIRED
+  CONFIGURATION_CHANGED
+  BACKUP_STARTED
+  BACKUP_FAILED
+  SYSTEM_ACCESS
+}
+
+enum DeviceType {
+  PI_ZERO
+  PI_3
+  PI_4
+  PI_5
+  ORANGE_PI
+  ESP8266_SENSOR
+  ESP32C3_SENSOR
+  HELTEC_LORA32V3_SENSOR
+  GENERIC
+  UNKNOWN
+}
+
+enum DeviceStatus {
+  UNCLAIMED
+  PENDING_SETUP
+  ONLINE
+  OFFLINE
+  MAINTENANCE
+  ERROR
+}
+
+enum AppStatus {
+  RUNNING
+  STOPPED
+  ERROR
+  NOT_INSTALLED
+  UNKNOWN
+}
+
+enum LogLevel {
+  DEBUG
+  INFO
+  WARN
+  ERROR
+  FATAL
+}
+
+enum CommandStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  TIMEOUT
+}
+
+enum AlertType {
+  DEVICE_OFFLINE
+  DEVICE_REGISTERED
+  HIGH_CPU
+  HIGH_MEMORY
+  HIGH_TEMPERATURE
+  LOW_DISK_SPACE
+  APPLICATION_ERROR
+  SYSTEM_ERROR
+  SECURITY_ALERT
+  LOW_BATTERY
+  CUSTOM
+}
+
+enum AlertSeverity {
+  INFO
+  WARNING
+  ERROR
+  CRITICAL
+}
+
+enum PreferenceCategory {
+  PROFILE
+  NOTIFICATIONS
+  SECURITY
+  SYSTEM
+  APPEARANCE
+  ACCESSIBILITY
+  DEVICE_SETTINGS
+}
+
+enum NotificationDeliveryStatus {
+  PENDING
+  SENDING
+  DELIVERED
+  FAILED
+  DEAD
+  CANCELLED
+}
+
+enum NotificationChannelType {
+  EMAIL
+  SMS
+  WEBHOOK
+  SLACK
+  TEAMS
+  PUSH
+}
+
+enum NotificationTypeEnum {
+  ALERT_TRIGGERED
+  ALERT_RESOLVED
+  DEVICE_OFFLINE
+  DEVICE_ONLINE
+  SYSTEM_MAINTENANCE
+  USER_INVITATION
+  CUSTOMER_CREATED
+}
+
+enum PushPlatform {
+  IOS
+  ANDROID
+}
+
+// =====================================================
+// CORE MODELS
+// =====================================================
+
+model Customer {
+  id               String         @id @default(cuid())
+  name             String
+  slug             String
+  domain           String?
+  status           CustomerStatus @default(ACTIVE)
+  subscriptionTier String         @default("FREE")
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  deletedAt        DateTime? // Soft delete support
+
+  // Relations
+  users                   User[]
+  devices                 Device[]
+  alerts                  Alert[]
+  thresholds              Threshold[]
+  apiKeys                 ApiKey[]
+  sessions                Session[]
+  auditLogs               AuditLog[]
+  securityLogs            SecurityLog[]
+  notificationRecords     NotificationRecord[]
+  notificationPreferences NotificationPreference[]
+  userPushTokens          UserPushToken[]
+
+  @@unique([slug])
+  @@unique([domain])
+  @@map("customers")
+}
+
+model User {
+  id           String     @id @default(cuid())
+  publicId     String     @unique @default(cuid()) @map("public_id")
+  email        String
+  username     String
+  password     String
+  firstName    String?
+  lastName     String?
+  phoneNumber  String?
+  role         UserRole   @default(USER)
+  status       UserStatus @default(ACTIVE)
+  profileImage     String?
+  twoFactorEnabled Boolean    @default(false)
+  createdAt        DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  lastLoginAt  DateTime?
+  deletedAt    DateTime? // Soft delete support
+
+  // Customer relationship - nullable for SUPERADMIN
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id])
+
+  // Relations
+  sessions                Session[]
+  devices                 Device[]
+  alerts                  Alert[]
+  apiKeys                 ApiKey[]
+  preferences             UserPreference[]
+  auditLogs               AuditLog[]
+  securityLogs            SecurityLog[]
+  verificationCodes       VerificationCode[]
+  notificationRecords     NotificationRecord[]
+  notificationPreferences NotificationPreference[]
+  userPushTokens          UserPushToken[]
+
+  @@unique([email])
+  @@unique([username])
+  @@index([customerId])
+  @@map("users")
+}
+
+model Session {
+  id         String    @id @default(cuid())
+  userId     String
+  customerId String? // Inherited from user for easier validation
+  token      String    @unique
+  expiresAt  DateTime
+  createdAt  DateTime  @default(now())
+  deletedAt  DateTime? // Soft delete support
+
+  // Relations
+  user     User      @relation(fields: [userId], references: [id])
+  customer Customer? @relation(fields: [customerId], references: [id])
+
+  @@index([customerId])
+  @@map("sessions")
+}
+
+model ApiKey {
+  id         String    @id @default(cuid())
+  userId     String
+  customerId String? // Inherited from user for easier validation
+  name       String
+  key        String
+  lastUsed   DateTime?
+  expiresAt  DateTime?
+  createdAt  DateTime  @default(now())
+  deletedAt  DateTime? // Soft delete support
+
+  // Relations
+  user     User      @relation(fields: [userId], references: [id])
+  customer Customer? @relation(fields: [customerId], references: [id])
+
+  @@unique([key])
+  @@index([customerId])
+  @@map("api_keys")
+}
+
+// =====================================================
+// DEVICE MODELS
+// =====================================================
+
+model Device {
+  id           String     @id @default(cuid())
+  publicId     String     @unique @default(cuid()) @map("public_id")
+  deviceId     String // hostname-mac format or custom ID
+  name         String? // Human-readable device name
+  hostname     String?
+  deviceType   DeviceType @default(UNKNOWN)
+  deviceModel  String?
+  architecture String?
+  location     String?
+  description  String?
+  deletedAt    DateTime? // Soft delete support
+
+  // Network information
+  ipAddress   String?
+  tailscaleIp String?
+  macAddress  String?
+
+  // Device Capabilities
+  capabilities Json @default("{}")
+  // Example structure:
+  // {
+  //   "protocols": ["ssh", "mqtt", "http"],
+  //   "commands": ["restart", "reboot", "update", "status"],
+  //   "features": ["monitoring", "logging", "remote_access"],
+  //   "restrictions": ["no_sudo", "read_only"],
+  //   "ssh": {
+  //     "supported": true,
+  //     "port": 22,
+  //     "auth_methods": ["password", "key"]
+  //   },
+  //   "mqtt": {
+  //     "supported": true,
+  //     "broker_required": true,
+  //     "topics": ["commands", "responses"]
+  //   }
+  // }
+
+  // Status
+  status   DeviceStatus @default(OFFLINE)
+  lastSeen DateTime?
+  lastBoot DateTime?
+  uptime   String?
+
+  // System information
+  cpuUsage    Float?
+  cpuTemp     Float?
+  memoryUsage Float?
+  memoryTotal Int?
+  diskUsage   Float?
+  diskTotal   String?
+  loadAverage String?
+
+  // Application status
+  appStatus    AppStatus @default(UNKNOWN)
+  agentVersion String?
+
+  // Ownership
+  userId String?
+
+  // Customer relationship - nullable (NULL for UNCLAIMED devices)
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id])
+
+  // Provisioning metadata (claiming token, API key ref, etc.)
+  metadata Json? @default("{}")
+
+  // Timestamps
+  registeredAt DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  user       User?           @relation(fields: [userId], references: [id])
+  metrics    DeviceMetric[]
+  logs       DeviceLog[]
+  alerts     Alert[]
+  commands   DeviceCommand[]
+  thresholds Threshold[]
+
+  @@unique([deviceId])
+  @@index([customerId])
+  @@index([status, customerId])
+  @@map("devices")
+}
+
+model DeviceMetric {
+  id        String    @id @default(cuid())
+  deviceId  String
+  metric    String // cpu_usage, memory_usage, temperature, etc.
+  value     Float
+  unit      String?
+  timestamp DateTime  @default(now())
+  deletedAt DateTime? // Soft delete support
+
+  // Relations
+  device Device @relation(fields: [deviceId], references: [id])
+
+  @@index([deviceId, metric, timestamp])
+  @@map("device_metrics")
+}
+
+model DeviceLog {
+  id        String    @id @default(cuid())
+  deviceId  String
+  level     LogLevel  @default(INFO)
+  message   String
+  source    String?
+  timestamp DateTime  @default(now())
+  deletedAt DateTime? // Soft delete support
+
+  // Relations
+  device Device @relation(fields: [deviceId], references: [id])
+
+  @@index([deviceId, level, timestamp])
+  @@map("device_logs")
+}
+
+model DeviceCommand {
+  id         String        @id @default(cuid())
+  publicId   String        @unique @default(cuid()) @map("public_id")
+  deviceId   String
+  command    String
+  arguments  String?
+  status     CommandStatus @default(PENDING)
+  output     String?
+  error      String?
+  exitCode   Int?
+  executedAt DateTime?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  deletedAt  DateTime? // Soft delete support
+
+  // Relations
+  device Device @relation(fields: [deviceId], references: [id])
+
+  @@map("device_commands")
+}
+
+// =====================================================
+// ALERTING MODELS
+// =====================================================
+
+model Threshold {
+  id              String    @id @default(cuid())
+  deviceId        String?
+  customerId      String // Required for multi-tenant
+  name            String
+  description     String?
+  metricName      String
+  operator        String // >, <, >=, <=, ==, !=
+  value           Float
+  unit            String?
+  severity        String // info, warning, critical, emergency
+  enabled         Boolean   @default(true)
+  type            String // device, global
+  cooldownMinutes Int       @default(5)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  metadata        Json?
+  deletedAt       DateTime? // Soft delete support
+
+  // Relations
+  device   Device?  @relation(fields: [deviceId], references: [id])
+  customer Customer @relation(fields: [customerId], references: [id])
+
+  @@index([deviceId, metricName])
+  @@index([customerId])
+  @@index([customerId, enabled])
+  @@index([metricName, enabled])
+  @@map("thresholds")
+}
+
+model Alert {
+  id         String        @id @default(cuid())
+  publicId   String        @unique @default(cuid()) @map("public_id")
+  deviceId   String?
+  userId     String?
+  customerId String // Required for multi-tenant
+  type       AlertType
+  severity   AlertSeverity @default(INFO)
+  title      String
+  message    String
+  source         String?
+  thresholdId    String?
+  acknowledgedAt DateTime?
+  resolved       Boolean       @default(false)
+  resolvedAt     DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  deletedAt      DateTime? // Soft delete support
+
+  // Relations
+  device   Device?  @relation(fields: [deviceId], references: [id])
+  user     User?    @relation(fields: [userId], references: [id])
+  customer Customer @relation(fields: [customerId], references: [id])
+
+  @@index([deviceId, resolved, createdAt])
+  @@index([customerId])
+  @@index([customerId, resolved])
+  @@map("alerts")
+}
+
+// =====================================================
+// PREFERENCES AND SYSTEM MODELS
+// =====================================================
+
+model UserPreference {
+  id        String             @id @default(cuid())
+  userId    String
+  category  PreferenceCategory
+  key       String
+  value     String
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  deletedAt DateTime? // Soft delete support
+
+  // Relations
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, category, key])
+  @@index([userId, category])
+  @@map("user_preferences")
+}
+
+model SystemConfig {
+  id        String    @id @default(cuid())
+  key       String
+  value     String
+  category  String?
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime? // Soft delete support
+
+  @@unique([key])
+  @@map("system_config")
+}
+
+// =====================================================
+// AUDIT & SECURITY LOGGING MODELS
+// =====================================================
+
+model AuditLog {
+  id           String          @id @default(cuid())
+  eventType    AuditEventType
+  userId       String
+  customerId   String?
+  resource     String
+  action       String
+  oldValues    Json?
+  newValues    Json?
+  ipAddress    String?
+  userAgent    String?
+  success      Boolean         @default(true)
+  errorMessage String?
+  timestamp    DateTime        @default(now())
+  correlationId String?
+
+  // Relations
+  user     User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  customer Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([customerId])
+  @@index([eventType])
+  @@index([resource])
+  @@index([timestamp])
+  @@index([success])
+  @@map("audit_logs")
+}
+
+model SecurityLog {
+  id           String            @id @default(cuid())
+  eventType    SecurityEventType
+  severity     String // LOW, MEDIUM, HIGH, CRITICAL
+  userId       String?
+  customerId   String?
+  ipAddress    String?
+  userAgent    String?
+  resource     String?
+  action       String?
+  details      Json?
+  timestamp    DateTime          @default(now())
+  correlationId String?
+
+  // Relations
+  user     User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  customer Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([customerId])
+  @@index([eventType])
+  @@index([severity])
+  @@index([timestamp])
+  @@index([ipAddress])
+  @@map("security_logs")
+}
+
+// =====================================================
+// VERIFICATION CODES
+// =====================================================
+
+model VerificationCode {
+  id        String    @id @default(cuid())
+  userId    String
+  code      String
+  type      String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type])
+  @@index([code, type])
+  @@map("verification_codes")
+}
+
+// =====================================================
+// NOTIFICATION BOUNDED CONTEXT
+// =====================================================
+
+model NotificationRecord {
+  id             String                     @id @default(cuid())
+  customerId     String
+  userId         String?
+  type           NotificationTypeEnum
+  channel        NotificationChannelType
+  recipient      String
+  subject        String
+  body           String                     @db.Text
+  status         NotificationDeliveryStatus @default(PENDING)
+  attemptCount   Int                        @default(0)
+  maxAttempts    Int                        @default(3)
+  sourceEventId  String
+  sourceEntityId String?
+  errorMessage   String?
+  scheduledAt    DateTime?
+  sentAt         DateTime?
+  deliveredAt    DateTime?
+  failedAt       DateTime?
+  createdAt      DateTime                   @default(now())
+  updatedAt      DateTime                   @updatedAt
+  deletedAt      DateTime?
+
+  customer Customer @relation(fields: [customerId], references: [id])
+  user     User?    @relation(fields: [userId], references: [id])
+
+  @@index([customerId, status])
+  @@index([customerId, userId, status])
+  @@index([sourceEventId])
+  @@index([createdAt])
+  @@map("notification_records")
+}
+
+model NotificationPreference {
+  id               String                  @id @default(cuid())
+  customerId       String
+  userId           String
+  channel          NotificationChannelType
+  notificationType NotificationTypeEnum
+  enabled          Boolean                 @default(true)
+  destination      String?
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+  deletedAt        DateTime?
+
+  customer Customer @relation(fields: [customerId], references: [id])
+  user     User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, channel, notificationType])
+  @@index([userId])
+  @@index([customerId])
+  @@map("notification_preferences")
+}
+
+model UserPushToken {
+  id          String       @id @default(cuid())
+  userId      String
+  customerId  String
+  platform    PushPlatform
+  token       String
+  deviceLabel String?
+  lastSeenAt  DateTime     @default(now())
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  deletedAt   DateTime?
+
+  user     User     @relation(fields: [userId], references: [id])
+  customer Customer @relation(fields: [customerId], references: [id])
+
+  @@unique([userId, token])
+  @@index([userId])
+  @@map("user_push_tokens")
+}
+

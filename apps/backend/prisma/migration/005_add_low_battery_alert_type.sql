@@ -1,0 +1,2 @@
+-- Add LOW_BATTERY to AlertType enum
+ALTER TYPE "AlertType" ADD VALUE IF NOT EXISTS 'LOW_BATTERY';

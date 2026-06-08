@@ -4,25 +4,30 @@
 # Global owners (must review all changes)
 * @your-username  # Replace with actual GitHub username
 
-# Domain-specific owners
-app/src/lib/device/ @your-username
-app/src/lib/user/ @your-username
-app/src/lib/monitoring/ @your-username
-app/src/lib/customer/ @your-username
+# DDD bounded contexts (packages/core)
+packages/core/src/device/ @your-username
+packages/core/src/user/ @your-username
+packages/core/src/monitoring/ @your-username
+packages/core/src/customer/ @your-username
+packages/core/src/shared/ @your-username
+
+# Backend API routes
+apps/backend/src/routes/ @your-username
+
+# Database schema and migrations
+apps/frontend/prisma/ @your-username
 
 # Infrastructure and configuration
-app/prisma/ @your-username
 docker/ @your-username
 .github/ @your-username
 Makefile @your-username
 
 # Testing infrastructure
-app/src/__tests__/ @your-username
-app/src/lib/shared/testing/ @your-username
+apps/frontend/src/__tests__/ @your-username
 
-# Frontend components
-app/src/components/ @your-username
-app/src/hooks/ @your-username
+# Frontend components and hooks
+apps/frontend/src/components/ @your-username
+apps/frontend/src/hooks/ @your-username
 
 # Documentation
 *.md @your-username

@@ -1,0 +1,42 @@
+import {Query} from '@iotpilot/core/shared/application/interfaces/query.interface';
+import {UserId} from '@iotpilot/core/user/domain/value-objects/user-id.vo';
+import {CustomerId} from '@iotpilot/core/shared/domain/value-objects/customer-id.vo';
+
+export class GetCurrentUserQuery implements Query {
+    /** Static type identifier that survives minification */
+    static readonly type = 'GetCurrentUserQuery';
+
+    private constructor(
+        public readonly userId: UserId,
+        public readonly customerId: CustomerId | null
+    ) {}
+
+    static create(
+        userId: string,
+        customerId?: string
+    ): GetCurrentUserQuery {
+        return new GetCurrentUserQuery(
+            UserId.fromString(userId),
+            customerId ? CustomerId.create(customerId) : null
+        );
+    }
+
+    static createForTenant(
+        userId: string,
+        customerId: string
+    ): GetCurrentUserQuery {
+        return new GetCurrentUserQuery(
+            UserId.fromString(userId),
+            CustomerId.create(customerId)
+        );
+    }
+
+    static createSuperAdmin(
+        userId: string
+    ): GetCurrentUserQuery {
+        return new GetCurrentUserQuery(
+            UserId.fromString(userId),
+            null
+        );
+    }
+}

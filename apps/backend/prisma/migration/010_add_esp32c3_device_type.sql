@@ -1,0 +1,2 @@
+-- Migration 010: Add ESP32C3_SENSOR to DeviceType enum
+ALTER TYPE "DeviceType" ADD VALUE IF NOT EXISTS 'ESP32C3_SENSOR';

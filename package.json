@@ -1,0 +1,26 @@
+{
+  "name": "iotpilot-monorepo",
+  "version": "0.0.0",
+  "private": true,
+  "description": "IoT Pilot monorepo — pnpm workspaces + Turborepo",
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=9"
+  },
+  "packageManager": "pnpm@11.5.1",
+  "scripts": {
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "type-check": "turbo run type-check",
+    "test": "turbo run test",
+    "test:unit": "turbo run test:unit",
+    "test:integration": "turbo run test:integration"
+  },
+  "devDependencies": {
+    "@prisma/client": "^6.19.0",
+    "prisma": "^6.19.0",
+    "tsx": "^4.21.0",
+    "turbo": "^2.5.0",
+    "typescript": "5.8.3"
+  }
+}

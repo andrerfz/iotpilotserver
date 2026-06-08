@@ -244,7 +244,7 @@ update_images() {
     docker compose pull
 
     # Build application image if Dockerfile exists
-    if [ -f "docker/Dockerfile" ]; then
+    if [ -f "infra/docker/Dockerfile" ]; then
         info "Building application image..."
         docker compose build --no-cache iotpilot-app
     fi
