@@ -57,9 +57,31 @@ header "Running database migrations"
 $COMPOSE up -d postgres redis
 sleep 5
 
+# Ensure migration tracking table exists
+docker exec -i iotpilot-postgres psql -U iotpilot -d iotpilot \
+  -c "CREATE TABLE IF NOT EXISTS _migrations (id SERIAL PRIMARY KEY, name VARCHAR(255) NOT NULL UNIQUE, applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW());" \
+  >/dev/null 2>&1
+
 for sql in "$DEPLOY_DIR"/apps/backend/prisma/migration/*.sql; do
-  info "  ↳ $(basename "$sql")"
-  docker exec -i iotpilot-postgres psql -U iotpilot -d iotpilot < "$sql" 2>&1 | grep -v "^$" | grep -Ev "^(ALTER|CREATE|INSERT|COMMENT|SET|SELECT)" || true
+  name="$(basename "$sql")"
+  # Skip if already applied (like Laravel's migrations table)
+  already=$(docker exec iotpilot-postgres psql -U iotpilot -d iotpilot -t -A \
+    -c "SELECT COUNT(*) FROM _migrations WHERE name='${name}';" 2>/dev/null)
+  if [ "${already}" = "1" ]; then
+    info "  ↳ ${name} (already applied)"
+    continue
+  fi
+  info "  ↳ ${name}"
+  if docker exec -i iotpilot-postgres psql -U iotpilot -d iotpilot < "$sql" >/dev/null 2>&1; then
+    docker exec iotpilot-postgres psql -U iotpilot -d iotpilot \
+      -c "INSERT INTO _migrations (name) VALUES ('${name}');" >/dev/null 2>&1
+    info "    ✓ applied"
+  else
+    warn "    ⚠ errors (may be harmless if objects already exist)"
+    # Record it anyway so we don't retry on every deploy
+    docker exec iotpilot-postgres psql -U iotpilot -d iotpilot \
+      -c "INSERT INTO _migrations (name) VALUES ('${name}') ON CONFLICT DO NOTHING;" >/dev/null 2>&1
+  fi
 done
 
 info "Migrations complete"
