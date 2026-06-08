@@ -26,6 +26,17 @@ WORKDIR /app
 
 ENV PATH="/app/node_modules/.bin:$PATH"
 
+# NEXT_PUBLIC_ vars must be declared as ARGs and set as ENVs
+# so Next.js bakes them into the client bundle at build time
+ARG NEXT_PUBLIC_DOMAIN_TUNEL
+ARG NEXT_PUBLIC_GRAFANA_CLOUDFLARE_URL
+ARG NEXT_PUBLIC_INFLUXDB_CLOUDFLARE_URL
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_DOMAIN_TUNEL=$NEXT_PUBLIC_DOMAIN_TUNEL
+ENV NEXT_PUBLIC_GRAFANA_CLOUDFLARE_URL=$NEXT_PUBLIC_GRAFANA_CLOUDFLARE_URL
+ENV NEXT_PUBLIC_INFLUXDB_CLOUDFLARE_URL=$NEXT_PUBLIC_INFLUXDB_CLOUDFLARE_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
 # Copy installed node_modules from deps stage
 COPY --from=deps /app/node_modules                    ./node_modules
 COPY --from=deps /app/apps/frontend/node_modules      ./apps/frontend/node_modules

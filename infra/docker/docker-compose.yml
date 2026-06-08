@@ -45,6 +45,10 @@ services:
       dockerfile: ./infra/docker/Dockerfile
       args:
         - NODE_ENV=production
+        - NEXT_PUBLIC_DOMAIN_TUNEL=${NEXT_PUBLIC_DOMAIN_TUNEL}
+        - NEXT_PUBLIC_GRAFANA_CLOUDFLARE_URL=${NEXT_PUBLIC_GRAFANA_CLOUDFLARE_URL}
+        - NEXT_PUBLIC_INFLUXDB_CLOUDFLARE_URL=${NEXT_PUBLIC_INFLUXDB_CLOUDFLARE_URL}
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
     container_name: iotpilot-app
     environment:
       - NODE_ENV=production
