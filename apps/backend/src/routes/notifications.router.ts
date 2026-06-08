@@ -8,8 +8,6 @@ import { CancelNotificationCommand } from '@iotpilot/core/notification/applicati
 import { RetryNotificationCommand } from '@iotpilot/core/notification/application/commands/retry-notification/retry-notification.command';
 import { TenantContextImpl } from '@iotpilot/core/shared/domain/tenant-context';
 import { CustomerId } from '@iotpilot/core/shared/domain/value-objects/customer-id.vo';
-import { NotificationNotFoundException } from '@iotpilot/core/notification/domain/exceptions/notification-not-found.exception';
-import { NotificationAlreadyTerminalException } from '@iotpilot/core/notification/domain/exceptions/notification-already-terminal.exception';
 
 const isoTimestamp = () => new Date().toISOString();
 
@@ -50,9 +48,8 @@ notificationsRouter.get('/', requireAuth(), async (req: AuthenticatedRequest, re
 
     send.ok(res, result);
     return;
-  } catch (error) {
-    send.internalError(res, 'Failed to fetch notifications');
-    return;
+  } catch (err) {
+    send.fromError(res, err);
   }
 });
 
@@ -80,13 +77,8 @@ notificationsRouter.get('/:id', requireAuth(), async (req: AuthenticatedRequest,
 
     send.ok(res, record);
     return;
-  } catch (error) {
-    if (error instanceof NotificationNotFoundException) {
-      send.notFound(res, (error as NotificationNotFoundException).message);
-      return;
-    }
-    send.internalError(res, 'Failed to fetch notification');
-    return;
+  } catch (err) {
+    send.fromError(res, err);
   }
 });
 
@@ -120,17 +112,8 @@ notificationsRouter.delete('/:id', requireAuth(), async (req: AuthenticatedReque
 
     send.ok(res, { cancelled: true });
     return;
-  } catch (error) {
-    if (error instanceof NotificationNotFoundException) {
-      send.notFound(res, (error as NotificationNotFoundException).message);
-      return;
-    }
-    if (error instanceof NotificationAlreadyTerminalException) {
-      send.badRequest(res, (error as NotificationAlreadyTerminalException).message);
-      return;
-    }
-    send.internalError(res, 'Failed to cancel notification');
-    return;
+  } catch (err) {
+    send.fromError(res, err);
   }
 });
 
@@ -164,16 +147,7 @@ notificationsRouter.post('/:id/retry', requireAuth(), async (req: AuthenticatedR
 
     send.ok(res, { retried: true });
     return;
-  } catch (error) {
-    if (error instanceof NotificationNotFoundException) {
-      send.notFound(res, (error as NotificationNotFoundException).message);
-      return;
-    }
-    if (error instanceof NotificationAlreadyTerminalException) {
-      send.badRequest(res, (error as NotificationAlreadyTerminalException).message);
-      return;
-    }
-    send.internalError(res, 'Failed to retry notification');
-    return;
+  } catch (err) {
+    send.fromError(res, err);
   }
 });

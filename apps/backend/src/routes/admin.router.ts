@@ -9,6 +9,10 @@ import { resolveUserPublicId } from '@iotpilot/core/user/infrastructure/services
 import { DeviceStatus, Prisma } from '@prisma/client';
 import * as crypto from 'crypto';
 import os from 'os';
+import { ServiceContainer } from '@iotpilot/core/shared/infrastructure/container/service-container';
+import { TenantContextImpl } from '@iotpilot/core/shared/domain/tenant-context';
+import { CustomerId } from '@iotpilot/core/shared/domain/value-objects/customer-id.vo';
+import { UpdateUserCommand } from '@iotpilot/core/user/application/commands/update-user/update-user.command';
 
 export const adminRouter = Router();
 
@@ -96,9 +100,8 @@ adminRouter.get('/devices', requireAuth('SUPERADMIN'), async (req: Authenticated
 
     send.ok(res, { devices, total });
     return;
-  } catch (error) {
-    send.internalError(res, 'Failed to list devices');
-    return;
+  } catch (err) {
+    send.fromError(res, err);
   }
 });
 
@@ -165,9 +168,8 @@ adminRouter.post('/devices', requireAuth('SUPERADMIN'), async (req: Authenticate
       count: inserted.count,
     });
     return;
-  } catch (error) {
-    send.internalError(res, 'Failed to pre-register devices');
-    return;
+  } catch (err) {
+    send.fromError(res, err);
   }
 });
 
@@ -247,10 +249,9 @@ adminRouter.get('/users', requireAuth('ADMIN'), async (req: AuthenticatedRequest
     const pagination = Pagination.create(page, limit, totalCount);
     send.ok(res, mappedUsers, { pagination });
     return;
-  } catch (error) {
-    console.error('List users error:', error);
-    send.internalError(res, 'Internal server error');
-    return;
+  } catch (err) {
+    console.error('List users error:', err);
+    send.fromError(res, err);
   }
 });
 
@@ -338,41 +339,25 @@ adminRouter.post('/users/:id/approve', requireAuth('ADMIN'), async (req: Authent
       return;
     }
 
-    // Update user status
-    // tenantPrisma wraps the Prisma client with a custom extension whose generated
-    // types don't surface the `status` field, even though it exists in schema.prisma.
-    const updatedUser = await tenantPrisma.client.user.update({
-      where: { id },
-      data: {
-        status: action === 'approve' ? UserStatus.ACTIVE : UserStatus.INACTIVE,
-      },
-    }) as unknown as {
-      id: string;
-      email: string;
-      username: string;
-      role: string;
-      status: UserStatus;
-      customerId?: string;
-    };
+    const tenantContext = currentUser.customerId
+      ? TenantContextImpl.create(CustomerId.create(currentUser.customerId))
+      : TenantContextImpl.createSuperAdmin();
 
-    // Email notification: requires email service integration (SendGrid/SES/SMTP).
-    // When implemented, send approval/rejection email to updatedUser.email.
-    console.log(`[UserApproval] ${updatedUser.email} ${action === 'approve' ? 'approved' : 'rejected'}`);
+    const commandBus = ServiceContainer.getInstance().getCommandBus();
+    await commandBus.execute(new UpdateUserCommand(
+      tenantContext,
+      id,
+      undefined, undefined, undefined, undefined, undefined,
+      action === 'approve',
+    ));
 
     send.ok(res, {
       message: `User ${action === 'approve' ? 'approved' : 'rejected'} successfully`,
-      user: updatedUser,
     });
     return;
-  } catch (error) {
-    if (error && typeof error === 'object' && 'errors' in error && Array.isArray((error as any).errors)) {
-      send.badRequest(res, 'Invalid input', (error as any).errors);
-      return;
-    }
-
-    console.error('User approval error:', error);
-    send.internalError(res, 'Internal server error');
-    return;
+  } catch (err) {
+    console.error('User approval error:', err);
+    send.fromError(res, err);
   }
 });
 
@@ -454,10 +439,9 @@ adminRouter.get('/logs', requireAuth('ADMIN'), async (req: AuthenticatedRequest,
       },
     });
     return;
-  } catch (error) {
-    console.error('Logs error:', error);
-    send.internalError(res, 'Internal server error');
-    return;
+  } catch (err) {
+    console.error('Logs error:', err);
+    send.fromError(res, err);
   }
 });
 
@@ -516,10 +500,9 @@ adminRouter.get('/system', requireAuth('ADMIN'), async (req: AuthenticatedReques
       application: appMetrics,
     });
     return;
-  } catch (error) {
-    console.error('System health error:', error);
-    send.internalError(res, 'Internal server error');
-    return;
+  } catch (err) {
+    console.error('System health error:', err);
+    send.fromError(res, err);
   }
 });
 
@@ -616,7 +599,7 @@ adminRouter.get('/stats', requireAuth('ADMIN'), async (req: AuthenticatedRequest
     ]);
 
     send.ok(res, { userCount, deviceCount, alertCount, activeDevices });
-  } catch (error) {
-    send.internalError(res, 'Failed to fetch admin stats');
+  } catch (err) {
+    send.fromError(res, err);
   }
 });

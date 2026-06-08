@@ -22,7 +22,7 @@ export class OnAlertTriggeredHandler implements EventHandler<AlertTriggeredEvent
     const body = `Alert ID: ${event.alertId.value}\nDevice: ${event.deviceId.value}\nThreshold: ${event.thresholdId.value}\nSeverity: ${severity}`;
 
     const routes = await this.routingService.resolveRoutes(
-      { value: 'ALERT_TRIGGERED', fromString: () => ({ value: 'ALERT_TRIGGERED' }) } as any,
+      { value: 'ALERT_TRIGGERED' } as any,
       CustomerId.create(customerId),
       'system',
       null,

@@ -24,6 +24,20 @@ services:
       - iotpilot-network
     command: tailscaled
 
+  # Cloudflare Tunnel — exposes services via Cloudflare Zero Trust
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: iotpilot-cloudflared
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+    restart: unless-stopped
+    networks:
+      - iotpilot-network
+    depends_on:
+      iotpilot-app:
+        condition: service_healthy
+
   # Main IotPilot Application
   iotpilot-app:
     build:

@@ -8,12 +8,15 @@ import {CommandHandler} from '@iotpilot/core/shared/application/interfaces/comma
 import {InvalidEmailException, UserAlreadyExistsException} from '../../../domain/exceptions/user.exception';
 import {StructuredLogger} from '@iotpilot/core/shared/infrastructure/logging/structured-logger';
 import {PasswordHasher} from '../../../domain/services/password-hasher';
+import {EventBus} from '@iotpilot/core/shared/application/bus/event.bus';
+import {UserRegisteredEvent} from '../../../domain/events/user-registered.event';
 
 export class RegisterUserHandler implements CommandHandler<RegisterUserCommand, UserEntity> {
   constructor(
     private readonly userRepository: UserRepository,
     private readonly passwordHasher: PasswordHasher,
-    private readonly logger: StructuredLogger
+    private readonly logger: StructuredLogger,
+    private readonly eventBus: EventBus
   ) {}
 
   async handle(command: RegisterUserCommand): Promise<UserEntity> {
@@ -77,6 +80,13 @@ export class RegisterUserHandler implements CommandHandler<RegisterUserCommand, 
 
     // Save user
     await this.userRepository.save(user, tenantContext);
+
+    await this.eventBus.publish(new UserRegisteredEvent(
+      user.getId(),
+      user.getEmail(),
+      user.getRole(),
+      user.getCustomerId()
+    ));
 
     this.logger.info('User registered successfully', {
       userId: user.getId().getValue(),

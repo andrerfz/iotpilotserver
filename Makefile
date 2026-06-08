@@ -405,6 +405,14 @@ local-restart-app:
 	@make wait-for-app
 	@make check-and-setup-db
 
+local-restart-backend:
+	@docker compose -f $(LOCAL_COMPOSE_FILE) restart iotpilot-backend
+
+local-restart-services:
+	@docker compose -f $(LOCAL_COMPOSE_FILE) restart iotpilot-app iotpilot-backend
+	@make wait-for-app
+	@make check-and-setup-db
+
 local-recreate-app:
 	@echo "⏹️  Recreating local app..."
 	@echo "🧹 Cleaning Next.js build cache (host + container)..."

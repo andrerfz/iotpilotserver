@@ -36,29 +36,5 @@ export class OnMetricsCollectedHandler implements EventHandler<MetricsCollectedE
       }
     );
 
-    // If alerts were triggered, also check threshold breaches with higher priority
-    if (event.hasAlerts) {
-      await this.jobQueue.enqueue(
-        {
-          jobType: 'check-threshold-breach',
-          tenantId: event.tenantId.value,
-          payload: {
-            deviceId: event.deviceId.value,
-            deviceName: event.deviceName.value,
-            cpuUsage: event.getCpuUsage(),
-            memoryUsage: event.getMemoryUsage(),
-            diskUsage: event.getDiskUsage(),
-            temperature: event.getTemperature(),
-          },
-          metadata: {
-            sourceEvent: 'MetricsCollectedEvent',
-            correlationId: event.eventId,
-          },
-        },
-        {
-          priority: 2,
-        }
-      );
-    }
   }
 }

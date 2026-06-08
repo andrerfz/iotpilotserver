@@ -205,7 +205,7 @@ const sshCommandSchema = v.object({
 
 const deviceSettingsSchema = v.object({
     hostname: v.optional(v.string({ min: 1, max: 100 })),
-    deviceType: v.optional(v.enum(['PI_ZERO', 'PI_3', 'PI_4', 'PI_5', 'ORANGE_PI', 'ESP8266_SENSOR', 'ESP32C3_SENSOR', 'GENERIC', 'UNKNOWN'] as const)),
+    deviceType: v.optional(v.enum(['PI_ZERO', 'PI_3', 'PI_4', 'PI_5', 'ORANGE_PI', 'ESP8266_SENSOR', 'ESP32C3_SENSOR', 'HELTEC_LORA32V3_SENSOR', 'GENERIC', 'UNKNOWN'] as const)),
     location: v.optional(v.string({ max: 200 })),
     description: v.optional(v.string({ max: 500 })),
     tags: v.optional(v.array(v.string({ max: 50 }))),
@@ -216,6 +216,8 @@ const deviceSettingsSchema = v.object({
     memoryThreshold: v.optional(v.number({ min: 50, max: 100 })),
     temperatureThreshold: v.optional(v.number({ min: 40, max: 100 })),
     diskThreshold: v.optional(v.number({ min: 70, max: 100 })),
+    sensorTempThreshold: v.optional(v.number({ min: -40, max: 100 })),
+    batteryThreshold: v.optional(v.number({ min: 1, max: 100 })),
     networkMonitoring: v.optional(v.boolean()),
     autoUpdate: v.optional(v.boolean()),
     updateChannel: v.optional(v.enum(['stable', 'beta', 'nightly'] as const)),
@@ -319,9 +321,9 @@ devicesRouter.get('/', requireAuth(), async (req: AuthenticatedRequest, res: Res
         const pagination = Pagination.create(page, limit, deviceListResult.total);
 
         send.ok(res, formattedDevices, { pagination, stats });
-    } catch (error) {
-        console.error('Failed to fetch devices with DDD:', error);
-        send.internalError(res, 'Failed to fetch devices');
+    } catch (err) {
+        console.error('Failed to fetch devices with DDD:', err);
+        send.fromError(res, err);
     }
 });
 
@@ -404,36 +406,9 @@ devicesRouter.post('/', requireAuth(), async (req: AuthenticatedRequest, res: Re
             message: registrationResult.message,
             capabilities: registrationResult.capabilities,
         });
-    } catch (error) {
-        console.error('❌ DEVICES POST: Failed to register device with DDD:', error);
-        process.stdout.write(`❌ DEVICES POST: Exception: ${(error as any)?.message}\n`);
-        process.stdout.write(`❌ DEVICES POST: Stack: ${(error as any)?.stack}\n`);
-
-        if (error instanceof z.ZodError) {
-            send.badRequest(res, 'Validation failed', error.errors.map(e => ({
-                path: e.path.join('.'),
-                message: e.message,
-            })));
-            return;
-        }
-
-        if ((error as any)?.message && ((error as any).message.includes('Device ID is required') || (error as any).message.includes('required'))) {
-            send.badRequest(res, 'Validation failed', [{ message: (error as any).message }]);
-            return;
-        }
-
-        if (error instanceof Error) {
-            if (error.message.includes('already exists')) {
-                res.status(409).json({ success: false, error: error.message, code: 'CONFLICT', timestamp: isoTimestamp() });
-                return;
-            }
-            if (error.message.includes('required') || error.message.includes('Tenant access violation') || error.message.includes('Invalid')) {
-                send.badRequest(res, error.message);
-                return;
-            }
-        }
-
-        send.internalError(res, 'Failed to register device');
+    } catch (err) {
+        console.error('❌ DEVICES POST: Failed to register device with DDD:', err);
+        send.fromError(res, err);
     }
 });
 
@@ -537,25 +512,9 @@ devicesRouter.post('/register', requireAuth(), async (req: AuthenticatedRequest,
         };
 
         send.created(res, response);
-    } catch (error) {
-        console.error('❌ DEVICE REGISTER POST: Failed to register device with DDD:', error);
-
-        if (error instanceof Error) {
-            if (error.message.includes('already exists')) {
-                res.status(409).json({ success: false, error: 'Device with this ID already exists', code: 'CONFLICT', timestamp: isoTimestamp() });
-                return;
-            }
-            if (error.message.includes('Tenant access violation')) {
-                send.forbidden(res, 'Access denied');
-                return;
-            }
-            if (error.message.includes('validation') || error.message.includes('required')) {
-                send.badRequest(res, error.message);
-                return;
-            }
-        }
-
-        send.internalError(res, 'Failed to register device');
+    } catch (err) {
+        console.error('❌ DEVICE REGISTER POST: Failed to register device with DDD:', err);
+        send.fromError(res, err);
     }
 });
 
@@ -602,24 +561,9 @@ devicesRouter.post('/activate', async (req: Request, res: Response) => {
             },
             config: provisionResult.config,
         });
-    } catch (error) {
-        const message = error instanceof Error ? error.message : 'Unknown error';
-
-        if (message.includes('not found')) {
-            send.notFound(res, message);
-            return;
-        }
-        if (message.includes('Invalid claiming token') || message.includes('expired') || message.includes('already been used')) {
-            send.unauthorized(res, message);
-            return;
-        }
-        if (message.includes('not in PENDING_SETUP')) {
-            res.status(409).json({ success: false, error: message, code: 'CONFLICT', timestamp: isoTimestamp() });
-            return;
-        }
-
-        logger.error('Failed to activate device', error instanceof Error ? error : undefined);
-        send.internalError(res, 'Failed to activate device');
+    } catch (err) {
+        logger.error('Failed to activate device', err instanceof Error ? err : undefined);
+        send.fromError(res, err);
     }
 });
 
@@ -674,20 +618,9 @@ devicesRouter.post('/claim', requireAuth(), async (req: AuthenticatedRequest, re
             expiresAt: claimResult.expiresAt,
             instructions: claimResult.instructions,
         });
-    } catch (error) {
-        const message = error instanceof Error ? error.message : 'Unknown error';
-
-        if (message.includes('not found')) {
-            send.notFound(res, message);
-            return;
-        }
-        if (message.includes('already claimed')) {
-            res.status(409).json({ success: false, error: message, code: 'CONFLICT', timestamp: isoTimestamp() });
-            return;
-        }
-
-        logger.error('Failed to claim device', error instanceof Error ? error : undefined);
-        send.internalError(res, 'Failed to claim device');
+    } catch (err) {
+        logger.error('Failed to claim device', err instanceof Error ? err : undefined);
+        send.fromError(res, err);
     }
 });
 
@@ -792,29 +725,9 @@ devicesRouter.post('/bulk', requireAuth(), async (req: AuthenticatedRequest, res
         }
 
         send.created(res, response);
-    } catch (error) {
-        console.error('❌ DEVICE BULK REGISTER POST: Failed to register devices in bulk with DDD:', error);
-
-        if (error instanceof Error) {
-            if (error.message.includes('At least one device is required')) {
-                send.badRequest(res, 'At least one device is required for bulk registration');
-                return;
-            }
-            if (error.message.includes('Tenant access violation')) {
-                send.forbidden(res, 'Access denied');
-                return;
-            }
-            if (error.message.includes('validation') || error.message.includes('invalid')) {
-                send.badRequest(res, error.message);
-                return;
-            }
-            if (error.message.includes('Customer ID is required')) {
-                send.badRequest(res, 'Customer ID is required but not provided');
-                return;
-            }
-        }
-
-        send.internalError(res, 'Failed to register devices in bulk');
+    } catch (err) {
+        console.error('❌ DEVICE BULK REGISTER POST: Failed to register devices in bulk with DDD:', err);
+        send.fromError(res, err);
     }
 });
 
@@ -974,14 +887,9 @@ devicesRouter.post('/tailscale-register', async (req: Request, res: Response) =>
                 ip: clientIP,
             },
         });
-    } catch (error) {
-        if (error instanceof z.ZodError) {
-            send.badRequest(res, 'Invalid registration data', error.errors);
-            return;
-        }
-
-        logger.error('Tailscale device registration failed', error instanceof Error ? error : undefined);
-        send.internalError(res, 'Registration failed');
+    } catch (err) {
+        logger.error('Tailscale device registration failed', err instanceof Error ? err : undefined);
+        send.fromError(res, err);
     }
 });
 
@@ -1080,21 +988,9 @@ devicesRouter.get('/:id', requireAuth(), async (req: AuthenticatedRequest, res: 
         } : null;
 
         send.ok(res, { ...response, deviceId: rawDevice?.deviceId || response.deviceId, rawStatus, pendingSetup });
-    } catch (error) {
-        console.error('❌ DEVICE GET: Failed to fetch device details with DDD:', error);
-
-        if (error instanceof Error) {
-            if (error.message.includes('not found')) {
-                send.notFound(res, 'Device not found');
-                return;
-            }
-            if (error.message.includes('Tenant access violation')) {
-                send.forbidden(res, 'Access denied');
-                return;
-            }
-        }
-
-        send.internalError(res, 'Failed to fetch device details');
+    } catch (err) {
+        console.error('❌ DEVICE GET: Failed to fetch device details with DDD:', err);
+        send.fromError(res, err);
     }
 });
 
@@ -1161,27 +1057,9 @@ devicesRouter.put('/:id', requireAuth(), async (req: AuthenticatedRequest, res: 
         };
 
         send.ok(res, response);
-    } catch (error) {
-        console.error('❌ DEVICE PUT: Failed to update device with DDD:', error);
-        process.stdout.write(`❌ DEVICE PUT: Exception: ${(error as any)?.message}\n`);
-        process.stdout.write(`❌ DEVICE PUT: Stack: ${(error as any)?.stack}\n`);
-
-        if (error instanceof Error) {
-            if (error.message.includes('not found')) {
-                send.notFound(res, 'Device not found');
-                return;
-            }
-            if (error.message.includes('Tenant access violation')) {
-                send.forbidden(res, 'Access denied');
-                return;
-            }
-            if (error.message.includes('validation')) {
-                send.badRequest(res, error.message);
-                return;
-            }
-        }
-
-        send.internalError(res, 'Failed to update device');
+    } catch (err) {
+        console.error('❌ DEVICE PUT: Failed to update device with DDD:', err);
+        send.fromError(res, err);
     }
 });
 
@@ -1216,23 +1094,9 @@ devicesRouter.delete('/:id', requireAuth(), async (req: AuthenticatedRequest, re
         await commandBus.execute(removeDeviceCommand);
 
         send.ok(res, { message: 'Device deleted successfully' });
-    } catch (error) {
-        console.error('❌ DEVICE DELETE: Failed to delete device with DDD:', error);
-        process.stdout.write(`❌ DEVICE DELETE: Exception: ${(error as any)?.message}\n`);
-        process.stdout.write(`❌ DEVICE DELETE: Stack: ${(error as any)?.stack}\n`);
-
-        if (error instanceof Error) {
-            if (error.message.includes('not found')) {
-                send.notFound(res, 'Device not found');
-                return;
-            }
-            if (error.message.includes('Tenant access violation')) {
-                send.forbidden(res, 'Access denied');
-                return;
-            }
-        }
-
-        send.internalError(res, 'Failed to delete device');
+    } catch (err) {
+        console.error('❌ DEVICE DELETE: Failed to delete device with DDD:', err);
+        send.fromError(res, err);
     }
 });
 
@@ -1308,9 +1172,9 @@ devicesRouter.get('/:id/alerts', requireAuth(), async (req: AuthenticatedRequest
 
         const pagination = Pagination.fromOffset(offset, limit, total);
         send.ok(res, dtos, { pagination, stats });
-    } catch (error) {
-        console.error('Error fetching device alerts:', error);
-        send.internalError(res, 'Failed to fetch device alerts');
+    } catch (err) {
+        console.error('Error fetching device alerts:', err);
+        send.fromError(res, err);
     }
 });
 
@@ -1380,9 +1244,9 @@ devicesRouter.post('/:id/alerts', requireAuth(), async (req: AuthenticatedReques
         const saved = await alertRepo.save(alert);
 
         send.created(res, alertToDTO(saved, publicId));
-    } catch (error) {
-        console.error('Error creating alert:', error);
-        send.internalError(res, 'Failed to create alert');
+    } catch (err) {
+        console.error('Error creating alert:', err);
+        send.fromError(res, err);
     }
 });
 
@@ -1426,9 +1290,9 @@ devicesRouter.get('/:id/alerts/:alertId', requireAuth(), async (req: Authenticat
         }
 
         send.ok(res, alertToDTO(alert as AlertEntity, devicePublicId));
-    } catch (error) {
-        console.error('Error fetching alert:', error);
-        send.internalError(res, 'Failed to fetch alert');
+    } catch (err) {
+        console.error('Error fetching alert:', err);
+        send.fromError(res, err);
     }
 });
 
@@ -1488,13 +1352,9 @@ devicesRouter.patch('/:id/alerts/:alertId', requireAuth(), async (req: Authentic
         );
 
         send.ok(res, alertToDTO(updated as AlertEntity, devicePublicId));
-    } catch (error) {
-        console.error('Error updating alert:', error);
-        if (error instanceof Error && error.message.includes('already resolved')) {
-            send.badRequest(res, error.message);
-            return;
-        }
-        send.internalError(res, 'Failed to update alert');
+    } catch (err) {
+        console.error('Error updating alert:', err);
+        send.fromError(res, err);
     }
 });
 
@@ -1539,9 +1399,9 @@ devicesRouter.delete('/:id/alerts/:alertId', requireAuth(), async (req: Authenti
         await commandBus.execute(cmd);
 
         send.ok(res, { message: 'Alert deleted successfully' });
-    } catch (error) {
-        console.error('Error deleting alert:', error);
-        send.internalError(res, 'Failed to delete alert');
+    } catch (err) {
+        console.error('Error deleting alert:', err);
+        send.fromError(res, err);
     }
 });
 
@@ -1586,12 +1446,12 @@ devicesRouter.get('/:id/commands', requireAuth(), async (req: AuthenticatedReque
         }));
 
         send.ok(res, { commands: formattedCommands });
-    } catch (error) {
+    } catch (err) {
         commandLogger.error('Failed to fetch device commands:', {
-            error: error instanceof Error ? error.message : String(error),
+            error: err instanceof Error ? err.message : String(err),
             deviceId: id,
         });
-        send.internalError(res, 'Failed to fetch device commands');
+        send.fromError(res, err);
     }
 });
 
@@ -1684,12 +1544,12 @@ devicesRouter.post('/:id/commands', requireAuth(), async (req: AuthenticatedRequ
             },
             message: 'Command issued successfully',
         });
-    } catch (error) {
+    } catch (err) {
         commandLogger.error('Failed to issue command:', {
-            error: error instanceof Error ? error.message : String(error),
+            error: err instanceof Error ? err.message : String(err),
             deviceId: id,
         });
-        send.internalError(res, 'Failed to issue command');
+        send.fromError(res, err);
     }
 });
 
@@ -1734,9 +1594,9 @@ devicesRouter.get('/:id/commands/:commandId', async (req: Request, res: Response
         }
 
         send.ok(res, { command });
-    } catch (error) {
-        logger.error('Failed to fetch command details', error instanceof Error ? error : undefined);
-        send.internalError(res, 'Failed to fetch command details');
+    } catch (err) {
+        logger.error('Failed to fetch command details', err instanceof Error ? err : undefined);
+        send.fromError(res, err);
     }
 });
 
@@ -1810,9 +1670,9 @@ devicesRouter.get('/:id/logs', requireAuth(), async (req: AuthenticatedRequest, 
             sources: sources.map((s: { source: string | null }) => s.source).filter(Boolean),
             levels: VALID_LEVELS,
         });
-    } catch (error) {
-        console.error('Error fetching device logs:', error);
-        send.internalError(res, 'Failed to fetch device logs');
+    } catch (err) {
+        console.error('Error fetching device logs:', err);
+        send.fromError(res, err);
     }
 });
 
@@ -1895,21 +1755,9 @@ devicesRouter.get('/:id/metrics', requireAuth(), async (req: AuthenticatedReques
             total_points: totalPoints,
             processed_points: totalPoints,
         });
-    } catch (error) {
-        console.error('❌ DEVICE METRICS GET: Failed to fetch device metrics with DDD:', error);
-
-        if (error instanceof Error) {
-            if (error.message.includes('not found')) {
-                send.notFound(res, 'Device not found');
-                return;
-            }
-            if (error.message.includes('Tenant access violation')) {
-                send.forbidden(res, 'Access denied');
-                return;
-            }
-        }
-
-        send.internalError(res, 'Failed to fetch device metrics');
+    } catch (err) {
+        console.error('❌ DEVICE METRICS GET: Failed to fetch device metrics with DDD:', err);
+        send.fromError(res, err);
     }
 });
 
@@ -1981,12 +1829,12 @@ devicesRouter.get('/:id/settings', requireAuth(), async (req: AuthenticatedReque
         });
 
         send.ok(res, settings);
-    } catch (error) {
+    } catch (err) {
         settingsLogger.error('Failed to fetch device settings:', {
-            error: error instanceof Error ? error.message : String(error),
+            error: err instanceof Error ? err.message : String(err),
             deviceId,
         });
-        send.internalError(res, 'Failed to fetch device settings');
+        send.fromError(res, err);
     }
 });
 
@@ -2100,17 +1948,12 @@ devicesRouter.put('/:id/settings', requireAuth(), async (req: AuthenticatedReque
             message: 'Device settings updated successfully',
             settings: validatedSettings,
         });
-    } catch (error) {
-        if (error instanceof z.ZodError) {
-            send.badRequest(res, 'Invalid settings data', error.errors);
-            return;
-        }
-
+    } catch (err) {
         settingsLogger.error('Failed to update device settings:', {
-            error: error instanceof Error ? error.message : String(error),
+            error: err instanceof Error ? err.message : String(err),
             deviceId,
         });
-        send.internalError(res, 'Failed to update device settings');
+        send.fromError(res, err);
     }
 });
 
@@ -2168,37 +2011,9 @@ devicesRouter.post('/:id/ssh', requireAuth(), async (req: AuthenticatedRequest, 
             output: result.output,
             error: result.error,
         });
-    } catch (error) {
-        console.error('❌ DEVICE SSH: Failed to execute SSH command:', error);
-
-        if (error && typeof error === 'object' && 'errors' in error && Array.isArray((error as any).errors)) {
-            send.badRequest(res, 'Invalid input', (error as any).errors.map((err: { path: (string | number)[]; message: string }) => ({
-                path: err.path.join('.'),
-                message: err.message,
-            })));
-            return;
-        }
-
-        if (error instanceof Error) {
-            if (error.message.includes('not found')) {
-                send.notFound(res, 'Device not found');
-                return;
-            }
-            if (error.message.includes('Tenant access violation')) {
-                send.forbidden(res, 'Access denied');
-                return;
-            }
-            if (error.message.includes('timeout')) {
-                res.status(408).json({ success: false, error: 'Command execution timeout', code: 'TIMEOUT', timestamp: isoTimestamp() });
-                return;
-            }
-            if (error.message.includes('connection') || error.message.includes('SSH')) {
-                res.status(503).json({ success: false, error: 'Unable to connect to device', code: 'SERVICE_UNAVAILABLE', timestamp: isoTimestamp() });
-                return;
-            }
-        }
-
-        send.internalError(res, 'Failed to execute SSH command');
+    } catch (err) {
+        console.error('❌ DEVICE SSH: Failed to execute SSH command:', err);
+        send.fromError(res, err);
     }
 });
 
@@ -2272,20 +2087,8 @@ devicesRouter.get('/:id/status', requireAuth(), async (req: AuthenticatedRequest
         };
 
         send.ok(res, response);
-    } catch (error) {
-        console.error('❌ DEVICE STATUS GET: Failed to fetch device status with DDD:', error);
-
-        if (error instanceof Error) {
-            if (error.message.includes('not found')) {
-                send.notFound(res, 'Device not found');
-                return;
-            }
-            if (error.message.includes('Tenant access violation')) {
-                send.forbidden(res, 'Access denied');
-                return;
-            }
-        }
-
-        send.internalError(res, 'Failed to fetch device status');
+    } catch (err) {
+        console.error('❌ DEVICE STATUS GET: Failed to fetch device status with DDD:', err);
+        send.fromError(res, err);
     }
 });

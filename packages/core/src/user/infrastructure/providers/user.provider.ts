@@ -79,6 +79,10 @@ export class UserServiceProvider implements BoundedContextProvider {
     // Lazy imports — keeps the provider file light and avoids circular deps
     const {ValidateSessionQuery} = require('@iotpilot/core/user/application/queries/validate-session/validate-session.query');
     const {ValidateSessionHandler} = require('@iotpilot/core/user/application/queries/validate-session/validate-session.handler');
+    const {GetUserQuery} = require('@iotpilot/core/user/application/queries/get-user/get-user.query');
+    const {GetUserHandler} = require('@iotpilot/core/user/application/queries/get-user/get-user.handler');
+    const {ApproveUserCommand} = require('@iotpilot/core/user/application/commands/approve-user/approve-user.command');
+    const {ApproveUserHandler} = require('@iotpilot/core/user/application/commands/approve-user/approve-user.handler');
     const {AuthenticateUserCommand} = require('@iotpilot/core/user/application/commands/authenticate-user/authenticate-user.command');
     const {AuthenticateUserHandler} = require('@iotpilot/core/user/application/commands/authenticate-user/authenticate-user.handler');
     const {RegisterUserCommand} = require('@iotpilot/core/user/application/commands/register-user/register-user.command');
@@ -118,21 +122,23 @@ export class UserServiceProvider implements BoundedContextProvider {
     const logger = StructuredLogger.forService('user-handlers');
 
     queryBus.register(ValidateSessionQuery, new ValidateSessionHandler(sessionRepo, userRepo));
-    commandBus.register(AuthenticateUserCommand, new AuthenticateUserHandler(authenticator, sessionService));
-    commandBus.register(RegisterUserCommand, new RegisterUserHandler(userRepo, passwordHasher, logger));
+    commandBus.register(AuthenticateUserCommand, new AuthenticateUserHandler(authenticator, sessionService, eventBus));
+    commandBus.register(RegisterUserCommand, new RegisterUserHandler(userRepo, passwordHasher, logger, eventBus));
     queryBus.register(GetCurrentUserQuery, new GetCurrentUserHandler(userRepo));
     commandBus.register(LogoutUserCommand, new LogoutUserHandler(sessionRepo, eventBus));
     commandBus.register(RefreshSessionCommand, new RefreshSessionHandler(sessionRepo, userRepo, eventBus));
     queryBus.register(ListApiKeysQuery, new ListApiKeysHandler(apiKeyRepo));
-    commandBus.register(CreateApiKeyCommand, new CreateApiKeyHandler(apiKeyRepo, cryptoService));
+    commandBus.register(CreateApiKeyCommand, new CreateApiKeyHandler(apiKeyRepo, cryptoService, eventBus));
+    queryBus.register(GetUserQuery, new GetUserHandler(userRepo, logger));
 
     const tenantEnforcer = new TenantIsolationEnforcer();
     queryBus.register(GetUserByIdQuery, new GetUserByIdHandler(userRepo, tenantEnforcer));
     queryBus.register(GetUserProfileQuery, new GetUserProfileHandler(userRepo, tenantEnforcer));
     commandBus.register(UpdateUserProfileCommand, new UpdateUserProfileHandler(userRepo, tenantEnforcer));
     queryBus.register(ListUsersQuery, new ListUsersHandler(userRepo, logger));
-    commandBus.register(UpdateUserCommand, new UpdateUserHandler(userRepo, logger));
+    commandBus.register(UpdateUserCommand, new UpdateUserHandler(userRepo, logger, eventBus));
     commandBus.register(RemoveUserCommand, new RemoveUserHandler(userRepo, tenantEnforcer));
+    commandBus.register(ApproveUserCommand, new ApproveUserHandler(userRepo, eventBus));
 
     // VerifyTwoFactor doesn't need email — register unconditionally
     const prisma = container.resolve('PrismaService');

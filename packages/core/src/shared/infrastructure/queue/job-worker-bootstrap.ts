@@ -4,7 +4,6 @@ import { BullMqJobWorker } from './bullmq-job-worker';
 import type { JobProcessor } from '../../application/interfaces/job-queue.interface';
 
 // Import all processors
-import { SendSlackAlertNotificationProcessor } from '@iotpilot/core/monitoring/infrastructure/jobs/send-slack-alert-notification.processor';
 import { DeviceRegisteredNotificationProcessor } from '@iotpilot/core/device/infrastructure/jobs/device-registered-notification.processor';
 import { DeviceHealthCheckProcessor } from '@iotpilot/core/device/infrastructure/jobs/device-health-check.processor';
 import { ProcessDeviceMetricsProcessor } from '@iotpilot/core/device/infrastructure/jobs/process-device-metrics.processor';
@@ -50,7 +49,6 @@ export class JobWorkerBootstrap {
       this.worker = new BullMqJobWorker(redisFactory);
 
       const processors: JobProcessor[] = [
-        new SendSlackAlertNotificationProcessor(),
         new DeviceRegisteredNotificationProcessor(),
         new DeviceHealthCheckProcessor(),
         new ProcessDeviceMetricsProcessor(),

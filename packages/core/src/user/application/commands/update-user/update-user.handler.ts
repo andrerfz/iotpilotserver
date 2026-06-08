@@ -11,11 +11,14 @@ import {
     UserNotFoundException
 } from '../../../domain/exceptions/user.exception';
 import {StructuredLogger} from '@iotpilot/core/shared/infrastructure/logging/structured-logger';
+import {EventBus} from '@iotpilot/core/shared/application/bus/event.bus';
+import {UserUpdatedEvent} from '../../../domain/events/user-updated.event';
 
 export class UpdateUserHandler implements CommandHandler<UpdateUserCommand, UserEntity> {
   constructor(
     private readonly userRepository: UserRepository,
-    private readonly logger: StructuredLogger
+    private readonly logger: StructuredLogger,
+    private readonly eventBus: EventBus
   ) {}
 
   async handle(command: UpdateUserCommand): Promise<UserEntity> {
@@ -107,6 +110,7 @@ export class UpdateUserHandler implements CommandHandler<UpdateUserCommand, User
 
     // Save updated user
     await this.userRepository.save(user, tenantContext);
+    await this.eventBus.publish(new UserUpdatedEvent(user));
 
     const changes: string[] = [];
     if (email) changes.push('email');

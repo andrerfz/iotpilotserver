@@ -6,6 +6,7 @@ import {prisma} from '@iotpilot/core/shared/infrastructure/database/prisma.servi
 import {PrismaAlertRepository} from '../repositories/prisma-alert.repository';
 import {PrismaThresholdRepository} from '../repositories/prisma-threshold.repository';
 import {NoopMonitoringMetricsRepository} from '../repositories/noop-metrics.repository';
+import type {ThresholdRepository} from '@iotpilot/core/monitoring/domain/interfaces/threshold-repository.interface';
 
 export class MonitoringServiceProvider implements BoundedContextProvider {
   getContextName(): string {
@@ -21,6 +22,13 @@ export class MonitoringServiceProvider implements BoundedContextProvider {
       useFactory: (c: DependencyContainer) => {
         const loggingService = c.resolve<TenantScopedLoggingService>('TenantScopedLoggingService');
         return new TenantBoundaryValidator(loggingService);
+      }
+    });
+
+    container.register<ThresholdRepository>('ThresholdRepository', {
+      useFactory: (c: DependencyContainer) => {
+        const validator = c.resolve<TenantBoundaryValidator>('TenantBoundaryValidator');
+        return new PrismaThresholdRepository(prisma, validator);
       }
     });
   }

@@ -5,11 +5,14 @@ import {CommandHandler} from '../../../../shared/application/command.handler';
 import {DeviceNotFoundException} from '../../../domain/exceptions/device-not-found.exception';
 import {UnauthorizedDeviceAccessException} from '../../../domain/exceptions/unauthorized-device-access.exception';
 import {StructuredLogger} from '../../../../shared/infrastructure/logging/structured-logger';
+import {EventBus} from '@iotpilot/core/shared/application/bus/event.bus';
+import {DeviceUpdatedEvent} from '../../../domain/events/device-updated.event';
 
 export class UpdateDeviceHandler implements CommandHandler<UpdateDeviceCommand, DeviceEntity> {
   constructor(
     private readonly deviceRepository: DeviceRepository,
-    private readonly logger: StructuredLogger
+    private readonly logger: StructuredLogger,
+    private readonly eventBus: EventBus
   ) {}
 
   async handle(command: UpdateDeviceCommand): Promise<DeviceEntity> {
@@ -70,6 +73,21 @@ export class UpdateDeviceHandler implements CommandHandler<UpdateDeviceCommand, 
 
     // Save updated device
     await this.deviceRepository.save(device, tenantContext);
+
+    const tenantId = device.customerId;
+    if (tenantId) {
+      const updatedFields = [
+        name !== undefined && 'name',
+        (ipAddress !== undefined || tailscaleIp !== undefined || hostname !== undefined) && 'network',
+        sshCredentials !== undefined && 'sshCredentials',
+      ].filter(Boolean) as string[];
+      const deviceIpAddress = device.getIpAddress();
+      if (deviceIpAddress) {
+        await this.eventBus.publish(new DeviceUpdatedEvent(
+          device.getId(), device.name, deviceIpAddress, device.status, updatedFields, tenantId
+        ));
+      }
+    }
 
     const userId = tenantContext.getUserId();
     this.logger.info('Device updated successfully', {

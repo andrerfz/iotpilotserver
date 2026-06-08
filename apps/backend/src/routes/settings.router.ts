@@ -94,10 +94,9 @@ settingsRouter.get('/', requireAuth(), async (req: AuthenticatedRequest, res: Re
 
     send.ok(res, groupedPreferences);
     return;
-  } catch (error) {
-    console.error('Failed to fetch settings:', error);
-    send.internalError(res, 'Failed to fetch settings');
-    return;
+  } catch (err) {
+    console.error('Failed to fetch settings:', err);
+    send.fromError(res, err);
   }
 });
 
@@ -129,10 +128,9 @@ settingsRouter.get('/profile', requireAuth(), async (req: AuthenticatedRequest, 
       phoneNumber: userRow?.phoneNumber ?? '',
     });
     return;
-  } catch (error) {
-    console.error('Failed to fetch profile settings:', error);
-    send.internalError(res, 'Failed to fetch profile settings');
-    return;
+  } catch (err) {
+    console.error('Failed to fetch profile settings:', err);
+    send.fromError(res, err);
   }
 });
 
@@ -199,10 +197,9 @@ settingsRouter.put('/profile', requireAuth(), async (req: AuthenticatedRequest, 
 
     send.ok(res, { message: 'Profile updated successfully', settings: validatedData });
     return;
-  } catch (error) {
-    console.error('Failed to update profile settings:', error);
-    send.internalError(res, 'Failed to update profile settings');
-    return;
+  } catch (err) {
+    console.error('Failed to update profile settings:', err);
+    send.fromError(res, err);
   }
 });
 
@@ -221,10 +218,9 @@ settingsRouter.get('/security', requireAuth(), async (req: AuthenticatedRequest,
 
     send.ok(res, preferences);
     return;
-  } catch (error) {
-    console.error('Failed to fetch security settings:', error);
-    send.internalError(res, 'Failed to fetch security settings');
-    return;
+  } catch (err) {
+    console.error('Failed to fetch security settings:', err);
+    send.fromError(res, err);
   }
 });
 
@@ -326,19 +322,9 @@ settingsRouter.put('/security', requireAuth(), async (req: AuthenticatedRequest,
       settings: validatedData,
     });
     return;
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      send.badRequest(
-        res,
-        'Invalid input',
-        error.errors.map((err) => ({ path: err.path.join('.'), message: err.message })),
-      );
-      return;
-    }
-
-    console.error('Failed to update security settings:', error);
-    send.internalError(res, 'Failed to update security settings');
-    return;
+  } catch (err) {
+    console.error('Failed to update security settings:', err);
+    send.fromError(res, err);
   }
 });
 
@@ -390,10 +376,9 @@ settingsRouter.get('/system', requireAuth(), async (req: AuthenticatedRequest, r
 
     send.ok(res, preferences);
     return;
-  } catch (error) {
-    console.error('Failed to fetch system settings:', error);
-    send.internalError(res, 'Failed to fetch system settings');
-    return;
+  } catch (err) {
+    console.error('Failed to fetch system settings:', err);
+    send.fromError(res, err);
   }
 });
 
@@ -503,22 +488,9 @@ settingsRouter.put('/system', requireAuth(), async (req: AuthenticatedRequest, r
       settings: validatedData,
     });
     return;
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      send.badRequest(
-        res,
-        'Invalid input',
-        (error as z.ZodError).errors.map((err: z.ZodIssue) => ({
-          path: err.path.join('.'),
-          message: err.message,
-        })),
-      );
-      return;
-    }
-
-    console.error('Failed to update system settings:', error);
-    send.internalError(res, 'Failed to update system settings');
-    return;
+  } catch (err) {
+    console.error('Failed to update system settings:', err);
+    send.fromError(res, err);
   }
 });
 
@@ -537,10 +509,9 @@ settingsRouter.get('/notifications', requireAuth(), async (req: AuthenticatedReq
 
     send.ok(res, preferences);
     return;
-  } catch (error) {
-    console.error('Failed to fetch notifications settings:', error);
-    send.internalError(res, 'Failed to fetch notifications settings');
-    return;
+  } catch (err) {
+    console.error('Failed to fetch notifications settings:', err);
+    send.fromError(res, err);
   }
 });
 
@@ -603,18 +574,8 @@ settingsRouter.put('/notifications', requireAuth(), async (req: AuthenticatedReq
       settings: validatedData,
     });
     return;
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      send.badRequest(
-        res,
-        'Invalid input',
-        error.errors.map((err) => ({ path: err.path.join('.'), message: err.message })),
-      );
-      return;
-    }
-
-    console.error('Failed to update notifications settings:', error);
-    send.internalError(res, 'Failed to update notifications settings');
-    return;
+  } catch (err) {
+    console.error('Failed to update notifications settings:', err);
+    send.fromError(res, err);
   }
 });

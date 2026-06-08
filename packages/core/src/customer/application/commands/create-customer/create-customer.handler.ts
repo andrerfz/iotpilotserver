@@ -5,25 +5,25 @@ import {CustomerId} from '../../../domain/value-objects/customer-id.vo';
 import {Uuid} from '@iotpilot/core/shared/domain/value-objects/uuid.vo';
 import {CustomerRepository} from '@iotpilot/core/customer/domain/interfaces/customer.repository';
 import {CryptoService} from '@iotpilot/core/shared/domain/interfaces/crypto-service.interface';
+import {EventBus} from '@iotpilot/core/shared/application/bus/event.bus';
+import {CustomerCreatedEvent} from '../../../domain/events/customer-created.event';
 
 export class CreateCustomerHandler {
   constructor(
     private readonly customerRepository: CustomerRepository,
-    private readonly cryptoService: CryptoService
+    private readonly cryptoService: CryptoService,
+    private readonly eventBus: EventBus
   ) {}
 
   async handle(command: CreateCustomerCommand): Promise<CustomerEntity> {
     const { name, description, contactEmail } = command;
     const tenantContext = command.getTenantContext();
-    
-    // Generate UUID for customer ID
+
     const customerId = CustomerId.create(Uuid.random(this.cryptoService).getValue());
     const customerName = CustomerName.create(name);
 
     const customer = CustomerEntity.create(customerId, customerName);
 
-    // Set the domain from contactEmail (which is the email domain during registration)
-    // This enables findByDomain to work for subsequent users from the same company
     if (contactEmail) {
       customer.updateContact(contactEmail);
       customer.updateDomain(contactEmail);
@@ -33,6 +33,12 @@ export class CreateCustomerHandler {
     }
 
     await this.customerRepository.save(customer, tenantContext);
+
+    await this.eventBus.publish(new CustomerCreatedEvent(
+      customer.getId(),
+      customer.getName(),
+      customer.getSettings(),
+    ));
 
     return customer;
   }

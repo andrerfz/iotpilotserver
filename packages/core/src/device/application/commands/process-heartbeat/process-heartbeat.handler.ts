@@ -1,6 +1,12 @@
 import {CommandHandler} from '@iotpilot/core/shared/application/interfaces/command.interface';
 import {HeartbeatData, ProcessHeartbeatCommand} from './process-heartbeat.command';
 import {PrismaService} from '@iotpilot/core/shared/infrastructure/database/prisma.service';
+import {EventBus} from '@iotpilot/core/shared/application/bus/event.bus';
+import {MetricsCollectedEvent} from '@iotpilot/core/device/domain/events/metrics-collected.event';
+import {DeviceId} from '@iotpilot/core/device/domain/value-objects/device-id.vo';
+import {DeviceName} from '@iotpilot/core/device/domain/value-objects/device-name.vo';
+import {DeviceMetrics} from '@iotpilot/core/device/domain/entities/device-metrics.entity';
+import {CustomerId} from '@iotpilot/core/shared/domain/value-objects/customer-id.vo';
 
 type PrismaClient = ReturnType<PrismaService['getClient']>;
 
@@ -10,16 +16,11 @@ export interface HeartbeatResult {
     lastSeen: Date;
 }
 
-/**
- * Handler for processing device heartbeats
- * Uses constructor injection for PrismaService dependency
- */
 export class ProcessHeartbeatHandler implements CommandHandler<ProcessHeartbeatCommand, HeartbeatResult> {
-    private readonly prismaService: PrismaService;
-
-    constructor(prismaService: PrismaService) {
-        this.prismaService = prismaService;
-    }
+    constructor(
+        private readonly prismaService: PrismaService,
+        private readonly eventBus: EventBus
+    ) {}
 
     private get prisma(): PrismaClient {
         return this.prismaService.getClient();
@@ -29,7 +30,6 @@ export class ProcessHeartbeatHandler implements CommandHandler<ProcessHeartbeatC
         const { data, userId } = command;
         const tenantContext = command.getTenantContext();
 
-        // Find the device
         const device = await this.prisma.device.findUnique({
             where: { deviceId: data.deviceId },
             include: {
@@ -43,7 +43,6 @@ export class ProcessHeartbeatHandler implements CommandHandler<ProcessHeartbeatC
             throw new Error('Device not found. Please register the device first.');
         }
 
-        // Check device ownership (unless user is admin/superadmin)
         const customerId = tenantContext.getCustomerId();
         if (!tenantContext.isSuperAdminUser() && customerId) {
             if (device.customerId !== customerId.getValue()) {
@@ -51,7 +50,6 @@ export class ProcessHeartbeatHandler implements CommandHandler<ProcessHeartbeatC
             }
         }
 
-        // Update device with latest data
         const updatedDevice = await this.prisma.device.update({
             where: { deviceId: data.deviceId },
             data: {
@@ -74,11 +72,37 @@ export class ProcessHeartbeatHandler implements CommandHandler<ProcessHeartbeatC
             }
         });
 
-        // Store metrics for historical tracking
         await this.storeMetrics(device.id, data);
-
-        // Check for alert conditions
         await this.checkAlertConditions(device.id, data, device.userId, device.customerId);
+
+        if (device.customerId) {
+            try {
+                const tenantId = CustomerId.create(device.customerId);
+                const metrics = DeviceMetrics.create({
+                    deviceId: DeviceId.create(device.id),
+                    cpuUsage: data.cpuUsage ?? 0,
+                    memoryUsage: data.memoryUsagePercent ?? 0,
+                    diskUsage: data.diskUsagePercent ?? 0,
+                    networkRx: 0,
+                    networkTx: 0,
+                    uptime: data.uptime ?? 0,
+                    loadAverage: data.loadAverage ?? [],
+                    temperature: data.cpuTemperature,
+                    collectedAt: new Date(),
+                    customerId: tenantId,
+                });
+                await this.eventBus.publish(new MetricsCollectedEvent(
+                    DeviceId.create(device.id),
+                    DeviceName.create(device.name),
+                    metrics,
+                    new Date(),
+                    false,
+                    tenantId,
+                ));
+            } catch (err) {
+                console.warn(`[ProcessHeartbeatHandler] Failed to publish MetricsCollectedEvent: ${(err as Error).message}`);
+            }
+        }
 
         return {
             deviceId: updatedDevice.id,
@@ -91,45 +115,20 @@ export class ProcessHeartbeatHandler implements CommandHandler<ProcessHeartbeatC
         const metricsToStore = [];
 
         if (data.cpuUsage !== undefined) {
-            metricsToStore.push({
-                deviceId,
-                metric: 'cpu_usage',
-                value: data.cpuUsage,
-                unit: '%'
-            });
+            metricsToStore.push({ deviceId, metric: 'cpu_usage', value: data.cpuUsage, unit: '%' });
         }
-
         if (data.cpuTemperature !== undefined) {
-            metricsToStore.push({
-                deviceId,
-                metric: 'cpu_temperature',
-                value: data.cpuTemperature,
-                unit: '°C'
-            });
+            metricsToStore.push({ deviceId, metric: 'cpu_temperature', value: data.cpuTemperature, unit: '°C' });
         }
-
         if (data.memoryUsagePercent !== undefined) {
-            metricsToStore.push({
-                deviceId,
-                metric: 'memory_usage',
-                value: data.memoryUsagePercent,
-                unit: '%'
-            });
+            metricsToStore.push({ deviceId, metric: 'memory_usage', value: data.memoryUsagePercent, unit: '%' });
         }
-
         if (data.diskUsagePercent !== undefined) {
-            metricsToStore.push({
-                deviceId,
-                metric: 'disk_usage',
-                value: data.diskUsagePercent,
-                unit: '%'
-            });
+            metricsToStore.push({ deviceId, metric: 'disk_usage', value: data.diskUsagePercent, unit: '%' });
         }
 
         if (metricsToStore.length > 0) {
-            await this.prisma.deviceMetric.createMany({
-                data: metricsToStore
-            });
+            await this.prisma.deviceMetric.createMany({ data: metricsToStore });
         }
     }
 
@@ -139,7 +138,7 @@ export class ProcessHeartbeatHandler implements CommandHandler<ProcessHeartbeatC
         userId: string | null,
         customerId: string | null
     ): Promise<void> {
-        if (!customerId) return; // UNCLAIMED devices don't generate alerts
+        if (!customerId) return;
         const alerts: Array<{
             deviceId: string;
             userId: string | null;
@@ -150,12 +149,9 @@ export class ProcessHeartbeatHandler implements CommandHandler<ProcessHeartbeatC
             message: string;
         }> = [];
 
-        // High CPU usage
         if (data.cpuUsage && data.cpuUsage > 85) {
             alerts.push({
-                deviceId,
-                userId,
-                customerId,
+                deviceId, userId, customerId,
                 type: 'HIGH_CPU',
                 severity: data.cpuUsage > 95 ? 'CRITICAL' : 'WARNING',
                 title: 'High CPU Usage',
@@ -163,12 +159,9 @@ export class ProcessHeartbeatHandler implements CommandHandler<ProcessHeartbeatC
             });
         }
 
-        // High memory usage
         if (data.memoryUsagePercent && data.memoryUsagePercent > 85) {
             alerts.push({
-                deviceId,
-                userId,
-                customerId,
+                deviceId, userId, customerId,
                 type: 'HIGH_MEMORY',
                 severity: data.memoryUsagePercent > 95 ? 'CRITICAL' : 'WARNING',
                 title: 'High Memory Usage',
@@ -176,12 +169,9 @@ export class ProcessHeartbeatHandler implements CommandHandler<ProcessHeartbeatC
             });
         }
 
-        // High temperature
         if (data.cpuTemperature && data.cpuTemperature > 70) {
             alerts.push({
-                deviceId,
-                userId,
-                customerId,
+                deviceId, userId, customerId,
                 type: 'HIGH_TEMPERATURE',
                 severity: data.cpuTemperature > 80 ? 'CRITICAL' : 'WARNING',
                 title: 'High Temperature',
@@ -189,12 +179,9 @@ export class ProcessHeartbeatHandler implements CommandHandler<ProcessHeartbeatC
             });
         }
 
-        // Low disk space
         if (data.diskUsagePercent && data.diskUsagePercent > 85) {
             alerts.push({
-                deviceId,
-                userId,
-                customerId,
+                deviceId, userId, customerId,
                 type: 'LOW_DISK_SPACE',
                 severity: data.diskUsagePercent > 95 ? 'CRITICAL' : 'WARNING',
                 title: 'Low Disk Space',
@@ -202,12 +189,9 @@ export class ProcessHeartbeatHandler implements CommandHandler<ProcessHeartbeatC
             });
         }
 
-        // Application errors
         if (data.appStatus === 'ERROR') {
             alerts.push({
-                deviceId,
-                userId,
-                customerId,
+                deviceId, userId, customerId,
                 type: 'APPLICATION_ERROR',
                 severity: 'ERROR',
                 title: 'Application Error',
@@ -215,20 +199,12 @@ export class ProcessHeartbeatHandler implements CommandHandler<ProcessHeartbeatC
             });
         }
 
-        // Create alerts that don't already exist
         for (const alertData of alerts) {
             const existingAlert = await this.prisma.alert.findFirst({
-                where: {
-                    deviceId: alertData.deviceId,
-                    type: alertData.type as any,
-                    resolved: false
-                }
+                where: { deviceId: alertData.deviceId, type: alertData.type as any, resolved: false }
             });
-
             if (!existingAlert) {
-                await this.prisma.alert.create({
-                    data: alertData as any
-                });
+                await this.prisma.alert.create({ data: alertData as any });
             }
         }
     }

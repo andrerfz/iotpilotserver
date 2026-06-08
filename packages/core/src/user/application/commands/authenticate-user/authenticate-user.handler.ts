@@ -2,8 +2,9 @@ import {CommandHandler} from '../../../../shared/application/command.handler';
 import {AuthenticateUserCommand} from './authenticate-user.command';
 import {UserAuthenticator} from '../../../domain/services/user-authenticator';
 import {UserEntity} from '../../../domain/entities/user.entity';
+import {EventBus} from '@iotpilot/core/shared/application/bus/event.bus';
+import {UserAuthenticatedEvent} from '../../../domain/events/user-authenticated.event';
 
-// SessionService interface - defined locally to avoid import issues
 interface SessionService {
     createSession(userId: string, customerId?: string | null, tx?: any): Promise<string>;
 }
@@ -22,68 +23,53 @@ export interface AuthenticationResult {
 export class AuthenticateUserHandler implements CommandHandler<AuthenticateUserCommand, AuthenticationResult> {
     constructor(
         private readonly userAuthenticator: UserAuthenticator,
-        private readonly sessionService: SessionService
+        private readonly sessionService: SessionService,
+        private readonly eventBus: EventBus
     ) {}
 
     async handle(command: AuthenticateUserCommand): Promise<AuthenticationResult> {
-        console.log(`🔍 AuthenticateUserHandler.handle: START - email: ${command.email.getValue()}, customerId: ${command.customerId?.getValue() || 'null'}`);
         let user: UserEntity | null;
-        
-        try {
-            // Get password value from Password object
-            const passwordValue = typeof command.password === 'string' 
-                ? command.password 
-                : command.password.getValue();
-            
-            if (command.customerId === null) {
-                console.log(`🔍 AuthenticateUserHandler.handle: Using SUPERADMIN authentication`);
-                // SUPERADMIN authentication
-                user = await this.userAuthenticator.authenticateSuperAdmin(
-                    command.email,
-                    passwordValue
-                );
-            } else {
-                console.log(`🔍 AuthenticateUserHandler.handle: Using tenant-specific authentication`);
-                // Tenant-specific authentication
-                user = await this.userAuthenticator.authenticate(
-                    command.email,
-                    passwordValue,
-                    command.customerId
-                );
-            }
-        } catch (error) {
-            console.log(`🔍 AuthenticateUserHandler.handle: Authentication failed:`, error);
-            throw error;
+
+        const passwordValue = typeof command.password === 'string'
+            ? command.password
+            : command.password.getValue();
+
+        if (command.customerId === null) {
+            user = await this.userAuthenticator.authenticateSuperAdmin(
+                command.email,
+                passwordValue
+            );
+        } else {
+            user = await this.userAuthenticator.authenticate(
+                command.email,
+                passwordValue,
+                command.customerId
+            );
         }
 
         if (!user) {
-            console.log('🔍 AuthenticateUserHandler.handle: User authentication returned null');
             throw new Error('Invalid credentials - user authentication failed');
         }
 
-        console.log('🔍 AuthenticateUserHandler.handle: User authenticated successfully, creating session');
-        
-        // Use a transaction to ensure user update and session creation are atomic
         const { PrismaService } = await import('@iotpilot/core/shared/infrastructure/database/prisma.service');
         const prismaService = new PrismaService();
-        const result = await prismaService.getClient().$transaction(async (tx: any) => {
-            // Update user's last login time
+        const token = await prismaService.getClient().$transaction(async (tx: any) => {
             await tx.user.update({
                 where: { id: user!.getId().getValue() },
                 data: { lastLoginAt: new Date() }
             });
-            
-            // Create a new session for the user
-            const token = await this.sessionService.createSession(
-                user.getId().getValue(),
-                user.getCustomerId()?.getValue() || null,
+
+            return this.sessionService.createSession(
+                user!.getId().getValue(),
+                user!.getCustomerId()?.getValue() || null,
                 tx
             );
-            
-            return token;
         });
-        
-        console.log('🔍 AuthenticateUserHandler.handle: Session created successfully');
+
+        await this.eventBus.publish(new UserAuthenticatedEvent(
+            user.getId(),
+            user.getEmail()
+        ));
 
         return {
             user: {
@@ -93,7 +79,7 @@ export class AuthenticateUserHandler implements CommandHandler<AuthenticateUserC
                 role: user.getRole().getValue(),
                 customerId: user.getCustomerId()?.getValue() || null
             },
-            token: result
+            token
         };
     }
 }

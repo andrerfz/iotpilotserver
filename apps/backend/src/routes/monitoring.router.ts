@@ -226,21 +226,9 @@ monitoringRouter.get('/alerts', requireAuth(), async (req: AuthenticatedRequest,
         });
         return;
 
-    } catch (error) {
-        console.error('❌ MONITORING ALERTS GET: Failed to fetch alerts with DDD:', error);
-
-        if (error instanceof Error) {
-            if (error.message.includes('Tenant access violation') || error.message.includes('access denied')) {
-                send.forbidden(res, 'Access denied');
-                return;
-            }
-            if (error.message.includes('not found')) {
-                send.notFound(res, 'Alerts not found');
-                return;
-            }
-        }
-
-        send.internalError(res, 'Failed to fetch alerts');
+    } catch (err) {
+        console.error('❌ MONITORING ALERTS GET: Failed to fetch alerts with DDD:', err);
+        send.fromError(res, err);
     }
 });
 
@@ -327,25 +315,9 @@ monitoringRouter.post('/alerts', requireAuth(), async (req: AuthenticatedRequest
         });
         return;
 
-    } catch (error) {
-        console.error('❌ MONITORING ALERTS POST: Failed to create alert with DDD:', error);
-
-        if (error instanceof Error) {
-            if (error.message.includes('Tenant access violation')) {
-                send.forbidden(res, 'Access denied');
-                return;
-            }
-            if (error.message.includes('Device not found') || error.message.includes('Threshold not found')) {
-                send.notFound(res, error.message);
-                return;
-            }
-            if (error.message.includes('validation') || error.message.includes('required')) {
-                send.badRequest(res, error.message);
-                return;
-            }
-        }
-
-        send.internalError(res, 'Failed to create alert');
+    } catch (err) {
+        console.error('❌ MONITORING ALERTS POST: Failed to create alert with DDD:', err);
+        send.fromError(res, err);
     }
 });
 
@@ -435,21 +407,9 @@ monitoringRouter.get('/alerts/:id', requireAuth(), async (req: AuthenticatedRequ
         send.ok(res, response);
         return;
 
-    } catch (error) {
-        console.error('❌ MONITORING ALERT GET: Failed to fetch alert details with DDD:', error);
-
-        if (error instanceof Error) {
-            if (error.message.includes('not found')) {
-                send.notFound(res, 'Alert not found');
-                return;
-            }
-            if (error.message.includes('Tenant access violation') || error.message.includes('access denied')) {
-                send.forbidden(res, 'Access denied');
-                return;
-            }
-        }
-
-        send.internalError(res, 'Failed to fetch alert details');
+    } catch (err) {
+        console.error('❌ MONITORING ALERT GET: Failed to fetch alert details with DDD:', err);
+        send.fromError(res, err);
     }
 });
 
@@ -564,29 +524,9 @@ monitoringRouter.put('/alerts/:id', requireAuth(), async (req: AuthenticatedRequ
         send.ok(res, response);
         return;
 
-    } catch (error) {
-        console.error('❌ MONITORING ALERT PUT: Failed to update alert with DDD:', error);
-
-        if (error instanceof Error) {
-            if (error.message.includes('not found')) {
-                send.notFound(res, 'Alert not found');
-                return;
-            }
-            if (error.message.includes('Tenant access violation')) {
-                send.forbidden(res, 'Access denied');
-                return;
-            }
-            if (error.message.includes('already acknowledged') || error.message.includes('already resolved')) {
-                res.status(409).json({ success: false, error: error.message, code: 'CONFLICT', timestamp: isoTimestamp() });
-                return;
-            }
-            if (error.message.includes('validation') || error.message.includes('required')) {
-                send.badRequest(res, error.message);
-                return;
-            }
-        }
-
-        send.internalError(res, 'Failed to update alert');
+    } catch (err) {
+        console.error('❌ MONITORING ALERT PUT: Failed to update alert with DDD:', err);
+        send.fromError(res, err);
     }
 });
 
@@ -655,25 +595,9 @@ monitoringRouter.delete('/alerts/:id', requireAuth(), async (req: AuthenticatedR
         send.ok(res, response);
         return;
 
-    } catch (error) {
-        console.error('❌ MONITORING ALERT DELETE: Failed to delete alert with DDD:', error);
-
-        if (error instanceof Error) {
-            if (error.message.includes('not found')) {
-                send.notFound(res, 'Alert not found');
-                return;
-            }
-            if (error.message.includes('Tenant access violation')) {
-                send.forbidden(res, 'Access denied');
-                return;
-            }
-            if (error.message.includes('validation') || error.message.includes('required')) {
-                send.badRequest(res, error.message);
-                return;
-            }
-        }
-
-        send.internalError(res, 'Failed to delete alert');
+    } catch (err) {
+        console.error('❌ MONITORING ALERT DELETE: Failed to delete alert with DDD:', err);
+        send.fromError(res, err);
     }
 });
 
@@ -793,25 +717,9 @@ monitoringRouter.get('/metrics', requireAuth(), async (req: AuthenticatedRequest
         send.ok(res, response);
         return;
 
-    } catch (error) {
-        console.error('❌ MONITORING METRICS GET: Failed to fetch system metrics with DDD:', error);
-
-        if (error instanceof Error) {
-            if (error.message.includes('TimeRange') || error.message.includes('invalid date')) {
-                send.badRequest(res, 'Invalid time range parameters');
-                return;
-            }
-            if (error.message.includes('Tenant access violation') || error.message.includes('access denied')) {
-                send.forbidden(res, 'Access denied');
-                return;
-            }
-            if (error.message.includes('not found')) {
-                send.notFound(res, 'Metrics not found');
-                return;
-            }
-        }
-
-        send.internalError(res, 'Failed to fetch system metrics');
+    } catch (err) {
+        console.error('❌ MONITORING METRICS GET: Failed to fetch system metrics with DDD:', err);
+        send.fromError(res, err);
     }
 });
 
@@ -1021,33 +929,9 @@ monitoringRouter.get('/reports', requireAuth(), async (req: AuthenticatedRequest
             return;
         }
 
-    } catch (error) {
-        console.error('❌ MONITORING REPORTS GET: Failed to generate report with DDD:', error);
-
-        if (error instanceof Error) {
-            if (error.message.includes('Tenant access violation') || error.message.includes('access denied')) {
-                send.forbidden(res, 'Access denied');
-                return;
-            }
-            if (error.message.includes('Device not found')) {
-                send.notFound(res, 'Device not found');
-                return;
-            }
-            if (error.message.includes('TimeRange') || error.message.includes('invalid date')) {
-                send.badRequest(res, 'Invalid time range parameters');
-                return;
-            }
-            if (error.message.includes('report type') || error.message.includes('format')) {
-                send.badRequest(res, error.message);
-                return;
-            }
-            if (error.message.includes('timeout') || error.message.includes('too large')) {
-                res.status(408).json({ success: false, error: 'Report generation timeout - try a smaller date range or fewer metrics', code: 'TIMEOUT', timestamp: isoTimestamp() });
-                return;
-            }
-        }
-
-        send.internalError(res, 'Failed to generate report');
+    } catch (err) {
+        console.error('❌ MONITORING REPORTS GET: Failed to generate report with DDD:', err);
+        send.fromError(res, err);
     }
 });
 
@@ -1152,21 +1036,9 @@ monitoringRouter.get('/thresholds', requireAuth(), async (req: AuthenticatedRequ
         send.ok(res, response);
         return;
 
-    } catch (error) {
-        console.error('❌ MONITORING THRESHOLDS GET: Failed to fetch thresholds with DDD:', error);
-
-        if (error instanceof Error) {
-            if (error.message.includes('Tenant access violation') || error.message.includes('access denied')) {
-                send.forbidden(res, 'Access denied');
-                return;
-            }
-            if (error.message.includes('not found')) {
-                send.notFound(res, 'Thresholds not found');
-                return;
-            }
-        }
-
-        send.internalError(res, 'Failed to fetch thresholds');
+    } catch (err) {
+        console.error('❌ MONITORING THRESHOLDS GET: Failed to fetch thresholds with DDD:', err);
+        send.fromError(res, err);
     }
 });
 
@@ -1270,28 +1142,8 @@ monitoringRouter.post('/thresholds', requireAuth(), async (req: AuthenticatedReq
         });
         return;
 
-    } catch (error) {
-        console.error('❌ MONITORING THRESHOLDS POST: Failed to create threshold with DDD:', error);
-
-        if (error instanceof Error) {
-            if (error.message.includes('Tenant access violation')) {
-                send.forbidden(res, 'Access denied');
-                return;
-            }
-            if (error.message.includes('Device not found')) {
-                send.notFound(res, 'Device not found');
-                return;
-            }
-            if (error.message.includes('already exists')) {
-                res.status(409).json({ success: false, error: 'Threshold with this name already exists', code: 'CONFLICT', timestamp: isoTimestamp() });
-                return;
-            }
-            if (error.message.includes('validation') || error.message.includes('required')) {
-                send.badRequest(res, error.message);
-                return;
-            }
-        }
-
-        send.internalError(res, 'Failed to create threshold');
+    } catch (err) {
+        console.error('❌ MONITORING THRESHOLDS POST: Failed to create threshold with DDD:', err);
+        send.fromError(res, err);
     }
 });

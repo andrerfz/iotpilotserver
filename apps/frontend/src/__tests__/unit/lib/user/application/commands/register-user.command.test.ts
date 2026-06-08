@@ -16,6 +16,7 @@ describe('RegisterUserCommand', () => {
   let mockUserRepository: any;
   let mockPasswordHasher: PasswordHasher;
   let mockLogger: StructuredLogger;
+  let mockEventBus: any;
   let tenantContext: TenantContextImpl;
 
   beforeEach(() => {
@@ -41,6 +42,8 @@ describe('RegisterUserCommand', () => {
       debug: vi.fn(),
     } as unknown as StructuredLogger;
 
+    mockEventBus = { publish: vi.fn().mockResolvedValue(undefined) };
+
     const customerId = CustomerId.create(CUSTOMER_UUID);
     const userId = UserId.fromString('admin-user-123');
     const userRole = UserRole.admin();
@@ -55,7 +58,8 @@ describe('RegisterUserCommand', () => {
     registerUserHandler = new RegisterUserHandler(
       mockUserRepository as UserRepository,
       mockPasswordHasher,
-      mockLogger
+      mockLogger,
+      mockEventBus
     );
   });
 

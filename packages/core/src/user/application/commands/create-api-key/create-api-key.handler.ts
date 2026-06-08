@@ -10,19 +10,18 @@ import {CustomerId} from '@iotpilot/core/shared/domain/value-objects/customer-id
 import {ApiKeyMapper} from '@iotpilot/core/user/infrastructure/mappers/api-key.mapper';
 import {ApiKeyLimitExceededException} from '@iotpilot/core/user/domain/exceptions/user.exception';
 import {CryptoService} from '@iotpilot/core/shared/domain/interfaces/crypto-service.interface';
+import {EventBus} from '@iotpilot/core/shared/application/bus/event.bus';
+import {ApiKeyCreatedEvent} from '@iotpilot/core/user/domain/events/api-key-created.event';
 
 const MAX_API_KEYS_PER_USER = parseInt(process.env.MAX_API_KEYS_PER_USER || '5', 10);
 
-/**
- * Handler for creating API keys command
- * Uses constructor injection for repository dependency
- */
 export class CreateApiKeyHandler implements CommandHandler<CreateApiKeyCommand, CreateApiKeyResult> {
     private readonly apiKeyMapper: ApiKeyMapper;
 
     constructor(
         private readonly apiKeyRepository: ApiKeyRepository,
-        private readonly cryptoService: CryptoService
+        private readonly cryptoService: CryptoService,
+        private readonly eventBus: EventBus
     ) {
         this.apiKeyMapper = new ApiKeyMapper();
     }
@@ -30,6 +29,7 @@ export class CreateApiKeyHandler implements CommandHandler<CreateApiKeyCommand, 
     async handle(command: CreateApiKeyCommand): Promise<CreateApiKeyResult> {
         const userId = UserId.fromString(command.userId);
         const customerId = CustomerId.fromString(command.customerId);
+
 
         // Check API key limit
         const existingCount = await this.apiKeyRepository.countByUserId(userId, command.getTenantContext());
@@ -55,6 +55,12 @@ export class CreateApiKeyHandler implements CommandHandler<CreateApiKeyCommand, 
 
         // Save to repository
         await this.apiKeyRepository.save(apiKey, command.getTenantContext());
+
+        await this.eventBus.publish(new ApiKeyCreatedEvent(
+            apiKey.id,
+            apiKey.userId,
+            customerId
+        ));
 
         // Return DTO with full key (only on creation)
         const dto = this.apiKeyMapper.toDTOWithFullKey(apiKey);

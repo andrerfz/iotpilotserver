@@ -73,6 +73,12 @@ export class DeviceServiceProvider implements BoundedContextProvider {
   registerHandlers(ctx: HandlerRegistrationContext): void {
     const {commandBus, queryBus, eventBus, container} = ctx;
 
+    const {ActivateDeviceCommand} = require('@iotpilot/core/device/application/commands/activate-device/activate-device.command');
+    const {ActivateDeviceHandler} = require('@iotpilot/core/device/application/commands/activate-device/activate-device.handler');
+    const {DeactivateDeviceCommand} = require('@iotpilot/core/device/application/commands/deactivate-device/deactivate-device.command');
+    const {DeactivateDeviceHandler} = require('@iotpilot/core/device/application/commands/deactivate-device/deactivate-device.handler');
+    const {SearchDevicesQuery} = require('@iotpilot/core/device/application/queries/search-devices/search-devices.query');
+    const {SearchDevicesHandler} = require('@iotpilot/core/device/application/queries/search-devices/search-devices.handler');
     const {ListDevicesQuery} = require('@iotpilot/core/device/application/queries/list-devices/list-devices.query');
     const {ListDevicesHandler} = require('@iotpilot/core/device/application/queries/list-devices/list-devices.handler');
     const {GetDeviceQuery} = require('@iotpilot/core/device/application/queries/get-device/get-device.query');
@@ -116,6 +122,7 @@ export class DeviceServiceProvider implements BoundedContextProvider {
 
     // Queries
     queryBus.register(ListDevicesQuery, new ListDevicesHandler(deviceRepo));
+    queryBus.register(SearchDevicesQuery, new SearchDevicesHandler(deviceRepo));
     queryBus.register(GetDeviceQuery, new GetDeviceHandler(deviceRepo));
     queryBus.register(GetDeviceStatusQuery, new GetDeviceStatusHandler(deviceRepo));
     queryBus.register(GetDeviceMetricsQuery, new GetDeviceMetricsHandler(deviceRepo, metricsRepo));
@@ -123,12 +130,14 @@ export class DeviceServiceProvider implements BoundedContextProvider {
     queryBus.register(GetSystemHealthQuery, new GetSystemHealthHandler(prisma));
 
     // Commands
+    commandBus.register(ActivateDeviceCommand, new ActivateDeviceHandler(deviceRepo, logger, eventBus));
+    commandBus.register(DeactivateDeviceCommand, new DeactivateDeviceHandler(deviceRepo, logger, eventBus));
     commandBus.register(RegisterDeviceCommand, new RegisterDeviceHandler(deviceRepo, logger));
     commandBus.register(RegisterDeviceCompleteCommand, new RegisterDeviceCompleteHandler(deviceRepo, prisma));
-    commandBus.register(UpdateDeviceCommand, new UpdateDeviceHandler(deviceRepo, logger));
+    commandBus.register(UpdateDeviceCommand, new UpdateDeviceHandler(deviceRepo, logger, eventBus));
     commandBus.register(RemoveDeviceCommand, new RemoveDeviceHandler(deviceRemover, deviceRepo, eventBus));
     commandBus.register(BulkRegisterDevicesCommand, new BulkRegisterDevicesHandler(deviceRepo, logger, cryptoService));
-    commandBus.register(ProcessHeartbeatCommand, new ProcessHeartbeatHandler(prisma));
+    commandBus.register(ProcessHeartbeatCommand, new ProcessHeartbeatHandler(prisma, eventBus));
     commandBus.register(RecordSensorReadingCommand, new RecordSensorReadingHandler(prisma));
     commandBus.register(ClaimDeviceCommand, new ClaimDeviceHandler(prisma));
     commandBus.register(ProvisionDeviceCommand, new ProvisionDeviceHandler(prisma));

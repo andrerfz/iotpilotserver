@@ -146,22 +146,9 @@ usersRouter.get('/', requireAuth(), async (req: AuthenticatedRequest, res: Respo
         });
         return;
 
-    } catch (error) {
-        console.error('❌ USERS GET: Failed to list users with DDD:', error);
-
-        if (error instanceof Error) {
-            if (error.message.includes('Tenant access violation')) {
-                send.forbidden(res, 'Access denied');
-                return;
-            }
-            if (error.message.includes('not found')) {
-                send.notFound(res, 'Customer not found');
-                return;
-            }
-        }
-
-        send.internalError(res, 'Failed to list users');
-        return;
+    } catch (err) {
+        console.error('❌ USERS GET: Failed to list users with DDD:', err);
+        send.fromError(res, err);
     }
 });
 
@@ -227,30 +214,9 @@ usersRouter.post('/', requireAuth('SUPERADMIN'), async (req: AuthenticatedReques
         });
         return;
 
-    } catch (error) {
-        console.error('❌ USERS POST: Failed to create user with DDD:', error);
-
-        if (error instanceof z.ZodError) {
-            send.badRequest(res, 'Invalid input', error.errors.map(err => ({
-                path: err.path.join('.'),
-                message: err.message
-            })));
-            return;
-        }
-
-        if (error instanceof Error) {
-            if (error.message.includes('already exists')) {
-                res.status(409).json({ success: false, error: error.message, code: 'CONFLICT', timestamp: isoTimestamp() });
-                return;
-            }
-            if (error.message.includes('validation')) {
-                send.badRequest(res, error.message);
-                return;
-            }
-        }
-
-        send.internalError(res, 'Failed to create user');
-        return;
+    } catch (err) {
+        console.error('❌ USERS POST: Failed to create user with DDD:', err);
+        send.fromError(res, err);
     }
 });
 
@@ -319,22 +285,9 @@ usersRouter.get('/current', requireAuth(), async (req: AuthenticatedRequest, res
         send.ok(res, response);
         return;
 
-    } catch (error) {
-        console.error('❌ USER CURRENT GET: Failed to get current user with DDD:', error);
-
-        if (error instanceof Error) {
-            if (error.message.includes('not found')) {
-                send.notFound(res, 'User not found');
-                return;
-            }
-            if (error.message.includes('Tenant access violation')) {
-                send.forbidden(res, 'Access denied');
-                return;
-            }
-        }
-
-        send.internalError(res, 'Failed to get current user');
-        return;
+    } catch (err) {
+        console.error('❌ USER CURRENT GET: Failed to get current user with DDD:', err);
+        send.fromError(res, err);
     }
 });
 
@@ -392,22 +345,9 @@ usersRouter.get('/:id', requireAuth(), async (req: AuthenticatedRequest, res: Re
         });
         return;
 
-    } catch (error) {
-        console.error('❌ USER GET BY ID: Failed to get user with DDD:', error);
-
-        if (error instanceof Error) {
-            if (error.message.includes('not found')) {
-                send.notFound(res, 'User not found');
-                return;
-            }
-            if (error.message.includes('Tenant access violation')) {
-                send.forbidden(res, 'Access denied');
-                return;
-            }
-        }
-
-        send.internalError(res, 'Failed to get user');
-        return;
+    } catch (err) {
+        console.error('❌ USER GET BY ID: Failed to get user with DDD:', err);
+        send.fromError(res, err);
     }
 });
 
@@ -467,34 +407,9 @@ usersRouter.put('/:id', requireAuth(), async (req: AuthenticatedRequest, res: Re
         });
         return;
 
-    } catch (error: unknown) {
-        console.error('❌ USER PUT: Error updating user:', error);
-
-        if (error instanceof z.ZodError) {
-            send.badRequest(res, 'Invalid input', error.errors.map(err => ({
-                path: err.path.join('.'),
-                message: err.message
-            })));
-            return;
-        }
-
-        if (error instanceof Error) {
-            if (error.message.includes('not found')) {
-                send.notFound(res, 'User not found');
-                return;
-            }
-            if (error.message.includes('already exists')) {
-                res.status(409).json({ success: false, error: error.message, code: 'CONFLICT', timestamp: isoTimestamp() });
-                return;
-            }
-            if (error.message.includes('Tenant access violation')) {
-                send.forbidden(res, 'Access denied');
-                return;
-            }
-        }
-
-        send.internalError(res, 'Failed to update user');
-        return;
+    } catch (err: unknown) {
+        console.error('❌ USER PUT: Error updating user:', err);
+        send.fromError(res, err);
     }
 });
 
@@ -553,26 +468,9 @@ usersRouter.delete('/:id', requireAuth('SUPERADMIN'), async (req: AuthenticatedR
         });
         return;
 
-    } catch (error) {
-        console.error('❌ USER DELETE: Failed to remove user with DDD:', error);
-
-        if (error instanceof Error) {
-            if (error.message.includes('not found')) {
-                send.notFound(res, 'User not found');
-                return;
-            }
-            if (error.message.includes('Cannot delete')) {
-                send.badRequest(res, error.message);
-                return;
-            }
-            if (error.message.includes('Tenant access violation')) {
-                send.forbidden(res, 'Access denied');
-                return;
-            }
-        }
-
-        send.internalError(res, 'Failed to delete user');
-        return;
+    } catch (err) {
+        console.error('❌ USER DELETE: Failed to remove user with DDD:', err);
+        send.fromError(res, err);
     }
 });
 
@@ -629,22 +527,9 @@ usersRouter.get('/:id/profile', requireAuth(), async (req: AuthenticatedRequest,
         send.ok(res, { profile: profileResult });
         return;
 
-    } catch (error) {
-        console.error('❌ USER PROFILE GET: Failed to get user profile with DDD:', error);
-
-        if (error instanceof Error) {
-            if (error.message.includes('not found')) {
-                send.notFound(res, 'User not found');
-                return;
-            }
-            if (error.message.includes('Tenant access violation')) {
-                send.forbidden(res, 'Access denied');
-                return;
-            }
-        }
-
-        send.internalError(res, 'Failed to get user profile');
-        return;
+    } catch (err) {
+        console.error('❌ USER PROFILE GET: Failed to get user profile with DDD:', err);
+        send.fromError(res, err);
     }
 });
 
@@ -708,30 +593,9 @@ usersRouter.put('/:id/profile', requireAuth(), async (req: AuthenticatedRequest,
         });
         return;
 
-    } catch (error) {
-        console.error('❌ USER PROFILE PUT: Failed to update profile with DDD:', error);
-
-        if (error instanceof z.ZodError) {
-            send.badRequest(res, 'Invalid input', error.errors.map((err: z.ZodIssue) => ({
-                path: err.path.join('.'),
-                message: err.message
-            })));
-            return;
-        }
-
-        if (error instanceof Error) {
-            if (error.message.includes('not found')) {
-                send.notFound(res, 'User not found');
-                return;
-            }
-            if (error.message.includes('Tenant access violation')) {
-                send.forbidden(res, 'Access denied');
-                return;
-            }
-        }
-
-        send.internalError(res, 'Failed to update profile');
-        return;
+    } catch (err) {
+        console.error('❌ USER PROFILE PUT: Failed to update profile with DDD:', err);
+        send.fromError(res, err);
     }
 });
 
@@ -762,9 +626,8 @@ usersRouter.get('/:id/notification-preferences', requireAuth(), async (req: Auth
         send.ok(res, prefs);
         return;
 
-    } catch (error) {
-        send.internalError(res, 'Failed to fetch preferences');
-        return;
+    } catch (err) {
+        send.fromError(res, err);
     }
 });
 
@@ -809,8 +672,7 @@ usersRouter.put('/:id/notification-preferences', requireAuth(), async (req: Auth
         send.ok(res, { updated: true });
         return;
 
-    } catch (error) {
-        send.internalError(res, 'Failed to update preference');
-        return;
+    } catch (err) {
+        send.fromError(res, err);
     }
 });

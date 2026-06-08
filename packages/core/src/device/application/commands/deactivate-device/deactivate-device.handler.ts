@@ -6,11 +6,14 @@ import {DeviceNotFoundException} from '../../../domain/exceptions/device-not-fou
 import {UnauthorizedDeviceAccessException} from '../../../domain/exceptions/unauthorized-device-access.exception';
 import {DeviceAlreadyInactiveException} from '../../../domain/exceptions/device-already-inactive.exception';
 import {StructuredLogger} from '../../../../shared/infrastructure/logging/structured-logger';
+import {EventBus} from '@iotpilot/core/shared/application/bus/event.bus';
+import {DeviceDeactivatedEvent} from '../../../domain/events/device-deactivated.event';
 
 export class DeactivateDeviceHandler implements CommandHandler<DeactivateDeviceCommand, DeviceEntity> {
   constructor(
     private readonly deviceRepository: DeviceRepository,
-    private readonly logger: StructuredLogger
+    private readonly logger: StructuredLogger,
+    private readonly eventBus: EventBus
   ) {}
 
   async handle(command: DeactivateDeviceCommand): Promise<DeviceEntity> {
@@ -52,6 +55,11 @@ export class DeactivateDeviceHandler implements CommandHandler<DeactivateDeviceC
 
     // Save updated device
     await this.deviceRepository.save(device, tenantContext);
+
+    const tenantId = device.customerId;
+    if (tenantId) {
+      await this.eventBus.publish(new DeviceDeactivatedEvent(device.getId(), device.name, tenantId));
+    }
 
     const customerId = tenantContext.getCustomerId();
     const userId = tenantContext.getUserId();

@@ -201,13 +201,9 @@ authRouter.post('/login', async (req: AuthenticatedRequest, res: Response) => {
             }
 
             logger.debug('AuthenticateUserCommand created successfully');
-        } catch (error) {
-            logger.error('Error in authentication setup', error instanceof Error ? error : undefined, { ipAddress: clientIP });
-            if (error instanceof Error && error.message.includes('Password must contain')) {
-                send.badRequest(res, 'Invalid password format');
-                return;
-            }
-            send.unauthorized(res, 'Invalid credentials');
+        } catch (err) {
+            logger.error('Error in authentication setup', err instanceof Error ? err : undefined, { ipAddress: clientIP });
+            send.fromError(res, err);
             return;
         }
 
@@ -284,57 +280,14 @@ authRouter.post('/login', async (req: AuthenticatedRequest, res: Response) => {
         });
         return;
 
-    } catch (error) {
-        logger.error('Login failed', error instanceof Error ? error : undefined, {
-            email: 'parsed_from_body',
+    } catch (err) {
+        logger.error('Login failed', err instanceof Error ? err : undefined, {
             ipAddress: clientIP,
             userAgent,
-            errorType: error instanceof Error ? error.name : 'Unknown',
             securityEvent: 'LOGIN_FAILURE',
         });
-
         logger.logLoginAttempt('unknown', undefined, clientIP, false, userAgent);
-
-        if (error && typeof error === 'object' && 'errors' in error && Array.isArray((error as any).errors)) {
-            logger.warn('Login validation failed', { error: 'Invalid input format', ipAddress: clientIP });
-            send.badRequest(res, 'Invalid input', (error as any).errors);
-            return;
-        }
-
-        if (error instanceof Error) {
-            if (error.message.startsWith('USER_NOT_ACTIVE:')) {
-                const emailAddr = error.message.split(':')[1];
-                try {
-                    const userRow = await ServiceContainer.getInstance().getPrismaClient().getClient().user.findFirst({
-                        where: { email: emailAddr },
-                        select: { status: true },
-                    });
-                    const statusMsg: Record<string, string> = {
-                        PENDING: 'Your account is awaiting admin approval.',
-                        SUSPENDED: 'Your account has been suspended. Contact your administrator.',
-                        INACTIVE: 'Your account has been deactivated. Contact your administrator.',
-                    };
-                    const msg = statusMsg[(userRow?.status as string) ?? ''] ?? 'Your account is not active.';
-                    send.unauthorized(res, msg);
-                    return;
-                } catch {
-                    send.unauthorized(res, 'Your account is not active.');
-                    return;
-                }
-            }
-
-            if (error.message.includes('Invalid credentials') ||
-                error.message.includes('not found') ||
-                error.message.includes('Password verification failed')) {
-                logger.warn('Invalid credentials attempt', { error: error.message, ipAddress: clientIP, userAgent });
-                send.unauthorized(res, 'Invalid credentials');
-                return;
-            }
-        }
-
-        logger.error('Unexpected login error', error instanceof Error ? error : undefined, { ipAddress: clientIP, userAgent });
-        send.internalError(res, 'Internal server error');
-        return;
+        send.fromError(res, err);
     }
 });
 
@@ -393,17 +346,8 @@ authRouter.post('/logout', async (req: AuthenticatedRequest, res: Response) => {
         send.ok(res, { message: 'Logged out successfully' });
         return;
 
-    } catch (error) {
-        if (error instanceof Error) {
-            if (error.message.includes('not found') || error.message.includes('Session not found')) {
-                res.clearCookie('auth-token', { path: '/' });
-                send.ok(res, { message: 'Logged out successfully' });
-                return;
-            }
-        }
-
-        send.internalError(res, 'Internal server error');
-        return;
+    } catch (err) {
+        send.fromError(res, err);
     }
 });
 
@@ -458,20 +402,8 @@ authRouter.get('/me', requireAuth(), async (req: AuthenticatedRequest, res: Resp
         send.ok(res, { user: userData });
         return;
 
-    } catch (error) {
-        if (error instanceof Error) {
-            if (error.message.includes('not found')) {
-                send.notFound(res, 'User not found');
-                return;
-            }
-            if (error.message.includes('Tenant access violation')) {
-                send.forbidden(res, 'Access denied');
-                return;
-            }
-        }
-
-        send.internalError(res, 'Internal server error');
-        return;
+    } catch (err) {
+        send.fromError(res, err);
     }
 });
 
@@ -583,32 +515,8 @@ authRouter.post('/register', async (req: AuthenticatedRequest, res: Response) =>
         });
         return;
 
-    } catch (error) {
-        if (error instanceof z.ZodError) {
-            send.badRequest(res, 'Invalid input', error.errors.map(err => ({
-                path: err.path.join('.'),
-                message: err.message,
-            })));
-            return;
-        }
-
-        if (error instanceof Error) {
-            if (error.message.includes('already exists') || error.message.includes('User with this email already exists')) {
-                res.status(409).json({ success: false, error: error.message, code: 'CONFLICT', timestamp: isoTimestamp() });
-                return;
-            }
-            if (error.message.includes('validation') || error.message.includes('required')) {
-                send.badRequest(res, error.message);
-                return;
-            }
-            if (error.message.includes('Password')) {
-                send.badRequest(res, error.message);
-                return;
-            }
-        }
-
-        send.internalError(res, 'Internal server error');
-        return;
+    } catch (err) {
+        send.fromError(res, err);
     }
 });
 
@@ -684,35 +592,11 @@ authRouter.post('/refresh', async (req: AuthenticatedRequest, res: Response) => 
         });
         return;
 
-    } catch (error) {
+    } catch (err) {
         if (process.env.NODE_ENV === 'development') {
-            console.error('AUTH REFRESH: Failed to refresh token with DDD:', error);
+            console.error('AUTH REFRESH: Failed to refresh token with DDD:', err);
         }
-
-        if (error && typeof error === 'object' && 'errors' in error && Array.isArray((error as any).errors)) {
-            send.badRequest(res, 'Invalid refresh request', (error as any).errors);
-            return;
-        }
-
-        if (error instanceof Error) {
-            if (error.message.includes('Invalid or expired refresh token')) {
-                res.clearCookie('auth-token', { path: '/' });
-                send.unauthorized(res, 'Invalid or expired refresh token');
-                return;
-            }
-            if (error.message.includes('Session not found') || error.message.includes('Session expired')) {
-                res.clearCookie('auth-token', { path: '/' });
-                send.unauthorized(res, 'Session expired or not found');
-                return;
-            }
-            if (error.message.includes('User not found')) {
-                send.notFound(res, 'User associated with session not found');
-                return;
-            }
-        }
-
-        send.internalError(res, 'Failed to refresh token');
-        return;
+        send.fromError(res, err);
     }
 });
 
@@ -773,22 +657,9 @@ authRouter.get('/session', async (req: AuthenticatedRequest, res: Response) => {
         send.ok(res, sessionData);
         return;
 
-    } catch (error) {
-        console.error('AUTH SESSION: Failed to validate session with DDD:', error);
-
-        if (error instanceof Error) {
-            if (error.message.includes('Token is required')) {
-                send.unauthorized(res, 'No authentication token provided');
-                return;
-            }
-            if (error.message.includes('Session not found') || error.message.includes('expired')) {
-                send.unauthorized(res, 'Invalid or expired session');
-                return;
-            }
-        }
-
-        send.internalError(res, 'Failed to validate session');
-        return;
+    } catch (err) {
+        console.error('AUTH SESSION: Failed to validate session with DDD:', err);
+        send.fromError(res, err);
     }
 });
 
@@ -818,10 +689,9 @@ authRouter.get('/sessions', requireAuth(), async (req: AuthenticatedRequest, res
 
         send.ok(res, sessions);
         return;
-    } catch (error) {
-        console.error('Error listing sessions:', error);
-        send.internalError(res, 'Failed to list sessions');
-        return;
+    } catch (err) {
+        console.error('Error listing sessions:', err);
+        send.fromError(res, err);
     }
 });
 
@@ -852,10 +722,9 @@ authRouter.delete('/sessions', requireAuth(), async (req: AuthenticatedRequest, 
 
         send.ok(res, { revokedCount: result.count });
         return;
-    } catch (error) {
-        console.error('Error revoking sessions:', error);
-        send.internalError(res, 'Failed to revoke sessions');
-        return;
+    } catch (err) {
+        console.error('Error revoking sessions:', err);
+        send.fromError(res, err);
     }
 });
 
@@ -888,10 +757,9 @@ authRouter.delete('/sessions/:id', requireAuth(), async (req: AuthenticatedReque
             wasCurrentSession: currentToken === session.token,
         });
         return;
-    } catch (error) {
-        console.error('Error revoking session:', error);
-        send.internalError(res, 'Failed to revoke session');
-        return;
+    } catch (err) {
+        console.error('Error revoking session:', err);
+        send.fromError(res, err);
     }
 });
 
@@ -943,10 +811,9 @@ authRouter.put('/password', requireAuth(), async (req: AuthenticatedRequest, res
         send.ok(res, { message: 'Password updated successfully' });
         return;
 
-    } catch (error) {
-        console.error('Error changing password:', error);
-        send.internalError(res, 'Failed to change password');
-        return;
+    } catch (err) {
+        console.error('Error changing password:', err);
+        send.fromError(res, err);
     }
 });
 
@@ -996,30 +863,8 @@ authRouter.post('/api-keys', requireAuth(), async (req: AuthenticatedRequest, re
         });
         return;
 
-    } catch (error: unknown) {
-        const safeError = getSafeErrorInfo(error);
-
-        if (error && typeof error === 'object' && 'errors' in error && Array.isArray((error as any).errors)) {
-            const validationErrors = (error as any).errors.map((issue: { path: (string | number)[]; message: string; code: string }) => ({
-                path: issue.path.join('.'),
-                message: issue.message,
-                code: issue.code,
-            }));
-
-            apiKeysLogger.warn('API key creation input validation failed', {
-                event: 'api_key_creation_validation_error',
-                correlationId,
-                userId: req.user?.id,
-                customerId: req.user?.customerId ?? undefined,
-                errorCount: validationErrors.length,
-                firstError: validationErrors[0]?.message,
-                method: 'POST',
-            });
-
-            send.badRequest(res, 'Invalid input', validationErrors);
-            return;
-        }
-
+    } catch (err: unknown) {
+        const safeError = getSafeErrorInfo(err);
         apiKeysLogger.error('API key creation failed via CommandBus', {
             event: 'api_key_creation_command_error',
             correlationId,
@@ -1031,21 +876,7 @@ authRouter.post('/api-keys', requireAuth(), async (req: AuthenticatedRequest, re
             method: 'POST',
             command: 'CreateApiKeyCommand',
         });
-
-        const errorMessage = safeError.message || 'Failed to create API key';
-        if (safeError.type.includes('Domain') || safeError.type.includes('Validation')) {
-            send.badRequest(res, errorMessage);
-            return;
-        } else if (safeError.type.includes('Unauthorized') || safeError.type.includes('Forbidden')) {
-            send.forbidden(res, errorMessage);
-            return;
-        } else if (safeError.type.includes('NotFound')) {
-            send.notFound(res, errorMessage);
-            return;
-        }
-
-        send.internalError(res, errorMessage);
-        return;
+        send.fromError(res, err);
     }
 });
 
@@ -1110,9 +941,8 @@ authRouter.get('/api-keys', requireAuth(), async (req: AuthenticatedRequest, res
         send.ok(res, maskedKeys, { pagination });
         return;
 
-    } catch (error: unknown) {
-        const safeError = getSafeErrorInfo(error);
-
+    } catch (err: unknown) {
+        const safeError = getSafeErrorInfo(err);
         apiKeysLogger.error('API keys query failed', {
             event: 'api_keys_query_failed',
             correlationId,
@@ -1124,9 +954,7 @@ authRouter.get('/api-keys', requireAuth(), async (req: AuthenticatedRequest, res
             method: 'GET',
             query: 'ListApiKeysQuery',
         });
-
-        send.internalError(res, 'Failed to retrieve API keys');
-        return;
+        send.fromError(res, err);
     }
 });
 
@@ -1192,9 +1020,8 @@ authRouter.delete('/api-keys', requireAuth(), async (req: AuthenticatedRequest, 
         });
         return;
 
-    } catch (error: unknown) {
-        const safeError = getSafeErrorInfo(error);
-
+    } catch (err: unknown) {
+        const safeError = getSafeErrorInfo(err);
         apiKeysLogger.error('API key deletion failed', {
             event: 'api_key_deletion_error',
             correlationId,
@@ -1206,9 +1033,7 @@ authRouter.delete('/api-keys', requireAuth(), async (req: AuthenticatedRequest, 
             hasStackTrace: !!safeError.stack,
             method: 'DELETE',
         });
-
-        send.internalError(res, 'Failed to delete API key');
-        return;
+        send.fromError(res, err);
     }
 });
 
@@ -1247,17 +1072,8 @@ authRouter.post('/verify-2fa', async (req: AuthenticatedRequest, res: Response) 
         send.ok(res, result);
         return;
 
-    } catch (error) {
-        if (error instanceof z.ZodError) {
-            send.badRequest(res, 'Invalid input');
-            return;
-        }
-        if (error instanceof Error && error.message.includes('Invalid or expired')) {
-            send.unauthorized(res, 'Invalid or expired verification code');
-            return;
-        }
-        console.error('[verify-2fa] Error:', error);
-        send.internalError(res, 'Verification failed');
-        return;
+    } catch (err) {
+        console.error('[verify-2fa] Error:', err);
+        send.fromError(res, err);
     }
 });
