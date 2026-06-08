@@ -41,7 +41,7 @@ COPY apps/backend/prisma/ ./apps/backend/prisma/
 
 # Generate Prisma client, then build Next.js
 RUN cd /app/apps/backend && prisma generate --schema=./prisma/schema.prisma
-RUN cd apps/frontend && npm run build
+RUN cd apps/frontend && NODE_OPTIONS="--max_old_space_size=1536" npm run build
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Stage 3: Development — hot-reload mode (source mounted as volumes)
