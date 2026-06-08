@@ -113,7 +113,7 @@ fi
 
 # ── Cleanup ───────────────────────────────────────────────────────────────────
 header "Cleanup"
-docker image prune -f >/dev/null 2>&1 || true
+docker image prune -af >/dev/null 2>&1 || true  # -a removes all unused images, not just dangling
 find "$DEPLOY_DIR/logs" -name "*.log" -mtime +7 -delete 2>/dev/null || true
 
 echo ""
