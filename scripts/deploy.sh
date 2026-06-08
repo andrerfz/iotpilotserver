@@ -22,10 +22,8 @@ header "Pre-flight checks"
 docker info >/dev/null 2>&1 || error "Docker is not running"
 [ -f .env ] || error ".env not found — copy .env.example and configure it"
 
-REQUIRED_VARS="POSTGRES_PASSWORD JWT_SECRET DEVICE_API_KEY"
-set -a; source .env; set +a
-for var in $REQUIRED_VARS; do
-  [ -n "${!var:-}" ] || error "Required env var $var is not set in .env"
+for var in POSTGRES_PASSWORD JWT_SECRET DEVICE_API_KEY; do
+  grep -q "^${var}=" .env || error "Required env var $var is not set in .env"
 done
 
 AVAILABLE_KB=$(df "$DEPLOY_DIR" | awk 'NR==2 {print $4}')
