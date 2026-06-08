@@ -120,6 +120,10 @@ services:
       - DEVICE_API_KEY=${DEVICE_API_KEY}
       - DOMAIN=${DOMAIN}
       - APP_URL=https://${NEXT_PUBLIC_DOMAIN_TUNEL}
+    volumes:
+      - ../../apps/backend/src:/app/apps/backend/src
+      - ../../packages/core/src:/app/packages/core/src
+      - ../../packages/core/package.json:/app/packages/core/package.json
     depends_on:
       postgres:
         condition: service_healthy
@@ -153,6 +157,10 @@ services:
       - INFLUXDB_TOKEN=${INFLUXDB_TOKEN}
       - JWT_SECRET=${JWT_SECRET}
       - DEVICE_API_KEY=${DEVICE_API_KEY}
+    volumes:
+      - ../../apps/worker/src:/app/apps/worker/src
+      - ../../packages/core/src:/app/packages/core/src
+      - ../../packages/core/package.json:/app/packages/core/package.json
     depends_on:
       postgres:
         condition: service_healthy

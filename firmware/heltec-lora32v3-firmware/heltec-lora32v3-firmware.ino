@@ -685,6 +685,10 @@ void setup() {
   Serial.println("\n[BOOT] IotPilot Sensor " FIRMWARE_VERSION " (Heltec WiFi LoRa 32 V3)");
 
   checkPrgButton();
+
+  // Turn LED off after boot — only use it for factory reset feedback
+  // Keeps it off during WiFi connect, send and sleep to save battery
+  digitalWrite(LED_PIN, LED_OFF);
   Serial.printf("[BOOT] WiFi fail count: %d/%d\n", wifiFailCount, MAX_WIFI_FAILS);
 
   disableLoRa();
