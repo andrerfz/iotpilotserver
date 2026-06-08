@@ -23,7 +23,7 @@ docker info >/dev/null 2>&1 || error "Docker is not running"
 [ -f .env ] || error ".env not found — copy .env.example and configure it"
 
 for var in POSTGRES_PASSWORD JWT_SECRET DEVICE_API_KEY; do
-  grep -q "^${var}=" .env || error "Required env var $var is not set in .env"
+  grep -Eq "^${var}=.+" .env || error "Required env var $var is not set or empty in .env"
 done
 
 AVAILABLE_KB=$(df "$DEPLOY_DIR" | awk 'NR==2 {print $4}')
@@ -55,14 +55,13 @@ $COMPOSE build
 # ── Run migrations (before swapping containers) ───────────────────────────────
 header "Running database migrations"
 
-# Ensure postgres is up
 $COMPOSE up -d postgres redis
 sleep 5
 
-$COMPOSE run --rm \
-  --no-deps \
-  iotpilot-backend \
-  npm run db:migrate
+for sql in "$DEPLOY_DIR"/apps/backend/prisma/migration/*.sql; do
+  info "  ↳ $(basename "$sql")"
+  docker exec -i iotpilot-postgres psql -U iotpilot -d iotpilot < "$sql" 2>&1 | grep -v "^$" | grep -Ev "^(ALTER|CREATE|INSERT|COMMENT|SET|SELECT)" || true
+done
 
 info "Migrations complete"
 
