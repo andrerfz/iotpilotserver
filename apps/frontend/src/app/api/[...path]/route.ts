@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import http from 'http';
 import https from 'https';
 
-const BACKEND = 'http://iotpilot-server-backend:3100';
+const BACKEND = process.env.NEXT_PUBLIC_API_URL || 'http://iotpilot-server-backend:3100';
 
 async function proxy(req: NextRequest, method: string): Promise<NextResponse> {
   const url = new URL(req.url);
