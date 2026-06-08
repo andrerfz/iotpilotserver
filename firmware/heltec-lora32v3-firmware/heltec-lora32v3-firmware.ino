@@ -76,7 +76,7 @@
 // Battery calibration (Heltec V3: official scale factor 490/100 = 4.9)
 // Source: WiFiLoRa32_battery_read example from Heltec library
 #define BATTERY_SCALE_FACTOR   5.02   // calibrated: multimeter 4.15V / ADC 827mV = 5.02
-#define BATTERY_FULL_V         4.2
+#define BATTERY_FULL_V         4.15  // Heltec V3 charger terminates at ~4.15V, not 4.2V
 #define BATTERY_EMPTY_V        3.0
 #define BATTERY_LOW_THRESHOLD  15.0
 

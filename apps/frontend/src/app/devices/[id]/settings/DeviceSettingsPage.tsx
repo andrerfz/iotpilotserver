@@ -170,7 +170,20 @@ export default function DeviceSettingsPage({ params }: DeviceSettingsPageProps) 
                 if (settingsRes.ok) {
                     const settingsResult = await settingsRes.json();
                     const s = settingsResult.data || settingsResult;
-                    initialSettings = { ...initialSettings, ...s };
+                    initialSettings = {
+                        ...initialSettings,
+                        ...s,
+                        // Coerce numeric fields — API may return them as strings
+                        reportingInterval:    Number(s.reportingInterval    ?? initialSettings.reportingInterval),
+                        heartbeatInterval:    Number(s.heartbeatInterval    ?? initialSettings.heartbeatInterval),
+                        cpuThreshold:         Number(s.cpuThreshold         ?? initialSettings.cpuThreshold),
+                        memoryThreshold:      Number(s.memoryThreshold      ?? initialSettings.memoryThreshold),
+                        temperatureThreshold: Number(s.temperatureThreshold ?? initialSettings.temperatureThreshold),
+                        diskThreshold:        Number(s.diskThreshold        ?? initialSettings.diskThreshold),
+                        sensorTempThreshold:  Number(s.sensorTempThreshold  ?? initialSettings.sensorTempThreshold),
+                        batteryThreshold:     Number(s.batteryThreshold     ?? initialSettings.batteryThreshold),
+                        apiKeyRotationDays:   Number(s.apiKeyRotationDays   ?? initialSettings.apiKeyRotationDays),
+                    };
                 }
 
                 setSettings(initialSettings);
