@@ -18,6 +18,9 @@ BOARD="esp32:esp32:esp32c3"
 BAUD="921600"
 FLASH_LOG="scripts/.flash-log-esp32c3.csv"
 SERVER_URL="${SERVER_URL:-https://dashboarddev.iotpilot.app}"
+TEST_WIFI_SSID="${WIFI_SSID_OVERRIDE:-}"
+TEST_WIFI_PASS="${WIFI_PASS_OVERRIDE:-}"
+TEST_TOKEN="${TOKEN_OVERRIDE:-}"
 
 # Colors
 RED='\033[0;31m'
@@ -165,11 +168,22 @@ compile_and_flash() {
 
     local activation_url="${SERVER_URL}/api/devices/activate"
 
+    # Build optional test-mode flags
+    local test_flags=""
+    if [ -n "$TEST_WIFI_SSID" ]; then
+        test_flags=" -DTEST_WIFI_SSID=\"${TEST_WIFI_SSID}\" -DTEST_WIFI_PASS=\"${TEST_WIFI_PASS}\""
+        info "TEST MODE: WiFi=${TEST_WIFI_SSID}"
+    fi
+    if [ -n "$TEST_TOKEN" ]; then
+        test_flags="${test_flags} -DTEST_TOKEN=\"${TEST_TOKEN}\""
+        info "TEST MODE: Token=${TEST_TOKEN}"
+    fi
+
     # ── Compile ──
     info "Compiling firmware with DEVICE_ID=${device_id}..."
     if ! arduino-cli compile \
         --fqbn "$BOARD" \
-        --build-property "compiler.cpp.extra_flags=-DDEVICE_ID=\"${device_id}\" -DACTIVATION_URL=\"${activation_url}\"" \
+        --build-property "compiler.cpp.extra_flags=-DDEVICE_ID=\"${device_id}\" -DACTIVATION_URL=\"${activation_url}\"${test_flags}" \
         "$FIRMWARE"; then
         log_flash "$device_id" "$port" "COMPILE_FAILED"
         error "Compilation failed for ${device_id}"

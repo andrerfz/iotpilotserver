@@ -14,12 +14,19 @@
 .PHONY: create-superadmin list-superadmins reset-superadmin-password delete-superadmin
 .PHONY: sync-node-modules clean-dev
 .PHONY: queue-status queue-failed queue-retry queue-clean queue-drain queue-dashboard
+.PHONY: ssh prod-logs prod-deploy prod-rollback prod-restart prod-status prod-migrate
 
 # Variables - Using .env for both production and local
 COMPOSE_FILE = infra/docker/docker-compose.yml --env-file .env
 LOCAL_COMPOSE_FILE = infra/docker/docker-compose.local.yml --env-file .env.local
 SERVICE ?= iotpilot-app
 ENV_FILE = .env
+
+# Production server connection
+PROD_HOST ?= 52.23.9.165
+PROD_USER ?= ubuntu
+PROD_KEY  ?= ~/.ssh/iotpilot-server.pem
+SSH_CMD    = ssh -i $(PROD_KEY) $(PROD_USER)@$(PROD_HOST)
 
 # Run a command inside the frontend package directory in the app container
 EXEC_FRONTEND = docker exec -w /app/apps/frontend iotpilot-server-app
@@ -359,6 +366,41 @@ deploy: check-env build
 	@echo "🚀 Deploying..."
 	@docker compose -f $(COMPOSE_FILE) up -d --remove-orphans
 	@echo "✅ Deployed!"
+
+# =============================================================================
+# PRODUCTION SERVER (EC2)
+# =============================================================================
+
+ssh:
+	$(SSH_CMD)
+
+prod-logs:
+	$(SSH_CMD) "cd ~/iotpilotserver && docker compose -f infra/docker/docker-compose.yml --env-file .env logs -f --tail=100"
+
+prod-status:
+	$(SSH_CMD) "cd ~/iotpilotserver && docker compose -f infra/docker/docker-compose.yml --env-file .env ps"
+
+prod-deploy:
+	@echo "🚀 Deploying to production $(PROD_HOST)..."
+	$(SSH_CMD) "cd ~/iotpilotserver && git pull origin main && bash scripts/deploy.sh"
+	@echo "✅ Production deploy complete!"
+
+prod-rollback:
+	@echo "⏪ Rolling back production to previous SHA..."
+	$(SSH_CMD) 'cd ~/iotpilotserver && SHA=$$(cat .deploy-rollback-sha 2>/dev/null || echo "") && [ -n "$$SHA" ] || { echo "No rollback SHA found"; exit 1; } && git reset --hard $$SHA && docker compose -f infra/docker/docker-compose.yml --env-file .env up -d --build --remove-orphans && echo "Rolled back to $$SHA"'
+	@echo "✅ Rollback complete!"
+
+prod-restart:
+	$(SSH_CMD) "cd ~/iotpilotserver && docker compose -f infra/docker/docker-compose.yml --env-file .env restart"
+
+prod-migrate:
+	@echo "🗄️  Applying SQL migrations on production..."
+	@for f in apps/backend/prisma/migration/*.sql; do \
+		echo "  ↳ $$f"; \
+		scp -i $(PROD_KEY) $$f $(PROD_USER)@$(PROD_HOST):/tmp/; \
+		$(SSH_CMD) "docker exec -i iotpilot-postgres psql -U iotpilot -d iotpilot < /tmp/$$(basename $$f)" 2>&1 | grep -v "^$$" || true; \
+	done
+	@echo "✅ Migrations applied"
 
 # =============================================================================
 # LOCAL DEVELOPMENT COMMANDS
@@ -1044,7 +1086,7 @@ device-toolchain-install:
 	@echo "   4. Stick QR label on device"
 
 device-flash-esp32c3:
-	@SERVER_URL=$(or $(SERVER_URL),https://dashboarddev.iotpilot.app) BAUD_OVERRIDE=$(BAUD) PORT_OVERRIDE=$(PORT) ./scripts/flash-device-esp32c3.sh $(ID)
+	@SERVER_URL=$(or $(SERVER_URL),https://dashboarddev.iotpilot.app) BAUD_OVERRIDE=$(BAUD) PORT_OVERRIDE=$(PORT) WIFI_SSID_OVERRIDE="$(WIFI_SSID)" WIFI_PASS_OVERRIDE="$(WIFI_PASS)" TOKEN_OVERRIDE="$(TOKEN)" ./scripts/flash-device-esp32c3.sh $(ID)
 
 device-toolchain-install-esp32c3:
 	@echo "📟 Installing ESP32-C3 manufacturing toolchain (LILYGO T-OI Plus)..."
@@ -1121,3 +1163,5 @@ print('  '+'-'*70) if ts else None; \
 print(f'\n  {len(ts)} scheduled task(s)') if ts else print(f'  No tasks. {err or \"Is the app running?\"}'); \
 " 2>/dev/null || echo "  Failed to connect. Is the app running?"
 
+
+-include Makefile.local

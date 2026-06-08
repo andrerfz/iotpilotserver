@@ -261,11 +261,15 @@ float readTemperature() {
 
 bool connectWiFi() {
   WiFi.mode(WIFI_STA);
-  WiFi.begin();
 
-  // Log the SSID being attempted (available after begin())
+#ifdef TEST_WIFI_SSID
+  WiFi.begin(TEST_WIFI_SSID, TEST_WIFI_PASS);
+  Serial.printf("[WiFi] TEST MODE — connecting to: %s\n", TEST_WIFI_SSID);
+#else
+  WiFi.begin();
   String ssid = WiFi.SSID();
   Serial.printf("[WiFi] Connecting to: %s\n", ssid.length() > 0 ? ssid.c_str() : "(saved network)");
+#endif
 
   int attempts = 0;
   while (WiFi.status() != WL_CONNECTED && attempts < 20) {
