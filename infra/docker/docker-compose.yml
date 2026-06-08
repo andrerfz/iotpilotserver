@@ -200,7 +200,7 @@ services:
       - INFLUXD_LOG_LEVEL=warn
     volumes:
       - influxdb-data:/var/lib/influxdb2
-      - ../influxdb/config:/etc/influxdb2:ro
+      - ../influxdb/config:/etc/influxdb2
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "influx", "ping"]
@@ -215,6 +215,7 @@ services:
   loki:
     image: grafana/loki:2.9.8
     container_name: iotpilot-loki
+    user: root
     volumes:
       - ../loki/config.yml:/etc/loki/config.yaml:ro
       - loki-data:/tmp/loki
