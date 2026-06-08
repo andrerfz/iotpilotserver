@@ -12,6 +12,15 @@ header() { echo -e "\n${BLUE}▶ $1${NC}"; }
 DEPLOY_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 COMPOSE="docker compose -f infra/docker/docker-compose.yml --env-file .env"
 MAX_WAIT=30   # × 10s = 5 minutes
+LOCK_FILE="/tmp/iotpilot-deploy.lock"
+
+# ── Deploy lock ───────────────────────────────────────────────────────────────
+if [ -f "$LOCK_FILE" ]; then
+  LOCK_PID=$(cat "$LOCK_FILE" 2>/dev/null || echo "unknown")
+  error "Deploy already in progress (PID: $LOCK_PID). Remove $LOCK_FILE to force."
+fi
+echo $$ > "$LOCK_FILE"
+trap 'rm -f "$LOCK_FILE"; info "Lock released"' EXIT INT TERM
 
 cd "$DEPLOY_DIR"
 
