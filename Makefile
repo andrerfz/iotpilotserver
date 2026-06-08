@@ -1086,7 +1086,7 @@ device-toolchain-install:
 	@echo "   4. Stick QR label on device"
 
 device-flash-esp32c3:
-	@SERVER_URL=$(or $(SERVER_URL),https://dashboarddev.iotpilot.app) BAUD_OVERRIDE=$(BAUD) PORT_OVERRIDE=$(PORT) WIFI_SSID_OVERRIDE="$(WIFI_SSID)" WIFI_PASS_OVERRIDE="$(WIFI_PASS)" TOKEN_OVERRIDE="$(TOKEN)" ./scripts/flash-device-esp32c3.sh $(ID)
+	@SERVER_URL=$(or $(SERVER_URL),https://dashboarddev.iotpilot.app) BAUD_OVERRIDE=$(BAUD) PORT_OVERRIDE=$(PORT) WIFI_SSID_OVERRIDE="$(WIFI_SSID)" WIFI_PASS_OVERRIDE="$(WIFI_PASS)" TOKEN_OVERRIDE="$(TOKEN)" ERASE_OVERRIDE="$(ERASE)" ./scripts/flash-device-esp32c3.sh $(ID)
 
 device-toolchain-install-esp32c3:
 	@echo "📟 Installing ESP32-C3 manufacturing toolchain (LILYGO T-OI Plus)..."

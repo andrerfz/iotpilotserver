@@ -617,8 +617,28 @@ void setup() {
   loadConfig();
 
   if (!isConfigured()) {
+#ifdef TEST_TOKEN
+    Serial.println("[TEST] Auto-activating with embedded credentials...");
+    if (connectWiFi()) {
+      if (activateDevice(TEST_TOKEN)) {
+        Serial.println("[TEST] Activation OK — rebooting");
+        delay(1000);
+        ESP.restart();
+      } else {
+        Serial.println("[TEST] Activation FAILED — check token and server");
+        esp_sleep_enable_timer_wakeup(30ULL * 1000000ULL);
+        esp_deep_sleep_start();
+      }
+    } else {
+      Serial.println("[TEST] WiFi failed — retrying in 30s");
+      esp_sleep_enable_timer_wakeup(30ULL * 1000000ULL);
+      esp_deep_sleep_start();
+    }
+    return;
+#else
     setupWiFiManager();
     return;
+#endif
   }
 
   // Read battery at rest BEFORE WiFi radio powers up to avoid voltage sag

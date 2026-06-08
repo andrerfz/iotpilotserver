@@ -108,12 +108,16 @@ export class ProvisionDeviceHandler implements CommandHandler<ProvisionDeviceCom
                 ipAddress: data.ipAddress || device.ipAddress,
                 agentVersion: data.firmwareVersion,
                 deviceModel: data.deviceModel || device.deviceModel,
+                metadata: {
+                    ...metadata,
+                    claimingTokenUsed: true,
+                },
                 capabilities: {
                     ...metadata,
                     claimingTokenUsed: true,
                     provisionedAt: new Date().toISOString(),
                     apiKeyCreated: true,
-                    reportingInterval: 300,   // 5 minutes default; user-configurable
+                    reportingInterval: 300,
                     deepSleepEnabled: true
                 },
                 updatedAt: new Date()

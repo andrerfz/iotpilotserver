@@ -291,3 +291,4 @@ yarn-debug.log*
 
 .opencode.json
 apps/node_modules
+Makefile.local

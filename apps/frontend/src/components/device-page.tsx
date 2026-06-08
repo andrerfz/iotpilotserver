@@ -363,9 +363,9 @@ export default function DeviceDetailPage({params}: {
                     <div className="flex items-start mb-3">
                         <Wifi className="w-5 h-5 text-blue-500 mr-3 flex-shrink-0 mt-0.5"/>
                         <div>
-                            <p className="font-semibold text-blue-900">Dispositivo pendiente de activación</p>
+                            <p className="font-semibold text-blue-900">Device pending activation</p>
                             <p className="text-sm text-blue-700 mt-0.5">
-                                Conecta el dispositivo al AP WiFi <span className="font-mono font-bold">IotPilot-Setup-XXXX</span> e introduce el token de abajo.
+                                Connect the device to the WiFi AP <span className="font-mono font-bold">IotPilot-Setup-XXXX</span> and enter the token below.
                             </p>
                         </div>
                     </div>

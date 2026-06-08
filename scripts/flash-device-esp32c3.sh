@@ -21,6 +21,7 @@ SERVER_URL="${SERVER_URL:-https://dashboarddev.iotpilot.app}"
 TEST_WIFI_SSID="${WIFI_SSID_OVERRIDE:-}"
 TEST_WIFI_PASS="${WIFI_PASS_OVERRIDE:-}"
 TEST_TOKEN="${TOKEN_OVERRIDE:-}"
+ERASE_FLASH="${ERASE_OVERRIDE:-}"
 
 # Colors
 RED='\033[0;31m'
@@ -191,6 +192,20 @@ compile_and_flash() {
     ok "Compilation successful"
 
     ensure_bootloader_mode "$port"
+
+    # ── Erase flash (optional — clears NVS/config) ──
+    if [ -n "${ERASE_FLASH:-}" ]; then
+        local esptool
+        esptool=$(find ~/Library/Arduino15/packages/esp32/tools/esptool_py -name "esptool" -type f 2>/dev/null | head -1)
+        if [ -z "$esptool" ]; then
+            warn "esptool not found — skipping erase"
+        else
+            info "Erasing flash (NVS will be cleared)..."
+            "$esptool" --port "$port" --baud 115200 erase-flash
+            sleep 1
+            info "Flash erased — reflashing..."
+        fi
+    fi
 
     # ── Upload ──
     info "Uploading to ${port} at ${BAUD} baud..."
