@@ -8,8 +8,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import http from 'http';
 import https from 'https';
 
-// BACKEND_URL is server-only (no NEXT_PUBLIC_ prefix) so it's read at runtime, not baked into the build
-const BACKEND = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'http://iotpilot-server-backend:3100';
+// BACKEND_URL is server-only (no NEXT_PUBLIC_ prefix) — read at runtime, never exposed to browser
+const BACKEND = process.env.BACKEND_URL || 'http://iotpilot-server-backend:3100';
 
 async function proxy(req: NextRequest, method: string): Promise<NextResponse> {
   const url = new URL(req.url);
