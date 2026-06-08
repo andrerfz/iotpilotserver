@@ -92,7 +92,7 @@ services:
       - iotpilot-network
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.iotpilot.rule=Host(\`${DOMAIN}\`) || Host(\`${TAILSCALE_DOMAIN}\`)"
+      - "traefik.http.routers.iotpilot.rule=Host(`${DOMAIN}`) || Host(`${TAILSCALE_DOMAIN}`)"
       - "traefik.http.routers.iotpilot.tls=true"
       - "traefik.http.routers.iotpilot.tls.certresolver=letsencrypt"
       - "traefik.http.services.iotpilot.loadbalancer.server.port=3000"
@@ -179,7 +179,7 @@ services:
       - iotpilot-network
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.grafana.rule=Host(\`${DOMAIN}\`) && PathPrefix(\`/grafana\`)"
+      - "traefik.http.routers.grafana.rule=Host(`${DOMAIN}`) && PathPrefix(`/grafana`)"
       - "traefik.http.routers.grafana.tls=true"
       - "traefik.http.routers.grafana.tls.certresolver=letsencrypt"
       - "traefik.http.services.grafana.loadbalancer.server.port=3000"
@@ -258,7 +258,7 @@ services:
       - iotpilot-network
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.traefik-dashboard.rule=Host(\`${DOMAIN}\`) && PathPrefix(\`/traefik\`)"
+      - "traefik.http.routers.traefik-dashboard.rule=Host(`${DOMAIN}`) && PathPrefix(`/traefik`)"
       - "traefik.http.routers.traefik-dashboard.tls=true"
       - "traefik.http.routers.traefik-dashboard.service=api@internal"
       - "traefik.http.routers.traefik-dashboard.middlewares=auth"
