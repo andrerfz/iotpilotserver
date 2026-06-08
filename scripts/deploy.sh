@@ -11,8 +11,7 @@ header() { echo -e "\n${BLUE}▶ $1${NC}"; }
 
 DEPLOY_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 COMPOSE="docker compose -f infra/docker/docker-compose.yml --env-file .env"
-HEALTH_URL="http://localhost:3000/api/health"
-MAX_WAIT=60   # × 10s = 10 minutes (t3.small needs more time)
+MAX_WAIT=30   # × 10s = 5 minutes
 
 cd "$DEPLOY_DIR"
 
@@ -74,7 +73,8 @@ header "Health check (up to $((MAX_WAIT * 10))s)"
 HEALTHY=false
 for i in $(seq 1 "$MAX_WAIT"); do
   sleep 10
-  if curl -sf "$HEALTH_URL" >/dev/null 2>&1; then
+  # Check health via docker exec — port not published on host in production
+  if docker exec iotpilot-app curl -sf http://localhost:3000/api/health >/dev/null 2>&1; then
     HEALTHY=true
     break
   fi
