@@ -61,6 +61,7 @@ services:
       - SESSION_SECRET=${SESSION_SECRET}
       - DOMAIN=${DOMAIN}
       - TAILSCALE_DOMAIN=${NEXT_PUBLIC_TAILSCALE_DOMAIN}
+      - NEXT_PUBLIC_API_URL=http://iotpilot-backend:3100
       - WEBHOOK_SECRET=${WEBHOOK_SECRET}
       - SMTP_HOST=${SMTP_HOST}
       - SMTP_PORT=${SMTP_PORT}
@@ -97,6 +98,71 @@ services:
       - "traefik.http.routers.iotpilot.tls.certresolver=letsencrypt"
       - "traefik.http.services.iotpilot.loadbalancer.server.port=3000"
       - "traefik.http.routers.iotpilot.middlewares=compression,rate-limit,security-headers"
+
+  # Express API Backend
+  iotpilot-backend:
+    build:
+      context: ../..
+      dockerfile: ./infra/docker/Dockerfile
+      target: development
+      args:
+        - NODE_ENV=production
+    container_name: iotpilot-backend
+    command: ["/bin/sh", "/app/apps/backend/start.sh"]
+    environment:
+      - NODE_ENV=production
+      - PORT=3100
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - REDIS_URL=redis://redis:6379
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN}
+      - JWT_SECRET=${JWT_SECRET}
+      - DEVICE_API_KEY=${DEVICE_API_KEY}
+      - DOMAIN=${DOMAIN}
+      - APP_URL=https://${NEXT_PUBLIC_DOMAIN_TUNEL}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3100/api/health"]
+      interval: 30s
+      timeout: 3s
+      start_period: 40s
+      retries: 3
+    networks:
+      - iotpilot-network
+
+  # BullMQ Worker
+  iotpilot-worker:
+    build:
+      context: ../..
+      dockerfile: ./infra/docker/Dockerfile
+      target: development
+      args:
+        - NODE_ENV=production
+    container_name: iotpilot-worker
+    command: ["/bin/sh", "/app/apps/worker/start.sh"]
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - REDIS_URL=redis://redis:6379
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN}
+      - JWT_SECRET=${JWT_SECRET}
+      - DEVICE_API_KEY=${DEVICE_API_KEY}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      disable: true
+    restart: unless-stopped
+    networks:
+      - iotpilot-network
 
   # PostgreSQL Database
   postgres:
