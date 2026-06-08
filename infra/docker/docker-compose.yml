@@ -66,6 +66,7 @@ services:
       - DOMAIN=${DOMAIN}
       - TAILSCALE_DOMAIN=${NEXT_PUBLIC_TAILSCALE_DOMAIN}
       - NEXT_PUBLIC_API_URL=http://iotpilot-backend:3100
+      - BACKEND_URL=http://iotpilot-backend:3100
       - WEBHOOK_SECRET=${WEBHOOK_SECRET}
       - SMTP_HOST=${SMTP_HOST}
       - SMTP_PORT=${SMTP_PORT}
