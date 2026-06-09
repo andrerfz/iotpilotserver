@@ -141,9 +141,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         await checkAuth();
     };
 
-    // Simple apiCall function (no interceptor for now)
-    const apiCall = (url: string, options?: RequestInit) => {
-        return fetch(apiUrl(url), {
+    // apiCall with 401 interceptor — any expired-session response clears auth and redirects
+    const apiCall = async (url: string, options?: RequestInit): Promise<Response> => {
+        const response = await fetch(apiUrl(url), {
             credentials: 'include',
             ...options,
             headers: {
@@ -151,6 +151,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 ...options?.headers,
             },
         });
+
+        if (response.status === 401) {
+            // Session expired mid-use: clear state and send to login
+            setUser(null);
+            setLoading(false);
+            router.replace('/login');
+        }
+
+        return response;
     };
 
     const value: AuthContextType = {

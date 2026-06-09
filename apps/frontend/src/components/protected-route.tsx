@@ -27,11 +27,11 @@ export default function ProtectedRoute({
 
     useEffect(() => {
         if (!loading && !user) {
-            router.push('/login');
+            router.replace('/login');
         }
     }, [user, loading, router]);
 
-    // Show loading state
+    // Show loading spinner while auth check is in progress
     if (loading) {
         return fallback || (
             <div className="min-h-screen bg-default-50 flex items-center justify-center">
@@ -43,19 +43,9 @@ export default function ProtectedRoute({
         );
     }
 
-    // User not authenticated
+    // Not authenticated: render nothing while router.replace fires
     if (!user) {
-        return fallback || (
-            <div className="min-h-screen bg-default-50 flex items-center justify-center">
-                <Card className="max-w-md w-full">
-                    <CardBody className="text-center py-8">
-                        <Server className="w-16 h-16 text-default-400 mx-auto mb-4"/>
-                        <h2 className="text-xl font-semibold text-foreground mb-2">Authentication Required</h2>
-                        <p className="text-default-600">Please log in to access this page.</p>
-                    </CardBody>
-                </Card>
-            </div>
-        );
+        return null;
     }
 
     // Check role requirements
