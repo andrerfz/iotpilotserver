@@ -16,6 +16,7 @@ export class NotificationType extends ValueObject<NotificationTypeProps> {
   public static readonly SYSTEM_MAINTENANCE = new NotificationType({ value: 'SYSTEM_MAINTENANCE' });
   public static readonly USER_INVITATION = new NotificationType({ value: 'USER_INVITATION' });
   public static readonly CUSTOMER_CREATED = new NotificationType({ value: 'CUSTOMER_CREATED' });
+  public static readonly USER_LOGIN_ALERT = new NotificationType({ value: 'USER_LOGIN_ALERT' });
 
   get value(): string {
     return this.props.value;

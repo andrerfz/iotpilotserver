@@ -38,11 +38,29 @@ export class UserSessionService {
       data: { deletedAt: new Date() }
     });
 
-    const token = jwt.sign({ userId }, secret, { expiresIn: '24h' });
+    // Read user's sessionTimeout preference (minutes). Fallback: 480 min (8h).
+    const DEFAULT_TIMEOUT_MINUTES = 480;
+    let timeoutMinutes = DEFAULT_TIMEOUT_MINUTES;
+    try {
+      const pref = await prisma.userPreference.findUnique({
+        where: { userId_category_key: { userId, category: 'SECURITY', key: 'sessionTimeout' } },
+        select: { value: true },
+      });
+      if (pref?.value) {
+        const parsed = parseInt(pref.value, 10);
+        if (!isNaN(parsed) && parsed >= 5 && parsed <= 1440) {
+          timeoutMinutes = parsed;
+        }
+      }
+    } catch {
+      // preference table may not exist in test environments — use default
+    }
+
+    const token = jwt.sign({ userId }, secret, { expiresIn: `${timeoutMinutes}m` });
 
     const userIdVO = UserId.fromString(userId);
     const customerIdVO = customerId ? CustomerId.create(customerId) : null;
-    const userSession = UserSession.create(userIdVO, customerIdVO, token, 24);
+    const userSession = UserSession.create(userIdVO, customerIdVO, token, Math.ceil(timeoutMinutes / 60));
 
     if (tx) {
       await prisma.session.create({

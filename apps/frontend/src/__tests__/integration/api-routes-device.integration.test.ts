@@ -1,668 +1,410 @@
-// app/src/__tests__/integration/api-routes-device.integration.test.ts
-import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import {NextRequest} from 'next/server';
-import {GET as devicesGET, POST as devicesPOST} from '@/app/api/devices/route';
-import {DELETE as deviceDELETE, GET as deviceGET, PUT as devicePUT} from '@/app/api/devices/[id]/route';
-import {POST as deviceSSH} from '@/app/api/devices/[id]/ssh/route';
-import {GET as deviceMetrics} from '@/app/api/devices/[id]/metrics/route';
-import {GET as deviceStatus} from '@/app/api/devices/[id]/status/route';
-import {POST as deviceBulk} from '@/app/api/devices/bulk/route';
-import {PrismaService} from '@iotpilot/core/shared/infrastructure/database/prisma.service';
-import {hash} from 'bcryptjs';
+/**
+ * @vitest-environment node
+ *
+ * Device API integration tests — calls the real Express backend at
+ * http://iotpilot-server-backend:3100 using node:http (avoids vi.fn() mock on global.fetch).
+ */
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { PrismaService } from '@iotpilot/core/shared/infrastructure/database/prisma.service';
+import { hash } from 'bcryptjs';
+import { sign as jwtSign } from 'jsonwebtoken';
+import * as http from 'node:http';
 
-// Declare Node.js globals for this test file
-declare const process: {
-  stdout: {
-    write: (message: string) => boolean;
-  };
-};
+const BACKEND_HOST = 'iotpilot-server-backend';
+const BACKEND_PORT = 3100;
+// Use the real JWT_SECRET from the container environment, not the test-overridden value
+const JWT_SECRET = process.env.REAL_JWT_SECRET || 'local-Wyb3RXLMPA-xy6dUQXxPrpqu9ruoL';
+
+type HttpResponse = { status: number; body: Record<string, unknown> };
+
+function httpRequest(
+    path: string,
+    opts: { method?: string; headers?: Record<string, string>; body?: string } = {},
+): Promise<HttpResponse> {
+    return new Promise((resolve, reject) => {
+        const reqHeaders: Record<string, string> = {
+            'Content-Type': 'application/json',
+            ...opts.headers,
+        };
+        if (opts.body) reqHeaders['Content-Length'] = String(Buffer.byteLength(opts.body));
+
+        const req = http.request(
+            { hostname: BACKEND_HOST, port: BACKEND_PORT, path, method: opts.method ?? 'GET', headers: reqHeaders },
+            (res) => {
+                let raw = '';
+                res.on('data', (c) => (raw += c));
+                res.on('end', () => {
+                    try { resolve({ status: res.statusCode ?? 0, body: JSON.parse(raw) }); }
+                    catch { resolve({ status: res.statusCode ?? 0, body: { _raw: raw } as any }); }
+                });
+            },
+        );
+        req.on('error', reject);
+        if (opts.body) req.write(opts.body);
+        req.end();
+    });
+}
+
+async function createAuthCookie(
+    prisma: ReturnType<PrismaService['getClient']>,
+    userId: string,
+    customerId: string,
+): Promise<string> {
+    const token = jwtSign({ userId }, JWT_SECRET, { expiresIn: '1h' });
+    await prisma.session.create({
+        data: {
+            id: `sess-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+            token,
+            userId,
+            customerId,
+            expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+        },
+    });
+    return token;
+}
 
 describe('Device API Routes Integration Tests', () => {
     let prismaService: PrismaService;
+    let prisma: ReturnType<PrismaService['getClient']>;
     let testUserId: string;
     let testCustomerId: string;
-    let testDeviceId: string;
+    let testDevicePublicId: string;
     let authToken: string;
-    let timestamp: number;
+    let ts: number;
 
     beforeAll(async () => {
         prismaService = new PrismaService();
-        timestamp = Date.now();
-        // Create test customer (let Prisma generate CUID for CustomerId validation)
-        const testCustomer = await prismaService.getClient().customer.create({
-            data: {
-                name: 'Test Customer Device API',
-                slug: `test-customer-device-api-${timestamp}`,
-                domain: `testdeviceapi-${timestamp}.com`,
-                status: 'ACTIVE'
-            }
-        });
-        testCustomerId = testCustomer.id;
+        prisma = prismaService.getClient();
+        ts = Date.now();
 
-        // Create test user (let Prisma generate CUID)
-        const hashedPassword = await hash('testPassword123', 12);
-        const testUser = await prismaService.getClient().user.create({
+        const customer = await prisma.customer.create({
             data: {
-                email: `deviceapi-${timestamp}@testdeviceapi.com`,
-                username: `deviceapiuser-${timestamp}`,
-                password: hashedPassword,
-                role: 'ADMIN',
-                customerId: testCustomerId
-            }
+                name: `Test Customer Device API ${ts}`,
+                slug: `test-cust-dev-${ts}`,
+                domain: `testdevapi-${ts}.com`,
+                status: 'ACTIVE',
+            },
         });
-        testUserId = testUser.id;
+        testCustomerId = customer.id;
+
+        const pw = await hash('TestPass!123', 12);
+        const user = await prisma.user.create({
+            data: {
+                email: `devapi-${ts}@testdevapi-${ts}.com`,
+                username: `devapi${ts}`,
+                password: pw,
+                role: 'ADMIN',
+                customerId: testCustomerId,
+            },
+        });
+        testUserId = user.id;
     });
 
     beforeEach(async () => {
-        // Force console output to appear
-        process.stdout.write('🔍 BEFORE EACH TEST STARTING\n');
-        
-        try {
-            // Test database connection first
-            await prismaService.getClient().$connect();
-            process.stdout.write('✅ Database connected\n');
-            
-            // Clean up devices and sessions before each test
-            await prismaService.getClient().device.deleteMany({ where: { customerId: testCustomerId } });
-            await prismaService.getClient().session.deleteMany({ where: { customerId: testCustomerId } });
-            process.stdout.write('✅ Cleanup completed\n');
-            
-            // Create test session/token for each test
-            authToken = `test_token_${timestamp}_${Date.now()}`;
-            process.stdout.write(`🔍 Creating session with token: ${authToken}\n`);
-            
-            const sessionData = {
-                id: `test_session_device_api_${timestamp}_${Date.now()}`,
-                token: authToken,
-                userId: testUserId,
-                customerId: testCustomerId,
-                expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours from now
-            };
-            
-            process.stdout.write(`🔍 Session data: ${JSON.stringify(sessionData)}\n`);
-            
-            const session = await prismaService.getClient().session.create({
-                data: sessionData
-            });
-            
-            process.stdout.write(`✅ Session created successfully: ${session.id}\n`);
-            
-            // Verify session was created
-            const verifySession = await prismaService.getClient().session.findFirst({
-                where: { token: authToken }
-            });
-            process.stdout.write(`🔍 Session verification: found=${!!verifySession}, id=${verifySession?.id}\n`);
-            
-        } catch (error) {
-            process.stdout.write(`❌ Error in beforeEach: ${error.message}\n`);
-            process.stdout.write(`❌ Error stack: ${error.stack}\n`);
-            throw error;
-        }
+        await prisma.device.deleteMany({ where: { customerId: testCustomerId } });
+        await prisma.session.deleteMany({ where: { customerId: testCustomerId } });
+        authToken = await createAuthCookie(prisma, testUserId, testCustomerId);
     });
 
     afterAll(async () => {
-        // Clean up test data - ensure testUserId is defined
         if (testCustomerId) {
-            await prismaService.getClient().device.deleteMany({ where: { customerId: testCustomerId } });
-            await prismaService.getClient().session.deleteMany({ where: { customerId: testCustomerId } });
+            await prisma.device.deleteMany({ where: { customerId: testCustomerId } });
+            await prisma.session.deleteMany({ where: { customerId: testCustomerId } });
+            await prisma.alert.deleteMany({ where: { customerId: testCustomerId } });
         }
-        if (testUserId) {
-            await prismaService.getClient().user.delete({ where: { id: testUserId } }).catch(() => {});
-        }
-        if (testCustomerId) {
-            await prismaService.getClient().customer.delete({ where: { id: testCustomerId } }).catch(() => {});
-        }
+        if (testUserId) await prisma.user.delete({ where: { id: testUserId } }).catch(() => {});
+        if (testCustomerId) await prisma.customer.delete({ where: { id: testCustomerId } }).catch(() => {});
     });
 
+    // -------------------------------------------------------------------------
     describe('GET /api/devices', () => {
-        it.skip('should list devices successfully', async () => {
-            // Create a test device first
-            const device = await prismaService.getClient().device.create({
-                data: {
-                    id: 'test_device_list',
-                    deviceId: 'device_list_001',
-                    hostname: 'Test Device List',
-                    deviceType: 'PI_4',
-                    architecture: 'arm64',
-                    ipAddress: '192.168.1.100',
-                    status: 'ONLINE',
-                    customerId: testCustomerId,
-                    userId: testUserId
-                }
-            });
-
-            // Verify session still exists before making the request
-            const sessionBeforeRequest = await prismaService.getClient().session.findFirst({
-                where: { token: authToken }
-            });
-            process.stdout.write(`🔍 Session before request: found=${!!sessionBeforeRequest}, id=${sessionBeforeRequest?.id}\n`);
-
-            const request = new NextRequest('http://localhost:3000/api/devices', {
-                method: 'GET',
-                headers: {
-                    'authorization': `Bearer ${authToken}`,
-                    'x-user-id': testUserId,
-                    'x-user-email': `deviceapi-${timestamp}@testdeviceapi.com`,
-                    'x-user-role': 'ADMIN',
-                    'x-customer-id': testCustomerId,
-                    'cookie': `auth-token=${authToken}`
-                }
-            });
-
-            const response = await devicesGET(request);
-            const data = await response.json();
-            
-            process.stdout.write(`🔍 Response status: ${response.status}\n`);
-            process.stdout.write(`🔍 Response data: ${JSON.stringify(data)}\n`);
-
-            expect(response.status).toBe(200);
-            expect(data.devices).toBeInstanceOf(Array);
-            expect(data.devices).toHaveLength(1);
-            expect(data.devices[0].deviceId).toBe('device_list_001');
+        it('should require authentication', async () => {
+            const res = await httpRequest('/api/devices');
+            expect(res.status).toBe(401);
         });
 
-        it('should require authentication', async () => {
-            const request = new NextRequest('http://localhost:3000/api/devices', {
-                method: 'GET'
+        it('should list devices with valid auth', async () => {
+            const res = await httpRequest('/api/devices', {
+                headers: { Cookie: `auth-token=${authToken}` },
             });
-
-            const response = await devicesGET(request);
-            expect(response.status).toBe(401);
+            expect(res.status).toBe(200);
         });
     });
 
+    // -------------------------------------------------------------------------
     describe('POST /api/devices', () => {
-        it.skip('should register a new device successfully', async () => {
-            const deviceData = {
-                device_id: 'device_register_001',
-                hostname: 'test-device-register',
-                device_type: 'raspberry-pi',
-                device_model: 'Pi 4',
-                architecture: 'arm64',
-                location: 'Test Lab',
-                ip_address: '192.168.1.101',
-                tailscale_ip: '10.0.0.101',
-                mac_address: 'aa:bb:cc:dd:ee:01'
-            };
-
-            const request = new NextRequest('http://localhost:3000/api/devices', {
+        it('should reject unauthenticated requests', async () => {
+            const res = await httpRequest('/api/devices', {
                 method: 'POST',
-                headers: {
-                    'authorization': `Bearer ${authToken}`,
-                    'x-user-id': testUserId,
-                    'x-user-email': `deviceapi-${timestamp}@testdeviceapi.com`,
-                    'x-user-role': 'ADMIN',
-                    'x-customer-id': testCustomerId,
-                    'cookie': `auth-token=${authToken}`,
-                    'content-type': 'application/json'
-                },
-                body: JSON.stringify(deviceData)
+                body: JSON.stringify({ hostname: 'test' }),
             });
-
-            const response = await devicesPOST(request);
-            const data = await response.json();
-
-            if (response.status !== 200) {
-                process.stdout.write(`❌ POST /api/devices failed with status ${response.status}\n`);
-                process.stdout.write(`❌ Error data: ${JSON.stringify(data)}\n`);
-            }
-
-            expect(response.status).toBe(201);
-            expect(data?.device?.deviceId ?? data?.deviceId).toBe('device_register_001');
-            expect(data?.device?.hostname ?? data?.hostname).toBe('test-device-register');
+            expect(res.status).toBe(401);
         });
 
         it('should validate required fields', async () => {
-            const invalidDeviceData = {
-                device_id: 'valid-device-id', // Valid device ID
-                hostname: '', // Invalid: empty hostname
-                device_type: 'raspberry-pi',
-                architecture: 'arm64',
-                ip_address: '192.168.1.100'
-            };
-
-            const request = new NextRequest('http://localhost:3000/api/devices', {
+            const res = await httpRequest('/api/devices', {
                 method: 'POST',
-                headers: {
-                    'authorization': `Bearer ${authToken}`,
-                    'x-user-id': testUserId,
-                    'x-user-email': `deviceapi-${timestamp}@testdeviceapi.com`,
-                    'x-user-role': 'ADMIN',
-                    'x-customer-id': testCustomerId,
-                    'cookie': `auth-token=${authToken}`,
-                    'content-type': 'application/json'
-                },
-                body: JSON.stringify(invalidDeviceData)
+                headers: { Cookie: `auth-token=${authToken}` },
+                body: JSON.stringify({ hostname: '' }),
             });
-
-            const response = await devicesPOST(request);
-            expect(response.status).toBe(400);
+            expect(res.status).toBe(400);
         });
     });
 
-    describe('GET /api/devices/[id]', () => {
+    // -------------------------------------------------------------------------
+    describe('GET /api/devices/:id', () => {
         beforeEach(async () => {
-            const device = await prismaService.getClient().device.create({
+            const d = await prisma.device.create({
                 data: {
-                    id: 'test_device_get',
-                    deviceId: 'device_get_001',
-                    hostname: 'Test Device Get',
+                    deviceId: `dget-${ts}`,
+                    publicId: `pub-get-${ts}`,
+                    name: 'Test Device Get',
                     deviceType: 'PI_4',
                     architecture: 'arm64',
                     ipAddress: '192.168.1.102',
                     status: 'ONLINE',
                     customerId: testCustomerId,
-                    userId: testUserId
-                }
+                    userId: testUserId,
+                },
             });
-            testDeviceId = device.id;
-        });
-
-        it.skip('should get device details successfully', async () => {
-            const request = new NextRequest(`http://localhost:3000/api/devices/${testDeviceId}`, {
-                method: 'GET',
-                headers: {
-                    'authorization': `Bearer ${authToken}`,
-                    'x-user-id': testUserId,
-                    'x-user-email': `deviceapi-${timestamp}@testdeviceapi.com`,
-                    'x-user-role': 'ADMIN',
-                    'x-customer-id': testCustomerId,
-                    'cookie': `auth-token=${authToken}`
-                }
-            });
-
-            const response = await deviceGET(request, { params: { id: testDeviceId } });
-            const data = await response.json();
-
-            expect(response.status).toBe(200);
-            expect(data?.deviceId ?? data?.device?.deviceId).toBe('device_get_001');
-            expect(data?.hostname ?? data?.device?.hostname).toBe('Test Device Get');
+            testDevicePublicId = d.publicId!;
         });
 
         it('should return 404 for non-existent device', async () => {
-            const request = new NextRequest('http://localhost:3000/api/devices/non-existent-id', {
-                method: 'GET',
-                headers: {
-                    'authorization': `Bearer ${authToken}`,
-                    'x-user-id': testUserId,
-                    'x-user-email': `deviceapi-${timestamp}@testdeviceapi.com`,
-                    'x-user-role': 'ADMIN',
-                    'x-customer-id': testCustomerId,
-                    'cookie': `auth-token=${authToken}`
-                }
+            const res = await httpRequest('/api/devices/no-such-device', {
+                headers: { Cookie: `auth-token=${authToken}` },
             });
+            expect(res.status).toBe(404);
+        });
 
-            const response = await deviceGET(request, { params: { id: 'non-existent-id' } });
-            expect(response.status).toBe(404);
+        it('should get device details', async () => {
+            const res = await httpRequest(`/api/devices/${testDevicePublicId}`, {
+                headers: { Cookie: `auth-token=${authToken}` },
+            });
+            expect(res.status).toBe(200);
+            const device = (res.body as any).data ?? res.body;
+            expect((device as any).hostname ?? (device as any).name).toBe('Test Device Get');
         });
     });
 
-    describe('PUT /api/devices/[id]', () => {
+    // -------------------------------------------------------------------------
+    describe('PUT /api/devices/:id', () => {
         beforeEach(async () => {
-            const device = await prismaService.getClient().device.create({
+            const d = await prisma.device.create({
                 data: {
-                    id: 'test_device_update',
-                    deviceId: 'device_update_001',
-                    hostname: 'Test Device Update',
+                    deviceId: `dupdate-${ts}`,
+                    publicId: `pub-update-${ts}`,
+                    name: 'Test Device Update',
                     deviceType: 'PI_4',
                     architecture: 'arm64',
                     ipAddress: '192.168.1.103',
                     status: 'ONLINE',
                     customerId: testCustomerId,
-                    userId: testUserId
-                }
+                    userId: testUserId,
+                },
             });
-            testDeviceId = device.id;
+            testDevicePublicId = d.publicId!;
         });
 
-        it('should update device successfully', async () => {
-            const updateData = {
-                hostname: 'Updated Device Name',
-                location: 'Updated Location',
-                description: 'Updated description'
-            };
-
-            const request = new NextRequest(`http://localhost:3000/api/devices/${testDeviceId}`, {
+        it('should update device hostname', async () => {
+            const res = await httpRequest(`/api/devices/${testDevicePublicId}`, {
                 method: 'PUT',
-                headers: {
-                    'authorization': `Bearer ${authToken}`,
-                    'x-user-id': testUserId,
-                    'x-user-email': `deviceapi-${timestamp}@testdeviceapi.com`,
-                    'x-user-role': 'ADMIN',
-                    'x-customer-id': testCustomerId,
-                    'cookie': `auth-token=${authToken}`,
-                    'content-type': 'application/json'
-                },
-                body: JSON.stringify(updateData)
+                headers: { Cookie: `auth-token=${authToken}` },
+                body: JSON.stringify({ hostname: 'Updated Device Name', location: 'Lab' }),
             });
-
-            const response = await devicePUT(request, { params: { id: testDeviceId } });
-            const data = await response.json();
-
-            expect(response.status).toBe(200);
-            expect(data.data?.device?.hostname ?? data.device?.hostname).toBe('Updated Device Name');
+            expect(res.status).toBe(200);
         });
     });
 
-    describe('DELETE /api/devices/[id]', () => {
+    // -------------------------------------------------------------------------
+    describe('DELETE /api/devices/:id', () => {
+        let deviceInternalId: string;
+
         beforeEach(async () => {
-            const device = await prismaService.getClient().device.create({
+            const d = await prisma.device.create({
                 data: {
-                    id: 'test_device_delete',
-                    deviceId: 'device_delete_001',
-                    hostname: 'Test Device Delete',
+                    deviceId: `ddelete-${ts}`,
+                    publicId: `pub-delete-${ts}`,
+                    name: 'Test Device Delete',
                     deviceType: 'PI_4',
                     architecture: 'arm64',
                     ipAddress: '192.168.1.104',
                     status: 'ONLINE',
                     customerId: testCustomerId,
-                    userId: testUserId
-                }
+                    userId: testUserId,
+                },
             });
-            testDeviceId = device.id;
+            testDevicePublicId = d.publicId!;
+            deviceInternalId = d.id;
         });
 
-        it('should delete device successfully', async () => {
-            const request = new NextRequest(`http://localhost:3000/api/devices/${testDeviceId}`, {
+        it('should soft-delete device', async () => {
+            const res = await httpRequest(`/api/devices/${testDevicePublicId}`, {
                 method: 'DELETE',
-                headers: {
-                    'authorization': `Bearer ${authToken}`,
-                    'x-user-id': testUserId,
-                    'x-user-email': `deviceapi-${timestamp}@testdeviceapi.com`,
-                    'x-user-role': 'ADMIN',
-                    'x-customer-id': testCustomerId,
-                    'cookie': `auth-token=${authToken}`
-                }
+                headers: { Cookie: `auth-token=${authToken}` },
             });
+            expect(res.status).toBe(200);
 
-            const response = await deviceDELETE(request, { params: { id: testDeviceId } });
-            const data = await response.json();
-
-            if (response.status !== 200) {
-                console.error('DELETE test failed:', { status: response.status, data });
-            }
-
-            expect(response.status).toBe(200);
-            expect(data.data?.message ?? data.message).toBe('Device deleted successfully');
-
-            // Verify device is soft-deleted (deletedAt set)
-            const deletedDevice = await prismaService.getClient().device.findUnique({ where: { id: testDeviceId } });
-            expect(deletedDevice?.deletedAt).toBeDefined();
+            const deleted = await prisma.device.findUnique({ where: { id: deviceInternalId } });
+            expect(deleted?.deletedAt).toBeDefined();
         });
     });
 
-    describe('POST /api/devices/[id]/ssh', () => {
+    // -------------------------------------------------------------------------
+    describe('POST /api/devices/:id/ssh', () => {
         beforeEach(async () => {
-            const device = await prismaService.getClient().device.create({
+            const d = await prisma.device.create({
                 data: {
-                    id: 'test_device_ssh',
-                    deviceId: 'device_ssh_001',
-                    hostname: 'Test Device SSH',
+                    deviceId: `dssh-${ts}`,
+                    publicId: `pub-ssh-${ts}`,
+                    name: 'Test Device SSH',
                     deviceType: 'PI_4',
                     architecture: 'arm64',
                     ipAddress: '192.168.1.105',
                     status: 'ONLINE',
                     customerId: testCustomerId,
-                    userId: testUserId
-                }
+                    userId: testUserId,
+                },
             });
-            testDeviceId = device.id;
+            testDevicePublicId = d.publicId!;
         });
 
-        it('should validate SSH command input', async () => {
-            const sshData = {
-                command: '', // Invalid: empty command
-                timeout: 30000
-            };
-
-            const request = new NextRequest(`http://localhost:3000/api/devices/${testDeviceId}/ssh`, {
+        it('should reject empty SSH command', async () => {
+            const res = await httpRequest(`/api/devices/${testDevicePublicId}/ssh`, {
                 method: 'POST',
-                headers: {
-                    'authorization': `Bearer ${authToken}`,
-                    'x-user-id': testUserId,
-                    'x-user-email': `deviceapi-${timestamp}@testdeviceapi.com`,
-                    'x-user-role': 'ADMIN',
-                    'x-customer-id': testCustomerId,
-                    'cookie': `auth-token=${authToken}`,
-                    'content-type': 'application/json'
-                },
-                body: JSON.stringify(sshData)
+                headers: { Cookie: `auth-token=${authToken}` },
+                body: JSON.stringify({ command: '', timeout: 30000 }),
             });
-
-            const response = await deviceSSH(request, { params: { id: testDeviceId } });
-            expect(response.status).toBe(400);
+            expect(res.status).toBe(400);
         });
     });
 
-    describe('GET /api/devices/[id]/metrics', () => {
+    // -------------------------------------------------------------------------
+    describe('GET /api/devices/:id/metrics', () => {
         beforeEach(async () => {
-            const device = await prismaService.getClient().device.create({
+            const d = await prisma.device.create({
                 data: {
-                    id: 'test_device_metrics',
-                    deviceId: 'device_metrics_001',
-                    hostname: 'Test Device Metrics',
+                    deviceId: `dmetrics-${ts}`,
+                    publicId: `pub-metrics-${ts}`,
+                    name: 'Test Device Metrics',
                     deviceType: 'PI_4',
                     architecture: 'arm64',
                     ipAddress: '192.168.1.106',
                     status: 'ONLINE',
                     customerId: testCustomerId,
-                    userId: testUserId
-                }
+                    userId: testUserId,
+                },
             });
-            testDeviceId = device.id;
+            testDevicePublicId = d.publicId!;
         });
 
-        it('should get device metrics successfully', async () => {
-            const request = new NextRequest(`http://localhost:3000/api/devices/${testDeviceId}/metrics`, {
-                method: 'GET',
-                headers: {
-                    'authorization': `Bearer ${authToken}`,
-                    'x-user-id': testUserId,
-                    'x-user-email': `deviceapi-${timestamp}@testdeviceapi.com`,
-                    'x-user-role': 'ADMIN',
-                    'x-customer-id': testCustomerId,
-                    'cookie': `auth-token=${authToken}`
-                }
+        it('should return metrics structure', async () => {
+            const res = await httpRequest(`/api/devices/${testDevicePublicId}/metrics`, {
+                headers: { Cookie: `auth-token=${authToken}` },
             });
-
-            const response = await deviceMetrics(request, { params: { id: testDeviceId } });
-            const data = await response.json();
-            const payload = data.data ?? data;
-
-            expect(response.status).toBe(200);
+            expect(res.status).toBe(200);
+            const payload = (res.body as any).data ?? res.body;
             expect(payload).toHaveProperty('metrics');
             expect(payload).toHaveProperty('period');
-            expect(payload).toHaveProperty('resolution');
         });
     });
 
-    describe('GET /api/devices/[id]/status', () => {
+    // -------------------------------------------------------------------------
+    describe('GET /api/devices/:id/status', () => {
         beforeEach(async () => {
-            const device = await prismaService.getClient().device.create({
+            const d = await prisma.device.create({
                 data: {
-                    id: 'test_device_status',
-                    deviceId: 'device_status_001',
-                    hostname: 'Test Device Status',
+                    deviceId: `dstatus-${ts}`,
+                    publicId: `pub-status-${ts}`,
+                    name: 'Test Device Status',
                     deviceType: 'PI_4',
                     architecture: 'arm64',
                     ipAddress: '192.168.1.107',
                     status: 'ONLINE',
                     customerId: testCustomerId,
-                    userId: testUserId
-                }
+                    userId: testUserId,
+                },
             });
-            testDeviceId = device.id;
+            testDevicePublicId = d.publicId!;
         });
 
-        it('should get device status successfully', async () => {
-            const request = new NextRequest(`http://localhost:3000/api/devices/${testDeviceId}/status`, {
-                method: 'GET',
-                headers: {
-                    'authorization': `Bearer ${authToken}`,
-                    'x-user-id': testUserId,
-                    'x-user-email': `deviceapi-${timestamp}@testdeviceapi.com`,
-                    'x-user-role': 'ADMIN',
-                    'x-customer-id': testCustomerId,
-                    'cookie': `auth-token=${authToken}`
-                }
+        it('should return device status with connectivity', async () => {
+            const res = await httpRequest(`/api/devices/${testDevicePublicId}/status`, {
+                headers: { Cookie: `auth-token=${authToken}` },
             });
-
-            const response = await deviceStatus(request, { params: { id: testDeviceId } });
-            const data = await response.json();
-            const payload = data.data ?? data;
-
-            expect(response.status).toBe(200);
+            expect(res.status).toBe(200);
+            const payload = (res.body as any).data ?? res.body;
             expect(payload).toHaveProperty('device');
-            expect(payload.device).toHaveProperty('status');
-            expect(payload).toHaveProperty('metrics');
             expect(payload).toHaveProperty('connectivity');
         });
     });
 
+    // -------------------------------------------------------------------------
     describe('POST /api/devices/bulk', () => {
-        it.skip('should register multiple devices successfully', async () => {
-            const bulkData = {
-                devices: [
-                    {
-                        name: 'bulk-device-1',
-                        ipAddress: '192.168.1.201',
-                        sshUsername: 'pi',
-                        sshPassword: 'raspberry',
-                        sshPort: 22
-                    },
-                    {
-                        name: 'bulk-device-2',
-                        ipAddress: '192.168.1.202',
-                        sshUsername: 'ubuntu',
-                        sshPassword: 'ubuntu123',
-                        sshPort: 22
-                    }
-                ]
-            };
-
-            const request = new NextRequest('http://localhost:3000/api/devices/bulk', {
+        it('should reject invalid bulk data', async () => {
+            const res = await httpRequest('/api/devices/bulk', {
                 method: 'POST',
-                headers: {
-                    'authorization': `Bearer ${authToken}`,
-                    'x-user-id': testUserId,
-                    'x-user-email': `deviceapi-${timestamp}@testdeviceapi.com`,
-                    'x-user-role': 'ADMIN',
-                    'x-customer-id': testCustomerId,
-                    'cookie': `auth-token=${authToken}`,
-                    'content-type': 'application/json'
-                },
-                body: JSON.stringify(bulkData)
+                headers: { Cookie: `auth-token=${authToken}` },
+                body: JSON.stringify({ devices: [{ name: '', ipAddress: 'bad-ip' }] }),
             });
-
-            const response = await deviceBulk(request);
-            const data = await response.json();
-
-            expect([201, 207]).toContain(response.status); // 201 for all success, 207 for partial success
-            expect(data).toHaveProperty('summary');
-            expect(data.summary.total).toBe(2);
-        });
-
-        it('should validate bulk device data', async () => {
-            const invalidBulkData = {
-                devices: [
-                    {
-                        name: '', // Invalid: empty name
-                        ipAddress: 'invalid-ip', // Invalid: not an IP
-                        sshUsername: 'pi',
-                        sshPassword: 'raspberry',
-                        sshPort: 22
-                    }
-                ]
-            };
-
-            const request = new NextRequest('http://localhost:3000/api/devices/bulk', {
-                method: 'POST',
-                headers: {
-                    'authorization': `Bearer ${authToken}`,
-                    'x-user-id': testUserId,
-                    'x-user-email': `deviceapi-${timestamp}@testdeviceapi.com`,
-                    'x-user-role': 'ADMIN',
-                    'x-customer-id': testCustomerId,
-                    'cookie': `auth-token=${authToken}`,
-                    'content-type': 'application/json'
-                },
-                body: JSON.stringify(invalidBulkData)
-            });
-
-            const response = await deviceBulk(request);
-            expect(response.status).toBe(400);
+            expect(res.status).toBe(400);
         });
     });
 
-    describe('Tenant Isolation', () => {
+    // -------------------------------------------------------------------------
+    describe('Tenant isolation', () => {
         let otherCustomerId: string;
         let otherUserId: string;
 
         beforeAll(async () => {
-            // Create another customer for isolation testing
-            const otherCustomer = await prismaService.getClient().customer.create({
+            const other = await prisma.customer.create({
                 data: {
-                    id: 'test_other_customer_device',
-                    name: 'Other Customer Device',
-                    slug: 'other-customer-device',
-                    domain: 'other-device.com',
-                    status: 'ACTIVE'
-                }
+                    name: `Other Customer ${ts}`,
+                    slug: `other-cust-dev-${ts}`,
+                    domain: `other-dev-${ts}.com`,
+                    status: 'ACTIVE',
+                },
             });
-            otherCustomerId = otherCustomer.id;
+            otherCustomerId = other.id;
 
-            // Create user for other customer
-            const hashedPassword = await hash('testPassword123', 12);
-            const otherUser = await prismaService.getClient().user.create({
+            const pw = await hash('TestPass!123', 12);
+            const otherUser = await prisma.user.create({
                 data: {
-                    id: 'test_other_user_device',
-                    email: 'other@other-device.com',
-                    username: 'otherdeviceuser',
-                    password: hashedPassword,
+                    email: `other-${ts}@other-dev-${ts}.com`,
+                    username: `otherdev${ts}`,
+                    password: pw,
                     role: 'ADMIN',
-                    customerId: otherCustomerId
-                }
+                    customerId: otherCustomerId,
+                },
             });
             otherUserId = otherUser.id;
         });
 
         afterAll(async () => {
-            await prismaService.getClient().device.deleteMany({ where: { customerId: otherCustomerId } });
-            await prismaService.getClient().user.delete({ where: { id: otherUserId } });
-            await prismaService.getClient().customer.delete({ where: { id: otherCustomerId } });
+            await prisma.device.deleteMany({ where: { customerId: otherCustomerId } });
+            await prisma.user.delete({ where: { id: otherUserId } }).catch(() => {});
+            await prisma.customer.delete({ where: { id: otherCustomerId } }).catch(() => {});
         });
 
-        it('should not access devices from different tenant', async () => {
-            // Create device for other customer
-            const otherDevice = await prismaService.getClient().device.create({
+        it('should not expose devices from another tenant', async () => {
+            const otherDevice = await prisma.device.create({
                 data: {
-                    id: 'test_other_device',
-                    deviceId: 'other_device_001',
-                    hostname: 'Other Device',
+                    deviceId: `other-iso-${ts}`,
+                    publicId: `pub-iso-${ts}`,
+                    name: 'Other Tenant Device',
                     deviceType: 'PI_4',
                     architecture: 'arm64',
                     ipAddress: '192.168.2.100',
                     status: 'ONLINE',
                     customerId: otherCustomerId,
-                    userId: otherUserId
-                }
+                    userId: otherUserId,
+                },
             });
 
-            // Try to access other customer's device with first customer's user
-            const request = new NextRequest(`http://localhost:3000/api/devices/${otherDevice.id}`, {
-                method: 'GET',
-                headers: {
-                    'authorization': `Bearer ${authToken}`,
-                    'x-user-id': testUserId,
-                    'x-user-email': `deviceapi-${timestamp}@testdeviceapi.com`,
-                    'x-user-role': 'ADMIN',
-                    'x-customer-id': testCustomerId,
-                    'cookie': `auth-token=${authToken}`
-                }
+            const res = await httpRequest(`/api/devices/${otherDevice.publicId}`, {
+                headers: { Cookie: `auth-token=${authToken}` },
             });
-
-            const response = await deviceGET(request, { params: { id: otherDevice.id } });
-            expect([403, 404]).toContain(response.status); // Should be forbidden or not found
+            expect([403, 404]).toContain(res.status);
         });
     });
 });

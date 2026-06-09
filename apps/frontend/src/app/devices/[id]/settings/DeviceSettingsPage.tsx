@@ -6,6 +6,8 @@ import {
     Activity,
     AlertTriangle,
     ArrowLeft,
+    Check,
+    Copy,
     Info,
     Network,
     RotateCcw,
@@ -15,7 +17,7 @@ import {
     Shield,
     Trash2
 } from 'lucide-react';
-import {Button, Card, CardBody, CardHeader, Chip, Divider, Input, Select, SelectItem, Slider, Switch, Tab, Tabs, Textarea} from '@/components/ui';
+import {Button, Card, CardBody, CardHeader, Chip, Divider, Input, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, Select, SelectItem, Slider, Switch, Tab, Tabs, Textarea, useDisclosure} from '@/components/ui';
 
 import {toast} from 'sonner';
 import {useAuth} from '@/contexts/auth-context';
@@ -124,6 +126,10 @@ export default function DeviceSettingsPage({ params }: DeviceSettingsPageProps) 
     const [saving, setSaving] = useState(false);
     const [hasChanges, setHasChanges] = useState(false);
     const [newTag, setNewTag] = useState('');
+    const [rotatingKey, setRotatingKey] = useState(false);
+    const [newApiKey, setNewApiKey] = useState<string | null>(null);
+    const [keyCopied, setKeyCopied] = useState(false);
+    const { isOpen: isKeyOpen, onOpen: onKeyOpen, onOpenChange: onKeyOpenChange } = useDisclosure();
 
     // Fetch device info and settings via API
     useEffect(() => {
@@ -223,6 +229,30 @@ export default function DeviceSettingsPage({ params }: DeviceSettingsPageProps) 
             setSettings(prev => ({ ...prev, sshEnabled: true }));
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleRotateApiKey = async () => {
+        setRotatingKey(true);
+        try {
+            const response = await apiCall(`/api/devices/${params.id}/rotate-key`, { method: 'POST' });
+            const body = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error((body.data ?? body)?.error || body.message || 'Failed to rotate key');
+            setNewApiKey((body.data ?? body).apiKey);
+            setKeyCopied(false);
+            onKeyOpen();
+        } catch (err) {
+            toast.error(err instanceof Error ? err.message : 'Failed to rotate API key');
+        } finally {
+            setRotatingKey(false);
+        }
+    };
+
+    const handleCopyKey = () => {
+        if (newApiKey) {
+            navigator.clipboard.writeText(newApiKey);
+            setKeyCopied(true);
+            setTimeout(() => setKeyCopied(false), 2000);
         }
     };
 
@@ -780,8 +810,12 @@ export default function DeviceSettingsPage({ params }: DeviceSettingsPageProps) 
                                         </div>
                                         <div>
                                             <p className="text-sm text-default-500">Status</p>
-                                            <Chip color="success" variant="flat" size="sm">
-                                                Running
+                                            <Chip
+                                                color={device.status === 'ONLINE' ? 'success' : device.status === 'MAINTENANCE' ? 'warning' : 'danger'}
+                                                variant="flat"
+                                                size="sm"
+                                            >
+                                                {device.status}
                                             </Chip>
                                         </div>
                                     </div>
@@ -891,25 +925,26 @@ export default function DeviceSettingsPage({ params }: DeviceSettingsPageProps) 
                                     <div>
                                         <h4 className="font-medium mb-3">Actions</h4>
                                         <div className="flex gap-2">
+                                            <Button
+                                                color="warning"
+                                                variant="bordered"
+                                                startContent={<RotateCcw className="w-4 h-4" />}
+                                                onClick={handleRotateApiKey}
+                                                isLoading={rotatingKey}
+                                            >
+                                                Rotate API Key
+                                            </Button>
                                             {!isSensorDevice(settings.deviceType) && (
                                                 <Button
-                                                    color="warning"
+                                                    color="danger"
                                                     variant="bordered"
-                                                    startContent={<RotateCcw className="w-4 h-4" />}
-                                                    onClick={() => toast.info('API key rotation requires re-registering the device. Contact your administrator.')}
+                                                    startContent={<Trash2 className="w-4 h-4" />}
+                                                    onClick={handleRevokeAccess}
+                                                    isLoading={saving}
                                                 >
-                                                    Rotate API Key
+                                                    Revoke Access
                                                 </Button>
                                             )}
-                                            <Button
-                                                color="danger"
-                                                variant="bordered"
-                                                startContent={<Trash2 className="w-4 h-4" />}
-                                                onClick={handleRevokeAccess}
-                                                isLoading={saving}
-                                            >
-                                                Revoke Access
-                                            </Button>
                                         </div>
                                     </div>
                                 </div>
@@ -937,6 +972,41 @@ export default function DeviceSettingsPage({ params }: DeviceSettingsPageProps) 
                     Save Settings
                 </Button>
             </div>
+
+            {/* New API Key Modal */}
+            <Modal isOpen={isKeyOpen} onOpenChange={onKeyOpenChange} isDismissable={false}>
+                <ModalContent>
+                    {(onClose) => (
+                        <>
+                            <ModalHeader>API Key Rotated</ModalHeader>
+                            <ModalBody>
+                                <p className="text-sm text-default-600 mb-4">
+                                    Save this key now — it will not be shown again. The device will go offline
+                                    until it reconnects with the new key.
+                                </p>
+                                <div className="bg-default-50 border-2 border-dashed border-default-300 rounded-xl p-4 text-center">
+                                    <p className="text-xs text-default-400 mb-2 uppercase tracking-wide">New API Key</p>
+                                    <p className="text-sm font-mono font-semibold break-all text-default-900">
+                                        {newApiKey}
+                                    </p>
+                                    <Button
+                                        variant="flat"
+                                        size="sm"
+                                        onPress={handleCopyKey}
+                                        className="mt-3"
+                                        startContent={keyCopied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                                    >
+                                        {keyCopied ? 'Copied!' : 'Copy key'}
+                                    </Button>
+                                </div>
+                            </ModalBody>
+                            <ModalFooter>
+                                <Button color="primary" onPress={onClose}>I&apos;ve saved the key</Button>
+                            </ModalFooter>
+                        </>
+                    )}
+                </ModalContent>
+            </Modal>
         </div>
     );
 }

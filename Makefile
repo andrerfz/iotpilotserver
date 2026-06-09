@@ -455,6 +455,10 @@ local-restart-services:
 	@make wait-for-app
 	@make check-and-setup-db
 
+local-recreate: ## Recreate all local containers (no data loss)
+	@echo "🔄 Recreating all local containers..."
+	@docker compose -f $(LOCAL_COMPOSE_FILE) up -d --force-recreate
+
 local-recreate-app:
 	@echo "⏹️  Recreating local app..."
 	@echo "🧹 Cleaning Next.js build cache (host + container)..."

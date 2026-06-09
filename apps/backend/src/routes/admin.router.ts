@@ -13,6 +13,7 @@ import { ServiceContainer } from '@iotpilot/core/shared/infrastructure/container
 import { TenantContextImpl } from '@iotpilot/core/shared/domain/tenant-context';
 import { CustomerId } from '@iotpilot/core/shared/domain/value-objects/customer-id.vo';
 import { UpdateUserCommand } from '@iotpilot/core/user/application/commands/update-user/update-user.command';
+import { ListCustomersQuery } from '@iotpilot/core/customer/application/queries/list-customers/list-customers.query';
 
 export const adminRouter = Router();
 
@@ -599,6 +600,48 @@ adminRouter.get('/stats', requireAuth('ADMIN'), async (req: AuthenticatedRequest
     ]);
 
     send.ok(res, { userCount, deviceCount, alertCount, activeDevices });
+  } catch (err) {
+    send.fromError(res, err);
+  }
+});
+
+/**
+ * GET /api/admin/customers?page=1&limit=50&search=acme&status=ACTIVE
+ *
+ * List all customers (tenants). SUPERADMIN only.
+ */
+adminRouter.get('/customers', requireAuth('SUPERADMIN'), async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const page = req.query.page ? parseInt(req.query.page as string) : 1;
+    const limit = Math.min(req.query.limit ? parseInt(req.query.limit as string) : 50, 100);
+    const search = req.query.search as string | undefined;
+    const status = req.query.status as string | undefined;
+
+    const queryBus = ServiceContainer.getInstance().getQueryBus();
+    const tenantContext = TenantContextImpl.createSuperAdmin();
+    const query = new ListCustomersQuery(tenantContext, page, limit);
+    const customers = await queryBus.execute(query);
+
+    let filtered = customers as Array<{
+      id: string; name: string; status: string; isActive: boolean;
+      isDeleted: boolean; description?: string; contactEmail?: string;
+      createdAt: Date; updatedAt: Date;
+    }>;
+
+    if (search) {
+      const q = search.toLowerCase();
+      filtered = filtered.filter(c =>
+        c.name.toLowerCase().includes(q) ||
+        (c.contactEmail ?? '').toLowerCase().includes(q)
+      );
+    }
+    if (status) {
+      filtered = filtered.filter(c => c.status === status);
+    }
+
+    send.ok(res, filtered, {
+      pagination: { page, limit, total: filtered.length }
+    });
   } catch (err) {
     send.fromError(res, err);
   }

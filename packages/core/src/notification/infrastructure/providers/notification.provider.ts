@@ -30,7 +30,8 @@ export class NotificationServiceProvider implements BoundedContextProvider {
     container.register<NotificationRoutingService>('NotificationRoutingService', {
       useFactory: (c: DependencyContainer) => {
         const preferenceRepo = c.resolve<NotificationPreferenceRepository>('NotificationPreferenceRepository');
-        return new NotificationRoutingService(preferenceRepo);
+        const prisma = c.resolve<PrismaService>('PrismaService');
+        return new NotificationRoutingService(preferenceRepo, prisma);
       },
     });
   }

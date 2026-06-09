@@ -6,6 +6,7 @@ import {AlertTriangle, CheckCircle, RefreshCw, Search, UserCheck, UserPlus, User
 import {Card, Button, Input, Table, TableBody, TableCell, TableHeader, TableRow, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader} from '@/components/ui';
 
 import {useAuth} from '@/contexts/auth-context';
+import {useUserPreferences} from '@/contexts/user-preferences-context';
 import {toast} from 'sonner';
 
 interface User {
@@ -20,6 +21,7 @@ interface User {
 export default function UserManagement() {
     const router = useRouter();
     const {apiCall, user: currentUser} = useAuth();
+    const {preferences} = useUserPreferences();
     const isSuperAdmin = currentUser?.role === 'SUPERADMIN';
 
     const [users, setUsers] = useState<User[]>([]);
@@ -40,7 +42,7 @@ export default function UserManagement() {
         try {
             const params = new URLSearchParams({
                 page: String(currentPage),
-                limit: '20',
+                limit: String(preferences.itemsPerPage),
             });
             if (searchQuery) params.set('search', searchQuery);
 
@@ -57,7 +59,7 @@ export default function UserManagement() {
         } finally {
             setLoading(false);
         }
-    }, [apiCall, currentPage, searchQuery]);
+    }, [apiCall, currentPage, searchQuery, preferences.itemsPerPage]);
 
     useEffect(() => {
         fetchUsers();

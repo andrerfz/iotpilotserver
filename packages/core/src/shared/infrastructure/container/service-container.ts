@@ -91,6 +91,7 @@ export class ServiceContainer {
       const { OnDeviceOfflineHandler } = require('@iotpilot/core/notification/application/event-handlers/on-device-offline.handler');
       const { OnDeviceOnlineHandler } = require('@iotpilot/core/notification/application/event-handlers/on-device-online.handler');
       const { OnNotificationDispatchedHandler } = require('@iotpilot/core/notification/application/event-handlers/on-notification-dispatched.handler');
+      const { OnUserAuthenticatedHandler } = require('@iotpilot/core/notification/application/event-handlers/on-user-authenticated.handler');
 
       const notificationCommandBus = this.commandBus;
       const routingService = AppContainer.resolve('NotificationRoutingService');
@@ -103,8 +104,9 @@ export class ServiceContainer {
       this.eventBus.subscribe('DeviceDisconnectedEvent', new OnDeviceOfflineHandler(notificationCommandBus, routingService));
       this.eventBus.subscribe('DeviceConnectedEvent', new OnDeviceOnlineHandler(notificationCommandBus, routingService));
       this.eventBus.subscribe('NotificationDispatchedEvent', new OnNotificationDispatchedHandler(jobQueue));
+      this.eventBus.subscribe('UserAuthenticatedEvent', new OnUserAuthenticatedHandler(notificationCommandBus, routingService, this.prismaClient));
 
-      console.log('[ServiceContainer] 8 domain event handlers registered');
+      console.log('[ServiceContainer] 9 domain event handlers registered');
     } catch (error) {
       console.warn('[ServiceContainer] Event handlers not available:', (error as Error).message);
     }
