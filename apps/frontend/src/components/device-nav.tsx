@@ -26,6 +26,7 @@ import {
     isFeatureEnabled
 } from '@/env';
 import {Badge, Button, Chip, Divider, Tooltip} from '@/components/ui';
+import {useAuth} from '@/contexts/auth-context';
 
 interface DeviceNavProps {
     deviceId: string;
@@ -42,6 +43,8 @@ export default function DeviceNav({
 }: DeviceNavProps) {
     const pathname = usePathname();
     const [externalLinksExpanded, setExternalLinksExpanded] = useState(false);
+    const {user} = useAuth();
+    const isSuperAdmin = user?.role === 'SUPERADMIN';
 
     // Environment configuration
     const envInfo = getEnvironmentInfo();
@@ -120,20 +123,20 @@ export default function DeviceNav({
         }
     ];
 
-    // External service links
+    // External service links — SUPERADMIN only (infrastructure-level tools)
     const externalLinks = [
         {
             title: 'Grafana Dashboard',
             icon: <BarChart className="w-4 h-4"/>,
             url: `${getGrafanaUrl()}/d/device-overview?var-device=${deviceId}`,
-            enabled: isFeatureEnabled('advancedMetrics'),
+            enabled: isSuperAdmin && isFeatureEnabled('advancedMetrics'),
             description: 'View detailed metrics in Grafana'
         },
         {
             title: 'InfluxDB Data',
             icon: <Activity className="w-4 h-4"/>,
             url: `${getInfluxUrl()}/orgs/iotpilot/data-explorer?query=from(bucket:"devices")|>filter(fn:(r)=>r.device_id=="${deviceId}")`,
-            enabled: isDevelopment(), // Only show in development
+            enabled: isSuperAdmin, // Raw DB access — SUPERADMIN only
             description: 'Raw metrics data in InfluxDB'
         }
     ];
