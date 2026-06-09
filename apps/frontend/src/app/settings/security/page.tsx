@@ -4,7 +4,7 @@ import {useEffect, useState} from 'react';
 import {useForm} from 'react-hook-form';
 import {zodResolver} from '@hookform/resolvers/zod';
 import {z} from 'zod';
-import {Button, Form, Card, CardBody, CardFooter, CardHeader, Switch, Input, Slider} from '@/components/ui';
+import {Button, Card, CardBody, CardFooter, CardHeader, Switch, Input, Slider} from '@/components/ui';
 
 import {toast} from 'sonner';
 import {AlertCircle, ChevronDown, ChevronUp, Key, Loader2, Lock, Monitor, RefreshCw, Shield, Trash2} from 'lucide-react';
@@ -217,7 +217,6 @@ export default function SecuritySettings() {
           <p className="text-sm text-gray-500">Manage your account security settings</p>
         </CardHeader>
 
-        <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <CardBody className="space-y-6">
               <div className="flex items-center justify-between">
@@ -301,7 +300,6 @@ export default function SecuritySettings() {
               </Button>
             </CardFooter>
           </form>
-        </Form>
       </Card>
 
       <Card className="mb-6">

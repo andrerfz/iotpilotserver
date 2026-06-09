@@ -4,7 +4,7 @@ import {useEffect, useState} from 'react';
 import {useForm} from 'react-hook-form';
 import {zodResolver} from '@hookform/resolvers/zod';
 import {z} from 'zod';
-import {Button, Form, Card, CardBody, CardHeader, Select, SelectItem, Switch, Radio, RadioGroup} from '@/components/ui';
+import {Button, Card, CardBody, CardHeader, Select, SelectItem, Switch, Radio, RadioGroup} from '@/components/ui';
 
 import {toast} from 'sonner';
 import {BarChart, Gauge, Layout, Loader2, Palette, Settings, Sparkles} from 'lucide-react';
@@ -145,7 +145,6 @@ export default function SystemSettings() {
     <div>
       <h2 className="text-xl font-semibold mb-6">System Settings</h2>
 
-      <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <Card className="mb-6">
             <CardHeader>
@@ -322,7 +321,6 @@ export default function SystemSettings() {
             </Button>
           </div>
         </form>
-      </Form>
     </div>
   );
 }

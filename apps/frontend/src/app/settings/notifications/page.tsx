@@ -4,7 +4,7 @@ import {useEffect, useState} from 'react';
 import {useForm} from 'react-hook-form';
 import {zodResolver} from '@hookform/resolvers/zod';
 import {z} from 'zod';
-import {Button, Form, Card, CardBody, CardFooter, CardHeader, Switch} from '@/components/ui';
+import {Button, Card, CardBody, CardFooter, CardHeader, Switch} from '@/components/ui';
 
 import {toast} from 'sonner';
 import {AlertTriangle, Bell, Loader2, Mail, Server} from 'lucide-react';
@@ -105,7 +105,7 @@ export default function NotificationsSettings() {
           </p>
         </CardHeader>
 
-        <Form {...form}>
+
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <CardBody className="space-y-6">
               <div className="flex items-center justify-between">
@@ -184,7 +184,7 @@ export default function NotificationsSettings() {
               </Button>
             </CardFooter>
           </form>
-        </Form>
+
       </Card>
     </div>
   );
