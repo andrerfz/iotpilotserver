@@ -18,6 +18,7 @@ import {
 import { GetThresholdsQuery } from '@iotpilot/core/monitoring/application/queries/get-thresholds/get-thresholds.query';
 import { CreateThresholdCommand } from '@iotpilot/core/monitoring/application/commands/create-threshold/create-threshold.command';
 import { UpdateThresholdCommand } from '@iotpilot/core/monitoring/application/commands/update-threshold/update-threshold.command';
+import { ComparisonOperator, ThresholdType } from '@iotpilot/core/monitoring/domain/entities/threshold.entity';
 import { TenantContextImpl } from '@iotpilot/core/shared/domain/tenant-context';
 import { CustomerId } from '@iotpilot/core/shared/domain/value-objects/customer-id.vo';
 import { validator } from '@iotpilot/core/shared/infrastructure/validation/validation-helper';
@@ -1178,34 +1179,45 @@ monitoringRouter.put('/thresholds/:id', requireAuth('ADMIN'), async (req: Authen
             return;
         }
 
-        // Verify ownership before mutating — prevents IDOR across tenants
+        // Verify ownership before mutating — prevents IDOR across tenants.
+        // Also fetch the threshold's own customerId so SUPERADMIN callers
+        // pass a valid tenant to the command instead of a placeholder.
         const where = customerId
             ? { id, customerId, deletedAt: null }
             : { id, deletedAt: null };
-        const existing = await prisma.getClient().threshold.findFirst({ where, select: { id: true } });
+        const existing = await prisma.getClient().threshold.findFirst({
+            where,
+            select: { id: true, customerId: true },
+        });
         if (!existing) {
             send.notFound(res, 'Threshold not found');
             return;
         }
+
+        // Effective customerId: prefer caller's (tenant-scoped), fall back to threshold's own.
+        const effectiveCustomerId = customerId ?? existing.customerId ?? '';
 
         const tenantContext = customerId
             ? TenantContextImpl.create(CustomerId.create(customerId))
             : TenantContextImpl.createSuperAdmin();
 
         const commandBus = ServiceContainer.getInstance().getCommandBus();
+        // Note: the domain ComparisonOperator / ThresholdType use symbolic values ('>', '>=', …)
+        // while the API schema uses descriptive names ('GREATER_THAN', …) for readability.
+        // Both reach Prisma as strings; the explicit casts preserve the semantic intent.
         const cmd = UpdateThresholdCommand.create(
             existing.id,
             body.name,
             body.description,
             body.metricName,
-            body.operator as any,
+            body.operator as ComparisonOperator,
             body.value,
             body.unit,
             body.severity,
-            body.type as any,
+            body.type as ThresholdType,
             body.cooldownMinutes,
             body.enabled,
-            customerId || 'system',
+            effectiveCustomerId,
             tenantContext
         );
 

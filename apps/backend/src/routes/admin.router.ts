@@ -13,7 +13,6 @@ import { ServiceContainer } from '@iotpilot/core/shared/infrastructure/container
 import { TenantContextImpl } from '@iotpilot/core/shared/domain/tenant-context';
 import { CustomerId } from '@iotpilot/core/shared/domain/value-objects/customer-id.vo';
 import { UpdateUserCommand } from '@iotpilot/core/user/application/commands/update-user/update-user.command';
-import { ListCustomersQuery } from '@iotpilot/core/customer/application/queries/list-customers/list-customers.query';
 
 export const adminRouter = Router();
 
@@ -612,36 +611,33 @@ adminRouter.get('/stats', requireAuth('ADMIN'), async (req: AuthenticatedRequest
  */
 adminRouter.get('/customers', requireAuth('SUPERADMIN'), async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const page = req.query.page ? parseInt(req.query.page as string) : 1;
-    const limit = Math.min(req.query.limit ? parseInt(req.query.limit as string) : 50, 100);
-    const search = req.query.search as string | undefined;
+    const page = Math.max(1, req.query.page ? parseInt(req.query.page as string) : 1);
+    const limit = Math.min(Math.max(1, req.query.limit ? parseInt(req.query.limit as string) : 50), 100);
+    const search = (req.query.search as string | undefined)?.trim() || undefined;
     const status = req.query.status as string | undefined;
 
-    const queryBus = ServiceContainer.getInstance().getQueryBus();
-    const tenantContext = TenantContextImpl.createSuperAdmin();
-    const query = new ListCustomersQuery(tenantContext, page, limit);
-    const customers = await queryBus.execute(query);
-
-    let filtered = customers as Array<{
-      id: string; name: string; status: string; isActive: boolean;
-      isDeleted: boolean; description?: string; contactEmail?: string;
-      createdAt: Date; updatedAt: Date;
-    }>;
-
+    // Build Prisma WHERE with real filters so pagination total is accurate
+    const where: Record<string, unknown> = { deletedAt: null };
+    if (status) where.status = status;
     if (search) {
-      const q = search.toLowerCase();
-      filtered = filtered.filter(c =>
-        c.name.toLowerCase().includes(q) ||
-        (c.contactEmail ?? '').toLowerCase().includes(q)
-      );
-    }
-    if (status) {
-      filtered = filtered.filter(c => c.status === status);
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { contactEmail: { contains: search, mode: 'insensitive' } },
+      ];
     }
 
-    send.ok(res, filtered, {
-      pagination: { page, limit, total: filtered.length }
-    });
+    const [customers, total] = await Promise.all([
+      prisma.getClient().customer.findMany({
+        where,
+        select: { id: true, name: true, status: true, contactEmail: true, createdAt: true, updatedAt: true },
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.getClient().customer.count({ where }),
+    ]);
+
+    send.ok(res, customers, { pagination: { page, limit, total } });
   } catch (err) {
     send.fromError(res, err);
   }
