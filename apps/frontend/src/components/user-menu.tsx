@@ -25,6 +25,7 @@ import {
     getTailscaleDomain,
     isCloudFlareAccess,
     isDevelopment,
+    isLocalDevelopment,
     isFeatureEnabled
 } from '@/env';
 
@@ -36,6 +37,8 @@ export default function UserMenu() {
     const router = useRouter();
 
     if (!user) return null;
+
+    const isSuperAdmin = user.role === 'SUPERADMIN';
 
     // Environment configuration
     const envInfo = getEnvironmentInfo();
@@ -64,25 +67,21 @@ export default function UserMenu() {
         }
     };
 
-    // External service links
+    // External service links — SUPERADMIN only (infrastructure tools)
     const externalServices = [
         {
             name: 'Grafana Dashboards',
             url: getGrafanaUrl(),
             icon: <BarChart3 className="w-4 h-4"/>,
-            description: isDevelopment()
-                ? 'View monitoring dashboards (Direct Port)'
-                : 'View monitoring dashboards (Subdomain)',
-            enabled: isFeatureEnabled('advancedMetrics'),
+            description: 'View monitoring dashboards',
+            enabled: isSuperAdmin && isFeatureEnabled('advancedMetrics'),
         },
         {
             name: 'InfluxDB Admin',
             url: getInfluxUrl(),
             icon: <Database className="w-4 h-4"/>,
-            description: isDevelopment()
-                ? 'Database administration (Direct Port)'
-                : 'Database administration (Subdomain)',
-            enabled: user.role === 'ADMIN',
+            description: 'Database administration',
+            enabled: isSuperAdmin,
         },
     ];
 
@@ -106,13 +105,13 @@ export default function UserMenu() {
             name: 'Grafana URL',
             value: serviceUrls.grafana,
             icon: <BarChart3 className="w-4 h-4"/>,
-            enabled: isFeatureEnabled('advancedMetrics'),
+            enabled: isSuperAdmin && isFeatureEnabled('advancedMetrics'),
         },
         {
             name: 'InfluxDB URL',
             value: serviceUrls.influxdb,
             icon: <Database className="w-4 h-4"/>,
-            enabled: user.role === 'ADMIN',
+            enabled: isSuperAdmin,
         },
         {
             name: 'Tailscale Network',
@@ -162,7 +161,7 @@ export default function UserMenu() {
                         <div className="hidden md:block text-left">
                             <div className="text-sm font-medium">
                                 {user.username}
-                                {isDevelopment() && (
+                                {isLocalDevelopment() && (
                                     <Chip size="sm" variant="flat" color="secondary" className="ml-1">
                                         {envInfo.name}
                                     </Chip>
@@ -205,7 +204,7 @@ export default function UserMenu() {
                                     >
                                         {user.role}
                                     </Chip>
-                                    {isDevelopment() && (
+                                    {isLocalDevelopment() && (
                                         <Chip
                                             size="sm"
                                             color="success"
@@ -297,7 +296,7 @@ export default function UserMenu() {
                 </DropdownSection>
 
                 {/* Environment Info (Development Only) */}
-                {isDevelopment() ? (
+                {isLocalDevelopment() ? (
                     <DropdownSection showDivider title="Environment Info">
                         <DropdownItem
                             key="env-info"
@@ -358,7 +357,7 @@ export default function UserMenu() {
                         </DropdownItem>
                     ) : null}
 
-                    {isDevelopment() ? (
+                    {isLocalDevelopment() ? (
                         <DropdownItem
                             key="debug"
                             startContent={<Monitor className="w-4 h-4"/>}
