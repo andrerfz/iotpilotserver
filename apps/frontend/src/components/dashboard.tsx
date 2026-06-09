@@ -7,7 +7,7 @@ import ProtectedRoute from '@/components/protected-route';
 import MaintenanceBanner from '@/components/maintenance-banner';
 import FeatureStatus from '@/components/feature-status';
 import NetworkStatus from '@/components/network-status';
-import {getBaseUrl, getEnvironmentInfo, isDevelopment} from '@/env';
+import {getBaseUrl, getEnvironmentInfo, isDevelopment, isLocalDevelopment} from '@/env';
 import {Chip, Code, Divider, Navbar, NavbarBrand} from '@/components/ui';
 
 export default function Dashboard() {
@@ -55,7 +55,7 @@ export default function Dashboard() {
 
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                     {/* Development Info Panels */}
-                    {isDevelopment() && (
+                    {isLocalDevelopment() && (
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                             <FeatureStatus/>
                             <NetworkStatus/>
@@ -67,7 +67,7 @@ export default function Dashboard() {
                 </div>
 
                 {/* Footer with Environment Info */}
-                {isDevelopment() && (
+                {isLocalDevelopment() && (
                     <footer>
                         <Divider/>
                         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
