@@ -65,6 +65,11 @@ export default function ProfileSettingsClient() {
         defaultValues: {language: 'en', timezone: 'UTC', dateFormat: 'MM/DD/YYYY'},
     });
 
+    // watch() subscribes to form state changes — needed for Select selectedKeys to update reactively
+    const language = displayForm.watch('language');
+    const timezone = displayForm.watch('timezone');
+    const dateFormat = displayForm.watch('dateFormat');
+
     const personalForm = useForm<PersonalFormValues>({
         resolver: zodResolver(personalFormSchema),
         defaultValues: {firstName: '', lastName: '', phoneNumber: ''},
@@ -230,7 +235,7 @@ export default function ProfileSettingsClient() {
                                     className="max-w-xs"
                                     items={LANGUAGE_OPTIONS}
                                     label="Language"
-                                    selectedKeys={[displayForm.getValues('language')]}
+                                    selectedKeys={[language]}
                                     onChange={k => displayForm.setValue('language', k.toString(), {shouldDirty: true})}
                                 >
                                     {o => <SelectItem key={o.value}>{o.label}</SelectItem>}
@@ -242,7 +247,7 @@ export default function ProfileSettingsClient() {
                                     className="max-w-xs"
                                     items={TIMEZONE_OPTIONS}
                                     label="Timezone"
-                                    selectedKeys={[displayForm.getValues('timezone')]}
+                                    selectedKeys={[timezone]}
                                     onChange={k => displayForm.setValue('timezone', k.toString(), {shouldDirty: true})}
                                 >
                                     {o => <SelectItem key={o.value}>{o.label}</SelectItem>}
@@ -254,7 +259,7 @@ export default function ProfileSettingsClient() {
                                     className="max-w-xs"
                                     items={DATE_FORMAT_OPTIONS}
                                     label="Date Format"
-                                    selectedKeys={[displayForm.getValues('dateFormat')]}
+                                    selectedKeys={[dateFormat]}
                                     onChange={k => displayForm.setValue('dateFormat', k.toString(), {shouldDirty: true})}
                                 >
                                     {o => <SelectItem key={o.value}>{o.label}</SelectItem>}

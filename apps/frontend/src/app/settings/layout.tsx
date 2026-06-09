@@ -7,7 +7,8 @@ import {
   Bell,
   Shield,
   Settings as SettingsIcon,
-  ChevronRight
+  ChevronRight,
+  ArrowLeft,
 } from 'lucide-react';
 import ProtectedRoute from '@/components/protected-route';
 
@@ -48,7 +49,13 @@ export default function SettingsLayout({
   return (
     <ProtectedRoute>
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-8">Settings</h1>
+      <div className="flex items-center gap-4 mb-8">
+        <Link href="/" className="flex items-center text-sm text-default-500 hover:text-default-800 transition-colors">
+          <ArrowLeft className="h-4 w-4 mr-1" />
+          Back
+        </Link>
+        <h1 className="text-2xl font-bold">Settings</h1>
+      </div>
       
       <div className="flex flex-col md:flex-row gap-8">
         {/* Sidebar Navigation */}

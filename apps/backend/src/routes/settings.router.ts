@@ -343,7 +343,8 @@ settingsRouter.get('/system', requireAuth(), async (req: AuthenticatedRequest, r
 
     const isAdmin = user.role === 'ADMIN' || user.role === 'SUPERADMIN';
     if (isAdmin) {
-      const systemConfig = await tenantPrisma.client.systemConfig.findMany({
+      // SystemConfig has no customerId column — use global prisma, not tenantPrisma
+      const systemConfig = await prisma.getClient().systemConfig.findMany({
         where: { category: 'system' },
       });
 
@@ -464,7 +465,8 @@ settingsRouter.put('/system', requireAuth(), async (req: AuthenticatedRequest, r
     if (isAdmin && Object.keys(systemConfigSettings).length > 0) {
       const systemConfigPromises = Object.entries(systemConfigSettings).map(
         ([key, value]: [string, string]) =>
-          tenantPrisma.client.systemConfig.upsert({
+          // SystemConfig has no customerId column — use global prisma, not tenantPrisma
+          prisma.getClient().systemConfig.upsert({
             where: { key },
             update: {
               value,
