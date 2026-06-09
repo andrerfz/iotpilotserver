@@ -8,7 +8,7 @@ import {Button, Form, Card, CardBody, CardFooter, CardHeader, Switch} from '@/co
 
 import {toast} from 'sonner';
 import {AlertTriangle, Bell, Loader2, Mail, Server} from 'lucide-react';
-import { apiUrl } from '@/utils/api-url';
+import {useAuth} from '@/contexts/auth-context';
 
 // Validation schema
 const notificationsFormSchema = z.object({
@@ -21,6 +21,7 @@ const notificationsFormSchema = z.object({
 type NotificationsFormValues = z.infer<typeof notificationsFormSchema>;
 
 export default function NotificationsSettings() {
+  const {apiCall} = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -39,7 +40,7 @@ export default function NotificationsSettings() {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const response = await fetch(apiUrl('/api/settings/notifications'));
+        const response = await apiCall('/api/settings/notifications');
         if (!response.ok) {
           throw new Error('Failed to fetch notification settings');
         }
@@ -54,19 +55,16 @@ export default function NotificationsSettings() {
     };
 
     fetchSettings();
-  }, [form]);
+  }, [form, apiCall]);
 
   // Handle form submission
   const onSubmit = async (values: NotificationsFormValues) => {
     setIsSaving(true);
 
     try {
-      const response = await fetch(apiUrl('/api/settings/notifications'), {
+      const response = await apiCall('/api/settings/notifications', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(values)
+        body: JSON.stringify(values),
       });
 
       if (!response.ok) {

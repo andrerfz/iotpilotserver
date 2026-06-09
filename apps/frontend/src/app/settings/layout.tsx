@@ -76,15 +76,9 @@ export default function SettingsLayout({
           
           <div className="mt-8 p-4 bg-muted rounded-lg">
             <h3 className="font-medium mb-2">Need help?</h3>
-            <p className="text-sm text-muted-foreground mb-3">
-              If you need assistance with your settings, please check our documentation or contact support.
+            <p className="text-sm text-muted-foreground">
+              If you need assistance with your settings, please contact support.
             </p>
-            <Link
-              href="/api/docs"
-              className="text-sm text-primary hover:underline"
-            >
-              View API documentation
-            </Link>
           </div>
         </aside>
         
