@@ -1,8 +1,8 @@
 import { NotificationPreferenceEntity } from '../entities/notification-preference.entity';
 import { NotificationPreferenceRepository } from '../interfaces/notification-preference.repository';
+import { NotificationTargetRepository } from '../interfaces/notification-target.repository';
 import { CustomerId } from '@iotpilot/core/shared/domain/value-objects/customer-id.vo';
 import { NotificationType } from '@iotpilot/core/shared/domain/value-objects/notification-type.vo';
-import { PrismaService } from '@iotpilot/core/shared/infrastructure/database/prisma.service';
 
 export interface RoutingEntry {
   userId: string;
@@ -28,11 +28,11 @@ const COARSE_TOGGLE: Record<string, string> = {
 export class NotificationRoutingService {
   constructor(
     private readonly preferenceRepo: NotificationPreferenceRepository,
-    private readonly prisma: PrismaService,
+    private readonly targetRepo: NotificationTargetRepository,
   ) {}
 
   /**
-   * Original single-user route resolver. Kept for backward compatibility.
+   * Single-user route resolver.
    * Suitable when the caller already knows the target userId and email.
    */
   async resolveRoutes(
@@ -79,15 +79,7 @@ export class NotificationRoutingService {
     type: NotificationType,
     customerId: CustomerId,
   ): Promise<RoutingEntry[]> {
-    const admins = await this.prisma.getClient().user.findMany({
-      where: {
-        customerId: customerId.getValue(),
-        role: { in: ['ADMIN', 'SUPERADMIN'] },
-        deletedAt: null,
-      },
-      select: { id: true, email: true },
-    });
-
+    const admins = await this.targetRepo.findAdminUsersInTenant(customerId);
     const routes: RoutingEntry[] = [];
 
     for (const admin of admins) {
@@ -118,24 +110,15 @@ export class NotificationRoutingService {
   }
 
   /**
-   * Checks the coarse-grained user_preferences toggle for a specific user.
+   * Checks the coarse-grained notification toggle for a user.
    * Returns true if the notification is allowed (default: true when no preference set).
    */
   private async isNotificationAllowed(userId: string, type: NotificationType): Promise<boolean> {
     const toggleKey = COARSE_TOGGLE[type.value];
     if (!toggleKey) return true;
 
-    try {
-      const pref = await this.prisma.getClient().userPreference.findUnique({
-        where: {
-          userId_category_key: { userId, category: 'NOTIFICATIONS', key: toggleKey },
-        },
-        select: { value: true },
-      });
-      // Default is true — only block if explicitly set to 'false'
-      return pref?.value !== 'false';
-    } catch {
-      return true;
-    }
+    const value = await this.targetRepo.getUserNotificationToggle(userId, toggleKey);
+    // Default is true — only block if explicitly set to 'false'
+    return value !== 'false';
   }
 }

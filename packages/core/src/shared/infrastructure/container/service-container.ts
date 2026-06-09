@@ -104,9 +104,9 @@ export class ServiceContainer {
       this.eventBus.subscribe('DeviceDisconnectedEvent', new OnDeviceOfflineHandler(notificationCommandBus, routingService));
       this.eventBus.subscribe('DeviceConnectedEvent', new OnDeviceOnlineHandler(notificationCommandBus, routingService));
       this.eventBus.subscribe('NotificationDispatchedEvent', new OnNotificationDispatchedHandler(jobQueue));
-      this.eventBus.subscribe('UserAuthenticatedEvent', new OnUserAuthenticatedHandler(notificationCommandBus, routingService, this.prismaClient));
+      this.eventBus.subscribe('UserAuthenticatedEvent', new OnUserAuthenticatedHandler(notificationCommandBus, routingService));
 
-      console.log('[ServiceContainer] 9 domain event handlers registered');
+      this.logger.info('[ServiceContainer] 9 domain event handlers registered');
     } catch (error) {
       console.warn('[ServiceContainer] Event handlers not available:', (error as Error).message);
     }

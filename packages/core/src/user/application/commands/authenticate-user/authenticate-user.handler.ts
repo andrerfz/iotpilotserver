@@ -68,7 +68,8 @@ export class AuthenticateUserHandler implements CommandHandler<AuthenticateUserC
 
         await this.eventBus.publish(new UserAuthenticatedEvent(
             user.getId(),
-            user.getEmail()
+            user.getEmail(),
+            user.getCustomerId() ?? null,
         ));
 
         return {
