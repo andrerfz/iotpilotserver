@@ -127,7 +127,7 @@ export default function DeviceCommandsPage({ params }: DeviceCommandsPageProps) 
         }
 
         fetchDeviceInfo();
-    }, [params.id, router]);
+    }, [params.id, router, apiCall]);
 
     // Fetch commands
     const fetchCommands = useCallback(async () => {
@@ -146,7 +146,7 @@ export default function DeviceCommandsPage({ params }: DeviceCommandsPageProps) 
         } finally {
             setCommandsLoading(false);
         }
-    }, [params.id]);
+    }, [params.id, apiCall]);
 
     useEffect(() => {
         if (device) {

@@ -112,7 +112,7 @@ export default function DeviceLogsPage({params}: DeviceLogsPageProps) {
         } finally {
             setRefreshing(false);
         }
-    }, [params.id, levelFilter, search, sourceFilter, offset, apiCall]);
+    }, [params.id, levelFilter, search, sourceFilter, offset, apiCall, PAGE_SIZE]);
 
     // Initial load — fetch device name + logs
     useEffect(() => {
