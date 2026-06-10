@@ -43,17 +43,47 @@ single test runner, reporters, and the existing `make test-*` mental model.
 
 ---
 
-## Q5 — Directory and service naming
+## Q5 _resolved_ — Directory and service naming
 
-`apps/frontend-ng` + container `iotpilot-server-ng` are the working names. Confirm, or pick
-final names before T1 (renaming later touches compose, Makefile, Husky, CI).
+**Decision:** Keep `apps/frontend-ng` (pnpm package name `frontend-ng`) and container
+`iotpilot-server-ng`. Legacy stays `apps/frontend` until fe-cutover, where it is removed
+(not renamed) — so no `frontend-legacy` intermediate name is introduced.
 
-**Proposal:** keep `frontend-ng`; rename legacy to `apps/frontend-legacy` only at fe-cutover.
+**Resolved:** 2026-06-10
+**Applies to:** T1, T5, T6, T7, fe-cutover
 
 ---
 
-## Q6 — Zoneless change detection
+## Q6 _resolved_ — Zoneless change detection
 
-Angular zoneless is stable in recent versions and pairs well with signals, but some
-third-party wrappers (ngx-echarts, xterm integration) may assume zones. Decide at T1 after
-checking the chosen Angular version; if unsure, start zone-based and revisit at fe-cutover.
+**Decision:** Start **zone-based** for fe-foundation. Angular 20 ships stable zoneless
+(`provideZonelessChangeDetection`), but the migration pulls in `ngx-echarts` (fe-dashboard)
+and `@xterm/xterm` (fe-device-advanced) whose Angular wrappers assume zones. Per the
+"if unsure, start zone-based" guidance, T1 keeps `zone.js` in `polyfills.ts` and standard
+change detection. Revisit at fe-cutover once the third-party surface is known.
+
+**Resolved:** 2026-06-10
+**Applies to:** T1, fe-cutover
+
+---
+
+## Q7 _resolved_ — Pinned framework versions (T1 kickoff)
+
+**Decision:** Versions are pinned exactly (no `^`/`~`) in `apps/frontend-ng/package.json`
+for reproducible installs across Docker/CI. Chosen at kickoff:
+
+| Package | Version |
+|---|---|
+| Angular (`@angular/*`) | `20.3.24` (CLI/build-angular `20.3.27`) |
+| `@ionic/angular` | `8.8.9` (standalone mode, `@ionic/angular/standalone`) |
+| `@capacitor/core` | `8.4.0` |
+| `ionicons` | `7.4.0` |
+| `rxjs` | `7.8.2` |
+| `typescript` | `5.9.3` |
+| `zone.js` | `0.15.1` |
+| `angular-eslint` | `20.7.0` |
+
+Bootstrap is standalone (`bootstrapApplication` + `provideIonicAngular`), no NgModules.
+
+**Resolved:** 2026-06-10
+**Applies to:** all modules (downstream `/fe-deepen` inputs)
