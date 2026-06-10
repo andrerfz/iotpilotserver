@@ -1,17 +1,26 @@
 version: 2
 updates:
-  # Enable version updates for npm
+  # npm — active workspace packages (pnpm monorepo).
+  # NOTE: /app was renamed to apps/* in the monorepo migration; the old path
+  # produced 10 orphaned PRs. apps/frontend (legacy Next.js) is intentionally
+  # NOT watched here — it is being replaced by the Ionic/Angular frontend and
+  # removed at fe-cutover. Dependabot SECURITY updates still fire for it
+  # regardless of this config; only version-bump noise is suppressed.
   - package-ecosystem: "npm"
-    directory: "/app"
+    directories:
+      - "/"
+      - "/apps/backend"
+      - "/apps/worker"
+      - "/packages/core"
     schedule:
       interval: "weekly"
       day: "monday"
       time: "09:00"
     open-pull-requests-limit: 10
     reviewers:
-      - "your-username"  # Replace with actual GitHub username
+      - "andrerfz"
     assignees:
-      - "your-username"  # Replace with actual GitHub username
+      - "andrerfz"
     commit-message:
       prefix: "deps"
       prefix-development: "deps-dev"
@@ -19,20 +28,20 @@ updates:
     labels:
       - "dependencies"
       - "automated"
+    groups:
+      # Batch low-risk updates into a single PR per directory to cut noise.
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
     ignore:
-      # Ignore major version updates for critical packages
-      - dependency-name: "react"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "react-dom"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "next"
-        update-types: ["version-update:semver-major"]
+      # Hold majors of critical runtime/db packages for manual upgrades.
       - dependency-name: "@prisma/client"
         update-types: ["version-update:semver-major"]
       - dependency-name: "prisma"
         update-types: ["version-update:semver-major"]
 
-  # Enable version updates for Docker
+  # Docker base images
   - package-ecosystem: "docker"
     directory: "/"
     schedule:
@@ -41,9 +50,9 @@ updates:
       time: "09:00"
     open-pull-requests-limit: 5
     reviewers:
-      - "your-username"  # Replace with actual GitHub username
+      - "andrerfz"
     assignees:
-      - "your-username"  # Replace with actual GitHub username
+      - "andrerfz"
     commit-message:
       prefix: "docker"
       include: "scope"
@@ -52,7 +61,7 @@ updates:
       - "dependencies"
       - "automated"
 
-  # Enable version updates for GitHub Actions
+  # GitHub Actions workflows
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
@@ -61,9 +70,9 @@ updates:
       time: "09:00"
     open-pull-requests-limit: 5
     reviewers:
-      - "your-username"  # Replace with actual GitHub username
+      - "andrerfz"
     assignees:
-      - "your-username"  # Replace with actual GitHub username
+      - "andrerfz"
     commit-message:
       prefix: "ci"
       include: "scope"
@@ -71,3 +80,10 @@ updates:
       - "github-actions"
       - "ci"
       - "automated"
+    groups:
+      # One PR for all CI action bumps instead of one per action.
+      ci-actions:
+        update-types:
+          - "minor"
+          - "patch"
+          - "major"
