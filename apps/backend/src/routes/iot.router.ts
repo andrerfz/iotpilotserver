@@ -272,7 +272,7 @@ iotRouter.post('/heartbeat', async (req: Request, res: Response) => {
 });
 
 /**
- * POST /iot/register — IoT device self-registration endpoint
+ * POST /api/iot/register — IoT device self-registration endpoint
  *
  * This endpoint is specifically for IoT devices to self-register using API keys.
  * It differs from /api/devices/register which is for manual user registration via UI.
@@ -288,7 +288,7 @@ iotRouter.post('/heartbeat', async (req: Request, res: Response) => {
  *   -d '{"device_id":"pi-001","hostname":"RaspberryPi-001","device_type":"GENERIC"}'
  * ```
  */
-iotRouter.post('/iot/register', async (req: Request, res: Response) => {
+iotRouter.post('/register', async (req: Request, res: Response) => {
     try {
         // 1. AUTHENTICATION - Validate API key for device authentication
         const apiKey = (req.headers['x-api-key'] as string | undefined) ||

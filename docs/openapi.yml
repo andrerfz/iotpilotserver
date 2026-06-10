@@ -2159,22 +2159,6 @@ paths:
         '200':
           description: Heartbeat received
 
-  /heartbeat:
-    post:
-      tags: [iot]
-      summary: Alias for /iot/heartbeat
-      security:
-        - apiKeyAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-      responses:
-        '200':
-          description: Heartbeat received
-
   /iot/register:
     post:
       tags: [iot]
@@ -2222,6 +2206,18 @@ paths:
                 firmware_version:
                   type: string
                   nullable: true
+      responses:
+        '200':
+          description: Sensor reading recorded
+
+  /iot/temperature:
+    post:
+      tags: [iot]
+      summary: ESP32/ESP8266 temperature webhook (alias for /webhook/temperature)
+      security:
+        - apiKeyAuth: []
+      requestBody:
+        $ref: '#/paths/~1webhook~1temperature/post/requestBody'
       responses:
         '200':
           description: Sensor reading recorded
