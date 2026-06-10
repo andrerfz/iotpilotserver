@@ -21,10 +21,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '22'
           cache: 'npm'
@@ -56,7 +56,7 @@ jobs:
           npx tsc --noEmit --strict --noUnusedLocals --noUnusedParameters || true
 
       - name: Upload quality reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: code-quality-reports
           path: |
@@ -75,10 +75,10 @@ jobs:
     needs: [quality]
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '22'
           cache: 'npm'
@@ -112,7 +112,7 @@ jobs:
           npm run test:performance -- --run --reporter=json > performance-results.json || true
 
       - name: Upload comprehensive reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: comprehensive-analysis-reports
           path: |
