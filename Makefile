@@ -15,6 +15,7 @@
 .PHONY: sync-node-modules clean-dev
 .PHONY: queue-status queue-failed queue-retry queue-clean queue-drain queue-dashboard
 .PHONY: ssh prod-logs prod-deploy prod-rollback prod-restart prod-status prod-migrate
+.PHONY: ng-dev ng-lint ng-test ng-type-check ng-build ng-logs _ng-running
 
 # Variables - Using .env for both production and local
 COMPOSE_FILE = infra/docker/docker-compose.yml --env-file .env
@@ -30,6 +31,9 @@ SSH_CMD    = ssh -i $(PROD_KEY) $(PROD_USER)@$(PROD_HOST)
 
 # Run a command inside the frontend package directory in the app container
 EXEC_FRONTEND = docker exec -w /app/apps/frontend iotpilot-server-app
+
+# Run a command inside the frontend-ng package directory in its dev container
+EXEC_NG = docker exec -w /app/apps/frontend-ng iotpilot-server-ng
 
 # Default target
 help:
@@ -93,6 +97,14 @@ help:
 	@echo "  route-list           - List all routes (from docs/openapi.yml + Next.js pages)"
 	@echo "  openapi-check        - Check if backend routes are documented in openapi.yml"
 	@echo "  openapi-diff         - Same as openapi-check but exits 1 on missing docs (CI use)"
+	@echo ""
+	@echo "🅰️  frontend-ng (Ionic + Angular):"
+	@echo "  ng-dev               - Start the frontend-ng dev server (HMR) on NG_PORT"
+	@echo "  ng-lint              - Lint frontend-ng (in container)"
+	@echo "  ng-type-check        - Type-check frontend-ng (in container)"
+	@echo "  ng-test              - Run frontend-ng Vitest suite (in container)"
+	@echo "  ng-build             - Build frontend-ng (in container)"
+	@echo "  ng-logs              - Follow frontend-ng dev server logs"
 	@echo ""
 	@echo "🏭 Production:"
 	@echo "  install              - Initial installation and setup"
@@ -657,6 +669,40 @@ lint:
 		cd apps/frontend && npm install --legacy-peer-deps --no-optional --no-fund --no-audit && npm run lint; \
 	fi
 	@echo "✅ Linting complete!"
+
+# ─── frontend-ng (Ionic + Angular) ──────────────────────────────────────────
+# ng-dev starts the dev server; the rest exec npm scripts inside its container.
+_ng-running:
+	@docker ps -q -f name=iotpilot-server-ng | grep -q . || { \
+		echo "❌ iotpilot-server-ng is not running. Start it with: make ng-dev"; \
+		exit 1; \
+	}
+
+ng-dev:
+	@echo "🅰️  Starting frontend-ng dev server (HMR)..."
+	@docker compose -f $(LOCAL_COMPOSE_FILE) up -d iotpilot-ng
+	@echo "✅ frontend-ng serving on http://localhost:$${NG_PORT:-4200}"
+	@echo "   Follow logs with: make ng-logs"
+
+ng-lint: _ng-running
+	@echo "🔍 Linting frontend-ng..."
+	@$(EXEC_NG) npm run lint
+
+ng-type-check: _ng-running
+	@echo "🔎 Type-checking frontend-ng..."
+	@$(EXEC_NG) npm run type-check
+
+ng-test: _ng-running
+	@echo "🧪 Testing frontend-ng (Vitest)..."
+	@$(EXEC_NG) npm test
+
+ng-build: _ng-running
+	@echo "🔨 Building frontend-ng..."
+	@$(EXEC_NG) npm run build
+
+ng-logs:
+	@echo "📋 frontend-ng dev server logs:"
+	@docker compose -f $(LOCAL_COMPOSE_FILE) logs -f --tail=100 iotpilot-ng
 
 route-list:
 	@echo "📋 Listing all routes (from docs/openapi.yml + Next.js pages)..."

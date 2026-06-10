@@ -117,6 +117,9 @@ services:
       - ../../apps/frontend-ng/tsconfig.json:/app/apps/frontend-ng/tsconfig.json
       - ../../apps/frontend-ng/tsconfig.app.json:/app/apps/frontend-ng/tsconfig.app.json
       - ../../apps/frontend-ng/tailwind.config.ts:/app/apps/frontend-ng/tailwind.config.ts
+      - ../../apps/frontend-ng/tsconfig.spec.json:/app/apps/frontend-ng/tsconfig.spec.json
+      - ../../apps/frontend-ng/vitest.config.ts:/app/apps/frontend-ng/vitest.config.ts
+      - ../../apps/frontend-ng/eslint.config.js:/app/apps/frontend-ng/eslint.config.js
       - ../../apps/frontend-ng/package.json:/app/apps/frontend-ng/package.json
     restart: unless-stopped
     networks:
