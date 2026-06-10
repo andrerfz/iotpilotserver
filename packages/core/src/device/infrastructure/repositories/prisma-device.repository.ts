@@ -5,6 +5,7 @@ import {DeviceRepository, DeviceSearchOptions, DeviceSearchResult} from '../../d
 import {DeviceId} from '../../domain/value-objects/device-id.vo';
 import {DeviceMapper} from '../mappers/device.mapper';
 import {MetricsRepository} from '../../domain/interfaces/metrics-repository.interface';
+import {getSecretCipher} from '../../../shared/infrastructure/crypto/secret-cipher.factory';
 
 export class PrismaDeviceRepository implements DeviceRepository {
   constructor(
@@ -99,18 +100,34 @@ export class PrismaDeviceRepository implements DeviceRepository {
       }
     }
 
-    // Store SSH credentials in capabilities JSON field if present
+    // Store SSH credentials in capabilities JSON field if present.
+    // Secret material (privateKey, passphrase) is encrypted at rest with the
+    // process SecretCipher; only non-sensitive metadata is stored in clear.
     const updateData: any = { ...persistenceData };
     if (device.sshCredentials) {
+      const creds = device.sshCredentials;
       const existingCapabilities = (updateData.capabilities as any) || {};
+      const cipher = getSecretCipher();
+
+      // Skip empties and the legacy read-path placeholder; never double-encrypt.
+      const encryptIfPresent = (value?: string): string | undefined => {
+        if (!value || value === 'password-based-auth') return undefined;
+        return cipher.isEncrypted(value) ? value : cipher.encrypt(value);
+      };
+
+      const secret: Record<string, string> = {};
+      const encryptedKey = encryptIfPresent(creds.privateKey);
+      const encryptedPassphrase = encryptIfPresent(creds.passphrase);
+      if (encryptedKey) secret.privateKey = encryptedKey;
+      if (encryptedPassphrase) secret.passphrase = encryptedPassphrase;
+
       updateData.capabilities = {
         ...existingCapabilities,
         ssh: {
-          username: device.sshCredentials.username,
-          port: device.sshCredentials.port || 22,
-          authMethod: device.sshCredentials.privateKey ? 'key' : 'password',
-          // Note: privateKey and passphrase are sensitive and should be encrypted
-          // For now, we'll store them in capabilities but they should be encrypted
+          username: creds.username,
+          port: creds.port || 22,
+          authMethod: creds.privateKey ? 'key' : 'password',
+          ...(Object.keys(secret).length > 0 ? { secret } : {}),
         }
       };
     }

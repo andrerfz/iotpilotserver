@@ -14,6 +14,7 @@ import {
     UpdateDeviceDTO
 } from '../dto/device.dto';
 import {TenantContext} from '../../../shared/domain/tenant-context';
+import {getSecretCipher} from '../../../shared/infrastructure/crypto/secret-cipher.factory';
 
 export class DeviceMapper {
   static toDomain(persistence: any, tenantContext?: TenantContext): DeviceEntity | null {
@@ -53,16 +54,37 @@ export class DeviceMapper {
       }
     }
 
-    // Extract SSH credentials from capabilities if present
+    // Extract SSH credentials from capabilities if present. Secret material is
+    // stored encrypted (capabilities.ssh.secret) and decrypted here. The cipher
+    // is only invoked when an encrypted secret exists, so device reads keep
+    // working in environments without CREDENTIAL_ENCRYPTION_KEY set.
     let sshCredentials: any = undefined;
     if (persistence.capabilities && typeof persistence.capabilities === 'object') {
       const caps = persistence.capabilities as any;
       if (caps.ssh) {
+        let privateKey = 'password-based-auth'; // legacy / no-secret fallback
+        let passphrase: string | undefined = undefined;
+
+        const enc = caps.ssh.secret;
+        if (enc && (enc.privateKey || enc.passphrase)) {
+          try {
+            const cipher = getSecretCipher();
+            if (enc.privateKey) privateKey = cipher.decrypt(enc.privateKey);
+            if (enc.passphrase) passphrase = cipher.decrypt(enc.passphrase);
+          } catch (error) {
+            // Never crash a device read on a bad key / corrupt ciphertext;
+            // fall back so SSH simply fails to connect rather than leaking.
+            console.error(
+              `Failed to decrypt SSH credentials for device ${persistence.id}: ${(error as Error).message}`
+            );
+          }
+        }
+
         sshCredentials = {
           username: caps.ssh.username || 'pi',
           port: caps.ssh.port || 22,
-          privateKey: 'password-based-auth', // Placeholder
-          passphrase: undefined
+          privateKey,
+          passphrase
         };
       }
     }
