@@ -1,0 +1,2223 @@
+openapi: 3.0.3
+info:
+  title: IoT Pilot Server API
+  description: |
+    REST API for the IoT Pilot device management platform.
+    Manages Raspberry Pi and IoT sensor devices with real-time monitoring,
+    SSH access, alerts, thresholds, and multi-tenant support.
+  version: 1.0.0
+  contact:
+    name: IoT Pilot
+
+servers:
+  - url: https://dashboarddev.iotpilot.app/api
+    description: Development (CloudFlare tunnel)
+  - url: https://dashboard.iotpilot.app/api
+    description: Production
+  - url: http://localhost:3100/api
+    description: Local Express backend
+
+tags:
+  - name: auth
+    description: Authentication, sessions, and API keys
+  - name: devices
+    description: Device registration, management, and sub-resources
+  - name: monitoring
+    description: Alerts, thresholds, metrics, and reports
+  - name: admin
+    description: Platform administration (ADMIN / SUPERADMIN only)
+  - name: users
+    description: User management and profiles
+  - name: settings
+    description: Per-user preferences
+  - name: notifications
+    description: Notification records and preferences
+  - name: iot
+    description: Device-initiated endpoints (API key auth, no JWT)
+  - name: system
+    description: Platform health and scheduling
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Security schemes
+# ─────────────────────────────────────────────────────────────────────────────
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: auth-token
+      description: JWT session token set as an HTTP-only cookie on login
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: Device API key (iotp_sensor_* format) for IoT endpoints
+
+  schemas:
+    # ── Generic ────────────────────────────────────────────────────────────────
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          description: Response payload (shape varies per endpoint)
+        timestamp:
+          type: string
+          format: date-time
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+        code:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    # ── Auth ───────────────────────────────────────────────────────────────────
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        remember:
+          type: boolean
+          default: false
+
+    RegisterRequest:
+      type: object
+      required: [email, password, username]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 12
+        username:
+          type: string
+          minLength: 3
+        firstName:
+          type: string
+        lastName:
+          type: string
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+          format: email
+        username:
+          type: string
+        role:
+          type: string
+          enum: [USER, ADMIN, SUPERADMIN, READONLY]
+        customerId:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        _count:
+          type: object
+          properties:
+            devices:
+              type: integer
+            alerts:
+              type: integer
+
+    Session:
+      type: object
+      properties:
+        id:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+        isCurrent:
+          type: boolean
+
+    # ── Device ─────────────────────────────────────────────────────────────────
+    Device:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Public ID (UUID)
+        deviceId:
+          type: string
+          description: Hardware identifier
+        hostname:
+          type: string
+        name:
+          type: string
+        deviceType:
+          type: string
+        deviceModel:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [ONLINE, OFFLINE, MAINTENANCE, ERROR, UNCLAIMED]
+        ipAddress:
+          type: string
+          nullable: true
+        tailscaleIp:
+          type: string
+          nullable: true
+        macAddress:
+          type: string
+          nullable: true
+        location:
+          type: string
+          nullable: true
+        agentVersion:
+          type: string
+          nullable: true
+        customerId:
+          type: string
+        lastSeen:
+          type: string
+          format: date-time
+          nullable: true
+
+    DeviceCommand:
+      type: object
+      properties:
+        id:
+          type: string
+        command:
+          type: string
+          enum: [REBOOT, SHUTDOWN, UPDATE, RESTART, CUSTOM]
+        arguments:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [PENDING, RUNNING, COMPLETED, FAILED, TIMEOUT]
+        output:
+          type: string
+          nullable: true
+        error:
+          type: string
+          nullable: true
+        exitCode:
+          type: integer
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        executedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    DeviceSettings:
+      type: object
+      properties:
+        reportingInterval:
+          type: integer
+          description: Seconds between sensor readings (sensor devices)
+        heartbeatInterval:
+          type: integer
+          description: Seconds between heartbeats (system devices)
+        metricsEnabled:
+          type: boolean
+        cpuThreshold:
+          type: number
+        memoryThreshold:
+          type: number
+        temperatureThreshold:
+          type: number
+        diskThreshold:
+          type: number
+        sensorTempThreshold:
+          type: number
+        batteryThreshold:
+          type: number
+        networkMonitoring:
+          type: boolean
+        autoUpdate:
+          type: boolean
+        updateChannel:
+          type: string
+          enum: [stable, beta, nightly]
+        sshEnabled:
+          type: boolean
+        apiKeyRotationDays:
+          type: integer
+
+    # ── Monitoring ─────────────────────────────────────────────────────────────
+    Alert:
+      type: object
+      properties:
+        id:
+          type: string
+        deviceId:
+          type: string
+        type:
+          type: string
+          enum: [HIGH_CPU, HIGH_MEMORY, HIGH_TEMPERATURE, DISK_SPACE, DEVICE_OFFLINE, SECURITY_ALERT, CUSTOM]
+        severity:
+          type: string
+          enum: [INFO, WARNING, ERROR, CRITICAL]
+        title:
+          type: string
+        message:
+          type: string
+        resolved:
+          type: boolean
+        resolvedAt:
+          type: string
+          format: date-time
+          nullable: true
+        acknowledgedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        metadata:
+          type: object
+          additionalProperties: true
+
+    Threshold:
+      type: object
+      properties:
+        id:
+          type: string
+        deviceId:
+          type: string
+          nullable: true
+          description: null = global tenant threshold
+        name:
+          type: string
+        description:
+          type: string
+        metricName:
+          type: string
+        operator:
+          type: string
+          enum: [GREATER_THAN, LESS_THAN, EQUAL_TO, NOT_EQUAL_TO, GREATER_THAN_OR_EQUAL, LESS_THAN_OR_EQUAL]
+        value:
+          type: number
+        unit:
+          type: string
+        severity:
+          type: string
+          enum: [LOW, MEDIUM, HIGH, CRITICAL]
+        type:
+          type: string
+          enum: [STATIC, DYNAMIC, BASELINE]
+        cooldownMinutes:
+          type: integer
+        isEnabled:
+          type: boolean
+        customerId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    # ── Notifications ──────────────────────────────────────────────────────────
+    NotificationRecord:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        channel:
+          type: string
+          enum: [EMAIL, SMS, WEBHOOK, SLACK, PUSH]
+        status:
+          type: string
+          enum: [PENDING, SENDING, DELIVERED, FAILED, DEAD, CANCELLED]
+        recipient:
+          type: string
+        subject:
+          type: string
+        attemptCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    # ── Settings ───────────────────────────────────────────────────────────────
+    ProfileSettings:
+      type: object
+      properties:
+        language:
+          type: string
+          example: en
+        timezone:
+          type: string
+          example: UTC
+        dateFormat:
+          type: string
+          enum: [MM/DD/YYYY, DD/MM/YYYY, YYYY-MM-DD]
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phoneNumber:
+          type: string
+
+    SecuritySettings:
+      type: object
+      properties:
+        twoFactorAuth:
+          type: string
+          enum: ['true', 'false']
+        sessionTimeout:
+          type: string
+          description: Minutes as numeric string (5-1440)
+          example: '30'
+        loginNotifications:
+          type: string
+          enum: ['true', 'false']
+
+    SystemSettings:
+      type: object
+      properties:
+        theme:
+          type: string
+          enum: [light, dark, system]
+        dashboardLayout:
+          type: string
+          enum: [default, compact, expanded]
+        itemsPerPage:
+          type: string
+          description: Numeric string (5-100)
+          example: '10'
+
+    NotificationSettings:
+      type: object
+      properties:
+        emailNotifications:
+          type: string
+          enum: ['true', 'false']
+        pushNotifications:
+          type: string
+          enum: ['true', 'false']
+        alertNotifications:
+          type: string
+          enum: ['true', 'false']
+        deviceOfflineNotifications:
+          type: string
+          enum: ['true', 'false']
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Paths
+# ─────────────────────────────────────────────────────────────────────────────
+security:
+  - cookieAuth: []
+
+paths:
+
+  # ────────────── SYSTEM ──────────────────────────────────────────────────────
+
+  /health:
+    get:
+      tags: [system]
+      summary: Health check
+      security: []
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: healthy
+                  uptime:
+                    type: number
+                  timestamp:
+                    type: string
+                    format: date-time
+
+  /schedule:
+    get:
+      tags: [system]
+      summary: List scheduled jobs
+      responses:
+        '200':
+          description: Scheduled job list
+
+  # ────────────── AUTH ────────────────────────────────────────────────────────
+
+  /auth/login:
+    post:
+      tags: [auth]
+      summary: Login with email and password
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful — sets auth-token cookie
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          user:
+                            $ref: '#/components/schemas/User'
+                          token:
+                            type: string
+        '401':
+          description: Invalid credentials
+
+  /auth/register:
+    post:
+      tags: [auth]
+      summary: Register a new user (auto-creates Customer on first email domain)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: User registered
+        '409':
+          description: Email already exists
+
+  /auth/logout:
+    post:
+      tags: [auth]
+      summary: Logout — revokes session and clears cookie
+      responses:
+        '200':
+          description: Logged out
+
+  /auth/me:
+    get:
+      tags: [auth]
+      summary: Get current authenticated user
+      responses:
+        '200':
+          description: Current user
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          user:
+                            $ref: '#/components/schemas/User'
+        '401':
+          description: Not authenticated
+
+  /auth/session:
+    get:
+      tags: [auth]
+      summary: Validate current session
+      security: []
+      responses:
+        '200':
+          description: Session valid
+        '401':
+          description: Session invalid or expired
+
+  /auth/refresh:
+    post:
+      tags: [auth]
+      summary: Refresh session token
+      responses:
+        '200':
+          description: New token issued
+
+  /auth/sessions:
+    get:
+      tags: [auth]
+      summary: List all active sessions for current user
+      responses:
+        '200':
+          description: Session list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Session'
+    delete:
+      tags: [auth]
+      summary: Revoke all sessions except current
+      responses:
+        '200':
+          description: Other sessions revoked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  revokedCount:
+                    type: integer
+
+  /auth/sessions/{id}:
+    delete:
+      tags: [auth]
+      summary: Revoke a specific session
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Session revoked
+
+  /auth/password:
+    put:
+      tags: [auth]
+      summary: Change current user password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [currentPassword, newPassword]
+              properties:
+                currentPassword:
+                  type: string
+                newPassword:
+                  type: string
+                  minLength: 8
+      responses:
+        '200':
+          description: Password changed
+        '401':
+          description: Current password incorrect
+
+  /auth/api-keys:
+    get:
+      tags: [auth]
+      summary: List API keys (masked)
+      responses:
+        '200':
+          description: API key list
+    post:
+      tags: [auth]
+      summary: Create a new API key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+      responses:
+        '201':
+          description: API key created
+    delete:
+      tags: [auth]
+      summary: Delete an API key
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: API key deleted
+
+  /auth/verify-2fa:
+    post:
+      tags: [auth]
+      summary: Verify 2FA code and complete login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code, userId]
+              properties:
+                code:
+                  type: string
+                  minLength: 6
+                  maxLength: 6
+                userId:
+                  type: string
+      responses:
+        '200':
+          description: 2FA verified — session created
+        '401':
+          description: Invalid or expired code
+
+  # ────────────── DEVICES ─────────────────────────────────────────────────────
+
+  /devices:
+    get:
+      tags: [devices]
+      summary: List devices (tenant-scoped)
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [ONLINE, OFFLINE, MAINTENANCE, ERROR, UNCLAIMED]
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Device list with pagination
+    post:
+      tags: [devices]
+      summary: Register a new device
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                hostname:
+                  type: string
+                deviceType:
+                  type: string
+                ipAddress:
+                  type: string
+      responses:
+        '201':
+          description: Device registered
+
+  /devices/register:
+    post:
+      tags: [devices]
+      summary: Register device (alternative endpoint)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: Device registered
+
+  /devices/activate:
+    post:
+      tags: [devices]
+      summary: Activate device using claiming token (no JWT — device-initiated)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [deviceId, claimingToken]
+              properties:
+                deviceId:
+                  type: string
+                claimingToken:
+                  type: string
+                  description: "Format: XXXX-XXXX"
+                macAddress:
+                  type: string
+                ipAddress:
+                  type: string
+                firmwareVersion:
+                  type: string
+      responses:
+        '200':
+          description: Device activated — returns API key and webhook URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  credentials:
+                    type: object
+                    properties:
+                      apiKey:
+                        type: string
+                      webhookUrl:
+                        type: string
+                  config:
+                    type: object
+
+  /devices/claim:
+    post:
+      tags: [devices]
+      summary: Claim an unclaimed device by hardware ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [deviceId]
+              properties:
+                deviceId:
+                  type: string
+                name:
+                  type: string
+      responses:
+        '200':
+          description: Device claimed — returns claiming token (TTL 15 min)
+
+  /devices/bulk:
+    post:
+      tags: [devices]
+      summary: Bulk pre-register unclaimed devices (SUPERADMIN)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [count]
+              properties:
+                count:
+                  type: integer
+                  minimum: 1
+                  maximum: 500
+      responses:
+        '201':
+          description: Devices pre-registered
+
+  /devices/tailscale-register:
+    post:
+      tags: [devices]
+      summary: Register device via Tailscale metadata (API key auth)
+      security:
+        - apiKeyAuth: []
+      responses:
+        '200':
+          description: Device registered via Tailscale
+
+  /devices/{id}:
+    get:
+      tags: [devices]
+      summary: Get device details by public ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Device details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+        '404':
+          description: Device not found
+    put:
+      tags: [devices]
+      summary: Update device (hostname, location, SSH credentials)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                hostname:
+                  type: string
+                location:
+                  type: string
+                description:
+                  type: string
+                tags:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Device updated
+    delete:
+      tags: [devices]
+      summary: Soft-delete device
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Device deleted
+
+  /devices/{id}/alerts:
+    get:
+      tags: [devices]
+      summary: List alerts for a device
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: severity
+          in: query
+          schema:
+            type: string
+        - name: resolved
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Alert list
+    post:
+      tags: [devices]
+      summary: Create a manual alert for a device
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type, severity, title, message]
+              properties:
+                type:
+                  type: string
+                severity:
+                  type: string
+                  enum: [INFO, WARNING, ERROR, CRITICAL]
+                title:
+                  type: string
+                message:
+                  type: string
+      responses:
+        '201':
+          description: Alert created
+
+  /devices/{id}/alerts/{alertId}:
+    get:
+      tags: [devices]
+      summary: Get a specific alert
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: alertId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Alert details
+    patch:
+      tags: [devices]
+      summary: Acknowledge or resolve an alert
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: alertId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action]
+              properties:
+                action:
+                  type: string
+                  enum: [acknowledge, resolve]
+                note:
+                  type: string
+      responses:
+        '200':
+          description: Alert updated
+    delete:
+      tags: [devices]
+      summary: Delete an alert
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: alertId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Alert deleted
+
+  /devices/{id}/commands:
+    get:
+      tags: [devices]
+      summary: List recent commands for a device
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        '200':
+          description: Command list
+    post:
+      tags: [devices]
+      summary: Issue a command to a device
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [command]
+              properties:
+                command:
+                  type: string
+                  enum: [REBOOT, SHUTDOWN, UPDATE, RESTART, CUSTOM]
+                arguments:
+                  type: string
+      responses:
+        '200':
+          description: Command queued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceCommand'
+
+  /devices/{id}/commands/{commandId}:
+    get:
+      tags: [devices]
+      summary: Get command details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: commandId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Command details
+
+  /devices/{id}/logs:
+    get:
+      tags: [devices]
+      summary: List device logs
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: level
+          in: query
+          schema:
+            type: string
+            enum: [ALL, DEBUG, INFO, WARN, ERROR, FATAL]
+        - name: source
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Log entries with metadata
+
+  /devices/{id}/metrics:
+    get:
+      tags: [devices]
+      summary: Get device metrics from InfluxDB
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [1h, 6h, 24h, 7d]
+            default: 24h
+      responses:
+        '200':
+          description: Time-series metrics
+
+  /devices/{id}/settings:
+    get:
+      tags: [devices]
+      summary: Get device settings
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Device settings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceSettings'
+    put:
+      tags: [devices]
+      summary: Update device settings
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceSettings'
+      responses:
+        '200':
+          description: Settings saved
+
+  /devices/{id}/ssh:
+    post:
+      tags: [devices]
+      summary: Execute SSH command on device
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [command]
+              properties:
+                command:
+                  type: string
+                  minLength: 1
+                timeout:
+                  type: integer
+                  default: 30000
+      responses:
+        '200':
+          description: SSH command result
+        '400':
+          description: Empty command or device offline
+
+  /devices/{id}/status:
+    get:
+      tags: [devices]
+      summary: Get device connectivity status and optional metrics snapshot
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: includeMetrics
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Device status with connectivity info
+
+  /devices/{id}/rotate-key:
+    post:
+      tags: [devices]
+      summary: Rotate device API key (ADMIN)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: New API key generated — old key immediately invalidated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  apiKey:
+                    type: string
+                  deviceId:
+                    type: string
+                  rotatedAt:
+                    type: string
+                    format: date-time
+
+  # ────────────── MONITORING ──────────────────────────────────────────────────
+
+  /monitoring/alerts:
+    get:
+      tags: [monitoring]
+      summary: List alerts (tenant-wide)
+      parameters:
+        - name: deviceId
+          in: query
+          schema:
+            type: string
+        - name: severity
+          in: query
+          schema:
+            type: string
+            enum: [INFO, WARNING, ERROR, CRITICAL]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, resolved, acknowledged]
+        - name: startTime
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: endTime
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Alert list
+    post:
+      tags: [monitoring]
+      summary: Create a manual alert
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [deviceId, severity, title, message]
+              properties:
+                deviceId:
+                  type: string
+                severity:
+                  type: string
+                  enum: [LOW, MEDIUM, HIGH, CRITICAL]
+                title:
+                  type: string
+                message:
+                  type: string
+      responses:
+        '201':
+          description: Alert created
+
+  /monitoring/alerts/trend:
+    get:
+      tags: [monitoring]
+      summary: Get daily alert counts (for trend chart)
+      parameters:
+        - name: deviceId
+          in: query
+          schema:
+            type: string
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [7d, 30d]
+            default: 7d
+      responses:
+        '200':
+          description: Daily alert counts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    date:
+                      type: string
+                      example: '2026-06-01'
+                    count:
+                      type: integer
+                    bySeverity:
+                      type: object
+                      additionalProperties:
+                        type: integer
+
+  /monitoring/alerts/batch:
+    put:
+      tags: [monitoring]
+      summary: Batch acknowledge or resolve alerts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action, alertIds]
+              properties:
+                action:
+                  type: string
+                  enum: [acknowledge, resolve]
+                alertIds:
+                  type: array
+                  items:
+                    type: string
+                  maxItems: 100
+                resolutionNote:
+                  type: string
+      responses:
+        '200':
+          description: Batch result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  processed:
+                    type: integer
+                  skipped:
+                    type: integer
+
+  /monitoring/alerts/{id}:
+    get:
+      tags: [monitoring]
+      summary: Get alert details with threshold info
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Alert details
+    put:
+      tags: [monitoring]
+      summary: Acknowledge or resolve an alert
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action]
+              properties:
+                action:
+                  type: string
+                  enum: [acknowledge, resolve]
+                note:
+                  type: string
+      responses:
+        '200':
+          description: Alert updated
+    delete:
+      tags: [monitoring]
+      summary: Delete alert (ADMIN)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Alert deleted
+
+  /monitoring/metrics:
+    get:
+      tags: [monitoring]
+      summary: Get system-wide metrics
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [1h, 6h, 24h, 7d, 30d]
+      responses:
+        '200':
+          description: Aggregated metrics
+
+  /monitoring/reports:
+    get:
+      tags: [monitoring]
+      summary: Generate a monitoring report
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [alerts, metrics, thresholds, system]
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [1h, 6h, 24h, 7d, 30d]
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum: [json, csv, pdf, html]
+            default: json
+        - name: deviceId
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Report data
+
+  /monitoring/thresholds:
+    get:
+      tags: [monitoring]
+      summary: List thresholds
+      parameters:
+        - name: deviceId
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Threshold list
+    post:
+      tags: [monitoring]
+      summary: Create a threshold
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, description, metricName, operator, value, unit, severity, type]
+              properties:
+                deviceId:
+                  type: string
+                  nullable: true
+                name:
+                  type: string
+                description:
+                  type: string
+                metricName:
+                  type: string
+                operator:
+                  type: string
+                  enum: [GREATER_THAN, LESS_THAN, EQUAL_TO, NOT_EQUAL_TO, GREATER_THAN_OR_EQUAL, LESS_THAN_OR_EQUAL]
+                value:
+                  type: number
+                unit:
+                  type: string
+                severity:
+                  type: string
+                  enum: [LOW, MEDIUM, HIGH, CRITICAL]
+                type:
+                  type: string
+                  enum: [STATIC, DYNAMIC, BASELINE]
+                cooldownMinutes:
+                  type: integer
+                  default: 5
+      responses:
+        '201':
+          description: Threshold created
+
+  /monitoring/thresholds/{id}:
+    put:
+      tags: [monitoring]
+      summary: Update a threshold (ADMIN)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, description, metricName, operator, value, unit, severity, type]
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                metricName:
+                  type: string
+                operator:
+                  type: string
+                  enum: [GREATER_THAN, LESS_THAN, EQUAL_TO, NOT_EQUAL_TO, GREATER_THAN_OR_EQUAL, LESS_THAN_OR_EQUAL]
+                value:
+                  type: number
+                unit:
+                  type: string
+                severity:
+                  type: string
+                  enum: [LOW, MEDIUM, HIGH, CRITICAL]
+                type:
+                  type: string
+                  enum: [STATIC, DYNAMIC, BASELINE]
+                cooldownMinutes:
+                  type: integer
+                enabled:
+                  type: boolean
+      responses:
+        '200':
+          description: Threshold updated
+    delete:
+      tags: [monitoring]
+      summary: Soft-delete threshold (ADMIN)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Threshold deleted
+
+  # ────────────── ADMIN ───────────────────────────────────────────────────────
+
+  /admin/stats:
+    get:
+      tags: [admin]
+      summary: Dashboard summary counts (ADMIN+)
+      responses:
+        '200':
+          description: Platform-wide or tenant-scoped stats
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userCount:
+                    type: integer
+                  deviceCount:
+                    type: integer
+                  alertCount:
+                    type: integer
+                  activeDevices:
+                    type: integer
+
+  /admin/devices:
+    get:
+      tags: [admin]
+      summary: List all devices across tenants, filterable by status (SUPERADMIN)
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Device list
+    post:
+      tags: [admin]
+      summary: Pre-register unclaimed devices in bulk (SUPERADMIN)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [count]
+              properties:
+                count:
+                  type: integer
+                  minimum: 1
+                  maximum: 500
+      responses:
+        '201':
+          description: Devices pre-registered
+
+  /admin/users:
+    get:
+      tags: [admin]
+      summary: List users with optional status filter (ADMIN+)
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User list
+
+  /admin/users/{id}/approve:
+    post:
+      tags: [admin]
+      summary: Approve or reject a pending user (ADMIN+)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action]
+              properties:
+                action:
+                  type: string
+                  enum: [approve, reject]
+      responses:
+        '200':
+          description: User approved or rejected
+
+  /admin/logs:
+    get:
+      tags: [admin]
+      summary: View device logs across tenant (ADMIN+)
+      parameters:
+        - name: level
+          in: query
+          schema:
+            type: string
+        - name: deviceId
+          in: query
+          schema:
+            type: string
+        - name: source
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Log list with pagination
+
+  /admin/system:
+    get:
+      tags: [admin]
+      summary: Get system health metrics (ADMIN+)
+      responses:
+        '200':
+          description: CPU, memory, DB counts, app info
+
+  /admin/customers:
+    get:
+      tags: [admin]
+      summary: List all customers / tenants (SUPERADMIN)
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+            maximum: 100
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [ACTIVE, INACTIVE, SUSPENDED, PENDING]
+      responses:
+        '200':
+          description: Customer list with pagination
+
+  # ────────────── USERS ───────────────────────────────────────────────────────
+
+  /users:
+    get:
+      tags: [users]
+      summary: List users (tenant-scoped)
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: role
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User list
+    post:
+      tags: [users]
+      summary: Create user (SUPERADMIN)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, username, password, role, customerId]
+              properties:
+                email:
+                  type: string
+                  format: email
+                username:
+                  type: string
+                password:
+                  type: string
+                role:
+                  type: string
+                  enum: [USER, ADMIN, READONLY]
+                customerId:
+                  type: string
+      responses:
+        '201':
+          description: User created
+
+  /users/current:
+    get:
+      tags: [users]
+      summary: Get current user profile and permissions
+      responses:
+        '200':
+          description: Current user with full profile
+
+  /users/{id}:
+    get:
+      tags: [users]
+      summary: Get user by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User details
+    put:
+      tags: [users]
+      summary: Update user (email, role, status)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                role:
+                  type: string
+                status:
+                  type: string
+      responses:
+        '200':
+          description: User updated
+    delete:
+      tags: [users]
+      summary: Delete user (SUPERADMIN, cannot self-delete)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User deleted
+
+  /users/{id}/profile:
+    get:
+      tags: [users]
+      summary: Get user profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User profile
+    put:
+      tags: [users]
+      summary: Update user profile (username, displayName, preferences)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                displayName:
+                  type: string
+      responses:
+        '200':
+          description: Profile updated
+
+  /users/{id}/notification-preferences:
+    get:
+      tags: [users]
+      summary: Get notification preferences
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Notification preferences
+    put:
+      tags: [users]
+      summary: Update notification preferences
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                channel:
+                  type: string
+                  enum: [EMAIL, SMS, WEBHOOK, SLACK, PUSH]
+                notificationType:
+                  type: string
+                enabled:
+                  type: boolean
+                destination:
+                  type: string
+                  nullable: true
+      responses:
+        '200':
+          description: Preferences updated
+
+  # ────────────── SETTINGS ────────────────────────────────────────────────────
+
+  /settings:
+    get:
+      tags: [settings]
+      summary: Get all user preferences grouped by category
+      responses:
+        '200':
+          description: All settings categories (PROFILE, SECURITY, SYSTEM, NOTIFICATIONS)
+
+  /settings/profile:
+    get:
+      tags: [settings]
+      summary: Get profile settings
+      responses:
+        '200':
+          description: Profile preferences + personal info
+    put:
+      tags: [settings]
+      summary: Save profile settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileSettings'
+      responses:
+        '200':
+          description: Profile saved
+
+  /settings/security:
+    get:
+      tags: [settings]
+      summary: Get security settings (2FA, session timeout, login notifications)
+      responses:
+        '200':
+          description: Security preferences
+    put:
+      tags: [settings]
+      summary: Save security settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SecuritySettings'
+      responses:
+        '200':
+          description: Security settings saved
+
+  /settings/system:
+    get:
+      tags: [settings]
+      summary: Get system settings (theme, layout, items per page)
+      responses:
+        '200':
+          description: System preferences (+ admin settings if ADMIN+)
+    put:
+      tags: [settings]
+      summary: Save system settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SystemSettings'
+      responses:
+        '200':
+          description: System settings saved
+
+  /settings/notifications:
+    get:
+      tags: [settings]
+      summary: Get notification settings
+      responses:
+        '200':
+          description: Notification preferences
+    put:
+      tags: [settings]
+      summary: Save notification settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationSettings'
+      responses:
+        '200':
+          description: Notification settings saved
+
+  # ────────────── NOTIFICATIONS ────────────────────────────────────────────────
+
+  /notifications:
+    get:
+      tags: [notifications]
+      summary: List notification history
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+        - name: channel
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Notification records
+
+  /notifications/{id}:
+    get:
+      tags: [notifications]
+      summary: Get a notification record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Notification record
+    delete:
+      tags: [notifications]
+      summary: Cancel a PENDING notification
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Notification cancelled
+
+  /notifications/{id}/retry:
+    post:
+      tags: [notifications]
+      summary: Retry a FAILED or DEAD notification (ADMIN)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Notification re-queued
+
+  # ────────────── IoT (device-initiated) ──────────────────────────────────────
+
+  /iot/heartbeat:
+    post:
+      tags: [iot]
+      summary: Device heartbeat — CPU, memory, disk, temperature
+      security:
+        - apiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                device_id:
+                  type: string
+                cpu_usage:
+                  type: number
+                memory_usage:
+                  type: number
+                disk_usage:
+                  type: number
+                temperature:
+                  type: number
+                uptime:
+                  type: number
+                ip_address:
+                  type: string
+      responses:
+        '200':
+          description: Heartbeat received
+
+  /iot/register:
+    post:
+      tags: [iot]
+      summary: IoT device self-registration
+      security:
+        - apiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Device registered
+
+  /webhook/temperature:
+    post:
+      tags: [iot]
+      summary: ESP32/ESP8266 sensor temperature webhook
+      security:
+        - apiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                device_id:
+                  type: string
+                temperature:
+                  type: number
+                  description: Ambient temperature in °C
+                humidity:
+                  type: number
+                  nullable: true
+                battery:
+                  type: number
+                  nullable: true
+                  description: Battery percentage
+                rssi:
+                  type: integer
+                  nullable: true
+                firmware_version:
+                  type: string
+                  nullable: true
+      responses:
+        '200':
+          description: Sensor reading recorded
+
+  /iot/temperature:
+    post:
+      tags: [iot]
+      summary: ESP32/ESP8266 temperature webhook (alias for /webhook/temperature)
+      security:
+        - apiKeyAuth: []
+      requestBody:
+        $ref: '#/paths/~1webhook~1temperature/post/requestBody'
+      responses:
+        '200':
+          description: Sensor reading recorded

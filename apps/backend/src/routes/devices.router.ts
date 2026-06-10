@@ -1,5 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
+import * as crypto from 'crypto';
+import { createId } from '@paralleldrive/cuid2';
 import { validator } from '@iotpilot/core/shared/infrastructure/validation/validation-helper';
 import { ServiceContainer } from '@iotpilot/core/shared/infrastructure/container/service-container';
 import { ListDevicesQuery } from '@iotpilot/core/device/application/queries/list-devices/list-devices.query';
@@ -2089,6 +2091,79 @@ devicesRouter.get('/:id/status', requireAuth(), async (req: AuthenticatedRequest
         send.ok(res, response);
     } catch (err) {
         console.error('❌ DEVICE STATUS GET: Failed to fetch device status with DDD:', err);
+        send.fromError(res, err);
+    }
+});
+
+// ---------------------------------------------------------------------------
+// POST /devices/:id/rotate-key — Rotate the device API key (ADMIN only)
+// ---------------------------------------------------------------------------
+
+devicesRouter.post('/:id/rotate-key', requireAuth('ADMIN'), async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const publicId = req.params.id;
+        const callerCustomerId = req.user?.customerId;
+
+        // Find device scoped to caller's tenant
+        const where = callerCustomerId
+            ? { publicId, customerId: callerCustomerId, deletedAt: null }
+            : { publicId, deletedAt: null };
+
+        const device = await prisma.getClient().device.findFirst({
+            where,
+            select: { id: true, deviceId: true, userId: true, customerId: true, name: true },
+        });
+
+        if (!device) {
+            send.notFound(res, 'Device not found');
+            return;
+        }
+
+        if (!device.userId) {
+            send.badRequest(res, 'Device has no associated user — cannot rotate API key');
+            return;
+        }
+
+        // Find existing active API key for this device
+        const existingKeys = await prisma.getClient().apiKey.findMany({
+            where: {
+                userId: device.userId,
+                customerId: device.customerId ?? undefined,
+                deletedAt: null,
+                name: { contains: device.deviceId },
+            },
+            select: { id: true },
+        });
+
+        // Soft-delete all matching old keys
+        if (existingKeys.length > 0) {
+            await prisma.getClient().apiKey.updateMany({
+                where: { id: { in: existingKeys.map(k => k.id) } },
+                data: { deletedAt: new Date() },
+            });
+        }
+
+        // Generate new key (same format as provision-device handler)
+        const raw = crypto.randomBytes(24).toString('base64url');
+        const newKey = `iotp_sensor_${raw}`;
+
+        await prisma.getClient().apiKey.create({
+            data: {
+                id: createId(),
+                userId: device.userId,
+                customerId: device.customerId ?? undefined,
+                name: `Sensor ${device.deviceId}`,
+                key: newKey,
+            },
+        });
+
+        send.ok(res, {
+            message: 'API key rotated successfully. The device will go offline until it reconnects with the new key.',
+            apiKey: newKey,
+            deviceId: device.deviceId,
+            rotatedAt: new Date().toISOString(),
+        });
+    } catch (err) {
         send.fromError(res, err);
     }
 });

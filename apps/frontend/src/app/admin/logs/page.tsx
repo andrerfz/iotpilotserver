@@ -14,7 +14,8 @@ import {
   HardDrive
 } from 'lucide-react';
 import {Card, Button, Input, Select, SelectItem, Table, TableBody, TableCell, TableHeader, TableRow, Badge} from '@/components/ui';
-import { apiUrl } from '@/utils/api-url';
+import {useAuth} from '@/contexts/auth-context';
+import {useUserPreferences} from '@/contexts/user-preferences-context';
 
 // Log type definition
 interface Log {
@@ -52,6 +53,8 @@ interface Filters {
 }
 
 export default function LogsViewer() {
+  const {apiCall} = useAuth();
+  const {preferences} = useUserPreferences();
   const [logs, setLogs] = useState<Log[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -63,7 +66,7 @@ export default function LogsViewer() {
   const [pagination, setPagination] = useState<Pagination>({
     total: 0,
     page: 1,
-    limit: 50,
+    limit: preferences.itemsPerPage,
     pages: 0
   });
   const [filters, setFilters] = useState<Filters>({
@@ -78,7 +81,7 @@ export default function LogsViewer() {
     setError(null);
 
     try {
-      let url = `/api/admin/logs?page=${page}`;
+      let url = `/api/admin/logs?page=${page}&limit=${preferences.itemsPerPage}`;
 
       if (levelFilter) {
         url += `&level=${levelFilter}`;
@@ -96,7 +99,7 @@ export default function LogsViewer() {
         url += `&search=${encodeURIComponent(searchQuery)}`;
       }
 
-      const response = await fetch(apiUrl(url), { credentials: 'include' });
+      const response = await apiCall(url);
 
       if (!response.ok) {
         throw new Error('Failed to fetch logs');

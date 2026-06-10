@@ -19,7 +19,7 @@ import { StatusBadge, EmptyState } from '@/components/ui';
 import {Button, Card, CardBody, CardHeader, Input, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Select, SelectItem, Textarea, useDisclosure} from '@/components/ui';
 
 import { toast } from 'sonner';
-import { apiUrl } from '@/utils/api-url';
+import {useAuth} from '@/contexts/auth-context';
 
 interface DeviceCommandsPageProps {
     params: {
@@ -86,6 +86,7 @@ const PREDEFINED_COMMANDS = [
 
 export default function DeviceCommandsPage({ params }: DeviceCommandsPageProps) {
     const router = useRouter();
+    const {apiCall} = useAuth();
     const { isOpen, onOpen, onOpenChange } = useDisclosure();
     const { isOpen: isCustomOpen, onOpen: onCustomOpen, onOpenChange: onCustomOpenChange } = useDisclosure();
 
@@ -109,7 +110,7 @@ export default function DeviceCommandsPage({ params }: DeviceCommandsPageProps) 
         async function fetchDeviceInfo() {
             try {
                 setLoading(true);
-                const response = await fetch(apiUrl(`/api/devices/${params.id}`));
+                const response = await apiCall(`/api/devices/${params.id}`);
 
                 if (!response.ok) {
                     throw new Error('Failed to fetch device info');
@@ -126,13 +127,13 @@ export default function DeviceCommandsPage({ params }: DeviceCommandsPageProps) 
         }
 
         fetchDeviceInfo();
-    }, [params.id, router]);
+    }, [params.id, router, apiCall]);
 
     // Fetch commands
     const fetchCommands = useCallback(async () => {
         try {
             setCommandsLoading(true);
-            const response = await fetch(apiUrl(`/api/devices/${params.id}/commands?limit=50`));
+            const response = await apiCall(`/api/devices/${params.id}/commands?limit=50`);
 
             if (!response.ok) {
                 throw new Error('Failed to fetch commands');
@@ -145,7 +146,7 @@ export default function DeviceCommandsPage({ params }: DeviceCommandsPageProps) 
         } finally {
             setCommandsLoading(false);
         }
-    }, [params.id]);
+    }, [params.id, apiCall]);
 
     useEffect(() => {
         if (device) {
@@ -167,11 +168,8 @@ export default function DeviceCommandsPage({ params }: DeviceCommandsPageProps) 
         try {
             setExecutingCommand(commandType);
 
-            const response = await fetch(apiUrl(`/api/devices/${params.id}/commands`), {
+            const response = await apiCall(`/api/devices/${params.id}/commands`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
                 body: JSON.stringify({
                     command: commandType,
                     arguments: args || '',

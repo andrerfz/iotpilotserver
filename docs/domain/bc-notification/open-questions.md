@@ -56,6 +56,32 @@
 
 ---
 
+## Q9 _resolved_ — User preference gate: user_preferences vs NotificationPreference
+
+**Decision:** Two separate preference systems exist and serve different purposes:
+1. `user_preferences` table (NOTIFICATIONS category) — coarse-grained toggles per user: `emailNotifications`, `alertNotifications`, `deviceOfflineNotifications`. Managed via `PUT /api/settings/notifications`.
+2. `NotificationPreference` aggregate — fine-grained per-channel, per-type configuration. Managed via `UpdateNotificationPreference`.
+
+The notification gate uses BOTH:
+- `NotificationRoutingService.resolveRoutes()` must first check `user_preferences.alertNotifications` (or `deviceOfflineNotifications`) for the target user. If the coarse toggle is `false`, skip dispatch entirely — do not even evaluate `NotificationPreference`.
+- Then apply fine-grained `NotificationPreference` for channel selection.
+
+This means `NotificationRoutingService` gains a dependency on `GetNotificationPreferencesQuery` from the user BC (reading `user_preferences` table).
+
+**Resolved:** 2026-06-09
+**Applies to:** `NotificationRoutingService.resolveRoutes()`, `GetNotificationPreferencesQuery` (user BC)
+
+---
+
+## Q10 _resolved_ — Login notification: UserLoggedInEvent consumer
+
+**Decision:** A new event handler `OnUserLoggedInHandler` in the notification BC listens to `UserLoggedInEvent`. Before dispatching, it calls `GetNotificationPreferencesQuery` to check `loginNotifications = true`. If enabled, it dispatches a `DispatchNotification` command with `type: USER_LOGIN_ALERT`, `channel: EMAIL`.
+
+**Resolved:** 2026-06-09
+**Applies to:** New event handler `on-user-logged-in.handler.ts` in notification BC
+
+---
+
 ## Q8 _resolved_ — Channels to support at materialisation
 
 **Decision:** EMAIL, SLACK, SMS, WEBHOOK, PUSH (iOS/Android via Pusher). `NotificationChannel` shared VO already has EMAIL, SMS, WEBHOOK, SLACK, TEAMS. PUSH must be added to the shared VO before materialisation.

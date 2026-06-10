@@ -1,12 +1,18 @@
 'use client';
 
-import {useState} from 'react';
+import {useEffect, useState} from 'react';
 import {useRouter} from 'next/navigation';
 import {ArrowLeft, Save, UserPlus} from 'lucide-react';
 import {Button, Card, Input, Select, SelectItem} from '@/components/ui';
 
 import {toast} from 'sonner';
 import {useAuth} from '@/contexts/auth-context';
+
+interface CustomerOption {
+    id: string;
+    name: string;
+    status: string;
+}
 
 interface UserFormData {
     email: string;
@@ -29,6 +35,25 @@ export default function NewUserPage() {
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [customers, setCustomers] = useState<CustomerOption[]>([]);
+    const [customersLoading, setCustomersLoading] = useState(true);
+
+    useEffect(() => {
+        async function fetchCustomers() {
+            try {
+                const res = await apiCall('/api/admin/customers?limit=100&status=ACTIVE');
+                if (res.ok) {
+                    const body = await res.json();
+                    setCustomers(body.data ?? body);
+                }
+            } catch {
+                // non-fatal — falls back to text input below
+            } finally {
+                setCustomersLoading(false);
+            }
+        }
+        fetchCustomers();
+    }, [apiCall]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -37,7 +62,7 @@ export default function NewUserPage() {
 
         try {
             if (!formData.customerId.trim()) {
-                throw new Error('Customer ID is required');
+                throw new Error('Customer is required');
             }
 
             const response = await apiCall('/api/users', {
@@ -149,17 +174,35 @@ export default function NewUserPage() {
                         </div>
                         <div className="md:col-span-2">
                             <label htmlFor="customerId" className="block text-sm font-medium text-gray-700 mb-1">
-                                Customer ID <span className="text-red-500">*</span>
+                                Customer <span className="text-red-500">*</span>
                             </label>
-                            <Input
-                                id="customerId"
-                                value={formData.customerId}
-                                onChange={(e) => setFormData({...formData, customerId: e.target.value})}
-                                placeholder="Enter the customer/tenant ID this user belongs to"
-                                required
-                                disabled={loading}
-                            />
-                            <p className="text-xs text-gray-500 mt-1">Find the Customer ID in the Admin → Customers list.</p>
+                            {customersLoading ? (
+                                <div className="h-10 bg-gray-100 rounded-md animate-pulse" />
+                            ) : customers.length > 0 ? (
+                                <Select
+                                    id="customerId"
+                                    selectedKeys={formData.customerId ? [formData.customerId] : []}
+                                    onSelectionChange={(keys) => setFormData({...formData, customerId: Array.from(keys)[0] as string})}
+                                    placeholder="Select customer / tenant"
+                                    disabled={loading}
+                                    isRequired
+                                >
+                                    {customers.map((c) => (
+                                        <SelectItem key={c.id} textValue={c.name}>
+                                            {c.name}
+                                        </SelectItem>
+                                    ))}
+                                </Select>
+                            ) : (
+                                <Input
+                                    id="customerId"
+                                    value={formData.customerId}
+                                    onChange={(e) => setFormData({...formData, customerId: e.target.value})}
+                                    placeholder="Enter the customer/tenant ID"
+                                    required
+                                    disabled={loading}
+                                />
+                            )}
                         </div>
                     </div>
 

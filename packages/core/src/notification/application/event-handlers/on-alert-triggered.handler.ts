@@ -21,17 +21,15 @@ export class OnAlertTriggeredHandler implements EventHandler<AlertTriggeredEvent
     const subject = `${isCritical ? '🔴' : '🟡'} ${severity} Alert Triggered`;
     const body = `Alert ID: ${event.alertId.value}\nDevice: ${event.deviceId.value}\nThreshold: ${event.thresholdId.value}\nSeverity: ${severity}`;
 
-    const routes = await this.routingService.resolveRoutes(
+    const routes = await this.routingService.resolveRoutesForTenant(
       { value: 'ALERT_TRIGGERED' } as any,
       CustomerId.create(customerId),
-      'system',
-      null,
     );
 
     for (const route of routes) {
       await this.commandBus.execute(DispatchNotificationCommand.create({
         customerId,
-        userId: route.userId === 'system' ? null : route.userId,
+        userId: route.userId,
         type: 'ALERT_TRIGGERED',
         channel: route.channel,
         recipient: route.destination ?? '',

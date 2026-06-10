@@ -17,6 +17,8 @@ import {
 } from '@iotpilot/core/monitoring/application/queries/generate-report/generate-report.query';
 import { GetThresholdsQuery } from '@iotpilot/core/monitoring/application/queries/get-thresholds/get-thresholds.query';
 import { CreateThresholdCommand } from '@iotpilot/core/monitoring/application/commands/create-threshold/create-threshold.command';
+import { UpdateThresholdCommand } from '@iotpilot/core/monitoring/application/commands/update-threshold/update-threshold.command';
+import { ComparisonOperator, ThresholdType } from '@iotpilot/core/monitoring/domain/entities/threshold.entity';
 import { TenantContextImpl } from '@iotpilot/core/shared/domain/tenant-context';
 import { CustomerId } from '@iotpilot/core/shared/domain/value-objects/customer-id.vo';
 import { validator } from '@iotpilot/core/shared/infrastructure/validation/validation-helper';
@@ -1144,6 +1146,234 @@ monitoringRouter.post('/thresholds', requireAuth(), async (req: AuthenticatedReq
 
     } catch (err) {
         console.error('❌ MONITORING THRESHOLDS POST: Failed to create threshold with DDD:', err);
+        send.fromError(res, err);
+    }
+});
+
+// ---------------------------------------------------------------------------
+// PUT /monitoring/thresholds/:id — Update threshold
+// ---------------------------------------------------------------------------
+const updateThresholdSchema = v.object({
+    name: v.string({ min: 1 }),
+    description: v.string({ min: 1 }),
+    metricName: v.string({ min: 1 }),
+    operator: v.enum(['GREATER_THAN', 'LESS_THAN', 'EQUAL_TO', 'NOT_EQUAL_TO', 'GREATER_THAN_OR_EQUAL', 'LESS_THAN_OR_EQUAL'] as const),
+    value: v.number(),
+    unit: v.string({ min: 1 }),
+    severity: v.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] as const),
+    type: v.enum(['STATIC', 'DYNAMIC', 'BASELINE'] as const),
+    cooldownMinutes: v.default(v.number({ min: 0, int: true }), 5),
+    enabled: v.default(v.boolean(), true),
+});
+
+monitoringRouter.put('/thresholds/:id', requireAuth('ADMIN'), async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+        const customerId = req.user?.customerId;
+
+        let body: ReturnType<typeof updateThresholdSchema.parse>;
+        try {
+            body = updateThresholdSchema.parse(req.body);
+        } catch (e: any) {
+            send.badRequest(res, 'Invalid input', e.errors ?? []);
+            return;
+        }
+
+        // Verify ownership before mutating — prevents IDOR across tenants.
+        // Also fetch the threshold's own customerId so SUPERADMIN callers
+        // pass a valid tenant to the command instead of a placeholder.
+        const where = customerId
+            ? { id, customerId, deletedAt: null }
+            : { id, deletedAt: null };
+        const existing = await prisma.getClient().threshold.findFirst({
+            where,
+            select: { id: true, customerId: true },
+        });
+        if (!existing) {
+            send.notFound(res, 'Threshold not found');
+            return;
+        }
+
+        // Effective customerId: prefer caller's (tenant-scoped), fall back to threshold's own.
+        const effectiveCustomerId = customerId ?? existing.customerId ?? '';
+
+        const tenantContext = customerId
+            ? TenantContextImpl.create(CustomerId.create(customerId))
+            : TenantContextImpl.createSuperAdmin();
+
+        const commandBus = ServiceContainer.getInstance().getCommandBus();
+        // Note: the domain ComparisonOperator / ThresholdType use symbolic values ('>', '>=', …)
+        // while the API schema uses descriptive names ('GREATER_THAN', …) for readability.
+        // Both reach Prisma as strings; the explicit casts preserve the semantic intent.
+        const cmd = UpdateThresholdCommand.create(
+            existing.id,
+            body.name,
+            body.description,
+            body.metricName,
+            body.operator as ComparisonOperator,
+            body.value,
+            body.unit,
+            body.severity,
+            body.type as ThresholdType,
+            body.cooldownMinutes,
+            body.enabled,
+            effectiveCustomerId,
+            tenantContext
+        );
+
+        const updated = await commandBus.execute<typeof cmd, any>(cmd);
+        send.ok(res, { threshold: updated });
+    } catch (err) {
+        send.fromError(res, err);
+    }
+});
+
+// ---------------------------------------------------------------------------
+// DELETE /monitoring/thresholds/:id — Soft-delete threshold
+// ---------------------------------------------------------------------------
+monitoringRouter.delete('/thresholds/:id', requireAuth('ADMIN'), async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+        const customerId = req.user?.customerId;
+
+        const where = customerId
+            ? { id, customerId, deletedAt: null }
+            : { id, deletedAt: null };
+
+        const existing = await prisma.getClient().threshold.findFirst({ where, select: { id: true } });
+        if (!existing) {
+            send.notFound(res, 'Threshold not found');
+            return;
+        }
+
+        await prisma.getClient().threshold.update({
+            where: { id: existing.id },
+            data: { deletedAt: new Date() },
+        });
+
+        send.ok(res, { message: 'Threshold deleted' });
+    } catch (err) {
+        send.fromError(res, err);
+    }
+});
+
+// ---------------------------------------------------------------------------
+// GET /monitoring/alerts/trend?deviceId=&period=7d
+// Returns daily alert counts for the Analytics chart.
+// ---------------------------------------------------------------------------
+monitoringRouter.get('/alerts/trend', requireAuth(), async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const customerId = req.user?.customerId;
+        const devicePublicId = req.query.deviceId as string | undefined;
+        const period = (req.query.period as string) || '7d';
+
+        const daysMap: Record<string, number> = { '1h': 1, '6h': 1, '24h': 1, '7d': 7, '30d': 30 };
+        const days = daysMap[period] ?? 7;
+        const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+        let internalDeviceId: string | undefined;
+        if (devicePublicId) {
+            const rec = await prisma.getClient().device.findFirst({
+                where: { publicId: devicePublicId },
+                select: { id: true },
+            });
+            internalDeviceId = rec?.id;
+        }
+
+        const where: any = { deletedAt: null, createdAt: { gte: since } };
+        if (customerId && req.user?.role !== 'SUPERADMIN') where.customerId = customerId;
+        if (internalDeviceId) where.deviceId = internalDeviceId;
+
+        const alerts = await prisma.getClient().alert.findMany({
+            where,
+            select: { createdAt: true, severity: true },
+            orderBy: { createdAt: 'asc' },
+        });
+
+        // Group by date (YYYY-MM-DD)
+        const buckets: Record<string, { count: number; bySeverity: Record<string, number> }> = {};
+        for (const alert of alerts) {
+            const date = alert.createdAt.toISOString().slice(0, 10);
+            if (!buckets[date]) buckets[date] = { count: 0, bySeverity: {} };
+            buckets[date].count++;
+            const sev = DOMAIN_TO_FRONTEND_SEVERITY[alert.severity as string] || alert.severity;
+            buckets[date].bySeverity[sev] = (buckets[date].bySeverity[sev] || 0) + 1;
+        }
+
+        const trend = Object.entries(buckets)
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([date, data]) => ({ date, ...data }));
+
+        send.ok(res, trend);
+    } catch (err) {
+        send.fromError(res, err);
+    }
+});
+
+// ---------------------------------------------------------------------------
+// PUT /monitoring/alerts/batch — Batch acknowledge or resolve alerts
+// Body: { action: "acknowledge" | "resolve", alertIds: string[], resolutionNote?: string }
+// ---------------------------------------------------------------------------
+const batchAlertSchema = v.object({
+    action: v.enum(['acknowledge', 'resolve'] as const),
+    alertIds: v.array(v.string({ min: 1 }), { min: 1, max: 100 }),
+    resolutionNote: v.optional(v.string({ max: 2000 })),
+});
+
+monitoringRouter.put('/alerts/batch', requireAuth(), async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const customerId = req.user?.customerId;
+        const userId = req.user?.id;
+
+        let body: ReturnType<typeof batchAlertSchema.parse>;
+        try {
+            body = batchAlertSchema.parse(req.body);
+        } catch (e: any) {
+            send.badRequest(res, 'Invalid input', e.errors ?? []);
+            return;
+        }
+
+        const tenantContext = customerId
+            ? TenantContextImpl.create(CustomerId.create(customerId))
+            : TenantContextImpl.createSuperAdmin();
+
+        const commandBus = ServiceContainer.getInstance().getCommandBus();
+
+        // Resolve publicIds → internal ids, scoped to tenant
+        const internalIdRows = await prisma.getClient().alert.findMany({
+            where: {
+                publicId: { in: body.alertIds },
+                ...(customerId ? { customerId } : {}),
+                deletedAt: null,
+            },
+            select: { id: true, resolved: true, acknowledgedAt: true },
+        });
+
+        let processed = 0;
+        let skipped = 0;
+
+        for (const row of internalIdRows) {
+            try {
+                if (body.action === 'acknowledge') {
+                    if (row.acknowledgedAt || row.resolved) { skipped++; continue; }
+                    const cmd = AcknowledgeAlertCommand.create(row.id, userId!, customerId || 'system', tenantContext);
+                    await commandBus.execute(cmd);
+                } else {
+                    if (row.resolved) { skipped++; continue; }
+                    const cmd = ResolveAlertCommand.create(row.id, userId!, customerId || 'system', tenantContext);
+                    await commandBus.execute(cmd);
+                }
+                processed++;
+            } catch {
+                skipped++;
+            }
+        }
+
+        // IDs in request but not found in DB count as skipped
+        skipped += body.alertIds.length - internalIdRows.length;
+
+        send.ok(res, { processed, skipped });
+    } catch (err) {
         send.fromError(res, err);
     }
 });

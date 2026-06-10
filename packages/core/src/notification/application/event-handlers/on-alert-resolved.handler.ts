@@ -17,17 +17,15 @@ export class OnAlertResolvedHandler implements EventHandler<AlertResolvedEvent> 
     if (!customerId) return;
 
     const tenantContext = TenantContextImpl.create(CustomerId.create(customerId));
-    const routes = await this.routingService.resolveRoutes(
+    const routes = await this.routingService.resolveRoutesForTenant(
       { value: 'ALERT_RESOLVED' } as any,
       CustomerId.create(customerId),
-      'system',
-      null,
     );
 
     for (const route of routes) {
       await this.commandBus.execute(DispatchNotificationCommand.create({
         customerId,
-        userId: route.userId === 'system' ? null : route.userId,
+        userId: route.userId,
         type: 'ALERT_RESOLVED',
         channel: route.channel,
         recipient: route.destination ?? '',

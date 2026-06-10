@@ -41,5 +41,20 @@ if ! docker exec -w /app/apps/frontend iotpilot-server-app npm run type-check; t
 fi
 
 echo ""
+
+# Warn when backend routes change but openapi.yml is not updated
+CHANGED_ROUTES=$(git diff --cached --name-only | grep "apps/backend/src/routes/")
+CHANGED_SPEC=$(git diff --cached --name-only | grep "docs/openapi.yml")
+
+if [ -n "$CHANGED_ROUTES" ] && [ -z "$CHANGED_SPEC" ]; then
+    echo "⚠️  Backend route files were modified but docs/openapi.yml was not updated."
+    echo "   Changed route files:"
+    echo "$CHANGED_ROUTES" | sed 's/^/     /'
+    echo ""
+    echo "   Run: make openapi-check   (see what's missing)"
+    echo "   Then update docs/openapi.yml before pushing."
+    echo ""
+fi
+
 echo "✅ Pre-commit checks passed!"
 echo "💡 Unit tests will run on push"

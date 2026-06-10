@@ -6,6 +6,7 @@ import {useRouter} from 'next/navigation';
 import {useDeviceQueries} from '@/hooks/queries/use-device-queries';
 import {Plus} from 'lucide-react';
 import {Button} from '@/components/ui';
+import {useUserPreferences} from '@/contexts/user-preferences-context';
 
 /**
  * Device interface matching API response
@@ -29,6 +30,8 @@ interface Device {
 export function DeviceList() {
     const router = useRouter();
     const { listDevices, loading, error } = useDeviceQueries();
+    const {preferences} = useUserPreferences();
+    const layout = preferences.dashboardLayout;
     const [devices, setDevices] = useState<Device[]>([]);
 
     useEffect(() => {
@@ -71,6 +74,9 @@ export function DeviceList() {
         return <div className="p-4">No devices found.</div>;
     }
 
+    const listClass = layout === 'compact' ? 'space-y-1' : layout === 'expanded' ? 'grid grid-cols-1 md:grid-cols-2 gap-4' : 'space-y-2';
+    const itemClass = layout === 'compact' ? 'block border p-2 rounded text-sm hover:bg-gray-50 hover:border-blue-300 transition-colors cursor-pointer' : 'block border p-3 rounded hover:bg-gray-50 hover:border-blue-300 transition-colors cursor-pointer';
+
     return (
         <div className="device-list p-4">
             <div className="flex justify-between items-center mb-4">
@@ -84,15 +90,15 @@ export function DeviceList() {
                     Add Device
                 </Button>
             </div>
-            <ul className="space-y-2">
+            <ul className={listClass}>
                 {devices.map(device => (
                     <li key={device.id}>
-                        <Link href={`/devices/${device.id}`} className="block border p-3 rounded hover:bg-gray-50 hover:border-blue-300 transition-colors cursor-pointer">
-                            <div className="font-semibold">{device.hostname}</div>
+                        <Link href={`/devices/${device.id}`} className={itemClass}>
+                            <div className={layout === 'compact' ? 'font-medium' : 'font-semibold'}>{device.hostname}</div>
                             <div className="text-sm text-gray-600">
                                 {device.deviceType} - Status: {device.status}
                             </div>
-                            {device.ipAddress && (
+                            {device.ipAddress && layout !== 'compact' && (
                                 <div className="text-sm text-gray-500">IP: {device.ipAddress}</div>
                             )}
                         </Link>

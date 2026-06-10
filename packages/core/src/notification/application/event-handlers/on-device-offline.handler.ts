@@ -23,17 +23,15 @@ export class OnDeviceOfflineHandler implements EventHandler<DeviceDisconnectedEv
     const subject = `⚠️ Device Offline: ${deviceName}`;
     const body = `Device "${deviceName}" (ID: ${event.deviceId.getValue()}) went offline${graceful}.${reason}`;
 
-    const routes = await this.routingService.resolveRoutes(
+    const routes = await this.routingService.resolveRoutesForTenant(
       { value: 'DEVICE_OFFLINE' } as any,
       CustomerId.create(customerId),
-      'system',
-      null,
     );
 
     for (const route of routes) {
       await this.commandBus.execute(DispatchNotificationCommand.create({
         customerId,
-        userId: route.userId === 'system' ? null : route.userId,
+        userId: route.userId,
         type: 'DEVICE_OFFLINE',
         channel: route.channel,
         recipient: route.destination ?? '',

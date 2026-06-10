@@ -167,6 +167,19 @@ export function isDevelopment(): boolean {
   return !environment.production;
 }
 
+/**
+ * Returns true ONLY when running on localhost or the local .test domain.
+ * Use this for debug panels that should never appear on remote tunnels
+ * (dashboarddev.iotpilot.app counts as development but is publicly accessible).
+ */
+export function isLocalDevelopment(): boolean {
+  if (typeof window === 'undefined') {
+    return process.env.NODE_ENV !== 'production';
+  }
+  const h = window.location.hostname;
+  return h === 'localhost' || h === 'iotpilotserver.test' || h === '127.0.0.1';
+}
+
 // Feature Flags
 export function isFeatureEnabled(feature: FeatureKey): boolean {
   return environment.features[feature];

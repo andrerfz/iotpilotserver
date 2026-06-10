@@ -5,7 +5,7 @@ import {RegisterUserHandler} from '@iotpilot/core/user/application/commands/regi
 import {PrismaUserRepository} from '@iotpilot/core/user/infrastructure/repositories/prisma-user.repository';
 import {BcryptPasswordHasher} from '@iotpilot/core/user/infrastructure/services/bcrypt-password-hasher';
 import {UserMapper} from '@iotpilot/core/user/infrastructure/mappers/user.mapper';
-import {InMemoryEventBus} from '@//lib/shared/application/bus/event.bus';
+import {InMemoryEventBus} from '@iotpilot/core/shared/application/bus/event.bus';
 import {CustomerId} from '@iotpilot/core/shared/domain/value-objects/customer-id.vo';
 import {TenantContext, withTenant} from '@iotpilot/core/tenant-middleware';
 

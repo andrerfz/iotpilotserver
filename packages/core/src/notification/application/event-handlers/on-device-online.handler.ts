@@ -22,17 +22,15 @@ export class OnDeviceOnlineHandler implements EventHandler<DeviceConnectedEvent>
     const subject = `✅ Device Online: ${deviceName}`;
     const body = `Device "${deviceName}" (ID: ${event.deviceId.getValue()}) is now online. IP: ${ip}`;
 
-    const routes = await this.routingService.resolveRoutes(
+    const routes = await this.routingService.resolveRoutesForTenant(
       { value: 'DEVICE_ONLINE' } as any,
       CustomerId.create(customerId),
-      'system',
-      null,
     );
 
     for (const route of routes) {
       await this.commandBus.execute(DispatchNotificationCommand.create({
         customerId,
-        userId: route.userId === 'system' ? null : route.userId,
+        userId: route.userId,
         type: 'DEVICE_ONLINE',
         channel: route.channel,
         recipient: route.destination ?? '',

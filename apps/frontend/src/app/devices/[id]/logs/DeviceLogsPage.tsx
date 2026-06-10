@@ -7,6 +7,7 @@ import {Button, Card, CardBody, CardHeader, Input, Select, SelectItem} from '@/c
 import {EmptyState} from '@/components/ui';
 import {toast} from 'sonner';
 import {useAuth} from '@/contexts/auth-context';
+import {useUserPreferences} from '@/contexts/user-preferences-context';
 
 interface DeviceLogsPageProps {
     params: {id: string};
@@ -55,11 +56,12 @@ function LogLevelBadge({level}: {level: string}) {
 }
 
 const LEVELS = ['ALL', 'DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL'] as const;
-const PAGE_SIZE = 100;
 
 export default function DeviceLogsPage({params}: DeviceLogsPageProps) {
     const router = useRouter();
     const {apiCall} = useAuth();
+    const {preferences} = useUserPreferences();
+    const PAGE_SIZE = preferences.itemsPerPage;
 
     const [deviceName, setDeviceName] = useState('');
     const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -110,7 +112,7 @@ export default function DeviceLogsPage({params}: DeviceLogsPageProps) {
         } finally {
             setRefreshing(false);
         }
-    }, [params.id, levelFilter, search, sourceFilter, offset, apiCall]);
+    }, [params.id, levelFilter, search, sourceFilter, offset, apiCall, PAGE_SIZE]);
 
     // Initial load — fetch device name + logs
     useEffect(() => {

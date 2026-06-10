@@ -10,7 +10,7 @@
 .PHONY: local-logs-app local-logs-influxdb local-logs-loki local-logs-postgres local-logs-redis local-logs-traefik local-logs-tailscale
 .PHONY: dev shell health migrate migrate-reset migrate-dev db-push db-setup db-status db-shell apply-migration
 .PHONY: fresh-setup local-start-with-migration
-.PHONY: test lint route-list test-api test-ci test-db test-influxdb test-integration test-unit test-fresh test-file test-debug test-watch test-coverage test-env-check test-integration-full test-performance test-security test-clean test-db-with-data test-influxdb-connection test-services test-smoke test-all
+.PHONY: test lint route-list openapi-check openapi-diff test-api test-ci test-db test-influxdb test-integration test-unit test-fresh test-file test-debug test-watch test-coverage test-env-check test-integration-full test-performance test-security test-clean test-db-with-data test-influxdb-connection test-services test-smoke test-all
 .PHONY: create-superadmin list-superadmins reset-superadmin-password delete-superadmin
 .PHONY: sync-node-modules clean-dev
 .PHONY: queue-status queue-failed queue-retry queue-clean queue-drain queue-dashboard
@@ -90,7 +90,9 @@ help:
 	@echo "🔧 Development:"
 	@echo "  dev                  - Start development (alias for local-start)"
 	@echo "  lint                 - Run linter in Docker"
-	@echo "  route-list           - List all routes (like Laravel route:list)"
+	@echo "  route-list           - List all routes (from docs/openapi.yml + Next.js pages)"
+	@echo "  openapi-check        - Check if backend routes are documented in openapi.yml"
+	@echo "  openapi-diff         - Same as openapi-check but exits 1 on missing docs (CI use)"
 	@echo ""
 	@echo "🏭 Production:"
 	@echo "  install              - Initial installation and setup"
@@ -455,6 +457,10 @@ local-restart-services:
 	@make wait-for-app
 	@make check-and-setup-db
 
+local-recreate: ## Recreate all local containers (no data loss)
+	@echo "🔄 Recreating all local containers..."
+	@docker compose -f $(LOCAL_COMPOSE_FILE) up -d --force-recreate
+
 local-recreate-app:
 	@echo "⏹️  Recreating local app..."
 	@echo "🧹 Cleaning Next.js build cache (host + container)..."
@@ -653,12 +659,16 @@ lint:
 	@echo "✅ Linting complete!"
 
 route-list:
-	@echo "📋 Listing all routes..."
-	@if docker ps -q -f name=iotpilot-server-app | grep -q .; then \
-		$(EXEC_FRONTEND) npm run route:list; \
-	else \
-		cd apps/frontend && node scripts/list-routes.js; \
-	fi
+	@echo "📋 Listing all routes (from docs/openapi.yml + Next.js pages)..."
+	@node apps/frontend/scripts/list-routes.js
+
+openapi-check:
+	@echo "🔍 Checking OpenAPI spec is in sync with backend routes..."
+	@node apps/frontend/scripts/check-openapi.js
+
+openapi-diff:
+	@echo "🔍 OpenAPI diff (strict — exits 1 if undocumented routes found)..."
+	@node apps/frontend/scripts/check-openapi.js --strict
 
 test-unit:
 	@echo "🧪 Running unit tests in Docker..."

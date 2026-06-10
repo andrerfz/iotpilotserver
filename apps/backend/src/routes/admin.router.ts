@@ -603,3 +603,42 @@ adminRouter.get('/stats', requireAuth('ADMIN'), async (req: AuthenticatedRequest
     send.fromError(res, err);
   }
 });
+
+/**
+ * GET /api/admin/customers?page=1&limit=50&search=acme&status=ACTIVE
+ *
+ * List all customers (tenants). SUPERADMIN only.
+ */
+adminRouter.get('/customers', requireAuth('SUPERADMIN'), async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const page = Math.max(1, req.query.page ? parseInt(req.query.page as string) : 1);
+    const limit = Math.min(Math.max(1, req.query.limit ? parseInt(req.query.limit as string) : 50), 100);
+    const search = (req.query.search as string | undefined)?.trim() || undefined;
+    const status = req.query.status as string | undefined;
+
+    // Build Prisma WHERE with real filters so pagination total is accurate
+    const where: Record<string, unknown> = { deletedAt: null };
+    if (status) where.status = status;
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { contactEmail: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    const [customers, total] = await Promise.all([
+      prisma.getClient().customer.findMany({
+        where,
+        select: { id: true, name: true, status: true, contactEmail: true, createdAt: true, updatedAt: true },
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.getClient().customer.count({ where }),
+    ]);
+
+    send.ok(res, customers, { pagination: { page, limit, total } });
+  } catch (err) {
+    send.fromError(res, err);
+  }
+});

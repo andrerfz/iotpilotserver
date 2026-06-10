@@ -2,8 +2,10 @@ import { DependencyContainer } from 'tsyringe';
 import { BoundedContextProvider, HandlerRegistrationContext } from '@iotpilot/core/shared/infrastructure/container/bounded-context-provider.interface';
 import { NotificationRecordRepository } from '../../domain/interfaces/notification-record.repository';
 import { NotificationPreferenceRepository } from '../../domain/interfaces/notification-preference.repository';
+import { NotificationTargetRepository } from '../../domain/interfaces/notification-target.repository';
 import { PrismaNotificationRecordRepository } from '../repositories/prisma-notification-record.repository';
 import { PrismaNotificationPreferenceRepository } from '../repositories/prisma-notification-preference.repository';
+import { PrismaNotificationTargetRepository } from '../repositories/prisma-notification-target.repository';
 import { NotificationRoutingService } from '../../domain/services/notification-routing.service';
 import { PrismaService } from '@iotpilot/core/shared/infrastructure/database/prisma.service';
 
@@ -27,10 +29,18 @@ export class NotificationServiceProvider implements BoundedContextProvider {
       },
     });
 
+    container.register<NotificationTargetRepository>('NotificationTargetRepository', {
+      useFactory: (c: DependencyContainer) => {
+        const prisma = c.resolve<PrismaService>('PrismaService');
+        return new PrismaNotificationTargetRepository(prisma);
+      },
+    });
+
     container.register<NotificationRoutingService>('NotificationRoutingService', {
       useFactory: (c: DependencyContainer) => {
         const preferenceRepo = c.resolve<NotificationPreferenceRepository>('NotificationPreferenceRepository');
-        return new NotificationRoutingService(preferenceRepo);
+        const targetRepo = c.resolve<NotificationTargetRepository>('NotificationTargetRepository');
+        return new NotificationRoutingService(preferenceRepo, targetRepo);
       },
     });
   }

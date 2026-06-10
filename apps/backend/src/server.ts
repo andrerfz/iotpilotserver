@@ -147,6 +147,16 @@ app.use('/api/', (req, res, next) => {
 // Mount all API routes
 app.use('/api', createApiRouter());
 
+// 404 catch-all for unknown API routes — must come after all route handlers
+app.use('/api', (_req: express.Request, res: express.Response) => {
+  res.status(404).json({
+    success: false,
+    error: 'Not found',
+    code: 'NOT_FOUND',
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // Socket.IO
 io.on('connection', (socket) => {
   const clientInfo = {

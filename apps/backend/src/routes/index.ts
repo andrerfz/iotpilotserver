@@ -18,11 +18,8 @@ export function createApiRouter(): Router {
   router.use('/users', usersRouter);
   router.use('/settings', settingsRouter);
   router.use('/iot', iotRouter);
-  // /api/iot/heartbeat and /api/heartbeat both handled by iot router
-  router.use('/heartbeat', iotRouter);
-  // /api/webhook/temperature — ESP32/ESP8266 sensor readings
+  // /api/webhook/temperature — ESP32/ESP8266 temperature sensor readings
   // (webhookUrl stored in device NVS during provisioning)
-  // Handled directly by iotRouter.post('/webhook/temperature')
   router.use('/webhook', iotRouter);
   router.use('/notifications', notificationsRouter);
 

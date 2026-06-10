@@ -291,7 +291,9 @@ describe('User Repository Integration Tests', () => {
 
   describe('count', () => {
     it('should count total users', async () => {
-      const initialCount = await userRepository.count();
+      // Use tenant-scoped count to avoid interference from other test files
+      const tenantCtx = TenantContextImpl.create(testCustomerId);
+      const initialCount = await userRepository.count(tenantCtx);
 
       // Create a user
       await prismaService.getClient().user.create({
@@ -306,7 +308,7 @@ describe('User Repository Integration Tests', () => {
         },
       });
 
-      const finalCount = await userRepository.count();
+      const finalCount = await userRepository.count(tenantCtx);
       expect(finalCount).toBe(initialCount + 1);
     });
   });

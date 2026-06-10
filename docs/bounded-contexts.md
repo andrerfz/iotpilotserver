@@ -55,6 +55,8 @@ IoT Pilot Server is organized into several bounded contexts that represent disti
 - **Monitoring Context**: Device health and metrics
 - **Infrastructure**: SSH connectivity and command execution
 
+**Design docs:** [`docs/domain/bc-device/`](domain/bc-device/)
+
 ---
 
 ### 2. User Management Context
@@ -105,6 +107,8 @@ IoT Pilot Server is organized into several bounded contexts that represent disti
 - **Device Context**: Users execute commands on devices
 - **All Contexts**: User identity and permissions apply everywhere
 
+**Design docs:** [`docs/domain/bc-user/`](domain/bc-user/)
+
 ---
 
 ### 3. Customer Management Context
@@ -153,6 +157,8 @@ IoT Pilot Server is organized into several bounded contexts that represent disti
 - **User Context**: Users belong to customers
 - **Device Context**: Devices belong to customers
 - **Billing Systems**: External integration for payments
+
+**Design docs:** [`docs/domain/bc-customer/`](domain/bc-customer/)
 
 ---
 
@@ -208,6 +214,8 @@ IoT Pilot Server is organized into several bounded contexts that represent disti
 - **Customer Context**: Customer-specific thresholds
 - **Notification Context**: Delivers alert notifications
 - **Analytics Context**: Provides data for reports
+
+**Design docs:** [`docs/domain/bc-monitoring/`](domain/bc-monitoring/)
 
 ---
 

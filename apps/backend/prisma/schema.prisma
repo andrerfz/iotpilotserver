@@ -201,6 +201,7 @@ enum NotificationTypeEnum {
   SYSTEM_MAINTENANCE
   USER_INVITATION
   CUSTOMER_CREATED
+  USER_LOGIN_ALERT
 }
 
 enum PushPlatform {
