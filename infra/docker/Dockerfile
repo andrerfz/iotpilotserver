@@ -145,6 +145,7 @@ COPY apps/frontend-ng/tsconfig.spec.json ./apps/frontend-ng/
 COPY apps/frontend-ng/tailwind.config.ts ./apps/frontend-ng/
 COPY apps/frontend-ng/vitest.config.ts   ./apps/frontend-ng/
 COPY apps/frontend-ng/eslint.config.js   ./apps/frontend-ng/
+COPY apps/frontend-ng/proxy.conf.js      ./apps/frontend-ng/
 
 WORKDIR /app/apps/frontend-ng
 

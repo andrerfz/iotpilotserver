@@ -121,6 +121,7 @@ services:
       - ../../apps/frontend-ng/vitest.config.ts:/app/apps/frontend-ng/vitest.config.ts
       - ../../apps/frontend-ng/eslint.config.js:/app/apps/frontend-ng/eslint.config.js
       - ../../apps/frontend-ng/package.json:/app/apps/frontend-ng/package.json
+      - ../../apps/frontend-ng/proxy.conf.js:/app/apps/frontend-ng/proxy.conf.js
     restart: unless-stopped
     networks:
       - iotpilot-network

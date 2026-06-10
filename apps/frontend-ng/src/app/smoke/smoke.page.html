@@ -1,0 +1,22 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Smoke</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  @if (health()) {
+    <div data-testid="health-status" class="rounded-lg bg-green-600/10 p-4 space-y-1">
+      <p class="font-mono font-semibold text-green-700">status: {{ health()!.status }}</p>
+      <p class="font-mono text-sm text-gray-500">env: {{ health()!.environment }}</p>
+      <p class="font-mono text-sm text-gray-500">version: {{ health()!.version }}</p>
+      <p class="font-mono text-sm text-gray-400">{{ health()!.timestamp }}</p>
+    </div>
+  } @else if (error()) {
+    <div data-testid="health-error" class="rounded-lg bg-red-600/10 p-4">
+      <p class="font-mono text-red-700">error: {{ error() }}</p>
+    </div>
+  } @else {
+    <p class="text-gray-400">Connecting to backend…</p>
+  }
+</ion-content>
