@@ -8,7 +8,7 @@ Each task is one small PR. Order is binding (each builds on the previous).
 |---|---|---|
 | T1 | Scaffold workspace | done |
 | T2 | Lint + format + strict TS | done |
-| T3 | Vitest setup | pending |
+| T3 | Vitest setup | done |
 | T4 | Tailwind + Ionic theme entry | pending |
 | T5 | Docker dev service | pending |
 | T6 | Makefile targets | pending |
