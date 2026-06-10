@@ -1,15 +1,17 @@
 packages:
-  # apps/frontend is the Next.js frontend (formerly app/)
+  # apps/frontend = legacy Next.js; apps/frontend-ng = Ionic+Angular (fe-foundation)
   - "apps/*"
   - "packages/*"
 
 allowBuilds:
   '@heroui/shared-utils': true
+  '@parcel/watcher': true
   '@prisma/client': true
   '@prisma/engines': true
   '@scarf/scarf': true
   cpu-features: true
   esbuild: true
+  lmdb: true
   msgpackr-extract: true
   prisma: true
   ssh2: true
