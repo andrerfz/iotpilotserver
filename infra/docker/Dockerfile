@@ -159,6 +159,40 @@ EXPOSE 4200
 CMD ["ng", "serve", "--host", "0.0.0.0", "--port", "4200", "--poll", "2000", "--disable-host-check"]
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Stage 3c: builder-ng — Angular production build (outputs to www/)
+# ─────────────────────────────────────────────────────────────────────────────
+FROM node:22-alpine AS builder-ng
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV PATH="/app/node_modules/.bin:/app/apps/frontend-ng/node_modules/.bin:$PATH"
+ENV NODE_PATH="/app/node_modules"
+
+COPY --from=deps /app/node_modules                    ./node_modules
+COPY --from=deps /app/apps/frontend-ng/node_modules   ./apps/frontend-ng/node_modules
+
+COPY pnpm-workspace.yaml   ./
+COPY apps/frontend-ng/     ./apps/frontend-ng/
+
+WORKDIR /app/apps/frontend-ng
+
+RUN ng build --configuration production
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Stage 3d: production-ng — nginx static server with SPA routing
+# ─────────────────────────────────────────────────────────────────────────────
+FROM nginx:alpine AS production-ng
+
+COPY infra/nginx/frontend-ng.conf /etc/nginx/conf.d/default.conf
+COPY --from=builder-ng /app/apps/frontend-ng/www /usr/share/nginx/html
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD wget -qO- http://localhost/index.html || exit 1
+
+EXPOSE 80
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Stage 4: Runner — production runtime (minimal image)
 # ─────────────────────────────────────────────────────────────────────────────
 FROM node:22-alpine AS runner

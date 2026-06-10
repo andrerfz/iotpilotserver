@@ -15,7 +15,7 @@
 .PHONY: sync-node-modules clean-dev
 .PHONY: queue-status queue-failed queue-retry queue-clean queue-drain queue-dashboard
 .PHONY: ssh prod-logs prod-deploy prod-rollback prod-restart prod-status prod-migrate
-.PHONY: ng-dev ng-lint ng-test ng-type-check ng-build ng-logs _ng-running
+.PHONY: ng-dev ng-lint ng-test ng-type-check ng-build ng-image ng-logs _ng-running
 
 # Variables - Using .env for both production and local
 COMPOSE_FILE = infra/docker/docker-compose.yml --env-file .env
@@ -103,7 +103,8 @@ help:
 	@echo "  ng-lint              - Lint frontend-ng (in container)"
 	@echo "  ng-type-check        - Type-check frontend-ng (in container)"
 	@echo "  ng-test              - Run frontend-ng Vitest suite (in container)"
-	@echo "  ng-build             - Build frontend-ng (in container)"
+	@echo "  ng-build             - Build frontend-ng (in container, dev verification)"
+	@echo "  ng-image             - Build frontend-ng production Docker image (nginx)"
 	@echo "  ng-logs              - Follow frontend-ng dev server logs"
 	@echo ""
 	@echo "🏭 Production:"
@@ -681,7 +682,7 @@ _ng-running:
 ng-dev:
 	@echo "🅰️  Starting frontend-ng dev server (HMR)..."
 	@docker compose -f $(LOCAL_COMPOSE_FILE) up -d iotpilot-ng
-	@echo "✅ frontend-ng serving on http://localhost:$${NG_PORT:-4200}"
+	@echo "✅ frontend-ng serving on http://localhost:$${NG_PORT:-4201}"
 	@echo "   Follow logs with: make ng-logs"
 
 ng-lint: _ng-running
@@ -699,6 +700,12 @@ ng-test: _ng-running
 ng-build: _ng-running
 	@echo "🔨 Building frontend-ng..."
 	@$(EXEC_NG) npm run build
+
+ng-image:
+	@echo "🏗️  Building frontend-ng production image (nginx)..."
+	@docker build -f infra/docker/Dockerfile --target production-ng -t iotpilot-ng:latest .
+	@echo "✅ Production image built: iotpilot-ng:latest"
+	@echo "   Verify SPA routing: docker run --rm -p 8090:80 iotpilot-ng:latest"
 
 ng-logs:
 	@echo "📋 frontend-ng dev server logs:"

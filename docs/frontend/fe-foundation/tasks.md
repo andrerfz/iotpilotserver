@@ -14,7 +14,7 @@ Each task is one small PR. Order is binding (each builds on the previous).
 | T6 | Makefile targets | done |
 | T7 | Husky integration | done |
 | T8 | Smoke page + backend connectivity | done |
-| T9 | Production build image | pending |
+| T9 | Production build image | done |
 
 ---
 

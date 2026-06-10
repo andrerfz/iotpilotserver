@@ -109,7 +109,7 @@ services:
       # Backend base URL for the dev proxy (server-side; wired up in T8)
       - NG_API_URL=${NG_API_URL:-http://iotpilot-backend:3100}
     ports:
-      - "${NG_PORT:-4200}:4200"
+      - "${NG_PORT:-4201}:4200"
     volumes:
       # Source-only mounts — node_modules stay in image (pnpm symlinks)
       - ../../apps/frontend-ng/src:/app/apps/frontend-ng/src
