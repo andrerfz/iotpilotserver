@@ -1459,7 +1459,7 @@ devicesRouter.get('/:id/commands', requireAuth(), async (req: AuthenticatedReque
 // POST /devices/:id/commands - Issue a new command to a device
 // ---------------------------------------------------------------------------
 
-devicesRouter.post('/:id/commands', requireAuth(), async (req: AuthenticatedRequest, res: Response) => {
+devicesRouter.post('/:id/commands', requireAuth('ADMIN'), async (req: AuthenticatedRequest, res: Response) => {
     const publicId = req.params.id;
     const id = await resolveDevicePublicId(publicId);
     if (!id) {
@@ -1961,7 +1961,7 @@ devicesRouter.put('/:id/settings', requireAuth(), async (req: AuthenticatedReque
 // POST /devices/:id/ssh - Execute SSH command on device
 // ---------------------------------------------------------------------------
 
-devicesRouter.post('/:id/ssh', requireAuth(), async (req: AuthenticatedRequest, res: Response) => {
+devicesRouter.post('/:id/ssh', requireAuth('ADMIN'), async (req: AuthenticatedRequest, res: Response) => {
     try {
         console.log('🔐 DEVICE SSH: Starting with DDD architecture');
 
