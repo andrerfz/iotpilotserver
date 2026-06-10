@@ -10,7 +10,7 @@ Each task is one small PR. Order is binding (each builds on the previous).
 | T2 | Lint + format + strict TS | done |
 | T3 | Vitest setup | done |
 | T4 | Tailwind + Ionic theme entry | done |
-| T5 | Docker dev service | pending |
+| T5 | Docker dev service | done |
 | T6 | Makefile targets | pending |
 | T7 | Husky integration | pending |
 | T8 | Smoke page + backend connectivity | pending |
