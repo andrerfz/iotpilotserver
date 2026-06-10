@@ -14,5 +14,16 @@
   <div id="container">
     <strong>frontend-ng foundation</strong>
     <p>Ionic + Angular workspace scaffolded. Smoke page arrives in T8.</p>
+
+    <!-- T4 proof: Ionic component + Tailwind utilities side by side, no bleed -->
+    <div class="mt-4 flex items-center gap-3 rounded-lg bg-blue-600/10 p-4">
+      <span
+        data-testid="tw-badge"
+        class="rounded-full bg-blue-600 px-3 py-1 text-sm text-white"
+      >
+        Tailwind
+      </span>
+      <ion-button size="small">Ionic button</ion-button>
+    </div>
   </div>
 </ion-content>

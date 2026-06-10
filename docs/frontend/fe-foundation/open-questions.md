@@ -28,6 +28,14 @@ adds onboarding cost without payoff at this scale.
 colors/typography/theming. Tailwind preflight must be scoped or disabled to avoid resetting
 Ionic component styles — verify in T4.
 
+**T4 outcome:** Tailwind **v3.4.19** (matches the legacy app's major), config in
+`tailwind.config.ts` (Angular's build auto-detects `tailwind.config.{js,cjs,mjs,ts}`; no
+manual postcss config needed), entry `src/theme/tailwind.css` last in `angular.json` styles.
+Preflight **disabled** via `corePlugins.preflight: false`. Verified at build time: page
+utilities (`flex`, `gap-3`, `bg-blue-600`, …) emit into `styles.css`, no preflight reset is
+present, Ionic CSS variables stay intact. fe-ui-kit T2 maps the prototype tokens onto
+`theme.extend`.
+
 **Resolved:** 2026-06-10
 **Applies to:** T4, fe-ui-kit
 
@@ -79,11 +87,30 @@ for reproducible installs across Docker/CI. Chosen at kickoff:
 | `@capacitor/core` | `8.4.0` |
 | `ionicons` | `7.4.0` |
 | `rxjs` | `7.8.2` |
-| `typescript` | `5.9.3` |
+| `typescript` | `5.8.3` (aligned to the workspace root in T3 — see Q8) |
 | `zone.js` | `0.15.1` |
 | `angular-eslint` | `20.7.0` |
 
 Bootstrap is standalone (`bootstrapApplication` + `provideIonicAngular`), no NgModules.
 
-**Resolved:** 2026-06-10
+**Resolved:** 2026-06-10 (typescript revised in T3)
 **Applies to:** all modules (downstream `/fe-deepen` inputs)
+
+---
+
+## Q8 _resolved_ — Test stack + Ionic-in-jsdom (T3/T4)
+
+**Decision:** Vitest stack pinned: `vitest@4.1.8`, `vite@8.0.16`, `jsdom@26.1.0`,
+`@testing-library/angular@18.1.1` (the 19.x line requires Angular 21),
+`@testing-library/dom@10.4.1`. TypeScript aligned to the workspace standard **5.8.3** —
+mixing 5.8 (root) and 5.9 (frontend-ng) made Analog feed the wrong TS to `compiler-cli`,
+crashing the transform. Karma/Jasmine removed.
+
+**Ionic-in-jsdom deferred:** rendering Ionic components under Vitest+jsdom needs extra setup
+(dep-optimizer `@ionic/core`, `ResizeObserver`/custom-element polyfills). Not configured in
+foundation — the trivial smoke test uses a plain standalone component. Stand this up in
+**fe-ui-kit** (T1/T2), where real Ionic component tests first appear. Until then, Ionic
+rendering is validated at build time.
+
+**Resolved:** 2026-06-10
+**Applies to:** T3, T4, fe-ui-kit

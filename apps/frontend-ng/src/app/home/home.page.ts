@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import {
+  IonButton,
   IonContent,
   IonHeader,
   IonTitle,
@@ -10,6 +11,6 @@ import {
   selector: 'app-home',
   templateUrl: 'home.page.html',
   styleUrls: ['home.page.scss'],
-  imports: [IonContent, IonHeader, IonTitle, IonToolbar],
+  imports: [IonButton, IonContent, IonHeader, IonTitle, IonToolbar],
 })
 export class HomePage {}
