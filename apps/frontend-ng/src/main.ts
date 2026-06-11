@@ -14,6 +14,7 @@ import {
 import { AppComponent } from './app/app.component';
 import { routes } from './app/app.routes';
 import { provideApi } from './app/core/api/api.config';
+import { provideTokenStorage } from './app/core/auth/token.storage';
 
 bootstrapApplication(AppComponent, {
   providers: [
@@ -22,5 +23,6 @@ bootstrapApplication(AppComponent, {
     provideRouter(routes, withPreloading(PreloadAllModules)),
     provideHttpClient(),
     provideApi(),
+    provideTokenStorage(),
   ],
 }).catch((err) => console.error(err));

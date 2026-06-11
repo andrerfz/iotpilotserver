@@ -7,7 +7,7 @@ Each task is one small PR. T1–T2 are prerequisites for everything; T3–T8 can
 | # | Task | Status |
 |---|---|---|
 | T1 | Generated API client | done |
-| T2 | Token storage + ApiError envelope | pending |
+| T2 | Token storage + ApiError envelope | done |
 | T3 | AuthService (login/logout/me/refresh) | pending |
 | T4 | Auth interceptor | pending |
 | T5 | Route guards | pending |
