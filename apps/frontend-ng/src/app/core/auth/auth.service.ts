@@ -5,6 +5,7 @@ import { authLoginPost } from '../api/generated/fn/auth/auth-login-post';
 import { authLogoutPost } from '../api/generated/fn/auth/auth-logout-post';
 import { authMeGet } from '../api/generated/fn/auth/auth-me-get';
 import { authRefreshPost } from '../api/generated/fn/auth/auth-refresh-post';
+import { authVerify2FaPost } from '../api/generated/fn/auth/auth-verify-2-fa-post';
 import { User } from '../api/generated/models/user';
 import { WITH_CREDENTIALS } from '../api/http-context';
 import { TokenStorage } from './token.storage';
@@ -60,6 +61,21 @@ export class AuthService {
       return { status: 'authenticated', user: data.user };
     }
     throw new Error('Unexpected login response: neither a session nor a 2FA challenge');
+  }
+
+  /**
+   * Complete a 2FA login: verify the emailed code for the userId returned by a
+   * `requires-2fa` login. On success the session is established (token + signals),
+   * exactly like a direct login.
+   */
+  async verifyTwoFactor(userId: string, code: string, remember = false): Promise<User> {
+    const res = await this.api.invoke(authVerify2FaPost, { body: { userId, code, remember } });
+    if (res.data?.token && res.data.user) {
+      await this.tokens.set(res.data.token);
+      this._user.set(res.data.user);
+      return res.data.user;
+    }
+    throw new Error('Unexpected 2FA verification response: no session payload');
   }
 
   /** Revoke the session server-side and clear local state (best-effort on the network call). */

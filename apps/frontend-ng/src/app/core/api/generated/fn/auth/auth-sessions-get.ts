@@ -8,11 +8,14 @@ import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
 import { Session } from '../../models/session';
+import { SuccessResponse } from '../../models/success-response';
 
 export interface AuthSessionsGet$Params {
 }
 
-export function authSessionsGet(http: HttpClient, rootUrl: string, params?: AuthSessionsGet$Params, context?: HttpContext): Observable<StrictHttpResponse<Array<Session>>> {
+export function authSessionsGet(http: HttpClient, rootUrl: string, params?: AuthSessionsGet$Params, context?: HttpContext): Observable<StrictHttpResponse<SuccessResponse & {
+'data'?: Array<Session>;
+}>> {
   const rb = new RequestBuilder(rootUrl, authSessionsGet.PATH, 'get');
   if (params) {
   }
@@ -22,7 +25,9 @@ export function authSessionsGet(http: HttpClient, rootUrl: string, params?: Auth
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<Array<Session>>;
+      return r as StrictHttpResponse<SuccessResponse & {
+      'data'?: Array<Session>;
+      }>;
     })
   );
 }

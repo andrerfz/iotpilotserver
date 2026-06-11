@@ -4,6 +4,7 @@ import { authLoginPost } from '../api/generated/fn/auth/auth-login-post';
 import { authLogoutPost } from '../api/generated/fn/auth/auth-logout-post';
 import { authMeGet } from '../api/generated/fn/auth/auth-me-get';
 import { authRefreshPost } from '../api/generated/fn/auth/auth-refresh-post';
+import { authVerify2FaPost } from '../api/generated/fn/auth/auth-verify-2-fa-post';
 import { User } from '../api/generated/models/user';
 import { AuthService } from './auth.service';
 import { InMemoryTokenStorage, TokenStorage } from './token.storage';
@@ -78,6 +79,21 @@ describe('AuthService', () => {
     expect(result).toEqual({ status: 'requires-2fa', userId: 'usr_1' });
     expect(auth.isAuthenticated()).toBe(false);
     expect(await tokens.get()).toBeNull();
+  });
+
+  it('verifyTwoFactor() completes login and establishes the session', async () => {
+    let sentBody: unknown;
+    api.on(authVerify2FaPost, (params) => {
+      sentBody = (params as { body: unknown }).body;
+      return Promise.resolve({ success: true, data: { user: adminUser, token: 'jwt-2fa' } });
+    });
+
+    const user = await auth.verifyTwoFactor('usr_1', '123456', true);
+
+    expect(user).toEqual(adminUser);
+    expect(sentBody).toEqual({ userId: 'usr_1', code: '123456', remember: true });
+    expect(auth.isAuthenticated()).toBe(true);
+    expect(await tokens.get()).toBe('jwt-2fa');
   });
 
   it('me() loads the current user into the signal', async () => {

@@ -14,6 +14,7 @@ export interface AuthVerify2FaPost$Params {
       body: {
 'code': string;
 'userId': string;
+'remember'?: boolean;
 }
 }
 

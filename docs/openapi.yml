@@ -643,9 +643,14 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Session'
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Session'
     delete:
       tags: [auth]
       summary: Revoke all sessions except current
@@ -655,10 +660,15 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  revokedCount:
-                    type: integer
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          revokedCount:
+                            type: integer
 
   /auth/sessions/{id}:
     delete:
@@ -673,6 +683,20 @@ paths:
       responses:
         '200':
           description: Session revoked
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          revoked:
+                            type: boolean
+                          wasCurrentSession:
+                            type: boolean
 
   /auth/password:
     put:
@@ -752,6 +776,8 @@ paths:
                   maxLength: 6
                 userId:
                   type: string
+                remember:
+                  type: boolean
       responses:
         '200':
           description: 2FA verified — session created, sets auth-token cookie
