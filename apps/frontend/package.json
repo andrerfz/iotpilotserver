@@ -39,7 +39,7 @@
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^8.5.0",
     "@bull-board/api": "^6.5.0",
-    "@bull-board/express": "^6.5.0",
+    "@bull-board/express": "^7.2.1",
     "@heroui/accordion": "^2.2.18",
     "@heroui/alert": "^2.2.21",
     "@heroui/autocomplete": "^2.3.22",

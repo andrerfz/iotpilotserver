@@ -52,8 +52,8 @@ importers:
         specifier: ^6.5.0
         version: 6.21.3(@bull-board/ui@6.21.3)
       '@bull-board/express':
-        specifier: ^6.5.0
-        version: 6.21.3
+        specifier: ^7.2.1
+        version: 7.2.1
       '@heroui/accordion':
         specifier: ^2.2.18
         version: 2.2.29(@heroui/system@2.4.28(@heroui/theme@2.4.26(tailwindcss@3.4.19(tsx@4.22.4)(yaml@2.9.0)))(@react-spectrum/provider@3.11.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(framer-motion@12.40.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@heroui/theme@2.4.26(tailwindcss@3.4.19(tsx@4.22.4)(yaml@2.9.0)))(@react-spectrum/provider@3.11.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(framer-motion@12.40.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -606,8 +606,8 @@ importers:
         specifier: ^6.5.0
         version: 6.21.3(@bull-board/ui@6.21.3)
       '@bull-board/express':
-        specifier: ^6.5.0
-        version: 6.21.3
+        specifier: ^7.2.1
+        version: 7.2.1
       '@influxdata/influxdb-client':
         specifier: ^1.33.2
         version: 1.35.0
@@ -1728,11 +1728,19 @@ packages:
     peerDependencies:
       '@bull-board/ui': 6.21.3
 
-  '@bull-board/express@6.21.3':
-    resolution: {integrity: sha512-9tE5osCSjjDYCJtTt/bOeXGbykPlhiIKtlGG3/YPCuvQ3qkYrjdBiXSzEUXGqqgX6Kf4HVri/UuY8gy99g/A7w==}
+  '@bull-board/api@7.2.1':
+    resolution: {integrity: sha512-ldRG4POJLHf6oDrbDA7AsbTKliBmV4eySlwdUAumiRDtfvtbRSdXGE4Md2uPDova1r/ck7ExEe1+pHEQAZElqw==}
+    peerDependencies:
+      '@bull-board/ui': 7.2.1
+
+  '@bull-board/express@7.2.1':
+    resolution: {integrity: sha512-tBr/xV5letzKYPRGRkilTQZmfoCoy3mCuUo4M2dDoDKOhbrF360mK5v9/rIcSgYSyI9c7BgEgrve80LhmexNxQ==}
 
   '@bull-board/ui@6.21.3':
     resolution: {integrity: sha512-s/PLBJab8cnoQAGVqjQb0v4oGe0KgB4aQ5G5g93doxzXB/D+wkXNL9P9+zLWLldBJXE57jL4CR99ttDCIiyNHw==}
+
+  '@bull-board/ui@7.2.1':
+    resolution: {integrity: sha512-O4ykrXrl2UJNHnhJrCvJxrw1ar+DlUBgyZUeZ8Ci+Ne5Wbq6rBv1gfpQH54/eu3IFbLso0S/kjc6WUGb2HPqZw==}
 
   '@capacitor/core@8.4.0':
     resolution: {integrity: sha512-LrS1xPIrqLtJABBIPDGXxxKmI9OyesrzWw8DiHbxhSC9JoiLUleUAJlX1a0LWIVLRbuY4Szgf9huFeRqYH2SAQ==}
@@ -7031,8 +7039,8 @@ packages:
   effect@3.21.0:
     resolution: {integrity: sha512-PPN80qRokCd1f015IANNhrwOnLO7GrrMQfk4/lnZRE/8j7UPWrNNjPV0uBrZutI/nHzernbW+J0hdqQysHiSnQ==}
 
-  ejs@5.0.2:
-    resolution: {integrity: sha512-IpbUaI/CAW86l3f+T8zN0iggSc0LmMZLcIW5eRVStLVNCoTXkE0YlncbbH50fp8Cl6zHIky0sW2uUbhBqGw0Jw==}
+  ejs@6.0.1:
+    resolution: {integrity: sha512-UaaM14yby8U3k02ihS1Bmj5Kz2d7CCQM1scxpgs4Mhkq8F1wR2gl3+Ts4h5Ne4Mnt7M9m4Dw7jsuMr3+xO4vZA==}
     engines: {node: '>=0.12.18'}
     hasBin: true
 
@@ -13011,11 +13019,16 @@ snapshots:
       '@bull-board/ui': 6.21.3
       redis-info: 3.1.0
 
-  '@bull-board/express@6.21.3':
+  '@bull-board/api@7.2.1(@bull-board/ui@7.2.1)':
     dependencies:
-      '@bull-board/api': 6.21.3(@bull-board/ui@6.21.3)
-      '@bull-board/ui': 6.21.3
-      ejs: 5.0.2
+      '@bull-board/ui': 7.2.1
+      redis-info: 3.1.0
+
+  '@bull-board/express@7.2.1':
+    dependencies:
+      '@bull-board/api': 7.2.1(@bull-board/ui@7.2.1)
+      '@bull-board/ui': 7.2.1
+      ejs: 6.0.1
       express: 5.2.1
     transitivePeerDependencies:
       - supports-color
@@ -13023,6 +13036,10 @@ snapshots:
   '@bull-board/ui@6.21.3':
     dependencies:
       '@bull-board/api': 6.21.3(@bull-board/ui@6.21.3)
+
+  '@bull-board/ui@7.2.1':
+    dependencies:
+      '@bull-board/api': 7.2.1(@bull-board/ui@7.2.1)
 
   '@capacitor/core@8.4.0':
     dependencies:
@@ -19055,7 +19072,7 @@ snapshots:
       '@standard-schema/spec': 1.1.0
       fast-check: 3.23.2
 
-  ejs@5.0.2: {}
+  ejs@6.0.1: {}
 
   electron-to-chromium@1.5.366: {}
 
