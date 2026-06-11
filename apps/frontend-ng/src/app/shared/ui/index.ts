@@ -127,10 +127,13 @@ export { UiSwitchComponent } from './forms/ui-switch.component';
 export { UiCheckboxComponent } from './forms/ui-checkbox.component';
 export { UiSelectComponent } from './forms/ui-select.component';
 export type { SelectOption } from './forms/ui-select.component';
-// T5 — Cards & states
-// export { MetricCardComponent, SparklineComponent, EmptyStateComponent } from './data';
+// T5 — Metric, Sparkline, EmptyState
+export { SparklineComponent } from './data/sparkline.component';
+export { MetricCardComponent } from './data/metric-card.component';
+export type { DeltaDir } from './data/metric-card.component';
+export { EmptyStateComponent } from './data/empty-state.component';
 // T6 — DataTable
-// export { DataTableComponent } from './data';
+// export { DataTableComponent } from './data/data-table.component';
 // T7 — Sheets
 // export { BottomSheetComponent, FilterChipComponent } from './sheets';
 // T8 — Pickers

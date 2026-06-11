@@ -13,7 +13,7 @@ matching `kit.jsx` component before implementing.
 | T2 | Design tokens + ThemeService | done |
 | T3 | Badges + status dot | done |
 | T4 | Form control wrappers (CVA) | done |
-| T5 | MetricCard + Sparkline + EmptyState | pending |
+| T5 | MetricCard + Sparkline + EmptyState | done |
 | T6 | DataTable | pending |
 | T7 | BottomSheet + FilterChip | pending |
 | T8 | Pickers (device, user, multi-select, date range) | pending |
