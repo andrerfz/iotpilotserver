@@ -1,0 +1,7 @@
+node_modules
+www
+dist
+coverage
+.angular
+package-lock.json
+pnpm-lock.yaml

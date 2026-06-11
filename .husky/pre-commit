@@ -56,5 +56,35 @@ if [ -n "$CHANGED_ROUTES" ] && [ -z "$CHANGED_SPEC" ]; then
     echo ""
 fi
 
+# ── frontend-ng checks (only when apps/frontend-ng/** files are staged) ──────
+NG_STAGED=$(git diff --cached --name-only | grep '^apps/frontend-ng/' | head -1 || true)
+if [ -n "$NG_STAGED" ]; then
+  echo "🅰️  Angular files staged — running frontend-ng checks..."
+  echo ""
+
+  if ! docker ps --format '{{.Names}}' | grep -q '^iotpilot-server-ng$'; then
+    echo "❌ Container 'iotpilot-server-ng' is not running!"
+    echo "💡 Start the Angular dev container: make ng-dev"
+    exit 1
+  fi
+
+  echo "📝 Linting frontend-ng..."
+  if ! make ng-lint; then
+    echo ""
+    echo "❌ ng-lint failed! Fix errors before committing."
+    exit 1
+  fi
+
+  echo ""
+  echo "🔎 Type-checking frontend-ng..."
+  if ! make ng-type-check; then
+    echo ""
+    echo "❌ ng type-check failed! Fix TypeScript errors before committing."
+    exit 1
+  fi
+
+  echo ""
+fi
+
 echo "✅ Pre-commit checks passed!"
 echo "💡 Unit tests will run on push"

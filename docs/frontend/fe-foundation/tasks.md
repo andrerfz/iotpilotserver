@@ -6,15 +6,15 @@ Each task is one small PR. Order is binding (each builds on the previous).
 
 | # | Task | Status |
 |---|---|---|
-| T1 | Scaffold workspace | pending |
-| T2 | Lint + format + strict TS | pending |
-| T3 | Vitest setup | pending |
-| T4 | Tailwind + Ionic theme entry | pending |
-| T5 | Docker dev service | pending |
-| T6 | Makefile targets | pending |
-| T7 | Husky integration | pending |
-| T8 | Smoke page + backend connectivity | pending |
-| T9 | Production build image | pending |
+| T1 | Scaffold workspace | done |
+| T2 | Lint + format + strict TS | done |
+| T3 | Vitest setup | done |
+| T4 | Tailwind + Ionic theme entry | done |
+| T5 | Docker dev service | done |
+| T6 | Makefile targets | done |
+| T7 | Husky integration | done |
+| T8 | Smoke page + backend connectivity | done |
+| T9 | Production build image | done |
 
 ---
 

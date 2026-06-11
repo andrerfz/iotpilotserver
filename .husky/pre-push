@@ -1,5 +1,10 @@
 #!/usr/bin/env sh
 
+# Capture push refs from stdin FIRST — before any subprocess can drain it.
+# Format per line: <local-ref> <local-sha> <remote-ref> <remote-sha>
+PUSH_REFS_FILE=$(mktemp)
+cat > "$PUSH_REFS_FILE"
+
 echo "🚀 Running pre-push checks in Docker..."
 echo ""
 
@@ -8,6 +13,7 @@ if ! docker info > /dev/null 2>&1; then
     echo "❌ Docker is not running!"
     echo "💡 Please start Docker and ensure services are running:"
     echo "   make local-start"
+    rm -f "$PUSH_REFS_FILE"
     exit 1
 fi
 
@@ -16,11 +22,46 @@ if ! docker ps --format '{{.Names}}' | grep -q '^iotpilot-server-app$'; then
     echo "❌ Container 'iotpilot-server-app' is not running!"
     echo "💡 Start the development environment first:"
     echo "   make local-start"
+    rm -f "$PUSH_REFS_FILE"
     exit 1
 fi
 
 echo "✅ Docker environment ready"
 echo ""
+
+# ── frontend-ng tests (only when pushed commits touch apps/frontend-ng/**) ───
+NG_PUSH_NEEDED=0
+while IFS=' ' read -r local_ref local_sha remote_ref remote_sha; do
+  if [ "$remote_sha" = "0000000000000000000000000000000000000000" ]; then
+    # New branch: scan all commits since divergence from main
+    if git log --name-only --pretty=format: main.."$local_sha" 2>/dev/null | grep -q '^apps/frontend-ng/'; then
+      NG_PUSH_NEEDED=1
+    fi
+  else
+    if git diff --name-only "${remote_sha}...${local_sha}" 2>/dev/null | grep -q '^apps/frontend-ng/'; then
+      NG_PUSH_NEEDED=1
+    fi
+  fi
+done < "$PUSH_REFS_FILE"
+rm -f "$PUSH_REFS_FILE"
+
+if [ "$NG_PUSH_NEEDED" = "1" ]; then
+  echo "🅰️  Angular commits in push — running ng tests..."
+
+  if ! docker ps --format '{{.Names}}' | grep -q '^iotpilot-server-ng$'; then
+    echo "❌ Container 'iotpilot-server-ng' is not running!"
+    echo "💡 Start the Angular dev container: make ng-dev"
+    exit 1
+  fi
+
+  if ! make ng-test; then
+    echo ""
+    echo "❌ ng tests failed! Push blocked."
+    exit 1
+  fi
+
+  echo ""
+fi
 
 echo "🧪 Running unit tests..."
 if ! make test-unit > /tmp/pre-push-tests.log 2>&1; then

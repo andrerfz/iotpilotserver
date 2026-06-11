@@ -1,0 +1,6 @@
+/* Tailwind entry (fe-foundation T4). Preflight is disabled in tailwind.config.ts
+ * so only Tailwind's component/utility layers are emitted — Ionic keeps ownership
+ * of base/reset styles. Loaded after Ionic styles so utilities win on layout. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

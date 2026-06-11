@@ -11,6 +11,7 @@ RUN apk add --no-cache python3 make g++ && corepack enable
 # Copy workspace manifests only (no source code)
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY apps/frontend/package.json     apps/frontend/
+COPY apps/frontend-ng/package.json  apps/frontend-ng/
 COPY apps/backend/package.json      apps/backend/
 COPY apps/worker/package.json       apps/worker/
 COPY packages/core/package.json     packages/core/
@@ -114,6 +115,82 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
 EXPOSE 3000
 
 CMD ["sh", "/app/apps/frontend/start-dev.sh"]
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Stage 3b: Development (frontend-ng) — Ionic/Angular dev server with HMR
+# Runs alongside the legacy Next.js frontend on a separate port. Source is
+# volume-mounted at runtime; node_modules stay in the image (pnpm symlinks).
+# ─────────────────────────────────────────────────────────────────────────────
+FROM node:22-alpine AS development-ng
+
+RUN apk add --no-cache curl bash && apk upgrade --no-cache
+
+WORKDIR /app
+
+ENV NODE_ENV=development
+ENV PATH="/app/node_modules/.bin:/app/apps/frontend-ng/node_modules/.bin:$PATH"
+ENV NODE_PATH="/app/node_modules"
+
+# Workspace node_modules from deps stage (root + frontend-ng pnpm symlinks)
+COPY --from=deps /app/node_modules                    ./node_modules
+COPY --from=deps /app/apps/frontend-ng/node_modules   ./apps/frontend-ng/node_modules
+
+# Static workspace + app config (source is volume-mounted at runtime)
+COPY pnpm-workspace.yaml   ./
+COPY apps/frontend-ng/package.json       ./apps/frontend-ng/
+COPY apps/frontend-ng/angular.json       ./apps/frontend-ng/
+COPY apps/frontend-ng/tsconfig.json      ./apps/frontend-ng/
+COPY apps/frontend-ng/tsconfig.app.json  ./apps/frontend-ng/
+COPY apps/frontend-ng/tsconfig.spec.json ./apps/frontend-ng/
+COPY apps/frontend-ng/tailwind.config.ts ./apps/frontend-ng/
+COPY apps/frontend-ng/vitest.config.ts   ./apps/frontend-ng/
+COPY apps/frontend-ng/eslint.config.js   ./apps/frontend-ng/
+COPY apps/frontend-ng/proxy.conf.js      ./apps/frontend-ng/
+
+WORKDIR /app/apps/frontend-ng
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+  CMD curl -f http://localhost:4200 || exit 1
+
+EXPOSE 4200
+
+# --poll: inotify is unreliable on bind mounts (esp. macOS) — poll for HMR.
+# --disable-host-check: allow access via the mapped host port / Traefik.
+CMD ["ng", "serve", "--host", "0.0.0.0", "--port", "4200", "--poll", "2000", "--disable-host-check"]
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Stage 3c: builder-ng — Angular production build (outputs to www/)
+# ─────────────────────────────────────────────────────────────────────────────
+FROM node:22-alpine AS builder-ng
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV PATH="/app/node_modules/.bin:/app/apps/frontend-ng/node_modules/.bin:$PATH"
+ENV NODE_PATH="/app/node_modules"
+
+COPY --from=deps /app/node_modules                    ./node_modules
+COPY --from=deps /app/apps/frontend-ng/node_modules   ./apps/frontend-ng/node_modules
+
+COPY pnpm-workspace.yaml   ./
+COPY apps/frontend-ng/     ./apps/frontend-ng/
+
+WORKDIR /app/apps/frontend-ng
+
+RUN ng build --configuration production
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Stage 3d: production-ng — nginx static server with SPA routing
+# ─────────────────────────────────────────────────────────────────────────────
+FROM nginx:alpine AS production-ng
+
+COPY infra/nginx/frontend-ng.conf /etc/nginx/conf.d/default.conf
+COPY --from=builder-ng /app/apps/frontend-ng/www /usr/share/nginx/html
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD wget -qO- http://localhost/index.html || exit 1
+
+EXPOSE 80
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Stage 4: Runner — production runtime (minimal image)

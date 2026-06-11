@@ -102,6 +102,26 @@ services:
       - "traefik.http.services.iotpilot.loadbalancer.server.port=3000"
       - "traefik.http.routers.iotpilot.middlewares=compression,rate-limit,security-headers"
 
+  # ── frontend-ng (Ionic + Angular) — DISABLED until fe-cutover ────────────────
+  # When ready: uncomment this block, disable/remove iotpilot-app above,
+  # and ensure iotpilot-backend is reachable at /api/* via Traefik path routing.
+  # iotpilot-ng:
+  #   build:
+  #     context: ../..
+  #     dockerfile: ./infra/docker/Dockerfile
+  #     target: production-ng
+  #   container_name: iotpilot-ng
+  #   restart: unless-stopped
+  #   networks:
+  #     - iotpilot-network
+  #   labels:
+  #     - "traefik.enable=true"
+  #     - "traefik.http.services.iotpilot-ng.loadbalancer.server.port=80"
+  #     - "traefik.http.routers.iotpilot-ng.rule=Host(`${DOMAIN}`) || Host(`${TAILSCALE_DOMAIN}`)"
+  #     - "traefik.http.routers.iotpilot-ng.tls=true"
+  #     - "traefik.http.routers.iotpilot-ng.tls.certresolver=letsencrypt"
+  #     - "traefik.http.routers.iotpilot-ng.middlewares=compression,security-headers"
+
   # Express API Backend
   iotpilot-backend:
     build:
