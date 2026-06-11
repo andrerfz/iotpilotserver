@@ -57,8 +57,8 @@ reach **done**. Estimates are dev-days for one senior dev.
 
 | Module | Scope | Depends on | Est. | Docs | Status |
 |---|---|---|---|---|---|
-| [fe-foundation](fe-foundation/) | Workspace, tooling, Docker, CI, Makefile, Husky | — | 4–6 | ✅ | pending |
-| [fe-core](fe-core/) | Generated API client, auth, interceptors, guards, socket, CQRS buses | fe-foundation | 6–9 | ✅ | pending |
+| [fe-foundation](fe-foundation/) | Workspace, tooling, Docker, CI, Makefile, Husky | — | 4–6 | ✅ | ✅ done |
+| [fe-core](fe-core/) | Generated API client, auth, interceptors, guards, socket, CQRS buses | fe-foundation | 6–9 | ✅ | ✅ done |
 | [fe-ui-kit](fe-ui-kit/) | UI barrel from the design prototype (DataTable, BottomSheet, pickers, palette), tokens/theme, app shell | fe-core | 9–12 | ✅ | pending |
 | fe-auth | Login, register, 2FA pages | fe-core, fe-ui-kit | 3–4 | ⏳ deepen | pending |
 | fe-settings | Settings hub + profile/security/system/notifications | fe-auth | 3–4 | ⏳ deepen | pending |
