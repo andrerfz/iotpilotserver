@@ -106,6 +106,10 @@ export {
 // Search
 export { IonSearchbar } from '@ionic/angular/standalone';
 
+// Theme service (T2)
+export { ThemeService } from './theme/theme.service';
+export type { Theme } from './theme/theme.service';
+
 // Custom kit components — filled in by T3–T12; re-exported here to keep the
 // import path stable for consumers.
 // T3 — Badges

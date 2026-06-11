@@ -1,0 +1,131 @@
+/*
+ * IoT Pilot — Design tokens
+ * Ported from docs/prototype frontend/IoT Pilot Console/app.css
+ *
+ * Mechanism:
+ *   • Prototype tokens live on :root (dark = default, NOC context) and [data-theme="light"].
+ *   • ThemeService adds [data-theme="dark"|"light"] + .dark (Tailwind) on <html>.
+ *   • Ionic CSS variables are mapped here so Ionic components pick up our palette
+ *     without needing the Ionic dark palette CSS overrides.
+ */
+
+/* ---------- Structural / layout tokens (theme-independent) ---------- */
+:root {
+  --r-sm: 6px;
+  --r: 8px;
+  --r-lg: 12px;
+  --fs-label: 11px;
+  --ls-label: 0.09em;
+  --font-sans: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --rail-w: 232px;
+  --shadow-sheet: 0 -24px 60px -12px rgba(0, 0, 0, 0.55);
+  --shadow-pop: 0 16px 40px -12px rgba(0, 0, 0, 0.45);
+}
+
+/* ---------- DARK (default, NOC palette) ---------- */
+:root,
+[data-theme="dark"] {
+  --bg:            hsl(226 18% 8%);
+  --bg-grid:       hsl(222 15% 14% / 0.45);
+  --elevated:      hsl(226 16% 11%);
+  --surface:       hsl(225 15% 13%);
+  --surface-2:     hsl(224 14% 17%);
+  --surface-3:     hsl(222 13% 22%);
+  --border:        hsl(222 13% 21%);
+  --border-strong: hsl(220 12% 30%);
+  --text:          hsl(210 40% 96%);
+  --text-muted:    hsl(215 18% 62%);
+  --text-dim:      hsl(215 16% 44%);
+  --primary:       hsl(217 91% 61%);
+  --primary-ink:   hsl(222 47% 8%);
+  --primary-weak:  hsl(217 91% 61% / 0.14);
+  --primary-line:  hsl(217 91% 61% / 0.40);
+  --success:       hsl(142 64% 47%);
+  --success-weak:  hsl(142 64% 47% / 0.14);
+  --warning:       hsl(38 92% 54%);
+  --warning-weak:  hsl(38 92% 54% / 0.14);
+  --danger:        hsl(0 78% 62%);
+  --danger-weak:   hsl(0 78% 62% / 0.14);
+  --info:          hsl(199 89% 56%);
+  --info-weak:     hsl(199 89% 56% / 0.14);
+  --scrim:         hsl(222 60% 3% / 0.66);
+  color-scheme: dark;
+}
+
+/* ---------- LIGHT ---------- */
+[data-theme="light"] {
+  --bg:            hsl(210 40% 96%);
+  --bg-grid:       hsl(215 30% 70% / 0.22);
+  --elevated:      hsl(0 0% 100%);
+  --surface:       hsl(0 0% 100%);
+  --surface-2:     hsl(210 40% 96%);
+  --surface-3:     hsl(212 36% 92%);
+  --border:        hsl(214 28% 88%);
+  --border-strong: hsl(214 22% 78%);
+  --text:          hsl(222 47% 13%);
+  --text-muted:    hsl(215 16% 40%);
+  --text-dim:      hsl(215 14% 55%);
+  --primary:       hsl(221 83% 53%);
+  --primary-ink:   hsl(0 0% 100%);
+  --primary-weak:  hsl(221 83% 53% / 0.10);
+  --primary-line:  hsl(221 83% 53% / 0.35);
+  --success:       hsl(142 71% 38%);
+  --success-weak:  hsl(142 71% 38% / 0.10);
+  --warning:       hsl(35 92% 42%);
+  --warning-weak:  hsl(35 92% 42% / 0.12);
+  --danger:        hsl(0 72% 51%);
+  --danger-weak:   hsl(0 72% 51% / 0.10);
+  --info:          hsl(199 89% 42%);
+  --info-weak:     hsl(199 89% 42% / 0.10);
+  --scrim:         hsl(222 40% 30% / 0.34);
+  color-scheme: light;
+}
+
+/*
+ * Ionic variable bridge
+ * Maps prototype tokens → Ionic CSS variables so Ionic components
+ * pick up the design palette without requiring the Ionic dark-palette CSS.
+ */
+:root,
+[data-theme="dark"],
+[data-theme="light"] {
+  /* Core palette */
+  --ion-color-primary:          var(--primary);
+  --ion-color-primary-contrast: var(--primary-ink);
+  --ion-color-primary-shade:    var(--primary-line);
+  --ion-color-primary-tint:     var(--primary-weak);
+
+  --ion-color-success:          var(--success);
+  --ion-color-success-contrast: var(--primary-ink);
+  --ion-color-success-shade:    var(--success-weak);
+  --ion-color-success-tint:     var(--success-weak);
+
+  --ion-color-warning:          var(--warning);
+  --ion-color-warning-contrast: var(--primary-ink);
+  --ion-color-warning-shade:    var(--warning-weak);
+  --ion-color-warning-tint:     var(--warning-weak);
+
+  --ion-color-danger:           var(--danger);
+  --ion-color-danger-contrast:  var(--text);
+  --ion-color-danger-shade:     var(--danger-weak);
+  --ion-color-danger-tint:      var(--danger-weak);
+
+  /* Surfaces */
+  --ion-background-color:       var(--bg);
+  --ion-background-color-rgb:   unset; /* let Ionic default */
+  --ion-text-color:             var(--text);
+  --ion-text-color-rgb:         unset;
+
+  --ion-card-background:        var(--surface);
+  --ion-item-background:        var(--surface);
+  --ion-toolbar-background:     var(--elevated);
+  --ion-tab-bar-background:     var(--elevated);
+  --ion-popover-background:     var(--surface-2);
+
+  /* Border / divider */
+  --ion-border-color:           var(--border);
+  --ion-color-step-50:          var(--surface-2);
+  --ion-color-step-100:         var(--surface-3);
+  --ion-color-step-150:         var(--border-strong);
+}
