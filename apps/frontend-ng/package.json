@@ -13,6 +13,7 @@
     "lint": "ng lint",
     "lint:fix": "ng lint --fix",
     "type-check": "tsc --noEmit -p tsconfig.app.json",
+    "api:generate": "ng-openapi-gen --config ng-openapi-gen.json",
     "format": "prettier --write \"src/**/*.{ts,html,scss,css,json}\"",
     "format:check": "prettier --check \"src/**/*.{ts,html,scss,css,json}\""
   },
@@ -56,6 +57,7 @@
     "eslint-plugin-jsdoc": "48.2.1",
     "eslint-plugin-prefer-arrow": "1.2.3",
     "jsdom": "26.1.0",
+    "ng-openapi-gen": "1.0.5",
     "postcss": "8.5.15",
     "prettier": "3.8.4",
     "tailwindcss": "3.4.19",

@@ -13,6 +13,7 @@ import {
 
 import { AppComponent } from './app/app.component';
 import { routes } from './app/app.routes';
+import { provideApi } from './app/core/api/api.config';
 
 bootstrapApplication(AppComponent, {
   providers: [
@@ -20,5 +21,6 @@ bootstrapApplication(AppComponent, {
     provideIonicAngular(),
     provideRouter(routes, withPreloading(PreloadAllModules)),
     provideHttpClient(),
+    provideApi(),
   ],
 }).catch((err) => console.error(err));

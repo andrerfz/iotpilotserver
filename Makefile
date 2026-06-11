@@ -15,7 +15,7 @@
 .PHONY: sync-node-modules clean-dev
 .PHONY: queue-status queue-failed queue-retry queue-clean queue-drain queue-dashboard
 .PHONY: ssh prod-logs prod-deploy prod-rollback prod-restart prod-status prod-migrate
-.PHONY: ng-dev ng-lint ng-test ng-type-check ng-build ng-image ng-logs _ng-running
+.PHONY: ng-dev ng-lint ng-test ng-type-check ng-build ng-image ng-logs ng-api-generate ng-api-check _ng-running
 
 # Variables - Using .env for both production and local
 COMPOSE_FILE = infra/docker/docker-compose.yml --env-file .env
@@ -105,6 +105,8 @@ help:
 	@echo "  ng-test              - Run frontend-ng Vitest suite (in container)"
 	@echo "  ng-build             - Build frontend-ng (in container, dev verification)"
 	@echo "  ng-image             - Build frontend-ng production Docker image (nginx)"
+	@echo "  ng-api-generate      - Regenerate typed API client from docs/openapi.yml (host)"
+	@echo "  ng-api-check         - Fail if the committed API client is stale (CI guard)"
 	@echo "  ng-logs              - Follow frontend-ng dev server logs"
 	@echo ""
 	@echo "🏭 Production:"
@@ -710,6 +712,24 @@ ng-image:
 ng-logs:
 	@echo "📋 frontend-ng dev server logs:"
 	@docker compose -f $(LOCAL_COMPOSE_FILE) logs -f --tail=100 iotpilot-ng
+
+# Codegen runs on the host (Node), mirroring route-list/openapi-check which also
+# run host-side. The generated client under core/api/generated is committed.
+ng-api-generate:
+	@echo "🧬 Generating typed API client from docs/openapi.yml..."
+	@pnpm --filter frontend-ng api:generate
+	@echo "✅ API client generated → apps/frontend-ng/src/app/core/api/generated"
+
+# CI guard (mirrors openapi-diff): regenerate, fail if the committed client drifts.
+ng-api-check:
+	@echo "🔍 Checking generated API client is in sync with docs/openapi.yml..."
+	@pnpm --filter frontend-ng api:generate >/dev/null 2>&1
+	@if ! git diff --quiet -- apps/frontend-ng/src/app/core/api/generated; then \
+		echo "❌ Generated API client is stale. Run 'make ng-api-generate' and commit."; \
+		git --no-pager diff --stat -- apps/frontend-ng/src/app/core/api/generated; \
+		exit 1; \
+	fi
+	@echo "✅ Generated API client is in sync."
 
 route-list:
 	@echo "📋 Listing all routes (from docs/openapi.yml + Next.js pages)..."

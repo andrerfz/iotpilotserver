@@ -5,3 +5,5 @@ coverage
 .angular
 package-lock.json
 pnpm-lock.yaml
+# Generated API client — never hand-edited (regenerate via `make ng-api-generate`)
+src/app/core/api/generated

@@ -4,6 +4,8 @@
 
 export const environment = {
   production: false,
+  // Relative base — the dev proxy (proxy.conf.js) forwards /api/* to the backend.
+  apiBaseUrl: '/api',
 };
 
 /*

@@ -54,6 +54,29 @@ components:
       description: Device API key (iotp_sensor_* format) for IoT endpoints
 
   schemas:
+    # ── IoT ingest ───────────────────────────────────────────────────────────────
+    TemperatureWebhookPayload:
+      type: object
+      properties:
+        device_id:
+          type: string
+        temperature:
+          type: number
+          description: Ambient temperature in °C
+        humidity:
+          type: number
+          nullable: true
+        battery:
+          type: number
+          nullable: true
+          description: Battery percentage
+        rssi:
+          type: integer
+          nullable: true
+        firmware_version:
+          type: string
+          nullable: true
+
     # ── Generic ────────────────────────────────────────────────────────────────
     SuccessResponse:
       type: object
@@ -2186,26 +2209,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                device_id:
-                  type: string
-                temperature:
-                  type: number
-                  description: Ambient temperature in °C
-                humidity:
-                  type: number
-                  nullable: true
-                battery:
-                  type: number
-                  nullable: true
-                  description: Battery percentage
-                rssi:
-                  type: integer
-                  nullable: true
-                firmware_version:
-                  type: string
-                  nullable: true
+              $ref: '#/components/schemas/TemperatureWebhookPayload'
       responses:
         '200':
           description: Sensor reading recorded
@@ -2217,7 +2221,11 @@ paths:
       security:
         - apiKeyAuth: []
       requestBody:
-        $ref: '#/paths/~1webhook~1temperature/post/requestBody'
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TemperatureWebhookPayload'
       responses:
         '200':
           description: Sensor reading recorded

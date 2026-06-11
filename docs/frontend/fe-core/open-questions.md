@@ -100,3 +100,22 @@ vs query param) and whether rooms are tenant-scoped server-side. Read
 not rely on cookies (mobile).
 
 **Applies to:** T7, fe-mobile
+
+---
+
+## Q6 — operationId on the OpenAPI spec (generated method names)
+
+`docs/openapi.yml` defines **no `operationId`** on any of its 89 operations. ng-openapi-gen
+therefore derives function names from path + verb (e.g. `authLoginPost`, `authMeGet`,
+`usersIdNotificationPreferencesGet`). These are deterministic and stable **as long as the
+paths don't change**, and the generated client compiles strict — so T1 ships with them.
+
+**Trade-off / deferral:** explicit `operationId`s would give shorter, intention-revealing
+method names (`login`, `getCurrentUser`) and decouple names from URL structure, but adding
+89 of them is a spec-wide edit best owned alongside the backend. Deferred deliberately
+(not overlooked). **Caveat for downstream:** if `operationId`s are added later, generated
+function names change → churn in every feature service that imports them. Decide before
+fe-device/fe-monitoring lean heavily on the client; doing it during fe-core (few callers)
+is far cheaper than after.
+
+**Applies to:** spec quality; fe-device, fe-monitoring, all feature modules

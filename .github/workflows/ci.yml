@@ -79,6 +79,9 @@ jobs:
       - name: Install all workspace dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Check generated API client is in sync (frontend-ng)
+        run: make ng-api-check
+
       - name: Generate Prisma client
         run: pnpm --filter @iotpilot/backend exec prisma generate --schema=./prisma/schema.prisma
 
