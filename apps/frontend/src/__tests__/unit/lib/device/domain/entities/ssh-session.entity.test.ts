@@ -73,7 +73,7 @@ describe('SSHSession Entity', () => {
     it('should mark the session as inactive and set the end time', () => {
       const now = new Date();
       // Properly mock Date constructor while preserving Date.now
-      vi.spyOn(global, 'Date').mockImplementationOnce(() => now);
+      vi.spyOn(global, 'Date').mockImplementationOnce(function () { return now; });
 
       sshSession.closeSession();
 

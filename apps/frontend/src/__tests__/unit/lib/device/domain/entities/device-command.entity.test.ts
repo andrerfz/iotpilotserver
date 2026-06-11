@@ -43,7 +43,7 @@ describe('DeviceCommand Entity', () => {
     it('should update the status to EXECUTING and set executedAt timestamp', () => {
       const now = new Date();
       // Properly mock Date constructor while preserving Date.now
-      vi.spyOn(global, 'Date').mockImplementationOnce(() => now);
+      vi.spyOn(global, 'Date').mockImplementationOnce(function () { return now; });
 
       deviceCommand.markAsExecuting();
 
@@ -57,7 +57,7 @@ describe('DeviceCommand Entity', () => {
       const now = new Date();
       const output = 'Command output';
       // Properly mock Date constructor while preserving Date.now
-      vi.spyOn(global, 'Date').mockImplementationOnce(() => now);
+      vi.spyOn(global, 'Date').mockImplementationOnce(function () { return now; });
 
       deviceCommand.markAsCompleted(output);
 
@@ -72,7 +72,7 @@ describe('DeviceCommand Entity', () => {
       const now = new Date();
       const error = 'Command failed: permission denied';
       // Properly mock Date constructor while preserving Date.now
-      vi.spyOn(global, 'Date').mockImplementationOnce(() => now);
+      vi.spyOn(global, 'Date').mockImplementationOnce(function () { return now; });
 
       deviceCommand.markAsFailed(error);
 
