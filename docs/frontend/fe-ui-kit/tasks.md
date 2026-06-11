@@ -14,7 +14,7 @@ matching `kit.jsx` component before implementing.
 | T3 | Badges + status dot | done |
 | T4 | Form control wrappers (CVA) | done |
 | T5 | MetricCard + Sparkline + EmptyState | done |
-| T6 | DataTable | pending |
+| T6 | DataTable | done |
 | T7 | BottomSheet + FilterChip | pending |
 | T8 | Pickers (device, user, multi-select, date range) | pending |
 | T9 | Shell layout (split-pane rail + topbar) | pending |

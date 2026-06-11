@@ -133,7 +133,8 @@ export { MetricCardComponent } from './data/metric-card.component';
 export type { DeltaDir } from './data/metric-card.component';
 export { EmptyStateComponent } from './data/empty-state.component';
 // T6 — DataTable
-// export { DataTableComponent } from './data/data-table.component';
+export { DataTableComponent } from './data/data-table.component';
+export type { ColumnDef } from './data/data-table.component';
 // T7 — Sheets
 // export { BottomSheetComponent, FilterChipComponent } from './sheets';
 // T8 — Pickers
