@@ -16,7 +16,9 @@
   --r-lg: 12px;
   --fs-label: 11px;
   --ls-label: 0.09em;
-  --font-sans: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  /* "...Variable" is the family name registered by @fontsource-variable
+     (covers the prototype's 450/550 weights via the wght axis). */
+  --font-sans: "IBM Plex Sans Variable", "IBM Plex Sans", system-ui, -apple-system, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
   --rail-w: 232px;
   --shadow-sheet: 0 -24px 60px -12px rgba(0, 0, 0, 0.55);
@@ -110,6 +112,9 @@
   --ion-color-danger-contrast:  var(--text);
   --ion-color-danger-shade:     var(--danger-weak);
   --ion-color-danger-tint:      var(--danger-weak);
+
+  /* Base font — prototype `body { font-family: var(--font-sans) }` */
+  --ion-font-family:            var(--font-sans);
 
   /* Surfaces */
   --ion-background-color:       var(--bg);

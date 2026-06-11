@@ -27,6 +27,8 @@
     "@angular/platform-browser-dynamic": "20.3.24",
     "@angular/router": "20.3.24",
     "@capacitor/core": "8.4.0",
+    "@fontsource-variable/ibm-plex-sans": "^5.2.8",
+    "@fontsource/ibm-plex-mono": "^5.2.7",
     "@ionic/angular": "8.8.10",
     "ionicons": "7.4.0",
     "rxjs": "7.8.2",
