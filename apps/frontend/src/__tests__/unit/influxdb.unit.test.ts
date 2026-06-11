@@ -1,5 +1,4 @@
 // app/src/__tests__/unit/influxdb.unit.test.ts
-import { describe, it, expect } from 'vitest';
 import { validateInfluxConfig, formatMetricsForInflux } from '@iotpilot/core/influxdb';
 
 describe('InfluxDB Unit Tests', () => {
