@@ -499,7 +499,7 @@ iotRouter.post('/temperature', async (req: Request, res: Response) => {
 
         logger.info('Sensor reading recorded', {
             deviceId: data.deviceId,
-            temperature: (data.readings ?? [])[data.readings?.length - 1 ?? 0]?.temperature,
+            temperature: data.readings?.length ? data.readings[data.readings.length - 1].temperature : undefined,
             battery: data.batteryLevel,
         });
 

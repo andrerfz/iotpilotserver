@@ -85,15 +85,15 @@ export class ProcessHeartbeatHandler implements CommandHandler<ProcessHeartbeatC
                     diskUsage: data.diskUsagePercent ?? 0,
                     networkRx: 0,
                     networkTx: 0,
-                    uptime: data.uptime ?? 0,
-                    loadAverage: data.loadAverage ?? [],
+                    uptime: Number(data.uptime ?? 0),
+                    loadAverage: data.loadAverage ? data.loadAverage.split(/[\s,]+/).map(Number).filter((n: number) => !Number.isNaN(n)) : [],
                     temperature: data.cpuTemperature,
                     collectedAt: new Date(),
                     customerId: tenantId,
                 });
                 await this.eventBus.publish(new MetricsCollectedEvent(
                     DeviceId.create(device.id),
-                    DeviceName.create(device.name),
+                    DeviceName.create(device.name ?? 'unknown'),
                     metrics,
                     new Date(),
                     false,
