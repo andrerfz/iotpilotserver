@@ -1,0 +1,22 @@
+/* Ionic-themed via CSS custom properties (the prototype's raw `.field` doesn't
+   map onto ion-input). Label follows app.css ".label" semantics. */
+:host { display: block; }
+
+.ui-field { display: flex; flex-direction: column; gap: 6px; }
+.ui-field__label {
+  font-family: var(--font-mono); font-size: var(--fs-label);
+  letter-spacing: var(--ls-label); text-transform: uppercase; color: var(--text-dim);
+}
+.ui-input {
+  --background: var(--surface);
+  --color: var(--text);
+  --placeholder-color: var(--text-dim);
+  --border-color: var(--border);
+  --border-radius: var(--r-sm);
+  --highlight-color-focused: var(--primary);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+}
+.ui-field--error .ui-input { --border-color: var(--danger); border-color: var(--danger); }
+.ui-field__error { font-family: var(--font-mono); font-size: 11px; color: var(--danger); }
+.ui-input__reveal { --color: var(--text-dim); height: 32px; }

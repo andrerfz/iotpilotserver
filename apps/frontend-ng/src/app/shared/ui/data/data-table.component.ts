@@ -155,43 +155,7 @@ interface SortState { key: string; dir: 1 | -1; }
       </div>
     </div>
   `,
-  styles: [`
-    :host { display: block; }
-    .selbar {
-      display: flex; align-items: center; gap: 10px;
-      padding: 8px 14px; background: var(--primary-weak);
-      border-radius: var(--r-sm) var(--r-sm) 0 0; border: 1px solid var(--primary-line);
-      border-bottom: none;
-    }
-    .selbar__count { font-weight: 600; color: var(--primary); }
-    .selbar__muted { color: var(--text-muted); }
-    .selbar__clear { background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 13px; padding: 4px 8px; }
-    .tablewrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; }
-    .table { width: 100%; border-collapse: collapse; }
-    .table th, .table td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); font-size: 13px; }
-    .table th { font-size: var(--fs-label); letter-spacing: var(--ls-label); text-transform: uppercase; font-family: var(--font-mono); color: var(--text-dim); background: var(--surface-2); font-weight: 550; }
-    .table th.sortable { cursor: pointer; }
-    .table th.sortable:hover { color: var(--text); }
-    .table tbody tr:last-child td { border-bottom: none; }
-    .row--clickable { cursor: pointer; }
-    .row--clickable:hover { background: var(--surface-2); }
-    .th-sort { display: flex; align-items: center; gap: 4px; }
-    .checkcell { width: 44px; }
-    .checkbox {
-      width: 16px; height: 16px; border-radius: 3px;
-      border: 1.5px solid var(--border-strong); background: var(--surface-2);
-      display: inline-flex; align-items: center; justify-content: center;
-      flex: none; cursor: pointer; color: transparent;
-      transition: background 0.1s, border-color 0.1s;
-    }
-    .checkbox:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
-    .checkbox--on { background: var(--primary); border-color: var(--primary); color: var(--primary-ink); }
-    .table__foot { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; font-size: 12px; color: var(--text-muted); background: var(--surface-2); border-top: 1px solid var(--border); }
-    .pager { display: flex; align-items: center; gap: 4px; }
-    .pager button { background: var(--surface-3); border: 1px solid var(--border); border-radius: 4px; width: 26px; height: 26px; display: grid; place-items: center; cursor: pointer; color: var(--text-muted); padding: 0; }
-    .pager button:disabled { opacity: 0.4; cursor: not-allowed; }
-    .pager button.is-active { background: var(--primary); border-color: var(--primary); color: var(--primary-ink); }
-  `],
+  styleUrl: './data-table.component.css',
 })
 export class DataTableComponent<T extends Record<string, unknown> = Record<string, unknown>> {
   readonly columns = input.required<ColumnDef<T>[]>();

@@ -1,0 +1,29 @@
+/* ".checkbox" ported 1:1 from prototype app.css. The visual span is driven by
+   a visually-hidden native checkbox (a11y); the span itself is pointer-inert. */
+:host { display: block; }
+
+.ui-checkbox-wrap { display: flex; flex-direction: column; gap: 6px; }
+.ui-checkbox-label {
+  display: inline-flex; align-items: center; gap: 10px;
+  cursor: pointer; user-select: none;
+}
+.ui-checkbox-label--disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Hide the native input visually but keep it accessible + focusable */
+.cb-native {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+.checkbox {
+  width: 17px; height: 17px; border-radius: 5px; border: 1.5px solid var(--border-strong);
+  display: grid; place-items: center; flex: none; background: var(--surface);
+  pointer-events: none; transition: background .12s, border-color .12s;
+}
+.checkbox svg { width: 12px; height: 12px; color: var(--primary-ink); opacity: 0; }
+.cb-native:focus-visible + .checkbox { outline: 2px solid var(--primary); outline-offset: 2px; }
+.checkbox--on { background: var(--primary); border-color: var(--primary); }
+.checkbox--on svg { opacity: 1; }
+
+.ui-checkbox-text { font-size: 13.5px; color: var(--text); }
+.ui-checkbox__error { font-family: var(--font-mono); font-size: 11px; color: var(--danger); }

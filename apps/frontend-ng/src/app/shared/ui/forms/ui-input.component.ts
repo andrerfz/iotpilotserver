@@ -54,28 +54,7 @@ addIcons({ eyeOutline, eyeOffOutline });
       }
     </div>
   `,
-  styles: [`
-    :host { display: block; }
-    .ui-field { display: flex; flex-direction: column; gap: 4px; }
-    .ui-field__label {
-      font-size: 12px; font-weight: 550; color: var(--text-muted);
-      font-family: var(--font-mono); letter-spacing: var(--ls-label);
-      text-transform: uppercase; margin-bottom: 2px;
-    }
-    .ui-input {
-      --background: var(--surface-2);
-      --color: var(--text);
-      --placeholder-color: var(--text-dim);
-      --border-color: var(--border);
-      --border-radius: var(--r-sm);
-      --highlight-color-focused: var(--primary);
-      border: 1px solid var(--border);
-      border-radius: var(--r-sm);
-    }
-    .ui-field--error .ui-input { --border-color: var(--danger); border-color: var(--danger); }
-    .ui-field__error { font-size: 12px; color: var(--danger); }
-    .ui-input__reveal { --color: var(--text-dim); height: 32px; }
-  `],
+  styleUrl: './ui-input.component.css',
 })
 export class UiInputComponent implements ControlValueAccessor {
   readonly label = input('');

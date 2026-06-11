@@ -1,0 +1,10 @@
+/* Ionic-themed via CSS custom properties over ion-toggle. */
+:host { display: block; }
+
+.ui-switch-wrap { display: flex; flex-direction: column; gap: 6px; }
+.ui-toggle {
+  --track-background: var(--surface-3);
+  --track-background-checked: var(--primary);
+  --handle-background: var(--text);
+}
+.ui-switch__error { font-family: var(--font-mono); font-size: 11px; color: var(--danger); }

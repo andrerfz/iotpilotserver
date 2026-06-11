@@ -22,19 +22,7 @@ import { Component, input, ChangeDetectionStrategy } from '@angular/core';
       }
     </div>
   `,
-  styles: [`
-    :host { display: block; }
-    .empty {
-      display: flex; flex-direction: column; align-items: center;
-      padding: 40px 20px; text-align: center; gap: 8px;
-    }
-    .empty__icon { margin-bottom: 8px; color: var(--text-dim); }
-    .empty__icon ::ng-deep svg,
-    .empty__icon ::ng-deep ion-icon { width: 32px; height: 32px; }
-    .empty__title { font-size: 14px; color: var(--text-muted); margin: 0; }
-    .empty__desc { font-size: 12px; color: var(--text-dim); margin: 0; }
-    .empty__action { margin-top: 8px; }
-  `],
+  styleUrl: './empty-state.component.css',
 })
 export class EmptyStateComponent {
   readonly title = input.required<string>();

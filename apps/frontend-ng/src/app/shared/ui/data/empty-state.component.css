@@ -1,0 +1,15 @@
+/* Container ported from prototype app.css — ".empty". Title/desc/action are
+   richer than the prototype (which renders icon + single line) but keep the
+   same spacing language. */
+:host { display: block; }
+
+.empty {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 10px; padding: 48px; color: var(--text-dim); text-align: center;
+}
+.empty__icon { color: var(--text-dim); }
+.empty__icon ::ng-deep svg,
+.empty__icon ::ng-deep ion-icon { width: 30px; height: 30px; }
+.empty__title { font-size: 14px; color: var(--text-muted); margin: 0; }
+.empty__desc { font-size: 12.5px; color: var(--text-dim); margin: 0; }
+.empty__action { margin-top: 4px; }

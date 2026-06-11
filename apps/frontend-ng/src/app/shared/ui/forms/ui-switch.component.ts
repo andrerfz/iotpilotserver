@@ -37,16 +37,7 @@ import { IonToggle, IonLabel, IonNote } from '@ionic/angular/standalone';
       }
     </div>
   `,
-  styles: [`
-    :host { display: block; }
-    .ui-switch-wrap { display: flex; flex-direction: column; gap: 4px; }
-    .ui-toggle {
-      --track-background: var(--surface-3);
-      --track-background-checked: var(--primary);
-      --handle-background: var(--text);
-    }
-    .ui-switch__error { font-size: 12px; color: var(--danger); }
-  `],
+  styleUrl: './ui-switch.component.css',
 })
 export class UiSwitchComponent implements ControlValueAccessor {
   readonly label = input('');

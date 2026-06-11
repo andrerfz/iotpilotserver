@@ -1,0 +1,32 @@
+/* Ported 1:1 from prototype app.css — "Metric cards". */
+:host { display: block; }
+
+.metric {
+  display: flex; flex-direction: column;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-lg); padding: 14px 16px 0; overflow: hidden; min-height: 118px;
+}
+.metric__top { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.metric__icon {
+  width: 26px; height: 26px; border-radius: 7px; display: grid; place-items: center; flex: none;
+}
+.metric__icon ::ng-deep svg,
+.metric__icon ::ng-deep ion-icon { width: 15px; height: 15px; }
+.metric__label {
+  font-family: var(--font-mono); font-size: var(--fs-label); letter-spacing: var(--ls-label);
+  text-transform: uppercase; color: var(--text-dim);
+}
+.metric__val {
+  font-size: 27px; font-weight: 600; letter-spacing: -0.02em; line-height: 1;
+  display: flex; align-items: baseline; gap: 5px;
+}
+.metric__unit { font-size: 13px; font-weight: 500; color: var(--text-muted); font-family: var(--font-mono); }
+.metric__delta {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-family: var(--font-mono); font-size: 11.5px; margin-top: 8px; padding-bottom: 10px;
+}
+.metric__delta svg { width: 12px; height: 12px; }
+.delta--up { color: var(--success); }
+.delta--down { color: var(--danger); }
+.delta--flat { color: var(--text-dim); }
+.metric__spark { width: 100%; height: 30px; opacity: .55; pointer-events: none; margin-top: auto; display: block; }

@@ -51,34 +51,7 @@ import { IonNote } from '@ionic/angular/standalone';
       }
     </div>
   `,
-  styles: [`
-    :host { display: block; }
-    .ui-checkbox-wrap { display: flex; flex-direction: column; gap: 4px; }
-    .ui-checkbox-label {
-      display: inline-flex; align-items: center; gap: 10px;
-      cursor: pointer; user-select: none;
-    }
-    .ui-checkbox-label--disabled { opacity: 0.5; cursor: not-allowed; }
-    /* Hide the native input visually but keep it accessible */
-    .cb-native {
-      position: absolute; width: 1px; height: 1px; overflow: hidden;
-      clip: rect(0 0 0 0); white-space: nowrap; border: 0;
-    }
-    .checkbox {
-      width: 18px; height: 18px; border-radius: 4px;
-      border: 1.5px solid var(--border-strong);
-      background: var(--surface-2);
-      display: inline-flex; align-items: center; justify-content: center;
-      flex: none; transition: background 0.12s, border-color 0.12s;
-      color: transparent; pointer-events: none;
-    }
-    .checkbox--on {
-      background: var(--primary); border-color: var(--primary);
-      color: var(--primary-ink);
-    }
-    .ui-checkbox-text { font-size: 14px; color: var(--text); }
-    .ui-checkbox__error { font-size: 12px; color: var(--danger); }
-  `],
+  styleUrl: './ui-checkbox.component.css',
 })
 export class UiCheckboxComponent implements ControlValueAccessor {
   readonly label = input('');

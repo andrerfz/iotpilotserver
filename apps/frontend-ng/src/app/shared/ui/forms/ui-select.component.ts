@@ -49,26 +49,7 @@ export interface SelectOption<T = string> {
       }
     </div>
   `,
-  styles: [`
-    :host { display: block; }
-    .ui-field { display: flex; flex-direction: column; gap: 4px; }
-    .ui-field__label {
-      font-size: 12px; font-weight: 550; color: var(--text-muted);
-      font-family: var(--font-mono); letter-spacing: var(--ls-label);
-      text-transform: uppercase; margin-bottom: 2px;
-    }
-    .ui-select {
-      --background: var(--surface-2);
-      --color: var(--text);
-      --placeholder-color: var(--text-dim);
-      --border-radius: var(--r-sm);
-      border: 1px solid var(--border);
-      border-radius: var(--r-sm);
-      width: 100%;
-    }
-    .ui-field--error .ui-select { border-color: var(--danger); }
-    .ui-field__error { font-size: 12px; color: var(--danger); }
-  `],
+  styleUrl: './ui-select.component.css',
 })
 export class UiSelectComponent<T = string> implements ControlValueAccessor {
   readonly label = input('');
