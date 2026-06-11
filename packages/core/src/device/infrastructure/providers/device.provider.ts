@@ -55,7 +55,7 @@ export class DeviceServiceProvider implements BoundedContextProvider {
     });
 
     // NodeSSHConnectorService - Lazy registration (server-side only)
-    if (typeof window === 'undefined') {
+    if (typeof (globalThis as any).window === 'undefined') {
       try {
         const { NodeSSHConnectorService } = require('@iotpilot/core/device/infrastructure/services/node-ssh-connector.service');
         container.register('NodeSSHConnectorService', {
@@ -144,7 +144,7 @@ export class DeviceServiceProvider implements BoundedContextProvider {
     commandBus.register(MarkStaleDevicesOfflineCommand, new MarkStaleDevicesOfflineHandler(prisma));
 
     // SSH — server-side only to avoid bundling ssh2 in client
-    if (typeof window === 'undefined') {
+    if (typeof (globalThis as any).window === 'undefined') {
       try {
         const {ExecuteSSHCommand} = require('@iotpilot/core/device/application/commands/execute-ssh-command/execute-ssh-command.command');
         const {ExecuteSSHCommandHandler} = require('@iotpilot/core/device/application/commands/execute-ssh-command/execute-ssh-command.handler');

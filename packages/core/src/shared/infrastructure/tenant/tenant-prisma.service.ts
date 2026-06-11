@@ -8,7 +8,7 @@ const logger = StructuredLogger.forService('tenant-prisma');
 let AsyncLocalStorage: any;
 try {
     // Try to import AsyncLocalStorage from Node.js async_hooks
-    if (typeof window === 'undefined') {
+    if (typeof (globalThis as any).window === 'undefined') {
         AsyncLocalStorage = require('async_hooks').AsyncLocalStorage;
     } else {
         throw new Error('Browser environment');

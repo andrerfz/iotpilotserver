@@ -87,7 +87,7 @@ export class AppContainer {
     });
 
     // Register BullMQ Job Queue (server-side only — avoid bundling in client)
-    if (typeof window === 'undefined') {
+    if (typeof (globalThis as any).window === 'undefined') {
       try {
         const { RedisConnectionFactory } = require('../redis/redis-connection.factory');
         const { BullMqJobQueue } = require('../queue/bullmq-job-queue');
@@ -104,7 +104,7 @@ export class AppContainer {
     }
 
     // Email Service (server-side only)
-    if (typeof window === 'undefined') {
+    if (typeof (globalThis as any).window === 'undefined') {
       try {
         const { NodemailerEmailService } = require('@iotpilot/core/shared/infrastructure/services/email.service');
         container.register('EmailService', {

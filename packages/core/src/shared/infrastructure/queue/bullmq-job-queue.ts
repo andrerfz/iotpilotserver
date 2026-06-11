@@ -1,4 +1,4 @@
-import { Queue } from 'bullmq';
+import { Queue, ConnectionOptions } from 'bullmq';
 import type { RedisConnectionFactory } from '../redis/redis-connection.factory';
 import type { JobData, JobOptions, JobQueue, QueueStats } from '../../application/interfaces/job-queue.interface';
 
@@ -20,7 +20,7 @@ export class BullMqJobQueue implements JobQueue {
 
   constructor(redisFactory: RedisConnectionFactory) {
     this.queue = new Queue(QUEUE_NAME, {
-      connection: redisFactory.getQueueConnection(),
+      connection: redisFactory.getQueueConnection() as unknown as ConnectionOptions,
     });
   }
 

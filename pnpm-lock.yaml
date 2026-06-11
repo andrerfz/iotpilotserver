@@ -575,6 +575,9 @@ importers:
       '@types/ws':
         specifier: ^8.5.10
         version: 8.18.1
+      '@types/zxcvbn':
+        specifier: ^4.4.5
+        version: 4.4.5
       prisma:
         specifier: ^6.19.0
         version: 6.19.3(typescript@5.8.3)

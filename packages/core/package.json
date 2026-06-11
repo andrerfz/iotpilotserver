@@ -53,6 +53,7 @@
     "@types/node": "^20.10.4",
     "@types/nodemailer": "^8.0.0",
     "@types/ws": "^8.5.10",
+    "@types/zxcvbn": "^4.4.5",
     "prisma": "^6.19.0",
     "typescript": "5.8.3",
     "vitest": "^1.6.1"

@@ -78,7 +78,7 @@ export class ServiceContainer {
    * Server-side only — event handlers are not needed in the browser.
    */
   private registerEventHandlers(): void {
-    if (typeof window !== 'undefined') return;
+    if (typeof (globalThis as any).window !== 'undefined') return;
 
     try {
       const jobQueue = AppContainer.resolve<JobQueue>('JobQueue');
@@ -118,7 +118,7 @@ export class ServiceContainer {
    * Server-side only — noop in the browser or during SSR.
    */
   private startCommandQueueProcessor(): void {
-    if (typeof window !== 'undefined') return;
+    if (typeof (globalThis as any).window !== 'undefined') return;
     try {
       const deviceRepo = AppContainer.resolve<DeviceRepository>('DeviceRepository');
       const commandRepo = AppContainer.resolve<DeviceCommandRepository>('DeviceCommandRepository');

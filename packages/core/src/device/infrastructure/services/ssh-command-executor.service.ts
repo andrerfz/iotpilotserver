@@ -38,7 +38,7 @@ export class SSHCommandExecutorService implements CommandExecutor {
 
   canHandle(device: Device | DeviceEntity): boolean {
     // Can only handle if we're on the server side and device has an IP address
-    if (typeof window !== 'undefined') {
+    if (typeof (globalThis as any).window !== 'undefined') {
       return false; // Not available on client side
     }
     const ipAddress = device.getIpAddress()?.value;
@@ -48,7 +48,7 @@ export class SSHCommandExecutorService implements CommandExecutor {
 
   async execute(device: Device | DeviceEntity, command: DeviceCommand): Promise<CommandExecutionResult> {
     // Check if we're on the server side
-    if (typeof window !== 'undefined') {
+    if (typeof (globalThis as any).window !== 'undefined') {
       return {
         status: CommandStatus.FAILED,
         error: 'SSH functionality is only available on the server',

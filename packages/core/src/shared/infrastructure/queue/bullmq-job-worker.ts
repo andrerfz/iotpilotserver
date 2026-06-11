@@ -1,4 +1,4 @@
-import { Worker, Job } from 'bullmq';
+import { Worker, Job, ConnectionOptions } from 'bullmq';
 import type { RedisConnectionFactory } from '../redis/redis-connection.factory';
 import type { JobData, JobProcessor, JobResult } from '../../application/interfaces/job-queue.interface';
 
@@ -42,7 +42,7 @@ export class BullMqJobWorker {
         return this.routeJob(job);
       },
       {
-        connection: this.redisFactory.getWorkerConnection(),
+        connection: this.redisFactory.getWorkerConnection() as unknown as ConnectionOptions,
         concurrency: this.concurrency,
       }
     );
