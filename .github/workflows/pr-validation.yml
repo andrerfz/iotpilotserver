@@ -9,6 +9,11 @@ env:
   NODE_VERSION: '22'
   PNPM_VERSION: '11'
 
+# The PR comment job posts a status table; needs write access to the PR.
+permissions:
+  contents: read
+  pull-requests: write
+
 concurrency:
   group: pr-${{ github.event.pull_request.number }}
   cancel-in-progress: true
