@@ -92,14 +92,37 @@ port it as a third injectable.
 
 ---
 
-## Q5 — Socket auth handshake details
+## Q5 _resolved_ — Socket auth handshake details
 
-Confirm how the backend Socket.IO server authenticates (JWT in `auth` payload vs cookie
-vs query param) and whether rooms are tenant-scoped server-side. Read
-`apps/backend/src/http`/socket setup before T7 — the client must match exactly and must
-not rely on cookies (mobile).
+**Backend reality (read `apps/backend/src/server.ts`):**
 
-**Applies to:** T7, fe-mobile
+- **No handshake authentication.** There is no `io.use()` middleware. Connections are not
+  authenticated; any client that reaches the server can `io(url)` and emit
+  `subscribe:devices` to join the room. CORS is `credentials: true`, so a cookie would be
+  sent, but the server never reads or verifies it.
+- **Rooms are NOT tenant-scoped.** `devices` is a single global room. `broadcastAlert`
+  does `io.to('devices').emit('alert:new', alert)` to *every* subscriber regardless of
+  tenant — a cross-tenant leak.
+- **Events.** server→client: `device:update` `{deviceId, update}`, `alert:new` `<alert>`.
+  client→server: `subscribe:devices`, `tailscale:device:connect`, `disconnect`.
+- **No client precedent.** Legacy `use-real-time-alerts.ts` polls (`setInterval` + `fetch`)
+  and never consumed socket.io; `use-websocket.ts` is an unused raw-WebSocket helper.
+
+**Decision (chosen 2026-06-11): harden the backend as part of T7**, so the client can meet
+the tenant-isolation acceptance. T7 therefore touches both backend and client:
+
+- **Backend** (`server.ts`): add `io.use()` that reads the session token from the
+  handshake **auth payload** (`socket.handshake.auth.token`) — *not* the cookie (mobile
+  can't rely on it) — validates it like `auth.middleware` (signed JWT + live session row),
+  attaches the user, and **joins `tenant:${customerId}`**. SUPERADMIN (no customerId) gets
+  a documented fallback. Change `broadcastAlert` to emit to the alert's tenant room, not
+  the global `devices` room. Reject the connection on invalid/expired token.
+- **Client** (T7 `socket.service.ts`): connect with `io(url, { auth: { token } })` using the
+  token from `TokenStorage`; (re)connect on login, disconnect on logout; backoff reconnect.
+  `alerts.stream.ts` exposes `alert:new` as a signal/observable. Bearer-style auth payload,
+  never cookies — consistent with Q2.
+
+**Applies to:** T7 (backend + client), fe-mobile
 
 ---
 
