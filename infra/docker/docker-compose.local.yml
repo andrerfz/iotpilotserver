@@ -111,17 +111,17 @@ services:
     ports:
       - "${NG_PORT:-4201}:4200"
     volumes:
-      # Source-only mounts — node_modules stay in image (pnpm symlinks)
-      - ../../apps/frontend-ng/src:/app/apps/frontend-ng/src
-      - ../../apps/frontend-ng/angular.json:/app/apps/frontend-ng/angular.json
-      - ../../apps/frontend-ng/tsconfig.json:/app/apps/frontend-ng/tsconfig.json
-      - ../../apps/frontend-ng/tsconfig.app.json:/app/apps/frontend-ng/tsconfig.app.json
-      - ../../apps/frontend-ng/tailwind.config.ts:/app/apps/frontend-ng/tailwind.config.ts
-      - ../../apps/frontend-ng/tsconfig.spec.json:/app/apps/frontend-ng/tsconfig.spec.json
-      - ../../apps/frontend-ng/vitest.config.ts:/app/apps/frontend-ng/vitest.config.ts
-      - ../../apps/frontend-ng/eslint.config.js:/app/apps/frontend-ng/eslint.config.js
-      - ../../apps/frontend-ng/package.json:/app/apps/frontend-ng/package.json
-      - ../../apps/frontend-ng/proxy.conf.js:/app/apps/frontend-ng/proxy.conf.js
+      # Whole-project mount: editing files or switching git branches replaces
+      # inodes, which silently breaks single-file bind mounts (the in-container
+      # path keeps pointing at the stale inode). Mounting the directory avoids
+      # that entirely. Two anonymous volumes shadow paths that must NOT come
+      # from the host:
+      #  - node_modules: the image holds linux/alpine deps (esbuild & friends
+      #    ship platform-specific native binaries); the host's macOS ones break.
+      #  - .angular: keep the build cache container-local, not mixed with host.
+      - ../../apps/frontend-ng:/app/apps/frontend-ng
+      - /app/apps/frontend-ng/node_modules
+      - /app/apps/frontend-ng/.angular
     restart: unless-stopped
     networks:
       - iotpilot-network
