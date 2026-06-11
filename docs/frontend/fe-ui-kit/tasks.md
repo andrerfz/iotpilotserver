@@ -11,7 +11,7 @@ matching `kit.jsx` component before implementing.
 |---|---|---|
 | T1 | Barrel + import lint rule | done |
 | T2 | Design tokens + ThemeService | done |
-| T3 | Badges + status dot | pending |
+| T3 | Badges + status dot | done |
 | T4 | Form control wrappers (CVA) | pending |
 | T5 | MetricCard + Sparkline + EmptyState | pending |
 | T6 | DataTable | pending |

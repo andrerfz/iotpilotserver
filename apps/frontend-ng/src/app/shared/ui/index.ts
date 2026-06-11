@@ -113,7 +113,14 @@ export type { Theme } from './theme/theme.service';
 // Custom kit components — filled in by T3–T12; re-exported here to keep the
 // import path stable for consumers.
 // T3 — Badges
-// export { StatusBadgeComponent, StatusDotComponent, SeverityBadgeComponent, RoleBadgeComponent, DeviceTypeBadgeComponent } from './badges';
+export { StatusBadgeComponent } from './badges/status.badge';
+export type { DeviceStatus, CommandStatus, AlertStatus, AnyStatus } from './badges/status.badge';
+export { StatusDotComponent } from './badges/status-dot.component';
+export { SeverityBadgeComponent } from './badges/severity.badge';
+export type { Severity } from './badges/severity.badge';
+export { RoleBadgeComponent } from './badges/role.badge';
+export type { UserRole } from './badges/role.badge';
+export { DeviceTypeBadgeComponent } from './badges/device-type.badge';
 // T4 — Form control wrappers
 // export { UiInputComponent, UiSwitchComponent, UiCheckboxComponent, UiSelectComponent } from './forms';
 // T5 — Cards & states
