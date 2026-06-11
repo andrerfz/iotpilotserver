@@ -1,10 +1,10 @@
 import { TestBed } from '@angular/core/testing';
 import { Api } from '../api/generated/api';
-import { authLoginPost } from '../api/generated/fn/auth/auth-login-post';
-import { authLogoutPost } from '../api/generated/fn/auth/auth-logout-post';
-import { authMeGet } from '../api/generated/fn/auth/auth-me-get';
-import { authRefreshPost } from '../api/generated/fn/auth/auth-refresh-post';
-import { authVerify2FaPost } from '../api/generated/fn/auth/auth-verify-2-fa-post';
+import { login as loginRequest } from '../api/generated/fn/auth/login';
+import { logout as logoutRequest } from '../api/generated/fn/auth/logout';
+import { getMe } from '../api/generated/fn/auth/get-me';
+import { refreshSession } from '../api/generated/fn/auth/refresh-session';
+import { verifyTwoFactor as verifyTwoFactorRequest } from '../api/generated/fn/auth/verify-two-factor';
 import { User } from '../api/generated/models/user';
 import { AuthService } from './auth.service';
 import { InMemoryTokenStorage, TokenStorage } from './token.storage';
@@ -56,7 +56,7 @@ describe('AuthService', () => {
   });
 
   it('login populates session signals and stores the token', async () => {
-    api.on(authLoginPost, () =>
+    api.on(loginRequest, () =>
       Promise.resolve({ success: true, data: { user: adminUser, token: 'jwt-1' } }),
     );
 
@@ -70,7 +70,7 @@ describe('AuthService', () => {
   });
 
   it('login returns a 2FA challenge without establishing a session', async () => {
-    api.on(authLoginPost, () =>
+    api.on(loginRequest, () =>
       Promise.resolve({ success: true, data: { requiresTwoFactor: true, userId: 'usr_1' } }),
     );
 
@@ -83,7 +83,7 @@ describe('AuthService', () => {
 
   it('verifyTwoFactor() completes login and establishes the session', async () => {
     let sentBody: unknown;
-    api.on(authVerify2FaPost, (params) => {
+    api.on(verifyTwoFactorRequest, (params) => {
       sentBody = (params as { body: unknown }).body;
       return Promise.resolve({ success: true, data: { user: adminUser, token: 'jwt-2fa' } });
     });
@@ -97,7 +97,7 @@ describe('AuthService', () => {
   });
 
   it('me() loads the current user into the signal', async () => {
-    api.on(authMeGet, () => Promise.resolve({ success: true, data: { user: adminUser } }));
+    api.on(getMe, () => Promise.resolve({ success: true, data: { user: adminUser } }));
 
     const user = await auth.me();
 
@@ -106,7 +106,7 @@ describe('AuthService', () => {
   });
 
   it('refresh() rotates the token and populates the session on success', async () => {
-    api.on(authRefreshPost, () =>
+    api.on(refreshSession, () =>
       Promise.resolve({ success: true, data: { user: adminUser, token: 'jwt-2' } }),
     );
 
@@ -119,11 +119,11 @@ describe('AuthService', () => {
 
   it('refresh() clears the session and returns false on failure', async () => {
     await tokens.set('stale');
-    api.on(authLoginPost, () =>
+    api.on(loginRequest, () =>
       Promise.resolve({ success: true, data: { user: adminUser, token: 'jwt-1' } }),
     );
     await auth.login('admin@acme.test', 'pw');
-    api.on(authRefreshPost, () => Promise.reject(new Error('401')));
+    api.on(refreshSession, () => Promise.reject(new Error('401')));
 
     const ok = await auth.refresh();
 
@@ -133,11 +133,11 @@ describe('AuthService', () => {
   });
 
   it('logout() clears session even though the network call resolves', async () => {
-    api.on(authLoginPost, () =>
+    api.on(loginRequest, () =>
       Promise.resolve({ success: true, data: { user: adminUser, token: 'jwt-1' } }),
     );
     await auth.login('admin@acme.test', 'pw');
-    api.on(authLogoutPost, () => Promise.resolve({ success: true, data: { message: 'ok' } }));
+    api.on(logoutRequest, () => Promise.resolve({ success: true, data: { message: 'ok' } }));
 
     await auth.logout();
 
@@ -147,11 +147,11 @@ describe('AuthService', () => {
   });
 
   it('logout() still clears local state when the network call fails', async () => {
-    api.on(authLoginPost, () =>
+    api.on(loginRequest, () =>
       Promise.resolve({ success: true, data: { user: adminUser, token: 'jwt-1' } }),
     );
     await auth.login('admin@acme.test', 'pw');
-    api.on(authLogoutPost, () => Promise.reject(new Error('network')));
+    api.on(logoutRequest, () => Promise.reject(new Error('network')));
 
     await expect(auth.logout()).rejects.toThrow();
     expect(auth.isAuthenticated()).toBe(false);

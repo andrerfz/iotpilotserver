@@ -139,19 +139,25 @@ the tenant-isolation acceptance. T7 therefore touches both backend and client:
 
 ---
 
-## Q6 — operationId on the OpenAPI spec (generated method names)
+## Q6 _resolved_ — operationId on the OpenAPI spec (generated method names)
 
-`docs/openapi.yml` defines **no `operationId`** on any of its 89 operations. ng-openapi-gen
-therefore derives function names from path + verb (e.g. `authLoginPost`, `authMeGet`,
-`usersIdNotificationPreferencesGet`). These are deterministic and stable **as long as the
-paths don't change**, and the generated client compiles strict — so T1 ships with them.
+`docs/openapi.yml` originally had **no `operationId`**, so ng-openapi-gen derived verbose
+names from path + verb (`authLoginPost`, `usersIdNotificationPreferencesGet`) that were
+also coupled to the URL — a rename of a path would rename the method and break callers.
 
-**Trade-off / deferral:** explicit `operationId`s would give shorter, intention-revealing
-method names (`login`, `getCurrentUser`) and decouple names from URL structure, but adding
-89 of them is a spec-wide edit best owned alongside the backend. Deferred deliberately
-(not overlooked). **Caveat for downstream:** if `operationId`s are added later, generated
-function names change → churn in every feature service that imports them. Decide before
-fe-device/fe-monitoring lean heavily on the client; doing it during fe-core (few callers)
-is far cheaper than after.
+**Decision (2026-06-11): add explicit `operationId`s to all 89 operations** — the correct,
+spec-canonical approach (operationId is the field generators are designed around; derived
+names are a fallback). Done now, during fe-core, because only ~8 call sites use the client
+today (AuthService, SessionsService); every later feature module would multiply the
+rename churn.
 
-**Applies to:** spec quality; fe-device, fe-monitoring, all feature modules
+- Naming: short, intention-revealing, REST-conventional — `login`, `getMe`,
+  `refreshSession`, `listSessions`, `revokeSession`, `getUserNotificationPreferences`, etc.
+  (89 unique ids, verified).
+- Regenerated client: function/file names now read `login.ts` / `getMe`, not
+  `auth-login-post.ts`. Call sites updated; where a generated name collided with a service
+  method (login/logout/verifyTwoFactor/listSessions/revokeSession) the import is aliased
+  `…Request`.
+- `make ng-api-check` + `openapi-check` green (89 paths).
+
+**Applies to:** spec quality; all feature modules (now build on stable, clean names)

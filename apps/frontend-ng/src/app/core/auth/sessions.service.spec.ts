@@ -1,8 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { Api } from '../api/generated/api';
-import { authSessionsDelete } from '../api/generated/fn/auth/auth-sessions-delete';
-import { authSessionsGet } from '../api/generated/fn/auth/auth-sessions-get';
-import { authSessionsIdDelete } from '../api/generated/fn/auth/auth-sessions-id-delete';
+import { revokeOtherSessions } from '../api/generated/fn/auth/revoke-other-sessions';
+import { listSessions as listSessionsRequest } from '../api/generated/fn/auth/list-sessions';
+import { revokeSession as revokeSessionRequest } from '../api/generated/fn/auth/revoke-session';
 import { Session } from '../api/generated/models/session';
 import { SessionsService } from './sessions.service';
 
@@ -35,18 +35,18 @@ describe('SessionsService', () => {
   });
 
   it('listSessions() unwraps the envelope data array', async () => {
-    api.on(authSessionsGet, () => Promise.resolve({ success: true, data: sessions }));
+    api.on(listSessionsRequest, () => Promise.resolve({ success: true, data: sessions }));
     expect(await svc.listSessions()).toEqual(sessions);
   });
 
   it('listSessions() returns [] when data is absent', async () => {
-    api.on(authSessionsGet, () => Promise.resolve({ success: true }));
+    api.on(listSessionsRequest, () => Promise.resolve({ success: true }));
     expect(await svc.listSessions()).toEqual([]);
   });
 
   it('revokeSession(id) passes the id and reports current-session revocation', async () => {
     let sentParams: unknown;
-    api.on(authSessionsIdDelete, (params) => {
+    api.on(revokeSessionRequest, (params) => {
       sentParams = params;
       return Promise.resolve({ success: true, data: { revoked: true, wasCurrentSession: true } });
     });
@@ -58,12 +58,12 @@ describe('SessionsService', () => {
   });
 
   it('revokeAllOtherSessions() returns the revoked count', async () => {
-    api.on(authSessionsDelete, () => Promise.resolve({ success: true, data: { revokedCount: 3 } }));
+    api.on(revokeOtherSessions, () => Promise.resolve({ success: true, data: { revokedCount: 3 } }));
     expect(await svc.revokeAllOtherSessions()).toBe(3);
   });
 
   it('revokeAllOtherSessions() defaults to 0 when count is missing', async () => {
-    api.on(authSessionsDelete, () => Promise.resolve({ success: true, data: {} }));
+    api.on(revokeOtherSessions, () => Promise.resolve({ success: true, data: {} }));
     expect(await svc.revokeAllOtherSessions()).toBe(0);
   });
 });

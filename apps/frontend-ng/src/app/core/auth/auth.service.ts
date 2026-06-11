@@ -1,11 +1,11 @@
 import { HttpContext } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { Api } from '../api/generated/api';
-import { authLoginPost } from '../api/generated/fn/auth/auth-login-post';
-import { authLogoutPost } from '../api/generated/fn/auth/auth-logout-post';
-import { authMeGet } from '../api/generated/fn/auth/auth-me-get';
-import { authRefreshPost } from '../api/generated/fn/auth/auth-refresh-post';
-import { authVerify2FaPost } from '../api/generated/fn/auth/auth-verify-2-fa-post';
+import { login as loginRequest } from '../api/generated/fn/auth/login';
+import { logout as logoutRequest } from '../api/generated/fn/auth/logout';
+import { getMe } from '../api/generated/fn/auth/get-me';
+import { refreshSession } from '../api/generated/fn/auth/refresh-session';
+import { verifyTwoFactor as verifyTwoFactorRequest } from '../api/generated/fn/auth/verify-two-factor';
 import { User } from '../api/generated/models/user';
 import { WITH_CREDENTIALS } from '../api/http-context';
 import { TokenStorage } from './token.storage';
@@ -49,7 +49,7 @@ export class AuthService {
    * session and populates the signals.
    */
   async login(email: string, password: string, remember = false): Promise<LoginResult> {
-    const res = await this.api.invoke(authLoginPost, { body: { email, password, remember } });
+    const res = await this.api.invoke(loginRequest, { body: { email, password, remember } });
     const data = res.data;
 
     if (data?.requiresTwoFactor && data.userId) {
@@ -69,7 +69,7 @@ export class AuthService {
    * exactly like a direct login.
    */
   async verifyTwoFactor(userId: string, code: string, remember = false): Promise<User> {
-    const res = await this.api.invoke(authVerify2FaPost, { body: { userId, code, remember } });
+    const res = await this.api.invoke(verifyTwoFactorRequest, { body: { userId, code, remember } });
     if (res.data?.token && res.data.user) {
       await this.tokens.set(res.data.token);
       this._user.set(res.data.user);
@@ -81,7 +81,7 @@ export class AuthService {
   /** Revoke the session server-side and clear local state (best-effort on the network call). */
   async logout(): Promise<void> {
     try {
-      await this.api.invoke(authLogoutPost, {});
+      await this.api.invoke(logoutRequest, {});
     } finally {
       await this.tokens.clear();
       this._user.set(null);
@@ -90,7 +90,7 @@ export class AuthService {
 
   /** Fetch the current user from the backend and refresh the signals. */
   async me(): Promise<User | null> {
-    const res = await this.api.invoke(authMeGet, {});
+    const res = await this.api.invoke(getMe, {});
     const user = res.data?.user ?? null;
     this._user.set(user);
     return user;
@@ -120,7 +120,7 @@ export class AuthService {
     const context = new HttpContext().set(WITH_CREDENTIALS, true);
     try {
       const res = await this.api.invoke(
-        authRefreshPost,
+        refreshSession,
         stored ? { body: { refreshToken: stored } } : {},
         context,
       );

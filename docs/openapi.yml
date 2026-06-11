@@ -485,6 +485,7 @@ paths:
 
   /health:
     get:
+      operationId: healthCheck
       tags: [system]
       summary: Health check
       security: []
@@ -507,6 +508,7 @@ paths:
 
   /schedule:
     get:
+      operationId: listScheduledJobs
       tags: [system]
       summary: List scheduled jobs
       responses:
@@ -517,6 +519,7 @@ paths:
 
   /auth/login:
     post:
+      operationId: login
       tags: [auth]
       summary: Login with email and password
       security: []
@@ -543,6 +546,7 @@ paths:
 
   /auth/register:
     post:
+      operationId: register
       tags: [auth]
       summary: Register a new user (auto-creates Customer on first email domain)
       security: []
@@ -560,6 +564,7 @@ paths:
 
   /auth/logout:
     post:
+      operationId: logout
       tags: [auth]
       summary: Logout — revokes session and clears cookie
       responses:
@@ -568,6 +573,7 @@ paths:
 
   /auth/me:
     get:
+      operationId: getMe
       tags: [auth]
       summary: Get current authenticated user
       responses:
@@ -590,6 +596,7 @@ paths:
 
   /auth/session:
     get:
+      operationId: getSession
       tags: [auth]
       summary: Validate current session
       security: []
@@ -601,6 +608,7 @@ paths:
 
   /auth/refresh:
     post:
+      operationId: refreshSession
       tags: [auth]
       summary: Refresh session token
       description: |
@@ -635,6 +643,7 @@ paths:
 
   /auth/sessions:
     get:
+      operationId: listSessions
       tags: [auth]
       summary: List all active sessions for current user
       responses:
@@ -652,6 +661,7 @@ paths:
                         items:
                           $ref: '#/components/schemas/Session'
     delete:
+      operationId: revokeOtherSessions
       tags: [auth]
       summary: Revoke all sessions except current
       responses:
@@ -672,6 +682,7 @@ paths:
 
   /auth/sessions/{id}:
     delete:
+      operationId: revokeSession
       tags: [auth]
       summary: Revoke a specific session
       parameters:
@@ -700,6 +711,7 @@ paths:
 
   /auth/password:
     put:
+      operationId: changePassword
       tags: [auth]
       summary: Change current user password
       requestBody:
@@ -723,12 +735,14 @@ paths:
 
   /auth/api-keys:
     get:
+      operationId: listApiKeys
       tags: [auth]
       summary: List API keys (masked)
       responses:
         '200':
           description: API key list
     post:
+      operationId: createApiKey
       tags: [auth]
       summary: Create a new API key
       requestBody:
@@ -745,6 +759,7 @@ paths:
         '201':
           description: API key created
     delete:
+      operationId: deleteApiKey
       tags: [auth]
       summary: Delete an API key
       parameters:
@@ -759,6 +774,7 @@ paths:
 
   /auth/verify-2fa:
     post:
+      operationId: verifyTwoFactor
       tags: [auth]
       summary: Verify 2FA code and complete login
       security: []
@@ -797,6 +813,7 @@ paths:
 
   /devices:
     get:
+      operationId: listDevices
       tags: [devices]
       summary: List devices (tenant-scoped)
       parameters:
@@ -827,6 +844,7 @@ paths:
         '200':
           description: Device list with pagination
     post:
+      operationId: createDevice
       tags: [devices]
       summary: Register a new device
       requestBody:
@@ -848,6 +866,7 @@ paths:
 
   /devices/register:
     post:
+      operationId: registerDevice
       tags: [devices]
       summary: Register device (alternative endpoint)
       requestBody:
@@ -862,6 +881,7 @@ paths:
 
   /devices/activate:
     post:
+      operationId: activateDevice
       tags: [devices]
       summary: Activate device using claiming token (no JWT — device-initiated)
       security: []
@@ -904,6 +924,7 @@ paths:
 
   /devices/claim:
     post:
+      operationId: claimDevice
       tags: [devices]
       summary: Claim an unclaimed device by hardware ID
       requestBody:
@@ -924,6 +945,7 @@ paths:
 
   /devices/bulk:
     post:
+      operationId: bulkCreateDevices
       tags: [devices]
       summary: Bulk pre-register unclaimed devices (SUPERADMIN)
       requestBody:
@@ -944,6 +966,7 @@ paths:
 
   /devices/tailscale-register:
     post:
+      operationId: registerTailscaleDevice
       tags: [devices]
       summary: Register device via Tailscale metadata (API key auth)
       security:
@@ -954,6 +977,7 @@ paths:
 
   /devices/{id}:
     get:
+      operationId: getDevice
       tags: [devices]
       summary: Get device details by public ID
       parameters:
@@ -972,6 +996,7 @@ paths:
         '404':
           description: Device not found
     put:
+      operationId: updateDevice
       tags: [devices]
       summary: Update device (hostname, location, SSH credentials)
       parameters:
@@ -1001,6 +1026,7 @@ paths:
         '200':
           description: Device updated
     delete:
+      operationId: deleteDevice
       tags: [devices]
       summary: Soft-delete device
       parameters:
@@ -1015,6 +1041,7 @@ paths:
 
   /devices/{id}/alerts:
     get:
+      operationId: listDeviceAlerts
       tags: [devices]
       summary: List alerts for a device
       parameters:
@@ -1035,6 +1062,7 @@ paths:
         '200':
           description: Alert list
     post:
+      operationId: createDeviceAlert
       tags: [devices]
       summary: Create a manual alert for a device
       parameters:
@@ -1066,6 +1094,7 @@ paths:
 
   /devices/{id}/alerts/{alertId}:
     get:
+      operationId: getDeviceAlert
       tags: [devices]
       summary: Get a specific alert
       parameters:
@@ -1083,6 +1112,7 @@ paths:
         '200':
           description: Alert details
     patch:
+      operationId: updateDeviceAlert
       tags: [devices]
       summary: Acknowledge or resolve an alert
       parameters:
@@ -1113,6 +1143,7 @@ paths:
         '200':
           description: Alert updated
     delete:
+      operationId: deleteDeviceAlert
       tags: [devices]
       summary: Delete an alert
       parameters:
@@ -1132,6 +1163,7 @@ paths:
 
   /devices/{id}/commands:
     get:
+      operationId: listDeviceCommands
       tags: [devices]
       summary: List recent commands for a device
       parameters:
@@ -1149,6 +1181,7 @@ paths:
         '200':
           description: Command list
     post:
+      operationId: createDeviceCommand
       tags: [devices]
       summary: Issue a command to a device
       parameters:
@@ -1180,6 +1213,7 @@ paths:
 
   /devices/{id}/commands/{commandId}:
     get:
+      operationId: getDeviceCommand
       tags: [devices]
       summary: Get command details
       parameters:
@@ -1199,6 +1233,7 @@ paths:
 
   /devices/{id}/logs:
     get:
+      operationId: getDeviceLogs
       tags: [devices]
       summary: List device logs
       parameters:
@@ -1236,6 +1271,7 @@ paths:
 
   /devices/{id}/metrics:
     get:
+      operationId: getDeviceMetrics
       tags: [devices]
       summary: Get device metrics from InfluxDB
       parameters:
@@ -1256,6 +1292,7 @@ paths:
 
   /devices/{id}/settings:
     get:
+      operationId: getDeviceSettings
       tags: [devices]
       summary: Get device settings
       parameters:
@@ -1272,6 +1309,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/DeviceSettings'
     put:
+      operationId: updateDeviceSettings
       tags: [devices]
       summary: Update device settings
       parameters:
@@ -1292,6 +1330,7 @@ paths:
 
   /devices/{id}/ssh:
     post:
+      operationId: executeDeviceSsh
       tags: [devices]
       summary: Execute SSH command on device
       parameters:
@@ -1322,6 +1361,7 @@ paths:
 
   /devices/{id}/status:
     get:
+      operationId: getDeviceStatus
       tags: [devices]
       summary: Get device connectivity status and optional metrics snapshot
       parameters:
@@ -1341,6 +1381,7 @@ paths:
 
   /devices/{id}/rotate-key:
     post:
+      operationId: rotateDeviceKey
       tags: [devices]
       summary: Rotate device API key (ADMIN)
       parameters:
@@ -1369,6 +1410,7 @@ paths:
 
   /monitoring/alerts:
     get:
+      operationId: listAlerts
       tags: [monitoring]
       summary: List alerts (tenant-wide)
       parameters:
@@ -1410,6 +1452,7 @@ paths:
         '200':
           description: Alert list
     post:
+      operationId: createAlert
       tags: [monitoring]
       summary: Create a manual alert
       requestBody:
@@ -1435,6 +1478,7 @@ paths:
 
   /monitoring/alerts/trend:
     get:
+      operationId: getAlertsTrend
       tags: [monitoring]
       summary: Get daily alert counts (for trend chart)
       parameters:
@@ -1470,6 +1514,7 @@ paths:
 
   /monitoring/alerts/batch:
     put:
+      operationId: batchUpdateAlerts
       tags: [monitoring]
       summary: Batch acknowledge or resolve alerts
       requestBody:
@@ -1505,6 +1550,7 @@ paths:
 
   /monitoring/alerts/{id}:
     get:
+      operationId: getAlert
       tags: [monitoring]
       summary: Get alert details with threshold info
       parameters:
@@ -1517,6 +1563,7 @@ paths:
         '200':
           description: Alert details
     put:
+      operationId: updateAlert
       tags: [monitoring]
       summary: Acknowledge or resolve an alert
       parameters:
@@ -1542,6 +1589,7 @@ paths:
         '200':
           description: Alert updated
     delete:
+      operationId: deleteAlert
       tags: [monitoring]
       summary: Delete alert (ADMIN)
       parameters:
@@ -1556,6 +1604,7 @@ paths:
 
   /monitoring/metrics:
     get:
+      operationId: getMonitoringMetrics
       tags: [monitoring]
       summary: Get system-wide metrics
       parameters:
@@ -1570,6 +1619,7 @@ paths:
 
   /monitoring/reports:
     get:
+      operationId: getMonitoringReports
       tags: [monitoring]
       summary: Generate a monitoring report
       parameters:
@@ -1599,6 +1649,7 @@ paths:
 
   /monitoring/thresholds:
     get:
+      operationId: listThresholds
       tags: [monitoring]
       summary: List thresholds
       parameters:
@@ -1610,6 +1661,7 @@ paths:
         '200':
           description: Threshold list
     post:
+      operationId: createThreshold
       tags: [monitoring]
       summary: Create a threshold
       requestBody:
@@ -1651,6 +1703,7 @@ paths:
 
   /monitoring/thresholds/{id}:
     put:
+      operationId: updateThreshold
       tags: [monitoring]
       summary: Update a threshold (ADMIN)
       parameters:
@@ -1694,6 +1747,7 @@ paths:
         '200':
           description: Threshold updated
     delete:
+      operationId: deleteThreshold
       tags: [monitoring]
       summary: Soft-delete threshold (ADMIN)
       parameters:
@@ -1710,6 +1764,7 @@ paths:
 
   /admin/stats:
     get:
+      operationId: getAdminStats
       tags: [admin]
       summary: Dashboard summary counts (ADMIN+)
       responses:
@@ -1731,6 +1786,7 @@ paths:
 
   /admin/devices:
     get:
+      operationId: listAdminDevices
       tags: [admin]
       summary: List all devices across tenants, filterable by status (SUPERADMIN)
       parameters:
@@ -1750,6 +1806,7 @@ paths:
         '200':
           description: Device list
     post:
+      operationId: createAdminDevice
       tags: [admin]
       summary: Pre-register unclaimed devices in bulk (SUPERADMIN)
       requestBody:
@@ -1770,6 +1827,7 @@ paths:
 
   /admin/users:
     get:
+      operationId: listAdminUsers
       tags: [admin]
       summary: List users with optional status filter (ADMIN+)
       parameters:
@@ -1783,6 +1841,7 @@ paths:
 
   /admin/users/{id}/approve:
     post:
+      operationId: approveAdminUser
       tags: [admin]
       summary: Approve or reject a pending user (ADMIN+)
       parameters:
@@ -1808,6 +1867,7 @@ paths:
 
   /admin/logs:
     get:
+      operationId: getAdminLogs
       tags: [admin]
       summary: View device logs across tenant (ADMIN+)
       parameters:
@@ -1837,6 +1897,7 @@ paths:
 
   /admin/system:
     get:
+      operationId: getAdminSystem
       tags: [admin]
       summary: Get system health metrics (ADMIN+)
       responses:
@@ -1845,6 +1906,7 @@ paths:
 
   /admin/customers:
     get:
+      operationId: listAdminCustomers
       tags: [admin]
       summary: List all customers / tenants (SUPERADMIN)
       parameters:
@@ -1876,6 +1938,7 @@ paths:
 
   /users:
     get:
+      operationId: listUsers
       tags: [users]
       summary: List users (tenant-scoped)
       parameters:
@@ -1903,6 +1966,7 @@ paths:
         '200':
           description: User list
     post:
+      operationId: createUser
       tags: [users]
       summary: Create user (SUPERADMIN)
       requestBody:
@@ -1931,6 +1995,7 @@ paths:
 
   /users/current:
     get:
+      operationId: getCurrentUser
       tags: [users]
       summary: Get current user profile and permissions
       responses:
@@ -1939,6 +2004,7 @@ paths:
 
   /users/{id}:
     get:
+      operationId: getUser
       tags: [users]
       summary: Get user by ID
       parameters:
@@ -1951,6 +2017,7 @@ paths:
         '200':
           description: User details
     put:
+      operationId: updateUser
       tags: [users]
       summary: Update user (email, role, status)
       parameters:
@@ -1976,6 +2043,7 @@ paths:
         '200':
           description: User updated
     delete:
+      operationId: deleteUser
       tags: [users]
       summary: Delete user (SUPERADMIN, cannot self-delete)
       parameters:
@@ -1990,6 +2058,7 @@ paths:
 
   /users/{id}/profile:
     get:
+      operationId: getUserProfile
       tags: [users]
       summary: Get user profile
       parameters:
@@ -2002,6 +2071,7 @@ paths:
         '200':
           description: User profile
     put:
+      operationId: updateUserProfile
       tags: [users]
       summary: Update user profile (username, displayName, preferences)
       parameters:
@@ -2027,6 +2097,7 @@ paths:
 
   /users/{id}/notification-preferences:
     get:
+      operationId: getUserNotificationPreferences
       tags: [users]
       summary: Get notification preferences
       parameters:
@@ -2039,6 +2110,7 @@ paths:
         '200':
           description: Notification preferences
     put:
+      operationId: updateUserNotificationPreferences
       tags: [users]
       summary: Update notification preferences
       parameters:
@@ -2072,6 +2144,7 @@ paths:
 
   /settings:
     get:
+      operationId: getSettings
       tags: [settings]
       summary: Get all user preferences grouped by category
       responses:
@@ -2080,12 +2153,14 @@ paths:
 
   /settings/profile:
     get:
+      operationId: getProfileSettings
       tags: [settings]
       summary: Get profile settings
       responses:
         '200':
           description: Profile preferences + personal info
     put:
+      operationId: updateProfileSettings
       tags: [settings]
       summary: Save profile settings
       requestBody:
@@ -2100,12 +2175,14 @@ paths:
 
   /settings/security:
     get:
+      operationId: getSecuritySettings
       tags: [settings]
       summary: Get security settings (2FA, session timeout, login notifications)
       responses:
         '200':
           description: Security preferences
     put:
+      operationId: updateSecuritySettings
       tags: [settings]
       summary: Save security settings
       requestBody:
@@ -2120,12 +2197,14 @@ paths:
 
   /settings/system:
     get:
+      operationId: getSystemSettings
       tags: [settings]
       summary: Get system settings (theme, layout, items per page)
       responses:
         '200':
           description: System preferences (+ admin settings if ADMIN+)
     put:
+      operationId: updateSystemSettings
       tags: [settings]
       summary: Save system settings
       requestBody:
@@ -2140,12 +2219,14 @@ paths:
 
   /settings/notifications:
     get:
+      operationId: getNotificationSettings
       tags: [settings]
       summary: Get notification settings
       responses:
         '200':
           description: Notification preferences
     put:
+      operationId: updateNotificationSettings
       tags: [settings]
       summary: Save notification settings
       requestBody:
@@ -2162,6 +2243,7 @@ paths:
 
   /notifications:
     get:
+      operationId: listNotifications
       tags: [notifications]
       summary: List notification history
       parameters:
@@ -2191,6 +2273,7 @@ paths:
 
   /notifications/{id}:
     get:
+      operationId: getNotification
       tags: [notifications]
       summary: Get a notification record
       parameters:
@@ -2203,6 +2286,7 @@ paths:
         '200':
           description: Notification record
     delete:
+      operationId: deleteNotification
       tags: [notifications]
       summary: Cancel a PENDING notification
       parameters:
@@ -2217,6 +2301,7 @@ paths:
 
   /notifications/{id}/retry:
     post:
+      operationId: retryNotification
       tags: [notifications]
       summary: Retry a FAILED or DEAD notification (ADMIN)
       parameters:
@@ -2233,6 +2318,7 @@ paths:
 
   /iot/heartbeat:
     post:
+      operationId: deviceHeartbeat
       tags: [iot]
       summary: Device heartbeat — CPU, memory, disk, temperature
       security:
@@ -2264,6 +2350,7 @@ paths:
 
   /iot/register:
     post:
+      operationId: iotRegisterDevice
       tags: [iot]
       summary: IoT device self-registration
       security:
@@ -2280,6 +2367,7 @@ paths:
 
   /webhook/temperature:
     post:
+      operationId: webhookTemperature
       tags: [iot]
       summary: ESP32/ESP8266 sensor temperature webhook
       security:
@@ -2296,6 +2384,7 @@ paths:
 
   /iot/temperature:
     post:
+      operationId: iotTemperature
       tags: [iot]
       summary: ESP32/ESP8266 temperature webhook (alias for /webhook/temperature)
       security:
