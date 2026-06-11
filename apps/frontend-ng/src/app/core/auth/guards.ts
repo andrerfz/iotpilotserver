@@ -1,0 +1,42 @@
+import { inject } from '@angular/core';
+import { CanActivateFn, Router } from '@angular/router';
+import { AuthService } from './auth.service';
+import { hasRole, Role } from './roles';
+
+/**
+ * Route guard: requires an authenticated session. Unauthenticated visitors are
+ * redirected to /login with the attempted URL as `returnUrl` (parity with the
+ * legacy middleware's no-token redirect; the legacy used `redirect`, the new app
+ * standardizes on `returnUrl`).
+ */
+export const authGuard: CanActivateFn = (_route, state) => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+
+  if (auth.isAuthenticated()) {
+    return true;
+  }
+  return router.createUrlTree(['/login'], { queryParams: { returnUrl: state.url } });
+};
+
+/**
+ * Route guard factory: requires `minRole` or higher (USER < ADMIN < SUPERADMIN).
+ *
+ * Parity with the legacy middleware: an unauthenticated visitor goes to /login;
+ * an authenticated user whose role is too low is sent to `/` (home), not /login
+ * — matching the middleware's admin-route behavior.
+ */
+export function roleGuard(minRole: Role): CanActivateFn {
+  return (_route, state) => {
+    const auth = inject(AuthService);
+    const router = inject(Router);
+
+    if (!auth.isAuthenticated()) {
+      return router.createUrlTree(['/login'], { queryParams: { returnUrl: state.url } });
+    }
+    if (!hasRole(auth.role(), minRole)) {
+      return router.createUrlTree(['/']);
+    }
+    return true;
+  };
+}
