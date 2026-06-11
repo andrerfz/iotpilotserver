@@ -16,3 +16,7 @@ allowBuilds:
   prisma: true
   ssh2: true
   unrs-resolver: true
+
+minimumReleaseAgeExclude:
+  - '@ionic/angular@8.8.10'
+  - '@ionic/core@8.8.10'

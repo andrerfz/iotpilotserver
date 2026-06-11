@@ -85,7 +85,7 @@ export class RegisterUserHandler implements CommandHandler<RegisterUserCommand, 
       user.getId(),
       user.getEmail(),
       user.getRole(),
-      user.getCustomerId()
+      user.getCustomerId() ?? null
     ));
 
     this.logger.info('User registered successfully', {

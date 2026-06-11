@@ -627,14 +627,14 @@ adminRouter.get('/customers', requireAuth('SUPERADMIN'), async (req: Authenticat
     }
 
     const [customers, total] = await Promise.all([
-      prisma.getClient().customer.findMany({
+      prisma.customer.findMany({
         where,
-        select: { id: true, name: true, status: true, contactEmail: true, createdAt: true, updatedAt: true },
+        select: { id: true, name: true, status: true, createdAt: true, updatedAt: true },
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,
         take: limit,
       }),
-      prisma.getClient().customer.count({ where }),
+      prisma.customer.count({ where }),
     ]);
 
     send.ok(res, customers, { pagination: { page, limit, total } });

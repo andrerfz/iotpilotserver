@@ -3,17 +3,20 @@ import {TenantContext} from '@iotpilot/core/shared/domain/tenant-context';
 
 export interface SensorReading {
     temperature: number;
-    cycle: number; // RTC wake cycle number (audit trail)
+    cycle?: number; // RTC wake cycle number (audit trail)
+    offsetSeconds?: number; // seconds buffered offline (backdates timestamp)
 }
 
 export interface RecordSensorReadingData {
     deviceId: string;
-    readings: SensorReading[];  // Batch of up to 6 readings
+    readings?: SensorReading[];  // Batch of up to 6 readings
     batteryLevel?: number;      // 0-100% from ADC
     rssi?: number;              // WiFi signal strength
     firmwareVersion?: string;
     alertPending?: boolean;     // Was threshold exceeded in this batch?
     alertTemp?: number;         // Temperature that triggered alert
+    batteryVoltage?: number;
+    batteryLow?: boolean;
 }
 
 /**

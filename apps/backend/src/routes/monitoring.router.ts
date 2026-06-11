@@ -1316,7 +1316,7 @@ monitoringRouter.get('/alerts/trend', requireAuth(), async (req: AuthenticatedRe
 // ---------------------------------------------------------------------------
 const batchAlertSchema = v.object({
     action: v.enum(['acknowledge', 'resolve'] as const),
-    alertIds: v.array(v.string({ min: 1 }), { min: 1, max: 100 }),
+    alertIds: v.array(v.string({ min: 1 })),
     resolutionNote: v.optional(v.string({ max: 2000 })),
 });
 

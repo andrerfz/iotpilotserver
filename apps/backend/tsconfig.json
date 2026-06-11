@@ -2,6 +2,8 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "noEmit": true,
+    "declaration": false,
+    "declarationMap": false,
     "module": "CommonJS",
     "baseUrl": ".",
     "paths": {
