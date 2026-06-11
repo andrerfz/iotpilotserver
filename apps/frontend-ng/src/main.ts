@@ -18,6 +18,8 @@ import { provideApi } from './app/core/api/api.config';
 import { authInterceptor } from './app/core/auth/auth.interceptor';
 import { AuthService } from './app/core/auth/auth.service';
 import { provideTokenStorage } from './app/core/auth/token.storage';
+import { provideQueryHandler } from './app/core/cqrs/query-bus';
+import { GetHealthHandler } from './app/core/cqrs/example/get-health.handler';
 
 bootstrapApplication(AppComponent, {
   providers: [
@@ -27,6 +29,8 @@ bootstrapApplication(AppComponent, {
     provideHttpClient(withInterceptors([authInterceptor])),
     provideApi(),
     provideTokenStorage(),
+    // CQRS: register query/command handlers via DI multi-providers.
+    provideQueryHandler(GetHealthHandler),
     // Restore any existing session before the first route renders.
     provideAppInitializer(() => inject(AuthService).restoreSession()),
   ],
