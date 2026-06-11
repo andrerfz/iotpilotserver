@@ -14,17 +14,57 @@ the choice here when resolved.
 
 ---
 
-## Q2 — Token strategy: web vs mobile
+## Q2 _resolved_ — Token strategy: web vs mobile
 
 The legacy Next.js app authenticates via cookie checked in `middleware.ts`. A Capacitor
 app cannot rely on httpOnly cookies across the WebView reliably, and the API already
 supports bearer JWT.
 
-**Proposal:** unify on bearer JWT for both targets. Access token in memory, refresh token
-in platform storage (web: `localStorage` or cookie — decide with security review; mobile:
-Capacitor SecureStorage). Backend changes should not be needed (`/auth/refresh` exists).
-Validate the refresh-token transport with the backend team before T2.
+**Backend reality (verified against `apps/backend/src/routes/auth.router.ts` +
+`middleware/auth.middleware.ts`):**
 
+- There is **one** token, not an OAuth access/refresh pair. `/auth/login` returns
+  `{ user, token }`; `/auth/refresh` takes the *current* token and **rotates** it to a
+  new one. The "refresh token" and "access token" are the same value.
+- The token is a **stateful JWT**: `jwt.verify(token, JWT_SECRET)` **and** a matching
+  `session` row (`expiresAt > now`, `deletedAt: null`). It is therefore **server-side
+  revocable** — logout / session-revoke genuinely invalidate it, not just client discard.
+- `extractToken()` accepts the token via **httpOnly cookie (`auth-token`) first, then
+  `Authorization: Bearer`** on every endpoint. Bearer transport already works end-to-end.
+- Lifetime: 24h (`remember` → 7d), enforced by `session.expiresAt`.
+
+**Decision:** unify on the single **session token** for both targets; canonical transport
+is `Authorization: Bearer`. Persistence differs by platform (the `TokenStorage`
+abstraction in T2 is exactly this seam):
+
+| | Web | Mobile (Capacitor) |
+|---|---|---|
+| Token at rest | **in memory only** (never `localStorage`) | Capacitor **SecureStorage** |
+| Persistence across reload/launch | the httpOnly `auth-token` cookie the backend already sets | SecureStorage |
+| Bootstrap restore | `POST /auth/refresh` with `withCredentials: true` → cookie carries token → new token into memory | read SecureStorage, then `me()` / `refresh()` |
+| Normal API calls | `Authorization: Bearer` from memory, `withCredentials: false` | `Authorization: Bearer` from SecureStorage |
+
+The cookie is a **web-only persistence backstop**; bearer is the one canonical transport,
+so web and mobile share the interceptor and generated-client code path. Rationale for
+in-memory over `localStorage`: an XSS payload cannot exfiltrate a token it can't read,
+and the server-side revocability + 24h expiry bound the blast radius if a token does leak.
+
+**Backend changes required: none.**
+
+**Security requirements (carry into T2/T4 — must be satisfied before the cookie path ships):**
+
+- The cookie-carried `/auth/refresh` (the only `withCredentials: true` call on web) is a
+  **CSRF-sensitive surface**. The cookie is currently `sameSite: 'lax'`; that blocks
+  cross-site POSTs in modern browsers but is **not sufficient on its own**. Add explicit
+  CSRF protection on this path — preferred: a double-submit CSRF token (or `sameSite:
+  'strict'` scoped to the refresh cookie), validated server-side. Treat any backend tweak
+  needed for this as a fe-core → backend follow-up, **not** an excuse to fall back to
+  `localStorage`.
+- All other API calls send `withCredentials: false`, so they carry no ambient cookie
+  authority and are not CSRF-exposed (a stolen-token replay needs the bearer header, which
+  CSRF cannot forge).
+
+**Resolved:** 2026-06-11
 **Applies to:** T2, T3, T4, fe-mobile
 
 ---
