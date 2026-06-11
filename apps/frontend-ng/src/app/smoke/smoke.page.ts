@@ -1,18 +1,13 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { Component, computed, inject, OnInit } from '@angular/core';
 import {
   IonContent,
   IonHeader,
   IonTitle,
   IonToolbar,
 } from '@ionic/angular/standalone';
-
-interface HealthResponse {
-  status: string;
-  timestamp: string;
-  environment: string;
-  version: string;
-}
+import { GetHealthQuery, HealthResult } from '../core/cqrs/example/get-health.query';
+import { QueryBus } from '../core/cqrs/query-bus';
+import { runQuery } from '../core/cqrs/run-query';
 
 @Component({
   selector: 'app-smoke',
@@ -21,16 +16,14 @@ interface HealthResponse {
   imports: [IonContent, IonHeader, IonTitle, IonToolbar],
 })
 export class SmokePage implements OnInit {
-  private readonly http = inject(HttpClient);
+  // Touch the bus so the example handler is wired (also makes the dependency explicit).
+  private readonly bus = inject(QueryBus);
+  private readonly query = runQuery<HealthResult>();
 
-  health = signal<HealthResponse | null>(null);
-  error = signal<string | null>(null);
+  readonly health = this.query.data;
+  readonly error = computed(() => this.query.error()?.message ?? null);
 
   ngOnInit(): void {
-    this.http.get<HealthResponse>('/api/health').subscribe({
-      next: (data) => this.health.set(data),
-      error: (err: { message?: string }) =>
-        this.error.set(err.message ?? 'Failed to reach backend'),
-    });
+    void this.query.run(new GetHealthQuery());
   }
 }

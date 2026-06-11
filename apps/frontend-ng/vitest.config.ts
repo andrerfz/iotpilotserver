@@ -13,5 +13,12 @@ export default defineConfig(() => ({
     include: ['src/**/*.spec.ts'],
     reporters: ['default'],
     testTimeout: 15000,
+    // @ionic/core ships ESM inside a CommonJS package; inline it so Vitest
+    // transforms it (lets specs import Ionic providers like ToastController).
+    server: {
+      deps: {
+        inline: [/@ionic\//],
+      },
+    },
   },
 }));
