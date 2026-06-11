@@ -18,14 +18,14 @@
 
 /* ---------- DARK (default, NOC) ---------- */
 :root, [data-theme="dark"] {
-  --bg:           hsl(222 47% 7%);
-  --bg-grid:      hsl(217 40% 14% / 0.45);
-  --elevated:     hsl(222 38% 10%);
-  --surface:      hsl(222 33% 12%);
-  --surface-2:    hsl(222 28% 16%);
-  --surface-3:    hsl(222 26% 20%);
-  --border:       hsl(217 28% 20%);
-  --border-strong:hsl(217 26% 30%);
+  --bg:           hsl(226 18% 8%);
+  --bg-grid:      hsl(222 15% 14% / 0.45);
+  --elevated:     hsl(226 16% 11%);
+  --surface:      hsl(225 15% 13%);
+  --surface-2:    hsl(224 14% 17%);
+  --surface-3:    hsl(222 13% 22%);
+  --border:       hsl(222 13% 21%);
+  --border-strong:hsl(220 12% 30%);
   --text:         hsl(210 40% 96%);
   --text-muted:   hsl(215 18% 62%);
   --text-dim:     hsl(215 16% 44%);
@@ -104,27 +104,11 @@ body {
   background: var(--bg);
 }
 
-/* --- Dark background treatments (compare live) --- */
-[data-theme="dark"][data-bg="gradient"] .app {
-  background: linear-gradient(176deg, hsl(221 38% 11%) 0%, hsl(223 45% 7.5%) 52%, hsl(225 50% 5.5%) 100%);
-}
-[data-theme="dark"][data-bg="glow"] .app {
+/* Dark: warm graphite + top-center ambient light */
+[data-theme="dark"] .app {
   background:
-    radial-gradient(1100px 540px at 20% -10%, hsl(217 72% 24% / 0.34), transparent 60%),
-    radial-gradient(860px 580px at 102% -4%, hsl(199 70% 26% / 0.14), transparent 56%),
-    hsl(223 44% 7%);
-}
-[data-theme="dark"][data-bg="warm"] .app {
-  background:
-    radial-gradient(1000px 560px at 50% -12%, hsl(28 40% 16% / 0.20), transparent 62%),
-    linear-gradient(180deg, hsl(226 15% 11.5%) 0%, hsl(228 18% 7.5%) 100%);
-}
-/* warm also relaxes the cold cards a touch */
-[data-theme="dark"][data-bg="warm"] {
-  --surface: hsl(225 16% 13%);
-  --surface-2: hsl(225 14% 17%);
-  --elevated: hsl(226 16% 10.5%);
-  --border: hsl(222 13% 21%);
+    radial-gradient(ellipse 75% 36% at 50% -2%, hsl(217 65% 22% / 0.22), transparent 100%),
+    linear-gradient(180deg, hsl(226 22% 9.5%) 0%, hsl(226 18% 7.5%) 100%);
 }
 
 /* ---- Left rail ---- */
@@ -209,6 +193,7 @@ body {
   border-bottom: 1px solid var(--border);
   background: color-mix(in srgb, var(--elevated) 86%, transparent);
   backdrop-filter: blur(8px);
+  position: relative; z-index: 20;
 }
 .crumbs { display: flex; align-items: center; gap: 8px; font-size: 13px; min-width: 0; }
 .crumbs__seg { color: var(--text-muted); white-space: nowrap; }
@@ -365,9 +350,9 @@ body {
    ============================================================ */
 .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 18px; }
 .metric {
+  display: flex; flex-direction: column;
   background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--r-lg); padding: 15px 16px 18px; position: relative; overflow: hidden;
-  min-height: 118px;
+  border-radius: var(--r-lg); padding: 14px 16px 0; overflow: hidden; min-height: 118px;
 }
 .metric__top { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
 .metric__icon {
@@ -377,12 +362,12 @@ body {
 .metric__label { font-family: var(--font-mono); font-size: var(--fs-label); letter-spacing: var(--ls-label); text-transform: uppercase; color: var(--text-dim); }
 .metric__val { font-size: 27px; font-weight: 600; letter-spacing: -0.02em; line-height: 1; display: flex; align-items: baseline; gap: 5px; }
 .metric__unit { font-size: 13px; font-weight: 500; color: var(--text-muted); font-family: var(--font-mono); }
-.metric__delta { display: inline-flex; align-items: center; gap: 3px; font-family: var(--font-mono); font-size: 11.5px; margin-top: 8px; position: relative; z-index: 1; }
+.metric__delta { display: inline-flex; align-items: center; gap: 3px; font-family: var(--font-mono); font-size: 11.5px; margin-top: 8px; padding-bottom: 10px; }
 .metric__delta svg { width: 12px; height: 12px; }
 .delta--up { color: var(--success); }
 .delta--down { color: var(--danger); }
 .delta--flat { color: var(--text-dim); }
-.metric__spark { position: absolute; right: 0; bottom: 0; left: 0; height: 32px; opacity: .55; pointer-events: none; }
+.metric__spark { width: 100%; height: 30px; opacity: .55; pointer-events: none; margin-top: auto; display: block; }
 
 /* ============================================================
    Data table
@@ -478,7 +463,12 @@ body {
   transform: translateY(100%); transition: transform .28s cubic-bezier(.32,.72,.31,1);
   pointer-events: none;
 }
-.sheet--open { transform: translateY(0); pointer-events: auto; }
+.sheet:not(.sheet--open) .sheet__panel {
+  visibility: hidden;
+}
+.sheet--open .sheet__panel {
+  visibility: visible;
+}
 .sheet__panel {
   width: min(560px, 100%); max-height: 82vh; display: flex; flex-direction: column;
   background: var(--elevated);
@@ -677,7 +667,7 @@ body {
    ============================================================ */
 .usermenu { position: relative; }
 .menu {
-  position: absolute; top: calc(100% + 8px); right: 0; z-index: 65;
+  position: absolute; top: calc(100% + 8px); right: 0; z-index: 200;
   width: 248px; background: var(--elevated); border: 1px solid var(--border-strong);
   border-radius: var(--r-lg); box-shadow: var(--shadow-pop); overflow: hidden;
   animation: menuin .14s ease;
@@ -697,6 +687,9 @@ body {
 .menu__item--danger { color: var(--danger); }
 .menu__item--danger svg { color: var(--danger); }
 .menu__item .mono { margin-left: auto; font-size: 11px; color: var(--text-dim); }
+
+/* upward variant for rail-bottom popovers */
+.menu--up { top: auto; bottom: calc(100% + 8px); }
 
 /* form stacks inside sheets */
 .formgrid { display: flex; flex-direction: column; gap: 14px; }

@@ -113,6 +113,88 @@ function DashboardView({ onOpenDevice }) {
 }
 
 /* ============================================================
+   1b · DEVICES LIST (dedicated fleet page)
+   ============================================================ */
+function DevicesListView({ onOpenDevice }) {
+  const [q, setQ] = useState('');
+  const [statusFilter, setStatusFilter] = useState([]);
+  const [regOpen, setRegOpen] = useState(false);
+  const [extra, setExtra] = useState([]);
+  const toast = useToast();
+
+  const registerDevice = (d) => {
+    const id = 'dev_' + Math.random().toString(16).slice(2, 8);
+    setExtra(x => [{ id, name: d.host, type: d.type, hw: d.type === 'Gateway' ? 'Heltec LoRa32 V3' : 'ESP32-C3', status: 'PENDING_SETUP', ip: '—', loc: d.loc || '—', cpu: 0, mem: 0, temp: 0, disk: 0, up: '—', fw: '2.4.1', last: 'just now' }, ...x]);
+    toast('Device registered · ' + d.host);
+  };
+
+  let rows = [...extra, ...DEV];
+  if (q) rows = rows.filter(d => (d.name + d.id + d.loc + d.hw).toLowerCase().includes(q.toLowerCase()));
+  if (statusFilter.length) rows = rows.filter(d => statusFilter.includes(d.status));
+
+  const online = rows.filter(d => d.status === 'ONLINE').length;
+  const errors = rows.filter(d => d.status === 'ERROR' || d.status === 'OFFLINE').length;
+  const pending = rows.filter(d => d.status === 'PENDING_SETUP' || d.status === 'MAINTENANCE').length;
+
+  const cols = [
+    { key: 'name', label: 'Device', sortable: true, render: r => (
+      <div className="cell"><StatusDot status={r.status} live />
+        <div><div className="td-strong">{r.name}</div><div className="td-mono dim" style={{ fontSize: 11 }}>{r.id} · {r.hw}</div></div>
+      </div>) },
+    { key: 'type', label: 'Type', render: r => <span className="badge badge--neutral">{r.type}</span> },
+    { key: 'status', label: 'Status', sortable: true, render: r => <StatusBadge status={r.status} /> },
+    { key: 'loc', label: 'Location', render: r => <span className="muted"><Icon name="mapPin" size={13} style={{ verticalAlign: -2, marginRight: 5, opacity: .6 }} />{r.loc}</span> },
+    { key: 'ip', label: 'IP', render: r => <span className="td-mono dim">{r.ip}</span> },
+    { key: 'cpu', label: 'CPU', sortable: true, render: r => <span className="td-mono">{r.cpu > 0 ? r.cpu + '%' : '—'}</span> },
+    { key: 'temp', label: 'Temp', sortable: true, render: r => <span className="td-mono">{r.temp > 0 ? r.temp + '°C' : '—'}</span> },
+    { key: 'fw', label: 'Firmware', render: r => <span className="td-mono dim">{r.fw}</span> },
+    { key: 'last', label: 'Last seen', render: r => <span className="td-mono dim">{r.last}</span> },
+  ];
+
+  return (
+    <div className="page page--wide">
+      <div className="pagehead">
+        <div><div className="pagehead__title">Devices</div><div className="pagehead__sub">{rows.length} devices registered · 3 sites</div></div>
+        <div className="pagehead__actions">
+          <Button variant="ghost" icon="download">Export</Button>
+          <Button variant="primary" icon="plus" onClick={() => setRegOpen(true)}>Register device</Button>
+        </div>
+      </div>
+      <div className="metrics" style={{ gridTemplateColumns: 'repeat(4,1fr)' }}>
+        <MetricCard icon="wifi" iconColor="var(--success)" label="Online" value={online} delta={`of ${rows.length} total`} deltaDir="flat" />
+        <MetricCard icon="wifiOff" iconColor="var(--danger)" label="Offline / Error" value={errors} delta={errors > 0 ? 'attention needed' : 'all clear'} deltaDir={errors > 0 ? 'down' : 'flat'} />
+        <MetricCard icon="clock" iconColor="var(--warning)" label="Maintenance / Pending" value={pending} />
+        <MetricCard icon="zap" iconColor="var(--primary)" label="Firmware current" value={DEV.filter(d => d.fw === '2.4.1').length} delta={`of ${rows.length}`} deltaDir="flat" />
+      </div>
+      <div className="filterbar">
+        <div className="field" style={{ width: 280 }}><Icon name="search" size={15} /><input placeholder="Search name, ID, location, hardware…" value={q} onChange={e => setQ(e.target.value)} /></div>
+        <MultiSelectPicker value={statusFilter} onChange={setStatusFilter} label="Status" icon="filter"
+          title="Filter by status" sub="Show only these device states"
+          options={[
+            { value: 'ONLINE', label: 'Online', dot: 'online' },
+            { value: 'OFFLINE', label: 'Offline', dot: 'offline' },
+            { value: 'MAINTENANCE', label: 'Maintenance', dot: 'maintenance' },
+            { value: 'ERROR', label: 'Error', dot: 'error' },
+            { value: 'PENDING_SETUP', label: 'Pending setup', dot: 'pending_setup' },
+          ]} />
+        <div className="filterbar__spacer" />
+        <span className="label">{rows.length} devices</span>
+      </div>
+      <DataTable columns={cols} rows={rows} pageSize={8} selectable onRowClick={r => onOpenDevice(r.id)}
+        kitName="DataTable · all devices"
+        renderActions={(sel, clear) => (
+          <><div style={{ flex: 1 }} />
+            <Button size="sm" variant="ghost" icon="zap" onClick={() => { toast(`Firmware update queued for ${sel.length} devices`); clear(); }}>Update firmware</Button>
+            <Button size="sm" variant="ghost" icon="refresh" onClick={() => { toast(`Reboot queued for ${sel.length} devices`); clear(); }}>Reboot</Button>
+            <Button size="sm" variant="danger" onClick={() => { toast(`${sel.length} devices removed`); clear(); }}>Remove</Button>
+          </>
+        )} />
+      <RegisterDeviceSheet open={regOpen} onClose={() => setRegOpen(false)} onRegister={registerDevice} />
+    </div>
+  );
+}
+
+/* ============================================================
    2 · DEVICE DETAIL
    ============================================================ */
 function DeviceDetailView({ deviceId, onBack }) {
@@ -405,4 +487,4 @@ function LogsView() {
   );
 }
 
-Object.assign(window, { DashboardView, DeviceDetailView, MonitoringView, AdminView, LogsView });
+Object.assign(window, { DashboardView, DevicesListView, DeviceDetailView, MonitoringView, AdminView, LogsView });

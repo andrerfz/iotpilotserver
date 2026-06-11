@@ -27,12 +27,10 @@ function App() {
   const [route, setRoute] = useState('dashboard');
   const [deviceId, setDeviceId] = useState('dev_a1f93c');
   const [theme, setTheme] = useState('dark');
-  const [bg, setBg] = useState(() => localStorage.getItem('iotpilot.bg') || 'glow');
   const [xray, setXray] = useState(false);
   const [palette, setPalette] = useState(false);
 
   useEffect(() => { document.documentElement.setAttribute('data-theme', theme); }, [theme]);
-  useEffect(() => { document.documentElement.setAttribute('data-bg', bg); localStorage.setItem('iotpilot.bg', bg); }, [bg]);
   useEffect(() => { document.body.classList.toggle('xray', xray); }, [xray]);
   useEffect(() => {
     const h = e => {
@@ -51,8 +49,8 @@ function App() {
 
   let view;
   if (route === 'dashboard') view = <DashboardView onOpenDevice={openDevice} />;
-  else if (route === 'device') view = <DashboardView onOpenDevice={openDevice} />;
-  else if (route === 'device-detail') view = <DeviceDetailView deviceId={deviceId} onBack={() => setRoute('dashboard')} />;
+  else if (route === 'device') view = <DevicesListView onOpenDevice={openDevice} />;
+  else if (route === 'device-detail') view = <DeviceDetailView deviceId={deviceId} onBack={() => setRoute('device')} />;
   else if (route === 'monitoring') view = <MonitoringView onOpenDevice={openDevice} />;
   else if (route === 'admin') view = <AdminView />;
   else if (route === 'logs') view = <LogsView />;
@@ -84,14 +82,7 @@ function App() {
           ))}
         </div>
         <div className="rail__foot">
-          <div className="tenant">
-            <div className="tenant__logo">AC</div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div className="tenant__name">Acme IoT</div>
-              <div className="tenant__meta">tenant · eu-west</div>
-            </div>
-            <Icon name="chevDown" size={15} style={{ color: 'var(--text-dim)' }} />
-          </div>
+          <TenantMenu onNav={setRoute} />
         </div>
       </aside>
 
@@ -112,7 +103,6 @@ function App() {
           <button className={`iconbtn ${xray ? 'iconbtn--on' : ''}`} onClick={() => setXray(x => !x)} title="Toggle component X-ray">
             <Icon name="frame" size={17} />
           </button>
-          <BgMenu value={bg} onChange={setBg} disabled={theme === 'light'} />
           <button className="iconbtn" onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')} title="Toggle theme">
             <Icon name={theme === 'dark' ? 'sun' : 'moon'} size={17} />
           </button>

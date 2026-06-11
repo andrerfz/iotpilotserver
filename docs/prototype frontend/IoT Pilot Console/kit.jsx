@@ -780,11 +780,62 @@ function BgMenu({ value, onChange, disabled }) {
   );
 }
 
+/* ---------------- TenantMenu (org/tenant switcher, bottom rail) ---------------- */
+const TENANT_INFO = {
+  name: 'Acme IoT', plan: 'Professional', region: 'eu-west-1', devices: 10, users: 7,
+};
+function TenantMenu({ onNav }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    const h = e => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', h);
+    return () => document.removeEventListener('mousedown', h);
+  }, []);
+  return (
+    <div ref={ref} style={{ position: 'relative' }} data-kit="TenantMenu">
+      <div className="tenant" style={{ cursor: 'pointer' }} onClick={() => setOpen(o => !o)}>
+        <div className="tenant__logo">AC</div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="tenant__name">{TENANT_INFO.name}</div>
+          <div className="tenant__meta">{TENANT_INFO.plan} · {TENANT_INFO.region}</div>
+        </div>
+        <Icon name="chevDown" size={15} style={{ color: 'var(--text-dim)', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .15s' }} />
+      </div>
+      {open && (
+        <div className="menu menu--up" style={{ width: '100%', left: 0, right: 0 }}>
+          <div className="menu__sec">
+            <div style={{ padding: '10px 14px 8px' }}>
+              <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>{TENANT_INFO.name}</div>
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                <span className="badge badge--primary">{TENANT_INFO.plan}</span>
+                <span className="mono dim" style={{ fontSize: 11 }}>{TENANT_INFO.region}</span>
+              </div>
+              <div style={{ display: 'flex', gap: 16, marginTop: 10 }}>
+                <div style={{ fontSize: 12 }}><span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, fontSize: 16 }}>{TENANT_INFO.devices}</span><span className="muted" style={{ marginLeft: 5 }}>devices</span></div>
+                <div style={{ fontSize: 12 }}><span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, fontSize: 16 }}>{TENANT_INFO.users}</span><span className="muted" style={{ marginLeft: 5 }}>users</span></div>
+              </div>
+            </div>
+          </div>
+          <div className="menu__sec">
+            <div className="menu__item" onClick={() => { onNav('admin'); setOpen(false); }}><Icon name="users" size={16} />Manage users</div>
+            <div className="menu__item" onClick={() => { onNav('settings'); setOpen(false); }}><Icon name="settings" size={16} />Tenant settings</div>
+            <div className="menu__item"><Icon name="shield" size={16} />API keys &amp; integrations</div>
+          </div>
+          <div className="menu__sec">
+            <div className="menu__item"><Icon name="globe" size={16} />Switch organisation</div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ---------------- export ---------------- */
 Object.assign(window, {
   Icon, Button, StatusDot, StatusBadge, SeverityBadge, RoleBadge, Checkbox, UserAvatar,
   Sparkline, Chart, MetricCard, DataTable, BottomSheet, FilterChip,
   DevicePicker, UserPicker, MultiSelectPicker, DateRangePicker, MiniCalendar,
   EmptyState, useToast, ToastHost, CommandPalette, STATUS_META, SEV_META,
-  CommandSheet, SSHTerminal, RegisterDeviceSheet, UserMenu, BgMenu,
+  CommandSheet, SSHTerminal, RegisterDeviceSheet, UserMenu, BgMenu, TenantMenu,
 });
