@@ -17,7 +17,7 @@
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^8.5.0",
     "@bull-board/api": "^6.5.0",
-    "@bull-board/express": "^6.5.0",
+    "@bull-board/express": "^7.2.1",
     "@influxdata/influxdb-client": "^1.33.2",
     "@nestjs/common": "^10.3.3",
     "@nestjs/config": "^3.2.2",
