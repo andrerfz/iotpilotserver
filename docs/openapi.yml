@@ -178,6 +178,30 @@ components:
         isCurrent:
           type: boolean
 
+    AuthData:
+      type: object
+      description: Authenticated session payload returned by refresh / 2FA verify.
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        token:
+          type: string
+
+    LoginData:
+      description: |
+        Login result. Either an authenticated session (`user` + `token`) or a
+        2FA challenge (`requiresTwoFactor` + `userId`) when the user has 2FA on.
+      allOf:
+        - $ref: '#/components/schemas/AuthData'
+        - type: object
+          properties:
+            requiresTwoFactor:
+              type: boolean
+            userId:
+              type: string
+            message:
+              type: string
+
     # ── Device ─────────────────────────────────────────────────────────────────
     Device:
       type: object
@@ -504,7 +528,7 @@ paths:
               $ref: '#/components/schemas/LoginRequest'
       responses:
         '200':
-          description: Login successful — sets auth-token cookie
+          description: Login successful — sets auth-token cookie (or a 2FA challenge)
           content:
             application/json:
               schema:
@@ -513,12 +537,7 @@ paths:
                   - type: object
                     properties:
                       data:
-                        type: object
-                        properties:
-                          user:
-                            $ref: '#/components/schemas/User'
-                          token:
-                            type: string
+                        $ref: '#/components/schemas/LoginData'
         '401':
           description: Invalid credentials
 
@@ -584,9 +603,35 @@ paths:
     post:
       tags: [auth]
       summary: Refresh session token
+      description: |
+        Rotates the session token. The current token is taken from the
+        auth-token cookie (web bootstrap), the `refreshToken` body field, or a
+        Bearer header. Returns a new token and the user, and resets the cookie.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken:
+                  type: string
+                remember:
+                  type: boolean
       responses:
         '200':
-          description: New token issued
+          description: New token issued — resets auth-token cookie
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/AuthData'
+        '401':
+          description: No or invalid refresh token
 
   /auth/sessions:
     get:
@@ -709,7 +754,16 @@ paths:
                   type: string
       responses:
         '200':
-          description: 2FA verified — session created
+          description: 2FA verified — session created, sets auth-token cookie
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/AuthData'
         '401':
           description: Invalid or expired code
 

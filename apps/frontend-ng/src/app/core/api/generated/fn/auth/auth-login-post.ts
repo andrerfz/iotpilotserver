@@ -7,19 +7,16 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
+import { LoginData } from '../../models/login-data';
 import { LoginRequest } from '../../models/login-request';
 import { SuccessResponse } from '../../models/success-response';
-import { User } from '../../models/user';
 
 export interface AuthLoginPost$Params {
       body: LoginRequest
 }
 
 export function authLoginPost(http: HttpClient, rootUrl: string, params: AuthLoginPost$Params, context?: HttpContext): Observable<StrictHttpResponse<SuccessResponse & {
-'data'?: {
-'user'?: User;
-'token'?: string;
-};
+'data'?: LoginData;
 }>> {
   const rb = new RequestBuilder(rootUrl, authLoginPost.PATH, 'post');
   if (params) {
@@ -32,10 +29,7 @@ export function authLoginPost(http: HttpClient, rootUrl: string, params: AuthLog
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
       return r as StrictHttpResponse<SuccessResponse & {
-      'data'?: {
-      'user'?: User;
-      'token'?: string;
-      };
+      'data'?: LoginData;
       }>;
     })
   );

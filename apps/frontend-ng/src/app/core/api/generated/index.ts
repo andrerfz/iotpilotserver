@@ -7,10 +7,12 @@ export type { StrictHttpResponse } from './strict-http-response';
 export { Api } from './api';
 
 export type { Alert } from './models/alert';
+export type { AuthData } from './models/auth-data';
 export type { Device } from './models/device';
 export type { DeviceCommand } from './models/device-command';
 export type { DeviceSettings } from './models/device-settings';
 export type { ErrorResponse } from './models/error-response';
+export type { LoginData } from './models/login-data';
 export type { LoginRequest } from './models/login-request';
 export type { NotificationRecord } from './models/notification-record';
 export type { NotificationSettings } from './models/notification-settings';

@@ -1,4 +1,5 @@
 import { provideHttpClient } from '@angular/common/http';
+import { provideAppInitializer, inject } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
 import {
   PreloadAllModules,
@@ -14,6 +15,7 @@ import {
 import { AppComponent } from './app/app.component';
 import { routes } from './app/app.routes';
 import { provideApi } from './app/core/api/api.config';
+import { AuthService } from './app/core/auth/auth.service';
 import { provideTokenStorage } from './app/core/auth/token.storage';
 
 bootstrapApplication(AppComponent, {
@@ -24,5 +26,7 @@ bootstrapApplication(AppComponent, {
     provideHttpClient(),
     provideApi(),
     provideTokenStorage(),
+    // Restore any existing session before the first route renders.
+    provideAppInitializer(() => inject(AuthService).restoreSession()),
   ],
 }).catch((err) => console.error(err));
