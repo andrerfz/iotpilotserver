@@ -79,7 +79,7 @@
     "@influxdata/influxdb-client": "^1.33.2",
     "@iotpilot/core": "workspace:*",
     "@nestjs/common": "^10.3.3",
-    "@nestjs/config": "^3.2.2",
+    "@nestjs/config": "^4.0.4",
     "@prisma/client": "^6.19.0",
     "@types/axios": "^0.9.36",
     "@types/ioredis": "^5.0.0",
