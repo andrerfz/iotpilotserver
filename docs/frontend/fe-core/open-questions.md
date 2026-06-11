@@ -81,14 +81,27 @@ pattern 1:1 and keeps the CQRS shape.
 
 ---
 
-## Q4 — EventBus: port or drop
+## Q4 _resolved_ — EventBus: port or drop
 
-Legacy has an `event-bus.provider.tsx` alongside command/query buses. Audit its real
-usage in `apps/frontend/src` during T8: if it only relays socket events, fold it into
-`alerts.stream.ts` and drop the abstraction; if features publish UI-level domain events,
-port it as a third injectable.
+**Audit of `apps/frontend/src` (non-test):**
 
-**Applies to:** T7, T8
+- `event-bus.provider.tsx` builds an `InMemoryEventBus` with **no handlers registered**
+  ("Event handlers can be registered here if needed" — left empty).
+- **Zero publishers**: `.publish(` appears nowhere in non-test frontend code.
+- **One subscriber**: `use-notifications.ts` does `eventBus.subscribe('AlertTriggeredEvent', …)`
+  to push a notification — but since nothing publishes, it is dead wiring. Its intent
+  (alert fired → show a notification) is exactly what the socket `alert:new` →
+  `AlertsStream` (T7) now delivers.
+- `ProfileSettingsClient.tsx` (a false positive in the first grep) does not use the bus.
+
+**Decision: drop the front-end EventBus abstraction.** It relays nothing today and no
+feature publishes UI-level domain events through it. T8 therefore ships **only**
+`CommandBus` + `QueryBus` (two injectables) — no third EventBus injectable. The legacy
+notification use case maps to consuming `AlertsStream.alerts$`. (The `EventBus` in
+`packages/core` is the backend domain-event bus — a separate concern, unaffected.)
+
+**Resolved:** 2026-06-11
+**Applies to:** T8
 
 ---
 
