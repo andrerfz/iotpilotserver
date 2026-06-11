@@ -1,5 +1,4 @@
 import { Component, input, ChangeDetectionStrategy } from '@angular/core';
-import { NgIf } from '@angular/common';
 import { SparklineComponent } from './sparkline.component';
 
 export type DeltaDir = 'up' | 'down' | 'flat';
@@ -8,7 +7,7 @@ export type DeltaDir = 'up' | 'down' | 'flat';
   selector: 'ui-metric-card',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgIf, SparklineComponent],
+  imports: [SparklineComponent],
   template: `
     <div class="metric">
       <div class="metric__top">
@@ -18,18 +17,28 @@ export type DeltaDir = 'up' | 'down' | 'flat';
         <span class="metric__label">{{ label() }}</span>
       </div>
       <div class="metric__val">
-        {{ value() }}<span *ngIf="unit()" class="metric__unit">{{ unit() }}</span>
+        {{ value() }}@if (unit()) {<span class="metric__unit">{{ unit() }}</span>}
       </div>
-      <div *ngIf="delta() !== null && delta() !== undefined" class="metric__delta" [class]="'delta--' + deltaDir()">
-        <svg *ngIf="deltaDir() !== 'flat'" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-          stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-          width="12" height="12">
-          <polyline *ngIf="deltaDir() === 'up'" points="18 15 12 9 6 15"></polyline>
-          <polyline *ngIf="deltaDir() === 'down'" points="6 9 12 15 18 9"></polyline>
-        </svg>
-        {{ delta() }}
-      </div>
-      <ui-sparkline *ngIf="spark().length" [data]="spark()" [color]="iconColor()"></ui-sparkline>
+      @if (delta() !== null && delta() !== undefined) {
+        <div class="metric__delta" [class]="'delta--' + deltaDir()">
+          @if (deltaDir() !== 'flat') {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              width="12" height="12">
+              @if (deltaDir() === 'up') {
+                <polyline points="18 15 12 9 6 15"></polyline>
+              }
+              @if (deltaDir() === 'down') {
+                <polyline points="6 9 12 15 18 9"></polyline>
+              }
+            </svg>
+          }
+          {{ delta() }}
+        </div>
+      }
+      @if (spark().length) {
+        <ui-sparkline [data]="spark()" [color]="iconColor()"></ui-sparkline>
+      }
     </div>
   `,
   styles: [`

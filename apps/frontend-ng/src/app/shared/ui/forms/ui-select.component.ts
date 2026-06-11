@@ -6,7 +6,6 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { NG_VALUE_ACCESSOR, ControlValueAccessor } from '@angular/forms';
-import { NgIf, NgFor } from '@angular/common';
 import { IonSelect, IonSelectOption, IonLabel, IonNote } from '@ionic/angular/standalone';
 
 export interface SelectOption<T = string> {
@@ -18,7 +17,7 @@ export interface SelectOption<T = string> {
   selector: 'ui-select',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgIf, NgFor, IonSelect, IonSelectOption, IonLabel, IonNote],
+  imports: [IonSelect, IonSelectOption, IonLabel, IonNote],
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
@@ -28,7 +27,9 @@ export interface SelectOption<T = string> {
   ],
   template: `
     <div class="ui-field" [class.ui-field--error]="!!error()">
-      <ion-label *ngIf="label()" class="ui-field__label">{{ label() }}</ion-label>
+      @if (label()) {
+        <ion-label class="ui-field__label">{{ label() }}</ion-label>
+      }
       <ion-select
         class="ui-select"
         interface="popover"
@@ -37,11 +38,15 @@ export interface SelectOption<T = string> {
         [value]="value()"
         (ionChange)="onChange($event)"
         (ionBlur)="onTouched()">
-        <ion-select-option *ngFor="let opt of options()" [value]="opt.value">
-          {{ opt.label }}
-        </ion-select-option>
+        @for (opt of options(); track opt.value) {
+          <ion-select-option [value]="opt.value">
+            {{ opt.label }}
+          </ion-select-option>
+        }
       </ion-select>
-      <ion-note *ngIf="error()" class="ui-field__error" color="danger">{{ error() }}</ion-note>
+      @if (error()) {
+        <ion-note class="ui-field__error" color="danger">{{ error() }}</ion-note>
+      }
     </div>
   `,
   styles: [`

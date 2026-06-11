@@ -6,14 +6,13 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { NG_VALUE_ACCESSOR, ControlValueAccessor } from '@angular/forms';
-import { NgIf } from '@angular/common';
 import { IonToggle, IonLabel, IonNote } from '@ionic/angular/standalone';
 
 @Component({
   selector: 'ui-switch',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgIf, IonToggle, IonLabel, IonNote],
+  imports: [IonToggle, IonLabel, IonNote],
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
@@ -29,9 +28,13 @@ import { IonToggle, IonLabel, IonNote } from '@ionic/angular/standalone';
         [disabled]="isDisabled()"
         (ionChange)="onChange($event)"
         (ionBlur)="onTouched()">
-        <ion-label *ngIf="label()">{{ label() }}</ion-label>
+        @if (label()) {
+          <ion-label>{{ label() }}</ion-label>
+        }
       </ion-toggle>
-      <ion-note *ngIf="error()" class="ui-switch__error" color="danger">{{ error() }}</ion-note>
+      @if (error()) {
+        <ion-note class="ui-switch__error" color="danger">{{ error() }}</ion-note>
+      }
     </div>
   `,
   styles: [`

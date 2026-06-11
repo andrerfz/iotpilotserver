@@ -1,21 +1,25 @@
 import { Component, input, ChangeDetectionStrategy } from '@angular/core';
-import { NgIf } from '@angular/common';
 
 @Component({
   selector: 'ui-empty-state',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgIf],
   template: `
     <div class="empty">
-      <div *ngIf="hasIcon()" class="empty__icon">
-        <ng-content select="[icon]"></ng-content>
-      </div>
+      @if (hasIcon()) {
+        <div class="empty__icon">
+          <ng-content select="[icon]"></ng-content>
+        </div>
+      }
       <p class="empty__title">{{ title() }}</p>
-      <p *ngIf="description()" class="empty__desc">{{ description() }}</p>
-      <div *ngIf="hasAction()" class="empty__action">
-        <ng-content select="[action]"></ng-content>
-      </div>
+      @if (description()) {
+        <p class="empty__desc">{{ description() }}</p>
+      }
+      @if (hasAction()) {
+        <div class="empty__action">
+          <ng-content select="[action]"></ng-content>
+        </div>
+      }
     </div>
   `,
   styles: [`

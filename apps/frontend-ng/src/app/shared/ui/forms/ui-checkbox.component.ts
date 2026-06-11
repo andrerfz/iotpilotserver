@@ -6,7 +6,6 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { NG_VALUE_ACCESSOR, ControlValueAccessor } from '@angular/forms';
-import { NgIf } from '@angular/common';
 import { IonNote } from '@ionic/angular/standalone';
 
 /**
@@ -18,7 +17,7 @@ import { IonNote } from '@ionic/angular/standalone';
   selector: 'ui-checkbox',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgIf, IonNote],
+  imports: [IonNote],
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
@@ -43,9 +42,13 @@ import { IonNote } from '@ionic/angular/standalone';
             <polyline points="20 6 9 17 4 12"></polyline>
           </svg>
         </span>
-        <span *ngIf="label()" class="ui-checkbox-text">{{ label() }}</span>
+        @if (label()) {
+          <span class="ui-checkbox-text">{{ label() }}</span>
+        }
       </label>
-      <ion-note *ngIf="error()" class="ui-checkbox__error" color="danger">{{ error() }}</ion-note>
+      @if (error()) {
+        <ion-note class="ui-checkbox__error" color="danger">{{ error() }}</ion-note>
+      }
     </div>
   `,
   styles: [`

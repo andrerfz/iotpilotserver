@@ -6,7 +6,6 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { NG_VALUE_ACCESSOR, ControlValueAccessor } from '@angular/forms';
-import { NgIf } from '@angular/common';
 import { IonInput, IonLabel, IonNote, IonButton, IonIcon } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { eyeOutline, eyeOffOutline } from 'ionicons/icons';
@@ -17,7 +16,7 @@ addIcons({ eyeOutline, eyeOffOutline });
   selector: 'ui-input',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgIf, IonInput, IonLabel, IonNote, IonButton, IonIcon],
+  imports: [IonInput, IonLabel, IonNote, IonButton, IonIcon],
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
@@ -27,7 +26,9 @@ addIcons({ eyeOutline, eyeOffOutline });
   ],
   template: `
     <div class="ui-field" [class.ui-field--error]="!!error()">
-      <ion-label *ngIf="label()" class="ui-field__label">{{ label() }}</ion-label>
+      @if (label()) {
+        <ion-label class="ui-field__label">{{ label() }}</ion-label>
+      }
       <ion-input
         class="ui-input"
         [type]="showPassword() ? 'text' : effectiveType()"
@@ -36,18 +37,21 @@ addIcons({ eyeOutline, eyeOffOutline });
         [value]="value()"
         (ionInput)="onInput($event)"
         (ionBlur)="onTouched()">
-        <ion-button
-          *ngIf="effectiveType() === 'password'"
-          slot="end"
-          fill="clear"
-          size="small"
-          class="ui-input__reveal"
-          (click)="showPassword.set(!showPassword())"
-          [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'">
-          <ion-icon slot="icon-only" [name]="showPassword() ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
-        </ion-button>
+        @if (effectiveType() === 'password') {
+          <ion-button
+            slot="end"
+            fill="clear"
+            size="small"
+            class="ui-input__reveal"
+            (click)="showPassword.set(!showPassword())"
+            [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'">
+            <ion-icon slot="icon-only" [name]="showPassword() ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
+          </ion-button>
+        }
       </ion-input>
-      <ion-note *ngIf="error()" class="ui-field__error" color="danger">{{ error() }}</ion-note>
+      @if (error()) {
+        <ion-note class="ui-field__error" color="danger">{{ error() }}</ion-note>
+      }
     </div>
   `,
   styles: [`
