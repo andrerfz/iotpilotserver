@@ -1,0 +1,112 @@
+import {
+  Component,
+  forwardRef,
+  input,
+  signal,
+  ChangeDetectionStrategy,
+} from '@angular/core';
+import { NG_VALUE_ACCESSOR, ControlValueAccessor } from '@angular/forms';
+import { NgIf } from '@angular/common';
+import { IonInput, IonLabel, IonNote, IonButton, IonIcon } from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import { eyeOutline, eyeOffOutline } from 'ionicons/icons';
+
+addIcons({ eyeOutline, eyeOffOutline });
+
+@Component({
+  selector: 'ui-input',
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [NgIf, IonInput, IonLabel, IonNote, IonButton, IonIcon],
+  providers: [
+    {
+      provide: NG_VALUE_ACCESSOR,
+      useExisting: forwardRef(() => UiInputComponent),
+      multi: true,
+    },
+  ],
+  template: `
+    <div class="ui-field" [class.ui-field--error]="!!error()">
+      <ion-label *ngIf="label()" class="ui-field__label">{{ label() }}</ion-label>
+      <ion-input
+        class="ui-input"
+        [type]="showPassword() ? 'text' : effectiveType()"
+        [placeholder]="placeholder()"
+        [disabled]="isDisabled()"
+        [value]="value()"
+        (ionInput)="onInput($event)"
+        (ionBlur)="onTouched()">
+        <ion-button
+          *ngIf="effectiveType() === 'password'"
+          slot="end"
+          fill="clear"
+          size="small"
+          class="ui-input__reveal"
+          (click)="showPassword.set(!showPassword())"
+          [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'">
+          <ion-icon slot="icon-only" [name]="showPassword() ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
+        </ion-button>
+      </ion-input>
+      <ion-note *ngIf="error()" class="ui-field__error" color="danger">{{ error() }}</ion-note>
+    </div>
+  `,
+  styles: [`
+    :host { display: block; }
+    .ui-field { display: flex; flex-direction: column; gap: 4px; }
+    .ui-field__label {
+      font-size: 12px; font-weight: 550; color: var(--text-muted);
+      font-family: var(--font-mono); letter-spacing: var(--ls-label);
+      text-transform: uppercase; margin-bottom: 2px;
+    }
+    .ui-input {
+      --background: var(--surface-2);
+      --color: var(--text);
+      --placeholder-color: var(--text-dim);
+      --border-color: var(--border);
+      --border-radius: var(--r-sm);
+      --highlight-color-focused: var(--primary);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+    }
+    .ui-field--error .ui-input { --border-color: var(--danger); border-color: var(--danger); }
+    .ui-field__error { font-size: 12px; color: var(--danger); }
+    .ui-input__reveal { --color: var(--text-dim); height: 32px; }
+  `],
+})
+export class UiInputComponent implements ControlValueAccessor {
+  readonly label = input('');
+  readonly placeholder = input('');
+  readonly type = input<string>('text');
+  /** Error message to display. Pass AbstractControl's first error or empty string. */
+  readonly error = input('');
+
+  protected readonly value = signal<string>('');
+  protected readonly isDisabled = signal(false);
+  protected readonly showPassword = signal(false);
+  protected readonly effectiveType = () => this.type();
+
+  private onChange: (v: string) => void = () => undefined;
+  protected onTouched: () => void = () => undefined;
+
+  writeValue(v: string | null): void {
+    this.value.set(v ?? '');
+  }
+
+  registerOnChange(fn: (v: string) => void): void {
+    this.onChange = fn;
+  }
+
+  registerOnTouched(fn: () => void): void {
+    this.onTouched = fn;
+  }
+
+  setDisabledState(disabled: boolean): void {
+    this.isDisabled.set(disabled);
+  }
+
+  protected onInput(event: Event): void {
+    const val = (event as CustomEvent<{ value: string }>).detail?.value ?? '';
+    this.value.set(val);
+    this.onChange(val);
+  }
+}

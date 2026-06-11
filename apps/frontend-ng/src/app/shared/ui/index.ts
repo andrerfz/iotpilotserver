@@ -121,8 +121,12 @@ export type { Severity } from './badges/severity.badge';
 export { RoleBadgeComponent } from './badges/role.badge';
 export type { UserRole } from './badges/role.badge';
 export { DeviceTypeBadgeComponent } from './badges/device-type.badge';
-// T4 — Form control wrappers
-// export { UiInputComponent, UiSwitchComponent, UiCheckboxComponent, UiSelectComponent } from './forms';
+// T4 — Form control wrappers (CVA)
+export { UiInputComponent } from './forms/ui-input.component';
+export { UiSwitchComponent } from './forms/ui-switch.component';
+export { UiCheckboxComponent } from './forms/ui-checkbox.component';
+export { UiSelectComponent } from './forms/ui-select.component';
+export type { SelectOption } from './forms/ui-select.component';
 // T5 — Cards & states
 // export { MetricCardComponent, SparklineComponent, EmptyStateComponent } from './data';
 // T6 — DataTable
