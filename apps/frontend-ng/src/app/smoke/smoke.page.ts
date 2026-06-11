@@ -1,10 +1,5 @@
 import { Component, computed, inject, OnInit } from '@angular/core';
-import {
-  IonContent,
-  IonHeader,
-  IonTitle,
-  IonToolbar,
-} from '@ionic/angular/standalone';
+import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ng/shared/ui';
 import { GetHealthQuery, HealthResult } from '../core/cqrs/example/get-health.query';
 import { QueryBus } from '../core/cqrs/query-bus';
 import { runQuery } from '../core/cqrs/run-query';

@@ -9,7 +9,7 @@ matching `kit.jsx` component before implementing.
 
 | # | Task | Status |
 |---|---|---|
-| T1 | Barrel + import lint rule | pending |
+| T1 | Barrel + import lint rule | done |
 | T2 | Design tokens + ThemeService | pending |
 | T3 | Badges + status dot | pending |
 | T4 | Form control wrappers (CVA) | pending |

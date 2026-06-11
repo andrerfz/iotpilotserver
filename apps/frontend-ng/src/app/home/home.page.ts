@@ -1,11 +1,5 @@
 import { Component } from '@angular/core';
-import {
-  IonButton,
-  IonContent,
-  IonHeader,
-  IonTitle,
-  IonToolbar,
-} from '@ionic/angular/standalone';
+import { IonButton, IonContent, IonHeader, IonTitle, IonToolbar } from '@ng/shared/ui';
 
 @Component({
   selector: 'app-home',

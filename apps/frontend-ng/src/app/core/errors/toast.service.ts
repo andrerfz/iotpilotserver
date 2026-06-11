@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { ToastController } from '@ionic/angular/standalone';
+import { ToastController } from '@ng/shared/ui';
 import { ApiError } from './api-error';
 
 /** User-facing messages per ApiError code — keeps raw backend payloads out of the UI. */

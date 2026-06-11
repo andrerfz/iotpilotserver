@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { ToastController } from '@ionic/angular/standalone';
+import { ToastController } from '@ng/shared/ui';
 import { ApiError } from './api-error';
 import { ToastService, toUserMessage } from './toast.service';
 
