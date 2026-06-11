@@ -32,6 +32,9 @@ export class AuthService {
 
   private readonly _user = signal<User | null>(null);
 
+  /** In-flight refresh, shared so concurrent 401s trigger a single rotation. */
+  private refreshInFlight: Promise<boolean> | null = null;
+
   /** Current user, or null when unauthenticated. */
   readonly currentUser = this._user.asReadonly();
   /** True when a user session is established. */
@@ -81,9 +84,22 @@ export class AuthService {
    * Rotate the session token. On web the httpOnly cookie carries the current
    * token (WITH_CREDENTIALS); on mobile the stored token is sent in the body.
    * Returns true when a fresh session was established. On failure the session is
-   * cleared. (Web cookie transport is honored once the T4 interceptor lands.)
+   * cleared.
+   *
+   * Single-flight: concurrent callers (e.g. several requests that 401 at once)
+   * share one rotation rather than stampeding `/auth/refresh`.
    */
-  async refresh(): Promise<boolean> {
+  refresh(): Promise<boolean> {
+    if (this.refreshInFlight) {
+      return this.refreshInFlight;
+    }
+    this.refreshInFlight = this.doRefresh().finally(() => {
+      this.refreshInFlight = null;
+    });
+    return this.refreshInFlight;
+  }
+
+  private async doRefresh(): Promise<boolean> {
     const stored = await this.tokens.get();
     const context = new HttpContext().set(WITH_CREDENTIALS, true);
     try {
