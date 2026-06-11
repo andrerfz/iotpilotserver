@@ -12,7 +12,7 @@ Each task is one small PR. T1–T2 are prerequisites for everything; T3–T8 can
 | T4 | Auth interceptor | done |
 | T5 | Route guards | done |
 | T6 | 2FA + session management | done |
-| T7 | SocketService + alerts stream | pending |
+| T7 | SocketService + alerts stream | done |
 | T8 | Command/Query buses | pending |
 | T9 | Toast service | pending |
 

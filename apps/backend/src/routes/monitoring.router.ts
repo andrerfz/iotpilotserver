@@ -301,20 +301,26 @@ monitoringRouter.post('/alerts', requireAuth(), async (req: AuthenticatedRequest
             customerId: req.user?.customerId
         });
 
-        send.created(res, {
-            alert: {
-                id: createdAlert.id,
-                deviceId: createdAlert.deviceId,
-                thresholdId: createdAlert.thresholdId,
-                title: createdAlert.title,
-                message: createdAlert.message,
-                severity: createdAlert.severity,
-                status: createdAlert.status,
-                metadata: createdAlert.metadata,
-                createdAt: createdAlert.createdAt,
-                customerId: createdAlert.customerId
-            }
-        });
+        const alertPayload = {
+            id: createdAlert.id,
+            deviceId: createdAlert.deviceId,
+            thresholdId: createdAlert.thresholdId,
+            title: createdAlert.title,
+            message: createdAlert.message,
+            severity: createdAlert.severity,
+            status: createdAlert.status,
+            metadata: createdAlert.metadata,
+            createdAt: createdAlert.createdAt,
+            customerId: createdAlert.customerId
+        };
+
+        // Push to the tenant's socket room (server.ts emits only to tenant:<customerId>).
+        const broadcastAlert = (global as { broadcastAlert?: (a: unknown) => void }).broadcastAlert;
+        if (broadcastAlert && alertPayload.customerId) {
+            broadcastAlert(alertPayload);
+        }
+
+        send.created(res, { alert: alertPayload });
         return;
 
     } catch (err) {

@@ -29,7 +29,7 @@ function extractToken(req: Request): string | null {
   return null;
 }
 
-async function resolveUser(token: string): Promise<AuthUser | null> {
+export async function resolveUser(token: string): Promise<AuthUser | null> {
   let payload: { userId: string; email: string; role: UserRoleType };
   try {
     payload = jwt.verify(token, process.env.JWT_SECRET!) as typeof payload;
@@ -157,5 +157,4 @@ export function authMiddleware(options: AuthOptions = {}) {
 }
 
 export const requireAuth = (role?: UserRoleType) => authMiddleware({ requiredRole: role });
-export const requireAuthWithApiKey = (role?: UserRoleType) =>
-  authMiddleware({ allowApiKey: true, requiredRole: role });
+export const requireAuthWithApiKey = (role?: UserRoleType) => authMiddleware({ allowApiKey: true, requiredRole: role });

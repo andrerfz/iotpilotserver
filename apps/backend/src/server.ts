@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import { createServer } from 'http';
-import { Server } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
@@ -158,19 +158,44 @@ app.use('/api', (_req: express.Request, res: express.Response) => {
 });
 
 // Socket.IO
-io.on('connection', (socket) => {
-  const clientInfo = {
-    id: socket.id,
-    ip: socket.handshake.address,
-    tailscale: socket.handshake.headers['x-tailscale-user']
-      ? {
-          user: socket.handshake.headers['x-tailscale-user'],
-          name: socket.handshake.headers['x-tailscale-name'],
-          login: socket.handshake.headers['x-tailscale-login'],
-        }
-      : null,
-  };
-  logger.info('Client connected', clientInfo);
+// Authenticate every socket connection at the handshake. The client sends the
+// session token in the auth payload (io(url, { auth: { token } })) — NOT a
+// cookie, so mobile WebViews work too. We validate it exactly like the HTTP
+// auth middleware (signed JWT + live session row) and tenant-scope the socket.
+io.use(async (socket: Socket, nextFn: (err?: Error) => void) => {
+  try {
+    const { resolveUser } = await import('./middleware/auth.middleware');
+    const token =
+      (socket.handshake.auth?.token as string | undefined) ||
+      (socket.handshake.headers['authorization'] as string | undefined)?.replace('Bearer ', '');
+
+    if (!token) {
+      nextFn(new Error('Authentication required'));
+      return;
+    }
+
+    const user = await resolveUser(token);
+    if (!user) {
+      nextFn(new Error('Invalid or expired session'));
+      return;
+    }
+
+    socket.data.user = user;
+    nextFn();
+  } catch {
+    nextFn(new Error('Authentication error'));
+  }
+});
+
+io.on('connection', (socket: Socket) => {
+  const user = socket.data.user as { id: string; role: string; customerId?: string | null };
+
+  // Tenant-scope the socket: alerts are emitted only to the customer's room.
+  // SUPERADMIN has no customerId and joins no tenant room (no tenant alerts).
+  if (user.customerId) {
+    socket.join(`tenant:${user.customerId}`);
+  }
+  logger.info('Client connected', { id: socket.id, userId: user.id, customerId: user.customerId });
 
   socket.on('subscribe:devices', () => {
     socket.join('devices');
@@ -187,7 +212,13 @@ io.on('connection', (socket) => {
 
 (global as any).broadcastDeviceUpdate = (deviceId: string, update: unknown) =>
   io.to('devices').emit('device:update', { deviceId, update });
-(global as any).broadcastAlert = (alert: unknown) => io.to('devices').emit('alert:new', alert);
+
+// Emit only to the alert's tenant room so alerts never leak across customers.
+(global as any).broadcastAlert = (alert: { customerId?: string | null } & Record<string, unknown>) => {
+  if (alert?.customerId) {
+    io.to(`tenant:${alert.customerId}`).emit('alert:new', alert);
+  }
+};
 
 // Bull Board dashboard
 setTimeout(async () => {

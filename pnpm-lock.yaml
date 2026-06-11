@@ -541,6 +541,9 @@ importers:
       rxjs:
         specifier: 7.8.2
         version: 7.8.2
+      socket.io-client:
+        specifier: 4.8.3
+        version: 4.8.3
       tslib:
         specifier: 2.8.1
         version: 2.8.1
