@@ -37,7 +37,7 @@ export type DeltaDir = 'up' | 'down' | 'flat';
         </div>
       }
       @if (spark().length) {
-        <ui-sparkline class="metric__spark" [data]="spark()" [color]="iconColor()"></ui-sparkline>
+        <ui-sparkline class="metric__spark" [data]="spark()" [color]="iconColor()" [h]="30"></ui-sparkline>
       }
     </div>
   `,

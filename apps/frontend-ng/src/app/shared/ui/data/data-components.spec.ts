@@ -23,13 +23,14 @@ describe('SparklineComponent', () => {
     expect(container.querySelector('polygon')).toBeTruthy();
   });
 
-  it('respects w and h inputs on the svg element', async () => {
+  it('fills its container width and uses h + w for height/viewBox', async () => {
     const { container } = await render(SparklineComponent, {
       inputs: { data: [1, 2, 3], w: 100, h: 20 },
     });
     const svg = container.querySelector('svg');
-    expect(svg?.getAttribute('width')).toBe('100');
+    expect(svg?.getAttribute('width')).toBe('100%'); // responsive — fills container
     expect(svg?.getAttribute('height')).toBe('20');
+    expect(svg?.getAttribute('viewBox')).toBe('0 0 100 20');
   });
 
   it('applies custom color to polyline stroke', async () => {
