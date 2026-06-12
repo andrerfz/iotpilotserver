@@ -3,6 +3,26 @@ import { CanActivateFn, Router } from '@angular/router';
 import { AuthService } from './auth.service';
 import { hasRole, Role } from './roles';
 
+/** Route guard: prevents authenticated users from visiting public-only routes
+ *  (/login, /register). Authenticated visitors are redirected to /app. */
+export const loggedInGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+
+  if (auth.isAuthenticated()) {
+    return router.createUrlTree(['/app']);
+  }
+  return true;
+};
+
+/** Root redirect: authenticated → /app, unauthenticated → /login.
+ *  Always returns a UrlTree so the component is never rendered. */
+export const rootRedirectGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  return router.createUrlTree(auth.isAuthenticated() ? ['/app'] : ['/login']);
+};
+
 /**
  * Route guard: requires an authenticated session. Unauthenticated visitors are
  * redirected to /login with the attempted URL as `returnUrl` (parity with the

@@ -1,0 +1,67 @@
+<ion-content class="register-content">
+  <div class="register-wrap">
+    <div class="register-logo">
+      <ui-app-logo />
+    </div>
+
+    <ion-card class="register-card">
+      <ion-card-content>
+        <div class="register-card__header">
+          <h2 class="register-card__title">Create an account</h2>
+          <p class="register-card__subtitle">Start managing your IoT devices</p>
+        </div>
+
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" class="register-form">
+          <ui-input
+            formControlName="username"
+            label="Username"
+            placeholder="Enter your username"
+            [error]="usernameError()" />
+
+          <ui-input
+            formControlName="email"
+            label="Email"
+            type="email"
+            placeholder="Enter your email"
+            [error]="emailError()" />
+
+          <ui-input
+            formControlName="password"
+            label="Password"
+            type="password"
+            placeholder="Create a password"
+            [error]="passwordError()" />
+
+          <app-password-strength [password]="passwordValue" />
+
+          <ui-input
+            formControlName="confirmPassword"
+            label="Confirm password"
+            type="password"
+            placeholder="Repeat your password"
+            [error]="confirmPasswordError()" />
+
+          @if (errorMessage()) {
+            <p class="register-error">{{ errorMessage() }}</p>
+          }
+
+          <ion-button
+            type="submit"
+            expand="block"
+            [disabled]="isLoading()">
+            @if (isLoading()) {
+              <ion-spinner name="crescent" slot="start" />
+            }
+            {{ isLoading() ? 'Creating account...' : 'Create account' }}
+          </ion-button>
+        </form>
+
+        <div class="register-footer">
+          <p>Already have an account? <a routerLink="/login">Sign in</a></p>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <p class="register-tagline">Secure IoT device management platform</p>
+  </div>
+</ion-content>

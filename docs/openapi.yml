@@ -202,6 +202,18 @@ components:
             message:
               type: string
 
+    RegisterData:
+      type: object
+      properties:
+        requiresApproval:
+          type: boolean
+        isNewCompany:
+          type: boolean
+        message:
+          type: string
+        user:
+          $ref: '#/components/schemas/User'
+
     # ── Device ─────────────────────────────────────────────────────────────────
     Device:
       type: object
@@ -559,6 +571,15 @@ paths:
       responses:
         '201':
           description: User registered
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/RegisterData'
         '409':
           description: Email already exists
 

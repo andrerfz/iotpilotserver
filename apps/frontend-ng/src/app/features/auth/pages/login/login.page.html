@@ -1,0 +1,101 @@
+<ion-content class="login-content">
+  <div class="login-wrap">
+    <div class="login-logo">
+      <ui-app-logo />
+    </div>
+
+    <ion-card class="login-card">
+      <ion-card-content>
+
+        @if (step() === 'credentials') {
+          <div class="login-card__header">
+            <h2 class="login-card__title">Welcome back</h2>
+            <p class="login-card__subtitle">Sign in to your account to continue</p>
+          </div>
+
+          <form [formGroup]="form" (ngSubmit)="onSubmit()" class="login-form">
+            <ui-input
+              formControlName="email"
+              label="Email"
+              type="email"
+              placeholder="Enter your email"
+              [error]="emailError()" />
+
+            <ui-input
+              formControlName="password"
+              label="Password"
+              type="password"
+              placeholder="Enter your password"
+              [error]="passwordError()" />
+
+            <ui-checkbox
+              formControlName="remember"
+              label="Remember me" />
+
+            @if (errorMessage()) {
+              <p class="login-error">{{ errorMessage() }}</p>
+            }
+
+            <ion-button
+              type="submit"
+              expand="block"
+              [disabled]="isLoading()">
+              @if (isLoading()) {
+                <ion-spinner name="crescent" slot="start" />
+              }
+              {{ isLoading() ? 'Signing in...' : 'Sign in' }}
+            </ion-button>
+          </form>
+
+          <div class="login-footer">
+            <p>Don't have an account? <a routerLink="/register">Create account</a></p>
+          </div>
+        }
+
+        @if (step() === '2fa') {
+          <div class="login-card__header">
+            <h2 class="login-card__title">Verification required</h2>
+            <p class="login-card__subtitle">Enter the 6-digit code sent to your email</p>
+          </div>
+
+          <div class="login-form">
+            <ion-input
+              #twoFaInput
+              class="twofa-input"
+              type="number"
+              inputmode="numeric"
+              [maxlength]="6"
+              placeholder="000000"
+              [value]="code()"
+              (ionInput)="onCodeInput($event)" />
+
+            @if (twoFaError()) {
+              <p class="login-error">{{ twoFaError() }}</p>
+            }
+
+            <ion-button
+              expand="block"
+              [disabled]="isLoading() || !code()"
+              (click)="onVerify()">
+              @if (isLoading()) {
+                <ion-spinner name="crescent" slot="start" />
+              }
+              {{ isLoading() ? 'Verifying...' : 'Verify' }}
+            </ion-button>
+
+            <ion-button
+              expand="block"
+              fill="clear"
+              [disabled]="isLoading()"
+              (click)="onBack()">
+              Back to login
+            </ion-button>
+          </div>
+        }
+
+      </ion-card-content>
+    </ion-card>
+
+    <p class="login-tagline">Secure IoT device management platform</p>
+  </div>
+</ion-content>

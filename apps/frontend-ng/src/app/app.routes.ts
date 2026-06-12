@@ -1,6 +1,6 @@
 import { isDevMode } from '@angular/core';
 import { Routes } from '@angular/router';
-import { authGuard } from './core/auth/guards';
+import { authGuard, loggedInGuard, rootRedirectGuard } from './core/auth/guards';
 import { SHELL_CHILDREN } from './shell/shell.routes';
 
 /** Dev-only routes: the kit showcase (/__ui) and the unguarded shell preview
@@ -24,6 +24,24 @@ const devRoutes: Routes = [
 
 export const routes: Routes = [
   {
+    path: '',
+    pathMatch: 'full',
+    canActivate: [rootRedirectGuard],
+    loadComponent: () => import('./home/home.page').then((m) => m.HomePage),
+  },
+  {
+    path: 'login',
+    canActivate: [loggedInGuard],
+    loadComponent: () =>
+      import('./features/auth/pages/login/login.page').then((m) => m.LoginPage),
+  },
+  {
+    path: 'register',
+    canActivate: [loggedInGuard],
+    loadComponent: () =>
+      import('./features/auth/pages/register/register.page').then((m) => m.RegisterPage),
+  },
+  {
     path: 'home',
     loadComponent: () => import('./home/home.page').then((m) => m.HomePage),
   },
@@ -39,9 +57,4 @@ export const routes: Routes = [
     children: SHELL_CHILDREN,
   },
   ...(isDevMode() ? devRoutes : []),
-  {
-    path: '',
-    redirectTo: 'home',
-    pathMatch: 'full',
-  },
 ];

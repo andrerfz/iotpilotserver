@@ -8,7 +8,7 @@ import {
   UrlTree,
 } from '@angular/router';
 import { AuthService } from './auth.service';
-import { authGuard, roleGuard } from './guards';
+import { authGuard, loggedInGuard, roleGuard } from './guards';
 
 /** Mutable session state the fake AuthService reflects. */
 const session = { authed: false, role: null as string | null };
@@ -38,6 +38,32 @@ beforeEach(() => {
   router = TestBed.inject(Router);
   session.authed = false;
   session.role = null;
+});
+
+describe('loggedInGuard', () => {
+  it('redirects an authenticated user to /app', () => {
+    session.authed = true;
+    session.role = 'USER';
+    expect(run(loggedInGuard)).toBe('/app');
+  });
+
+  it('allows an unauthenticated visitor through', () => {
+    session.authed = false;
+    expect(run(loggedInGuard)).toBe('allow');
+  });
+});
+
+describe('loggedInGuard', () => {
+  it('redirects an authenticated user to /app', () => {
+    session.authed = true;
+    session.role = 'USER';
+    expect(run(loggedInGuard)).toBe('/app');
+  });
+
+  it('allows an unauthenticated visitor through', () => {
+    session.authed = false;
+    expect(run(loggedInGuard)).toBe('allow');
+  });
 });
 
 describe('authGuard', () => {

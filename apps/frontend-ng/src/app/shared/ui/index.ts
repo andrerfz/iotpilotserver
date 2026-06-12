@@ -31,7 +31,11 @@ export {
   IonNote,
   IonBadge,
   IonIcon,
+  IonText,
 } from '@ionic/angular/standalone';
+
+// Form inputs
+export { IonInput } from '@ionic/angular/standalone';
 
 // Lists
 export {
