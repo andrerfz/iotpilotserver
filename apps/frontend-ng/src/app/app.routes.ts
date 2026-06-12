@@ -10,6 +10,11 @@ export const routes: Routes = [
     loadComponent: () => import('./smoke/smoke.page').then((m) => m.SmokePage),
   },
   {
+    // Provisional UI-kit showcase. T12 will complete + prod-exclude it.
+    path: '__ui',
+    loadComponent: () => import('./demo/demo.page').then((m) => m.DemoPage),
+  },
+  {
     path: '',
     redirectTo: 'home',
     pathMatch: 'full',
