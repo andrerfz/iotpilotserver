@@ -19,7 +19,7 @@ matching `kit.jsx` component before implementing.
 | T8 | Pickers (device, user, multi-select, date range) | done |
 | T9 | Shell layout (split-pane rail + topbar) | done |
 | T10 | User menu + tenant switcher | done |
-| T11 | Command palette | pending |
+| T11 | Command palette | done |
 | T12 | Shell satellites + demo page | pending |
 
 ---

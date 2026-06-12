@@ -1,4 +1,4 @@
-import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
@@ -7,7 +7,9 @@ import { RailComponent } from './rail.component';
 import { TopbarComponent } from './topbar.component';
 import { UserMenuComponent } from './user-menu.component';
 import { TenantMenuComponent } from './tenant-menu.component';
+import { CommandPaletteComponent, CommandItem } from './command-palette.component';
 import { breadcrumbFromSnapshot } from './breadcrumbs';
+import { NAV } from './nav';
 
 /**
  * App shell — `ion-split-pane` with the rail inline ≥1080px and an overlay
@@ -20,7 +22,7 @@ import { breadcrumbFromSnapshot } from './breadcrumbs';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     IonSplitPane, IonMenu, IonContent, IonRouterOutlet,
-    RailComponent, TopbarComponent, UserMenuComponent, TenantMenuComponent,
+    RailComponent, TopbarComponent, UserMenuComponent, TenantMenuComponent, CommandPaletteComponent,
   ],
   template: `
     <ion-split-pane contentId="shell-main" when="(min-width: 1080px)">
@@ -40,6 +42,8 @@ import { breadcrumbFromSnapshot } from './breadcrumbs';
         <ion-router-outlet></ion-router-outlet>
       </div>
     </ion-split-pane>
+
+    <app-command-palette [(open)]="paletteOpen" [commands]="commands()"></app-command-palette>
   `,
   styleUrl: './shell.component.scss',
 })
@@ -47,12 +51,29 @@ export class ShellComponent {
   private readonly router = inject(Router);
 
   readonly breadcrumbs = signal<string[]>([]);
+  /** Shell base segment (/app or /__shell) so palette commands stay in-tree. */
+  private readonly base = signal('/app');
+  protected readonly paletteOpen = signal(false);
+
+  protected readonly commands = computed<CommandItem[]>(() => {
+    const b = this.base();
+    const out: CommandItem[] = [];
+    for (const g of NAV) {
+      for (const it of g.items) {
+        out.push({ group: 'Navigate', label: it.label, icon: it.icon, route: `${b}/${it.path}` });
+      }
+    }
+    return out;
+  });
 
   constructor() {
     // Walk the global router state (always current on NavigationEnd) — the
     // shell's own ActivatedRoute.snapshot.firstChild can lag when sibling
     // children swap under the persistent shell.
-    const update = () => this.breadcrumbs.set(breadcrumbFromSnapshot(this.router.routerState.snapshot.root));
+    const update = () => {
+      this.breadcrumbs.set(breadcrumbFromSnapshot(this.router.routerState.snapshot.root));
+      this.base.set('/' + (this.router.url.split('/')[1] || 'app'));
+    };
     this.router.events
       .pipe(filter(e => e instanceof NavigationEnd), takeUntilDestroyed())
       .subscribe(update);
@@ -60,6 +81,6 @@ export class ShellComponent {
   }
 
   protected onSearch(): void {
-    // Command palette opens here in T11.
+    this.paletteOpen.set(true);
   }
 }

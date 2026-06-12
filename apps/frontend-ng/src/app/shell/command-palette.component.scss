@@ -1,0 +1,53 @@
+/* Ported 1:1 from prototype app.css — ".palette*". Mobile docks to the bottom. */
+:host { display: contents; }
+
+.palette-wrap {
+  position: fixed; inset: 0; z-index: 80;
+  display: flex; justify-content: center; align-items: flex-start;
+  padding-top: 12vh;
+}
+.palette-backdrop {
+  position: absolute; inset: 0; border: none; margin: 0; padding: 0;
+  background: var(--scrim); backdrop-filter: blur(1.5px); cursor: default;
+}
+
+.palette {
+  position: relative; z-index: 1;
+  width: min(580px, 92vw); background: var(--elevated);
+  border: 1px solid var(--border-strong); border-radius: var(--r-lg);
+  box-shadow: var(--shadow-pop); overflow: hidden;
+}
+
+.palette__input { display: flex; align-items: center; gap: 11px; padding: 14px 16px; border-bottom: 1px solid var(--border); }
+.palette__input ion-icon { width: 18px; height: 18px; color: var(--text-dim); }
+.palette__input input {
+  border: none; background: none; outline: none; color: var(--text);
+  font-size: 15px; width: 100%; font-family: var(--font-sans);
+}
+.palette__input input::placeholder { color: var(--text-dim); }
+.palette__input kbd {
+  font-family: var(--font-mono); font-size: 11px; color: var(--text-dim);
+  border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px;
+}
+
+.palette__results { max-height: 340px; overflow-y: auto; padding: 7px; }
+.palette__group {
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: var(--ls-label);
+  text-transform: uppercase; color: var(--text-dim); padding: 9px 9px 4px;
+}
+.palette__item {
+  display: flex; align-items: center; gap: 11px; padding: 9px 9px;
+  border-radius: var(--r-sm); cursor: pointer; font-size: 13.5px; color: var(--text);
+}
+.palette__item ion-icon { width: 16px; height: 16px; color: var(--text-muted); }
+.palette__item--active { background: var(--primary-weak); }
+.palette__item--active ion-icon { color: var(--primary); }
+.palette__label { flex: 1; min-width: 0; }
+.palette__item .mono { margin-left: auto; font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); }
+.palette__empty { padding: 20px; text-align: center; color: var(--text-dim); font-size: 13px; }
+
+/* Mobile: dock as a bottom sheet (topbar button opens it here). */
+@media (max-width: 640px) {
+  .palette-wrap { align-items: flex-end; padding-top: 0; }
+  .palette { width: 100%; border-radius: var(--r-lg) var(--r-lg) 0 0; border-bottom: none; }
+}
