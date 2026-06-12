@@ -6,7 +6,7 @@ import { Component, input } from '@angular/core';
   template: `
     <span class="badge badge--primary">{{ display() }}</span>
   `,
-  styleUrl: './badge.css',
+  styleUrl: './badge.scss',
 })
 export class DeviceTypeBadgeComponent {
   readonly type = input.required<string>();

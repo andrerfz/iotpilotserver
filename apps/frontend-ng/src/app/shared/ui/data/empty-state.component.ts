@@ -22,7 +22,7 @@ import { Component, input, ChangeDetectionStrategy } from '@angular/core';
       }
     </div>
   `,
-  styleUrl: './empty-state.component.css',
+  styleUrl: './empty-state.component.scss',
 })
 export class EmptyStateComponent {
   readonly title = input.required<string>();

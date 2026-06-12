@@ -49,7 +49,7 @@ export interface SelectOption<T = string> {
       }
     </div>
   `,
-  styleUrl: './ui-select.component.css',
+  styleUrl: './ui-select.component.scss',
 })
 export class UiSelectComponent<T = string> implements ControlValueAccessor {
   readonly label = input('');

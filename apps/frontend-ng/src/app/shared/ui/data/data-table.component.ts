@@ -155,7 +155,7 @@ interface SortState { key: string; dir: 1 | -1; }
       </div>
     </div>
   `,
-  styleUrl: './data-table.component.css',
+  styleUrl: './data-table.component.scss',
 })
 export class DataTableComponent<T extends Record<string, unknown> = Record<string, unknown>> {
   readonly columns = input.required<ColumnDef<T>[]>();

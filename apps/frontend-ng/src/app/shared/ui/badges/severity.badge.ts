@@ -29,7 +29,7 @@ const LABEL_MAP: Record<string, string> = {
   template: `
     <span class="badge" [ngClass]="'badge--' + color()">{{ label() }}</span>
   `,
-  styleUrl: './badge.css',
+  styleUrl: './badge.scss',
 })
 export class SeverityBadgeComponent {
   readonly severity = input.required<string>();

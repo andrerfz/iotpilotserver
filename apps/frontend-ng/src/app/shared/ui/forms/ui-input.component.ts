@@ -54,7 +54,7 @@ addIcons({ eyeOutline, eyeOffOutline });
       }
     </div>
   `,
-  styleUrl: './ui-input.component.css',
+  styleUrl: './ui-input.component.scss',
 })
 export class UiInputComponent implements ControlValueAccessor {
   readonly label = input('');

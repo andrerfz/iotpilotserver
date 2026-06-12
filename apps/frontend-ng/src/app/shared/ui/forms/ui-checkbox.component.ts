@@ -51,7 +51,7 @@ import { IonNote } from '@ionic/angular/standalone';
       }
     </div>
   `,
-  styleUrl: './ui-checkbox.component.css',
+  styleUrl: './ui-checkbox.component.scss',
 })
 export class UiCheckboxComponent implements ControlValueAccessor {
   readonly label = input('');

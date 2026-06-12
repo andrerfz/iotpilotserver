@@ -19,7 +19,7 @@ const ROLE_COLOR: Record<string, BadgeColor> = {
   template: `
     <span class="badge" [ngClass]="'badge--' + color()">{{ role() }}</span>
   `,
-  styleUrl: './badge.css',
+  styleUrl: './badge.scss',
 })
 export class RoleBadgeComponent {
   readonly role = input.required<string>();

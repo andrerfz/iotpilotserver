@@ -41,7 +41,7 @@ export type DeltaDir = 'up' | 'down' | 'flat';
       }
     </div>
   `,
-  styleUrl: './metric-card.component.css',
+  styleUrl: './metric-card.component.scss',
 })
 export class MetricCardComponent {
   readonly label = input.required<string>();

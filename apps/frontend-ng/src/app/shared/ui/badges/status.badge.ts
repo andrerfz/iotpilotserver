@@ -43,7 +43,7 @@ function getMeta(status: string): StatusMeta {
   template: `
     <span class="badge" [ngClass]="'badge--' + color()">{{ label() }}</span>
   `,
-  styleUrl: './badge.css',
+  styleUrl: './badge.scss',
 })
 export class StatusBadgeComponent {
   readonly status = input.required<string>();

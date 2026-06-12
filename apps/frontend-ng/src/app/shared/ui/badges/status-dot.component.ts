@@ -14,7 +14,7 @@ import { NgClass } from '@angular/common';
       [attr.aria-label]="status()">
     </span>
   `,
-  styleUrl: './status-dot.component.css',
+  styleUrl: './status-dot.component.scss',
 })
 export class StatusDotComponent {
   readonly status = input.required<string>();

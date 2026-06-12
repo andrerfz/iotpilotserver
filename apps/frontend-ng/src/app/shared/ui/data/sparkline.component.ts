@@ -21,7 +21,7 @@ import { Component, input, computed, ChangeDetectionStrategy } from '@angular/co
       <polyline [attr.points]="line()" fill="none" [attr.stroke]="color()" stroke-width="1.6" />
     </svg>
   `,
-  styleUrl: './sparkline.component.css',
+  styleUrl: './sparkline.component.scss',
 })
 export class SparklineComponent {
   readonly data = input.required<number[]>();
