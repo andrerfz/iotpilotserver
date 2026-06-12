@@ -23,6 +23,7 @@ import {UserMapper} from '@iotpilot/core/user/infrastructure/mappers/user.mapper
 import {TenantContextImpl} from '@iotpilot/core/shared/domain/tenant-context';
 import {CustomerId} from '@iotpilot/core/shared/domain/value-objects/customer-id.vo';
 import {StructuredLogger} from '@iotpilot/core/shared/infrastructure/logging/structured-logger';
+import {InMemoryEventBus} from '@iotpilot/core/shared/application/bus/event.bus';
 
 // Mock session service for E2E
 class TestSessionService {
@@ -68,16 +69,19 @@ describe('E2E: User Onboarding Journey', () => {
         sessionService = new TestSessionService();
         userAuthenticator = new UserAuthenticator(userRepository, passwordHasher);
         logger = StructuredLogger.forService('e2e-test');
+        const eventBus = new InMemoryEventBus();
 
         registerHandler = new RegisterUserHandler(
             userRepository,
             passwordHasher,
-            logger
+            logger,
+            eventBus
         );
 
         authenticateHandler = new AuthenticateUserHandler(
             userAuthenticator,
-            sessionService as any
+            sessionService as any,
+            eventBus
         );
 
         // Create customer in database for this test
