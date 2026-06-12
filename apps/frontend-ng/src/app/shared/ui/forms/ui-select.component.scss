@@ -1,4 +1,5 @@
-/* Ionic-themed via CSS custom properties. Label follows app.css ".label". */
+/* Single-select field that opens a BottomSheet of options. Field styling follows
+   the other form controls; the option rows reuse the prototype ".opt" pattern. */
 :host { display: block; }
 
 .ui-field { display: flex; flex-direction: column; gap: 6px; }
@@ -6,18 +7,39 @@
   font-family: var(--font-mono); font-size: var(--fs-label);
   letter-spacing: var(--ls-label); text-transform: uppercase; color: var(--text-dim);
 }
+
 .ui-select {
-  --background: var(--surface);
-  --color: var(--text);
-  --placeholder-color: var(--text-dim);
-  --border-radius: var(--r-sm);
-  --padding-start: 12px;
-  --padding-end: 12px;
-  --padding-top: 10px;
-  --padding-bottom: 10px;
-  border: 1px solid var(--border);
-  border-radius: var(--r-sm);
-  width: 100%;
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  height: 44px; padding: 0 12px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-sm);
+  color: var(--text); cursor: pointer; font-family: var(--font-sans); font-size: 14px;
+  text-align: left;
 }
+.ui-select:hover { border-color: var(--border-strong); }
+.ui-select:disabled { opacity: .5; cursor: not-allowed; }
+.ui-select__value { flex: 1; min-width: 0; }
+.ui-select__value--placeholder { color: var(--text-dim); }
+.ui-select__chev { width: 15px; height: 15px; color: var(--text-dim); flex: none; }
+
 .ui-field--error .ui-select { border-color: var(--danger); }
 .ui-field__error { font-family: var(--font-mono); font-size: 11px; color: var(--danger); }
+
+/* option list inside the sheet — ported from prototype app.css ".opt*" */
+.optlist { display: flex; flex-direction: column; gap: 3px; }
+.opt {
+  display: flex; align-items: center; gap: 11px; padding: 9px 10px;
+  border-radius: var(--r-sm); cursor: pointer; border: 1px solid transparent;
+  transition: background .1s;
+}
+.opt:hover { background: var(--surface-2); }
+.opt:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+.opt--sel { background: var(--primary-weak); border-color: var(--primary-line); }
+.opt__main { min-width: 0; flex: 1; }
+.opt__title { font-size: 13.5px; font-weight: 500; }
+.opt__check {
+  width: 19px; height: 19px; border-radius: 99px; border: 1.5px solid var(--border-strong);
+  display: grid; place-items: center; flex: none;
+}
+.opt__check ion-icon { width: 12px; height: 12px; color: var(--primary-ink); opacity: 0; }
+.opt--sel .opt__check { background: var(--primary); border-color: var(--primary); }
+.opt--sel .opt__check ion-icon { opacity: 1; }

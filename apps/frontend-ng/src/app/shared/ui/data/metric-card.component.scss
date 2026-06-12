@@ -1,10 +1,11 @@
 /* Ported 1:1 from prototype app.css — "Metric cards". */
-:host { display: block; }
+:host { display: block; height: 100%; }
 
 .metric {
   display: flex; flex-direction: column;
   background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--r-lg); padding: 14px 16px 0; overflow: hidden; min-height: 118px;
+  border-radius: var(--r-lg); padding: 14px 16px 0; overflow: hidden;
+  min-height: 118px; height: 100%;
 }
 .metric__top { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
 .metric__icon {

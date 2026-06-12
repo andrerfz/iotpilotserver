@@ -1,6 +1,5 @@
-/* ion-modal themed as the prototype's bottom sheet; inner head/body/foot
-   ported from app.css ".sheet*". ion-modal owns the panel chrome (rounded top,
-   backdrop, drag handle, slide-up). */
+/* ion-modal themed as the prototype's bottom sheet. Actions sit in the header
+   bar (iOS nav style) so they're always visible at any breakpoint. */
 .ui-sheet {
   --background: var(--elevated);
   --border-radius: 18px;
@@ -11,28 +10,27 @@
   --ion-backdrop-color: var(--scrim);
 }
 
-.sheet__inner {
-  display: flex; flex-direction: column; height: 100%;
-  background: var(--elevated); color: var(--text);
-}
+.sheet__header { --background: var(--elevated); }
+.sheet__header::after { display: none; }   /* kill the md shadow line */
+.sheet__content { --background: var(--elevated); }
 
-.sheet__head {
+.sheet__bar {
   display: flex; align-items: center; gap: 12px;
-  padding: 8px 18px 14px; border-bottom: 1px solid var(--border);
+  padding: 6px 14px 12px; border-bottom: 1px solid var(--border);
+  background: var(--elevated);
 }
-.sheet__title { font-size: 15px; font-weight: 600; }
-.sheet__sub { font-size: 12.5px; color: var(--text-muted); margin-top: 1px; }
-.sheet__head .label {
-  margin-left: auto;
-  font-family: var(--font-mono); font-size: var(--fs-label);
-  letter-spacing: var(--ls-label); text-transform: uppercase; color: var(--text-dim);
-}
+.sheet__titles { flex: 1; min-width: 0; text-align: center; }
+.sheet__title { font-size: 15px; font-weight: 600; color: var(--text); }
+.sheet__sub { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
 
-.sheet__body { padding: 14px 18px; overflow-y: auto; flex: 1; min-height: 120px; }
-
-.sheet__foot {
-  display: flex; align-items: center; gap: 12px;
-  padding: 13px 18px; border-top: 1px solid var(--border); background: var(--elevated);
+.sheet__act {
+  background: none; border: none; cursor: pointer; padding: 6px 2px;
+  font-family: var(--font-sans); font-size: 14px; color: var(--text-muted);
+  white-space: nowrap; flex: none;
 }
-.sheet__foot--split { justify-content: space-between; }
-.sheet__foot ion-button { flex: 1; --border-radius: var(--r-sm); height: 40px; }
+.sheet__act:hover { color: var(--text); }
+.sheet__act--save { color: var(--primary); font-weight: 600; }
+.sheet__act--save:hover { color: var(--primary); }
+.sheet__act:disabled { opacity: .4; cursor: not-allowed; }
+
+.sheet__body { padding: 14px 18px; }

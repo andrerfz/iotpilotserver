@@ -1,48 +1,49 @@
-import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
-import { IonModal, IonButton } from '@ionic/angular/standalone';
+import { Component, input, output, computed, ChangeDetectionStrategy } from '@angular/core';
+import { IonModal, IonHeader, IonContent } from '@ionic/angular/standalone';
 
 /**
- * Bottom sheet — the prototype's signature selector shell, built on `ion-modal`
- * with breakpoints (Q-resolved). Header (title/sub + optional count badge),
- * projected body, split footer (Cancel left / Save right with saveDisabled).
- * The parent owns the `open` state; `close`/`save` report user intent.
+ * Bottom sheet — the prototype's signature selector shell over `ion-modal` with
+ * breakpoints. Actions live in the header bar (iOS-style: Cancel left, Apply
+ * right) so they're always visible regardless of breakpoint. Body is projected.
+ * The parent owns `open`; `dismiss`/`save` report user intent.
  */
 @Component({
   selector: 'ui-bottom-sheet',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonModal, IonButton],
+  imports: [IonModal, IonHeader, IonContent],
   template: `
     <ion-modal
+      #modalEl
       class="ui-sheet"
       [isOpen]="open()"
-      [breakpoints]="[0, 1]"
-      [initialBreakpoint]="1"
+      [breakpoints]="breakpoints()"
+      [initialBreakpoint]="initialBreakpoint()"
       [handle]="true"
+      (ionModalDidPresent)="modalEl.setCurrentBreakpoint(initialBreakpoint())"
       (ionModalDidDismiss)="dismiss.emit()">
       <ng-template>
-        <div class="sheet__inner">
-          <div class="sheet__head">
-            <div>
+        <ion-header class="sheet__header">
+          <div class="sheet__bar">
+            <button type="button" class="sheet__act" (click)="dismiss.emit()">Cancel</button>
+            <div class="sheet__titles">
               <div class="sheet__title">{{ title() }}</div>
-              @if (sub()) {
-                <div class="sheet__sub">{{ sub() }}</div>
+              @if (subline()) {
+                <div class="sheet__sub">{{ subline() }}</div>
               }
             </div>
-            @if (count() !== null && count() !== undefined) {
-              <span class="label">{{ count() }} selected</span>
-            }
+            <button type="button" class="sheet__act sheet__act--save"
+              [disabled]="saveDisabled()" (click)="save.emit()">
+              {{ saveLabel() }}
+            </button>
           </div>
+        </ion-header>
+
+        <ion-content class="sheet__content">
           <div class="sheet__body">
             <ng-content></ng-content>
           </div>
-          <div class="sheet__foot sheet__foot--split">
-            <ion-button fill="outline" color="medium" (click)="dismiss.emit()">Cancel</ion-button>
-            <ion-button color="primary" [disabled]="saveDisabled()" (click)="save.emit()">
-              {{ saveLabel() }}
-            </ion-button>
-          </div>
-        </div>
+        </ion-content>
       </ng-template>
     </ion-modal>
   `,
@@ -54,9 +55,18 @@ export class BottomSheetComponent {
   readonly sub = input('');
   readonly saveLabel = input('Apply');
   readonly saveDisabled = input(false);
-  /** Selected count badge in the header; null/undefined hides it. */
+  /** Selected count shown under the title; null/undefined falls back to `sub`. */
   readonly count = input<number | null>(null);
+  /** Default ~0.92 leaves a header-height gap at the top (iOS look); draggable
+   *  up to full or down to dismiss via the breakpoints array. */
+  readonly initialBreakpoint = input(0.92);
+  readonly breakpoints = input<number[]>([0, 0.92, 1]);
 
   readonly dismiss = output<void>();
   readonly save = output<void>();
+
+  protected readonly subline = computed(() => {
+    const c = this.count();
+    return c !== null && c !== undefined ? `${c} selected` : this.sub();
+  });
 }

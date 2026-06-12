@@ -1,7 +1,9 @@
 import { Component, signal, inject, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { addIcons } from 'ionicons';
+import { hardwareChipOutline, speedometerOutline, notificationsOutline } from 'ionicons/icons';
 import {
-  IonContent, IonHeader, IonToolbar, IonTitle, IonButton,
+  IonContent, IonHeader, IonToolbar, IonTitle, IonButton, IonIcon,
   ThemeService,
   StatusBadgeComponent, StatusDotComponent, SeverityBadgeComponent,
   RoleBadgeComponent, DeviceTypeBadgeComponent,
@@ -23,10 +25,11 @@ interface DeviceRow extends Record<string, unknown> {
   cpu: number;
 }
 
+addIcons({ hardwareChipOutline, speedometerOutline, notificationsOutline });
+
 /**
- * Provisional kit showcase (route `/__ui`). Covers T3–T6 barrel exports.
- * T12 will fold this into the full kitchen-sink (shell + remaining components)
- * and exclude it from the production build.
+ * Provisional kit showcase (route `/__ui`). Covers every barrel export.
+ * Dev-only route (gated by isDevMode() in app.routes).
  */
 @Component({
   selector: 'app-demo-page',
@@ -34,7 +37,7 @@ interface DeviceRow extends Record<string, unknown> {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
-    IonContent, IonHeader, IonToolbar, IonTitle, IonButton,
+    IonContent, IonHeader, IonToolbar, IonTitle, IonButton, IonIcon,
     StatusBadgeComponent, StatusDotComponent, SeverityBadgeComponent,
     RoleBadgeComponent, DeviceTypeBadgeComponent,
     UiInputComponent, UiSwitchComponent, UiCheckboxComponent, UiSelectComponent,
@@ -115,9 +118,17 @@ interface DeviceRow extends Record<string, unknown> {
         <section class="card">
           <h2>T5 — Metric cards, sparkline, empty state</h2>
           <div class="grid3">
-            <ui-metric-card label="Devices online" value="128" delta="+4" deltaDir="up" [spark]="spark"></ui-metric-card>
-            <ui-metric-card label="Avg CPU" value="42" unit="%" delta="-3%" deltaDir="down" [spark]="spark"></ui-metric-card>
-            <ui-metric-card label="Open alerts" value="7"></ui-metric-card>
+            <ui-metric-card label="Devices online" value="128" delta="+4" deltaDir="up" [spark]="spark">
+              <ion-icon icon name="hardware-chip-outline"></ion-icon>
+            </ui-metric-card>
+            <ui-metric-card label="Avg CPU" value="42" unit="%" delta="-3%" deltaDir="down" [spark]="spark"
+              iconColor="var(--warning)" iconBg="color-mix(in srgb, var(--warning) 15%, transparent)">
+              <ion-icon icon name="speedometer-outline"></ion-icon>
+            </ui-metric-card>
+            <ui-metric-card label="Open alerts" value="7"
+              iconColor="var(--danger)" iconBg="color-mix(in srgb, var(--danger) 15%, transparent)">
+              <ion-icon icon name="notifications-outline"></ion-icon>
+            </ui-metric-card>
           </div>
           <div class="card inner spark-demo">
             <span class="spark-demo__label">Sparkline</span>

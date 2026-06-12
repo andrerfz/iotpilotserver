@@ -1,5 +1,5 @@
 import { render, fireEvent } from '@testing-library/angular';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { ReactiveFormsModule, FormControl, FormGroup } from '@angular/forms';
 import { Component } from '@angular/core';
 import { UiInputComponent } from './ui-input.component';
@@ -162,35 +162,43 @@ describe('UiSelectComponent', () => {
     { label: 'System', value: 'system' },
   ];
 
-  it('renders with label and options', async () => {
+  it('renders the label and a field trigger showing the placeholder', async () => {
     const { container } = await render(UiSelectComponent, {
-      inputs: { label: 'Theme', options },
+      inputs: { label: 'Theme', options, placeholder: 'Pick one' },
     });
     expect(container.querySelector('ion-label')?.textContent).toContain('Theme');
-    const opts = container.querySelectorAll('ion-select-option');
-    expect(opts.length).toBe(3);
-    expect(opts[0].textContent).toContain('Light');
+    expect(container.querySelector('.ui-select')).toBeTruthy();
+    expect(container.querySelector('.ui-select__value')?.textContent?.trim()).toBe('Pick one');
   });
 
-  it('CVA: writeValue sets selected value', async () => {
-    const { fixture } = await render(UiSelectComponent, {
-      inputs: { options },
-    });
+  it('CVA: writeValue sets the value and shows its label in the field', async () => {
+    const { fixture, container } = await render(UiSelectComponent, { inputs: { options } });
     fixture.componentInstance.writeValue('dark');
     fixture.detectChanges();
-    expect(
-      (fixture.componentInstance as unknown as { value: () => string }).value(),
-    ).toBe('dark');
+    expect((fixture.componentInstance as unknown as { value: () => string | null }).value()).toBe('dark');
+    expect(container.querySelector('.ui-select__value')?.textContent?.trim()).toBe('Dark');
   });
 
-  it('CVA: setDisabledState disables', async () => {
-    const { fixture } = await render(UiSelectComponent, {
-      inputs: { options },
-    });
+  it('CVA: commit applies the draft and notifies (sheet round-trip)', async () => {
+    const onChange = vi.fn();
+    const { fixture } = await render(UiSelectComponent, { inputs: { options } });
+    const c = fixture.componentInstance as unknown as {
+      registerOnChange(fn: (v: string | null) => void): void;
+      openSheet(): void; draft: { set(v: string): void }; commit(): void; value(): string | null;
+    };
+    c.registerOnChange(onChange);
+    c.openSheet();
+    c.draft.set('system');
+    c.commit();
+    expect(onChange).toHaveBeenCalledWith('system');
+    expect(c.value()).toBe('system');
+  });
+
+  it('CVA: setDisabledState disables the trigger', async () => {
+    const { fixture, container } = await render(UiSelectComponent, { inputs: { options } });
     fixture.componentInstance.setDisabledState(true);
-    expect(
-      (fixture.componentInstance as unknown as { isDisabled: () => boolean }).isDisabled(),
-    ).toBe(true);
+    fixture.detectChanges();
+    expect((container.querySelector('.ui-select') as HTMLButtonElement).disabled).toBe(true);
   });
 
   it('shows error note', async () => {

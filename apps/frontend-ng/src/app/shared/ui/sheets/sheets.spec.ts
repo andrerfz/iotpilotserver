@@ -76,8 +76,8 @@ describe('BottomSheetComponent', () => {
     };
     expect(modal).toBeTruthy();
     expect(modal.isOpen).toBe(false);
-    expect(modal.breakpoints).toEqual([0, 1]);
-    expect(modal.initialBreakpoint).toBe(1);
+    expect(modal.breakpoints).toEqual([0, 0.92, 1]);
+    expect(modal.initialBreakpoint).toBe(0.92);
   });
 
   it('emits close on modal dismiss', async () => {
