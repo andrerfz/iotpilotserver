@@ -17,7 +17,7 @@ matching `kit.jsx` component before implementing.
 | T6 | DataTable | done |
 | T7 | BottomSheet + FilterChip | done |
 | T8 | Pickers (device, user, multi-select, date range) | done |
-| T9 | Shell layout (split-pane rail + topbar) | pending |
+| T9 | Shell layout (split-pane rail + topbar) | done |
 | T10 | User menu + tenant switcher | pending |
 | T11 | Command palette | pending |
 | T12 | Shell satellites + demo page | pending |

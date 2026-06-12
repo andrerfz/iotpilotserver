@@ -1,0 +1,16 @@
+:host { display: block; height: 100%; }
+
+ion-split-pane {
+  --side-width: var(--rail-w);
+  --side-max-width: var(--rail-w);
+}
+ion-menu { --width: var(--rail-w); --background: var(--elevated); }
+.rail-host { --background: var(--elevated); }
+
+/* Main column: topbar (fixed) + routed outlet (fills remaining height). */
+.main {
+  display: flex; flex-direction: column;
+  min-width: 0; min-height: 0; height: 100%;
+  background: var(--bg);
+}
+ion-router-outlet { position: relative; flex: 1; min-height: 0; }
