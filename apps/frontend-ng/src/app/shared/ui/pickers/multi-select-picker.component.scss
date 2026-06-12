@@ -34,11 +34,3 @@
 .opt--sel .opt__check { background: var(--primary); border-color: var(--primary); }
 .opt--sel .opt__check ion-icon { opacity: 1; }
 
-.opt__radio {
-  width: 18px; height: 18px; border-radius: 99px;
-  border: 1.5px solid var(--border-strong); flex: none; position: relative;
-}
-.opt--sel .opt__radio { border-color: var(--primary); }
-.opt--sel .opt__radio::after {
-  content: ""; position: absolute; inset: 3px; border-radius: 99px; background: var(--primary);
-}

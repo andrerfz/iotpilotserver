@@ -184,10 +184,10 @@ describe('UiSelectComponent', () => {
     const { fixture } = await render(UiSelectComponent, { inputs: { options } });
     const c = fixture.componentInstance as unknown as {
       registerOnChange(fn: (v: string | null) => void): void;
-      openSheet(): void; draft: { set(v: string): void }; commit(): void; value(): string | null;
+      draft: { set(v: string): void }; commit(): void; value(): string | null;
     };
     c.registerOnChange(onChange);
-    c.openSheet();
+    // willOpen would sync draft from value; simulate the user picking an option then Apply.
     c.draft.set('system');
     c.commit();
     expect(onChange).toHaveBeenCalledWith('system');

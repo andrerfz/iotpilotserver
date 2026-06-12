@@ -11,7 +11,7 @@ import { DateRangePickerComponent } from './date-range-picker.component';
 
 /** Test-only views onto the components' protected members. */
 interface MultiHarness {
-  openSheet(): void;
+  onWillOpen(): void;
   toggle(v: string): void;
   save(): void;
   draft(): string[];
@@ -20,7 +20,6 @@ interface MultiHarness {
 }
 interface MappedHarness { options(): PickerOption[]; }
 interface DateHarness {
-  openSheet(): void;
   save(): void;
   draft: { set(v: string): void };
   cells: (number | null)[];
@@ -61,7 +60,7 @@ describe('MultiSelectPickerComponent', () => {
       on: { valueChange: onChange },
     });
     const c = fixture.componentInstance as unknown as MultiHarness;
-    c.openSheet();
+    c.onWillOpen();
     c.toggle('ONLINE'); c.toggle('OFFLINE'); c.toggle('ONLINE'); // +online +offline -online
     c.save();
     expect(onChange).toHaveBeenCalledWith(['OFFLINE']);
@@ -74,7 +73,7 @@ describe('MultiSelectPickerComponent', () => {
       on: { valueChange: onChange },
     });
     const c = fixture.componentInstance as unknown as MultiHarness;
-    c.openSheet();
+    c.onWillOpen();
     c.toggle('OFFLINE'); c.toggle('MAINTENANCE');
     c.save();
     expect(onChange).toHaveBeenCalledWith(['MAINTENANCE']);
@@ -85,9 +84,9 @@ describe('MultiSelectPickerComponent', () => {
       inputs: { label: 'Status', options: OPTS, value: ['ONLINE'] },
     });
     const c = fixture.componentInstance as unknown as MultiHarness;
-    c.openSheet();
+    c.onWillOpen();
     c.toggle('OFFLINE');
-    c.openSheet(); // reopen discards uncommitted draft
+    c.onWillOpen(); // reopen discards uncommitted draft
     expect(c.draft()).toEqual(['ONLINE']);
   });
 
@@ -165,8 +164,7 @@ describe('DateRangePickerComponent', () => {
       on: { valueChange: onChange },
     });
     const c = fixture.componentInstance as unknown as DateHarness;
-    c.openSheet();
-    c.draft.set('30d');
+    c.draft.set('30d'); // willOpen would sync from value; user then picks a preset
     c.save();
     expect(onChange).toHaveBeenCalledWith('30d');
   });

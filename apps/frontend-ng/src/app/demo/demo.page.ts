@@ -1,7 +1,7 @@
 import { Component, signal, inject, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { addIcons } from 'ionicons';
-import { hardwareChipOutline, speedometerOutline, notificationsOutline } from 'ionicons/icons';
+import { hardwareChipOutline, speedometerOutline, notificationsOutline, checkmark } from 'ionicons/icons';
 import {
   IonContent, IonHeader, IonToolbar, IonTitle, IonButton, IonIcon,
   ThemeService,
@@ -25,7 +25,7 @@ interface DeviceRow extends Record<string, unknown> {
   cpu: number;
 }
 
-addIcons({ hardwareChipOutline, speedometerOutline, notificationsOutline });
+addIcons({ hardwareChipOutline, speedometerOutline, notificationsOutline, checkmark });
 
 /**
  * Provisional kit showcase (route `/__ui`). Covers every barrel export.
@@ -163,7 +163,7 @@ addIcons({ hardwareChipOutline, speedometerOutline, notificationsOutline });
               label="Status"
               [value]="statusFilter() || ''"
               [active]="!!statusFilter()"
-              (chipClick)="sheetOpen.set(true)"
+              (chipClick)="statusSheet.open()"
               (clear)="statusFilter.set('')">
             </ui-filter-chip>
             <ui-filter-chip label="Region" value="Europe" [active]="true" [count]="2"></ui-filter-chip>
@@ -172,20 +172,25 @@ addIcons({ hardwareChipOutline, speedometerOutline, notificationsOutline });
           <p class="muted">status filter: {{ statusFilter() || '—' }}</p>
 
           <ui-bottom-sheet
-            [open]="sheetOpen()"
+            #statusSheet
             title="Filter by status"
             sub="Pick one device status"
             saveLabel="Apply"
             [saveDisabled]="!draftStatus()"
             [count]="draftStatus() ? 1 : null"
-            (dismiss)="sheetOpen.set(false)"
-            (save)="statusFilter.set(draftStatus()); sheetOpen.set(false)">
-            <ui-select
-              label="Status"
-              [options]="statusOptions"
-              [ngModel]="draftStatus()"
-              (ngModelChange)="draftStatus.set($event)">
-            </ui-select>
+            (willOpen)="draftStatus.set(statusFilter())"
+            (save)="statusFilter.set(draftStatus())">
+            <div class="optlist">
+              @for (opt of statusOptions; track opt.value) {
+                <div class="opt" [class.opt--sel]="draftStatus() === opt.value"
+                  role="button" tabindex="0"
+                  (click)="draftStatus.set(opt.value)"
+                  (keydown.enter)="draftStatus.set(opt.value)">
+                  <div class="opt__title">{{ opt.label }}</div>
+                  <div class="opt__check"><ion-icon name="checkmark"></ion-icon></div>
+                </div>
+              }
+            </div>
           </ui-bottom-sheet>
         </section>
 
@@ -255,6 +260,20 @@ addIcons({ hardwareChipOutline, speedometerOutline, notificationsOutline });
     .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 14px; }
     .muted { font-size: 12px; color: var(--text-muted); margin: 4px 0 0; }
     @media (max-width: 640px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+
+    /* option rows for the T7 status sheet (mirrors the picker's .opt look) */
+    .optlist { display: flex; flex-direction: column; gap: 3px; }
+    .opt { display: flex; align-items: center; gap: 11px; padding: 9px 10px;
+      border-radius: var(--r-sm); cursor: pointer; border: 1px solid transparent; transition: background .1s; }
+    .opt:hover { background: var(--surface-2); }
+    .opt:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+    .opt--sel { background: var(--primary-weak); border-color: var(--primary-line); }
+    .opt__title { flex: 1; min-width: 0; font-size: 13.5px; font-weight: 500; }
+    .opt__check { width: 19px; height: 19px; border-radius: 6px; border: 1.5px solid var(--border-strong);
+      display: grid; place-items: center; flex: none; }
+    .opt__check ion-icon { width: 12px; height: 12px; color: var(--primary-ink); opacity: 0; }
+    .opt--sel .opt__check { background: var(--primary); border-color: var(--primary); }
+    .opt--sel .opt__check ion-icon { opacity: 1; }
   `],
 })
 export class DemoPage {
@@ -291,7 +310,6 @@ export class DemoPage {
   protected readonly selCount = signal(0);
 
   // T7 — sheet + chip
-  protected readonly sheetOpen = signal(false);
   protected readonly statusFilter = signal('');
   protected readonly draftStatus = signal('');
   protected readonly statusOptions: SelectOption[] = [

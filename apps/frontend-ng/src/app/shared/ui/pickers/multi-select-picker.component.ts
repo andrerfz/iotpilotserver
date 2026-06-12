@@ -41,7 +41,7 @@ export interface PickerOption<T = string> {
       [value]="summary()"
       [active]="value().length > 0"
       [count]="multi() ? value().length : 0"
-      (chipClick)="openSheet()"
+      (chipClick)="sheet.open()"
       (clear)="valueChange.emit([])">
       @if (chipIcon()) {
         <ion-icon icon [name]="chipIcon()"></ion-icon>
@@ -49,12 +49,12 @@ export interface PickerOption<T = string> {
     </ui-filter-chip>
 
     <ui-bottom-sheet
-      [open]="open()"
+      #sheet
       [title]="title()"
       [sub]="sub()"
       [count]="multi() ? draft().length : null"
       saveLabel="Apply"
-      (dismiss)="open.set(false)"
+      (willOpen)="onWillOpen()"
       (save)="save()">
       @if (searchable()) {
         <div class="field">
@@ -76,10 +76,8 @@ export interface PickerOption<T = string> {
               @if (!opt.severity) { <div class="opt__title">{{ opt.label }}</div> }
               @if (opt.meta) { <div class="opt__meta">{{ opt.meta }}</div> }
             </div>
-            <div [class]="multi() ? 'opt__check' : 'opt__radio'">
-              @if (multi() && isSelected(opt.value)) {
-                <ion-icon name="checkmark"></ion-icon>
-              }
+            <div class="opt__check">
+              <ion-icon name="checkmark"></ion-icon>
             </div>
           </div>
         } @empty {
@@ -104,7 +102,6 @@ export class MultiSelectPickerComponent<T = string> {
 
   readonly valueChange = output<T[]>();
 
-  protected readonly open = signal(false);
   protected readonly draft = signal<T[]>([]);
   protected readonly query = signal('');
 
@@ -121,10 +118,9 @@ export class MultiSelectPickerComponent<T = string> {
     return `${v.length} selected`;
   });
 
-  protected openSheet(): void {
+  protected onWillOpen(): void {
     this.draft.set([...this.value()]);
     this.query.set('');
-    this.open.set(true);
   }
 
   protected isSelected(v: T): boolean {
@@ -141,6 +137,5 @@ export class MultiSelectPickerComponent<T = string> {
 
   protected save(): void {
     this.valueChange.emit(this.draft());
-    this.open.set(false);
   }
 }

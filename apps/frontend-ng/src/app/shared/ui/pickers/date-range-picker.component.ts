@@ -33,16 +33,16 @@ const DOW = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [IonIcon, FilterChipComponent, BottomSheetComponent],
   template: `
-    <ui-filter-chip [label]="label()" [value]="summary()" [active]="true" (chipClick)="openSheet()">
+    <ui-filter-chip [label]="label()" [value]="summary()" [active]="true" (chipClick)="sheet.open()">
       <ion-icon icon name="calendar-outline"></ion-icon>
     </ui-filter-chip>
 
     <ui-bottom-sheet
-      [open]="open()"
+      #sheet
       title="Select time range"
       sub="Quick preset or custom range"
       saveLabel="Apply"
-      (dismiss)="open.set(false)"
+      (willOpen)="draft.set(value())"
       (save)="save()">
       <div class="presets">
         @for (p of presets(); track p.id) {
@@ -80,7 +80,6 @@ export class DateRangePickerComponent {
 
   readonly valueChange = output<string>();
 
-  protected readonly open = signal(false);
   protected readonly draft = signal<string>('24h');
 
   protected readonly summary = computed(() =>
@@ -107,13 +106,7 @@ export class DateRangePickerComponent {
     ];
   }
 
-  protected openSheet(): void {
-    this.draft.set(this.value());
-    this.open.set(true);
-  }
-
   protected save(): void {
     this.valueChange.emit(this.draft());
-    this.open.set(false);
   }
 }

@@ -64,26 +64,47 @@ describe('FilterChipComponent', () => {
 
 // ─── BottomSheetComponent ─────────────────────────────────────────────────────
 
-// Note: ion-modal relocates to an overlay container once isOpen=true, so these
-// assert the inline element (open=false) — bindings/config/events live there.
+// Note: ion-modal relocates to an overlay container once presented, so these
+// assert the inline element — sheet config and lifecycle events live there.
 describe('BottomSheetComponent', () => {
-  it('renders an ion-modal bound to the open input + sheet breakpoints', async () => {
+  it('renders an ion-modal configured as a 0.92 sheet', async () => {
     const { container } = await render(BottomSheetComponent, {
-      inputs: { open: false, title: 'Pick devices' },
+      inputs: { title: 'Pick devices' },
     });
     const modal = container.querySelector('ion-modal') as HTMLElement & {
-      isOpen?: boolean; breakpoints?: number[]; initialBreakpoint?: number;
+      initialBreakpoint?: number; breakpoints?: number[];
     };
     expect(modal).toBeTruthy();
-    expect(modal.isOpen).toBe(false);
-    expect(modal.breakpoints).toEqual([0, 0.92, 1]);
     expect(modal.initialBreakpoint).toBe(0.92);
+    expect(modal.breakpoints).toEqual([0, 0.92]);
+    expect(modal.classList.contains('ui-sheet')).toBe(true);
   });
 
-  it('emits close on modal dismiss', async () => {
+  it('open() presents the modal (honoring initialBreakpoint)', async () => {
+    const { fixture, container } = await render(BottomSheetComponent, {
+      inputs: { title: 'Pick' },
+    });
+    const modal = container.querySelector('ion-modal') as HTMLElement & { present: () => Promise<void> };
+    const present = vi.spyOn(modal, 'present').mockResolvedValue(undefined);
+    fixture.componentInstance.open();
+    expect(present).toHaveBeenCalledTimes(1);
+  });
+
+  it('emits willOpen when the modal will present', async () => {
+    const onWillOpen = vi.fn();
+    const { container } = await render(BottomSheetComponent, {
+      inputs: { title: 'Pick' },
+      on: { willOpen: onWillOpen },
+    });
+    (container.querySelector('ion-modal') as HTMLElement)
+      .dispatchEvent(new CustomEvent('ionModalWillPresent'));
+    expect(onWillOpen).toHaveBeenCalledTimes(1);
+  });
+
+  it('emits dismiss on modal dismiss', async () => {
     const onClose = vi.fn();
     const { container } = await render(BottomSheetComponent, {
-      inputs: { open: false, title: 'Pick' },
+      inputs: { title: 'Pick' },
       on: { dismiss: onClose },
     });
     (container.querySelector('ion-modal') as HTMLElement)

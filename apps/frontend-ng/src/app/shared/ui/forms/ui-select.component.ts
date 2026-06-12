@@ -18,7 +18,7 @@ export interface SelectOption<T = string> {
  * Single-select form control. The field opens a BottomSheet of options (iOS-style
  * sheet, stacking above any parent sheet) with Apply/Cancel — not a popover, so it
  * behaves the same in forms and nested inside other sheets. Multi-select is the
- * MultiSelectPicker. ControlValueAccessor over the chosen value.
+ * MultiSelectPicker. ControlValueAccessor over the value.
  */
 @Component({
   selector: 'ui-select',
@@ -38,7 +38,8 @@ export interface SelectOption<T = string> {
         <ion-label class="ui-field__label">{{ label() }}</ion-label>
       }
 
-      <button type="button" class="ui-select" [disabled]="isDisabled()" (click)="openSheet()" (blur)="onTouched()">
+      <button type="button" class="ui-select" [disabled]="isDisabled()"
+        (click)="sheet.open()" (blur)="onTouched()">
         <span class="ui-select__value" [class.ui-select__value--placeholder]="!selectedLabel()">
           {{ selectedLabel() || placeholder() }}
         </span>
@@ -50,10 +51,10 @@ export interface SelectOption<T = string> {
       }
 
       <ui-bottom-sheet
-        [open]="open()"
+        #sheet
         [title]="label() || 'Select'"
         saveLabel="Apply"
-        (dismiss)="open.set(false)"
+        (willOpen)="draft.set(value())"
         (save)="commit()">
         <div class="optlist">
           @for (opt of options(); track opt.value) {
@@ -83,7 +84,6 @@ export class UiSelectComponent<T = string> implements ControlValueAccessor {
   protected readonly value = signal<T | null>(null);
   protected readonly draft = signal<T | null>(null);
   protected readonly isDisabled = signal(false);
-  protected readonly open = signal(false);
 
   protected readonly selectedLabel = computed(() =>
     this.options().find(o => o.value === this.value())?.label ?? '',
@@ -108,15 +108,9 @@ export class UiSelectComponent<T = string> implements ControlValueAccessor {
     this.isDisabled.set(disabled);
   }
 
-  protected openSheet(): void {
-    this.draft.set(this.value());
-    this.open.set(true);
-  }
-
   protected commit(): void {
     this.value.set(this.draft());
     this.onChangeFn(this.draft());
     this.onTouched();
-    this.open.set(false);
   }
 }
