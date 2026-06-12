@@ -8,20 +8,7 @@
 }
 
 .rail__brand {
-  display: flex; align-items: center; gap: 10px;
   padding: 18px 18px 16px; border-bottom: 1px solid var(--border);
-}
-.brand-mark {
-  width: 30px; height: 30px; border-radius: 8px; flex: none;
-  background: var(--primary); color: var(--primary-ink);
-  display: grid; place-items: center; position: relative;
-  box-shadow: 0 0 0 1px var(--primary-line), 0 6px 18px -6px var(--primary);
-}
-.brand-mark ion-icon { width: 17px; height: 17px; }
-.brand-name { font-weight: 600; letter-spacing: -0.01em; font-size: 14.5px; }
-.brand-sub {
-  font-family: var(--font-mono); font-size: 10px; color: var(--text-dim);
-  letter-spacing: 0.04em; text-transform: uppercase;
 }
 
 .rail__scroll { overflow-y: auto; flex: 1; padding: 12px 12px 18px; min-height: 0; }

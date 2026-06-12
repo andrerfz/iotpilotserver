@@ -1,0 +1,10 @@
+:host { display: block; }
+
+.maint {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 22px; font-size: 12.5px;
+  background: var(--warning-weak); color: var(--warning);
+  border-bottom: 1px solid var(--primary-line);
+  border-left: 3px solid var(--warning);
+}
+.maint ion-icon { width: 16px; height: 16px; flex: none; }

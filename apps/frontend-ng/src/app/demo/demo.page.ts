@@ -13,6 +13,7 @@ import {
   DevicePickerComponent, DevicePickerItem,
   UserPickerComponent, UserPickerItem,
   DateRangePickerComponent,
+  AppLogoComponent, NetworkStatusComponent, MaintenanceBannerComponent,
 } from '@ng/shared/ui';
 
 interface DeviceRow extends Record<string, unknown> {
@@ -41,6 +42,7 @@ interface DeviceRow extends Record<string, unknown> {
     DataTableComponent,
     FilterChipComponent, BottomSheetComponent,
     MultiSelectPickerComponent, DevicePickerComponent, UserPickerComponent, DateRangePickerComponent,
+    AppLogoComponent, NetworkStatusComponent, MaintenanceBannerComponent,
   ],
   template: `
     <ion-header>
@@ -210,6 +212,22 @@ interface DeviceRow extends Record<string, unknown> {
             statuses={{ pickedStatuses().length }} · devices={{ pickedDevices().length }} ·
             users={{ pickedUsers().length }} · period={{ period() }}
           </p>
+        </section>
+
+        <!-- T12 — Shell satellites -->
+        <section class="card">
+          <h2>T12 — Shell satellites (logo, maintenance banner, network status)</h2>
+          <div class="row">
+            <ui-app-logo></ui-app-logo>
+            <ui-app-logo [showText]="false"></ui-app-logo>
+          </div>
+          <div class="card inner" style="padding:0; overflow:hidden;">
+            <ui-maintenance-banner message="Scheduled maintenance tonight 02:00–03:00 UTC."></ui-maintenance-banner>
+            <ui-network-status></ui-network-status>
+            <p class="muted" style="padding:12px 16px;">
+              Network status shows a bar only while offline (toggle your connection to see it).
+            </p>
+          </div>
         </section>
       </div>
     </ion-content>

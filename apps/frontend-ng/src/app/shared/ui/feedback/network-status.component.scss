@@ -1,0 +1,9 @@
+:host { display: block; }
+
+.netbar {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 22px; font-size: 12.5px;
+  background: var(--danger-weak); color: var(--danger);
+  border-bottom: 1px solid color-mix(in srgb, var(--danger) 35%, transparent);
+}
+.netbar ion-icon { width: 16px; height: 16px; flex: none; }

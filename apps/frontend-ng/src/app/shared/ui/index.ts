@@ -147,3 +147,7 @@ export { UserPickerComponent } from './pickers/user-picker.component';
 export type { UserPickerItem } from './pickers/user-picker.component';
 export { DateRangePickerComponent } from './pickers/date-range-picker.component';
 export type { DateRangePreset } from './pickers/date-range-picker.component';
+// T12 — Shell satellites
+export { AppLogoComponent } from './brand/app-logo.component';
+export { NetworkStatusComponent } from './feedback/network-status.component';
+export { MaintenanceBannerComponent } from './feedback/maintenance-banner.component';

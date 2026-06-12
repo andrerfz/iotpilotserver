@@ -20,7 +20,7 @@ matching `kit.jsx` component before implementing.
 | T9 | Shell layout (split-pane rail + topbar) | done |
 | T10 | User menu + tenant switcher | done |
 | T11 | Command palette | done |
-| T12 | Shell satellites + demo page | pending |
+| T12 | Shell satellites + demo page | done |
 
 ---
 

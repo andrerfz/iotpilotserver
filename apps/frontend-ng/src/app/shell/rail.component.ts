@@ -1,15 +1,15 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { IonIcon } from '@ng/shared/ui';
+import { IonIcon, AppLogoComponent } from '@ng/shared/ui';
 import { addIcons } from 'ionicons';
 import {
-  flash, gridOutline, hardwareChipOutline, notificationsOutline,
+  gridOutline, hardwareChipOutline, notificationsOutline,
   documentTextOutline, peopleOutline, settingsOutline,
 } from 'ionicons/icons';
 import { NAV } from './nav';
 
 addIcons({
-  flash, gridOutline, hardwareChipOutline, notificationsOutline,
+  gridOutline, hardwareChipOutline, notificationsOutline,
   documentTextOutline, peopleOutline, settingsOutline,
 });
 
@@ -22,15 +22,11 @@ addIcons({
   selector: 'app-rail',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, RouterLinkActive, IonIcon],
+  imports: [RouterLink, RouterLinkActive, IonIcon, AppLogoComponent],
   template: `
     <div class="rail">
       <div class="rail__brand">
-        <div class="brand-mark"><ion-icon name="flash"></ion-icon></div>
-        <div>
-          <div class="brand-name">IoT Pilot</div>
-          <div class="brand-sub">ops console</div>
-        </div>
+        <ui-app-logo></ui-app-logo>
       </div>
 
       <div class="rail__scroll">

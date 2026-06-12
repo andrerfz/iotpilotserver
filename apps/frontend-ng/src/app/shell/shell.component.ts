@@ -2,7 +2,7 @@ import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@a
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
-import { IonSplitPane, IonMenu, IonContent, IonRouterOutlet } from '@ng/shared/ui';
+import { IonSplitPane, IonMenu, IonContent, IonRouterOutlet, MaintenanceBannerComponent, NetworkStatusComponent } from '@ng/shared/ui';
 import { RailComponent } from './rail.component';
 import { TopbarComponent } from './topbar.component';
 import { UserMenuComponent } from './user-menu.component';
@@ -23,6 +23,7 @@ import { NAV } from './nav';
   imports: [
     IonSplitPane, IonMenu, IonContent, IonRouterOutlet,
     RailComponent, TopbarComponent, UserMenuComponent, TenantMenuComponent, CommandPaletteComponent,
+    MaintenanceBannerComponent, NetworkStatusComponent,
   ],
   template: `
     <ion-split-pane contentId="shell-main" when="(min-width: 1080px)">
@@ -38,7 +39,8 @@ import { NAV } from './nav';
         <app-topbar [breadcrumbs]="breadcrumbs()" (openSearch)="onSearch()">
           <app-user-menu userMenu (openPalette)="onSearch()"></app-user-menu>
         </app-topbar>
-        <!-- maintenance banner slot — wired in T12 -->
+        <ui-maintenance-banner [message]="maintenanceMessage()"></ui-maintenance-banner>
+        <ui-network-status></ui-network-status>
         <ion-router-outlet></ion-router-outlet>
       </div>
     </ion-split-pane>
@@ -54,6 +56,8 @@ export class ShellComponent {
   /** Shell base segment (/app or /__shell) so palette commands stay in-tree. */
   private readonly base = signal('/app');
   protected readonly paletteOpen = signal(false);
+  /** Maintenance banner copy; empty hides it. Wired to a system setting later. */
+  protected readonly maintenanceMessage = signal('');
 
   protected readonly commands = computed<CommandItem[]>(() => {
     const b = this.base();

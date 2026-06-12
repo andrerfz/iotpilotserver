@@ -1,6 +1,21 @@
+import { isDevMode } from '@angular/core';
 import { Routes } from '@angular/router';
 import { authGuard } from './core/auth/guards';
 import { SHELL_CHILDREN } from './shell/shell.routes';
+
+/** Dev-only routes: the kit showcase (/__ui) and the unguarded shell preview
+ *  (/__shell). Absent from the production routing table via isDevMode(). */
+const devRoutes: Routes = [
+  {
+    path: '__ui',
+    loadComponent: () => import('./demo/demo.page').then((m) => m.DemoPage),
+  },
+  {
+    path: '__shell',
+    loadComponent: () => import('./shell/shell.component').then((m) => m.ShellComponent),
+    children: SHELL_CHILDREN,
+  },
+];
 
 export const routes: Routes = [
   {
@@ -18,17 +33,7 @@ export const routes: Routes = [
     loadComponent: () => import('./shell/shell.component').then((m) => m.ShellComponent),
     children: SHELL_CHILDREN,
   },
-  {
-    // Provisional UI-kit showcase. T12 will complete + prod-exclude it.
-    path: '__ui',
-    loadComponent: () => import('./demo/demo.page').then((m) => m.DemoPage),
-  },
-  {
-    // Dev preview of the shell without the auth guard (provisional, like __ui).
-    path: '__shell',
-    loadComponent: () => import('./shell/shell.component').then((m) => m.ShellComponent),
-    children: SHELL_CHILDREN,
-  },
+  ...(isDevMode() ? devRoutes : []),
   {
     path: '',
     redirectTo: 'home',

@@ -85,7 +85,7 @@ apps/frontend-ng/src/app/shell/
 | `components/user-menu.tsx` | 384 | `shell/user-menu.component.ts` |
 | `components/network-status.tsx` | 59 | `shell/network-status.component.ts` |
 | `components/maintenance-banner.tsx` | 26 | `shell/maintenance-banner.component.ts` |
-| `components/feature-status.tsx` | 60 | audit at T12 — likely dropped (debug-only) |
+| `components/feature-status.tsx` | 60 | **DROPPED (Q6)** — debug-only: returns null unless `isDevelopment()` and consumed only inside dashboard's `{isLocalDevelopment() && …}` panel. Not ported. |
 | `components/app-logo.tsx` | 54 | `shell/app-logo.component.ts` (prototype brand mark) |
 
 New from prototype (no legacy counterpart): `BottomSheet`, `FilterChip`, `DevicePicker`,
