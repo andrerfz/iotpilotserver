@@ -16,7 +16,7 @@ matching `kit.jsx` component before implementing.
 | T5 | MetricCard + Sparkline + EmptyState | done |
 | T6 | DataTable | done |
 | T7 | BottomSheet + FilterChip | done |
-| T8 | Pickers (device, user, multi-select, date range) | pending |
+| T8 | Pickers (device, user, multi-select, date range) | done |
 | T9 | Shell layout (split-pane rail + topbar) | pending |
 | T10 | User menu + tenant switcher | pending |
 | T11 | Command palette | pending |

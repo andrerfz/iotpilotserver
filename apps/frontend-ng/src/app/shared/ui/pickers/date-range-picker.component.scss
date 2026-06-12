@@ -1,0 +1,30 @@
+/* Presets + mini calendar — ported 1:1 from prototype app.css
+   (".presets", ".preset*", ".cal*"). */
+
+.presets { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.preset {
+  padding: 11px 12px; border-radius: var(--r-sm); border: 1px solid var(--border);
+  background: var(--surface); cursor: pointer; text-align: left; color: var(--text);
+  font-family: var(--font-sans);
+}
+.preset:hover { border-color: var(--border-strong); }
+.preset--sel { border-color: var(--primary-line); background: var(--primary-weak); }
+.preset__t { font-size: 13px; font-weight: 550; }
+.preset__d { font-family: var(--font-mono); font-size: 10.5px; color: var(--text-dim); margin-top: 2px; }
+
+.cal-label {
+  font-family: var(--font-mono); font-size: var(--fs-label);
+  letter-spacing: var(--ls-label); text-transform: uppercase; color: var(--text-dim);
+  margin: 18px 0 2px;
+}
+
+.cal { margin-top: 14px; }
+.cal__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.cal__month { font-size: 13px; font-weight: 600; }
+.cal__grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.cal__dow { font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); text-align: center; padding: 4px 0; }
+.cal__day {
+  aspect-ratio: 1; display: grid; place-items: center; border-radius: 6px;
+  font-size: 12.5px; color: var(--text); font-variant-numeric: tabular-nums;
+}
+.cal__day--end { background: var(--primary); color: var(--primary-ink); }

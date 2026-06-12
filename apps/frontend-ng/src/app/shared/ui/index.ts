@@ -139,4 +139,11 @@ export type { ColumnDef } from './data/data-table.component';
 export { BottomSheetComponent } from './sheets/bottom-sheet.component';
 export { FilterChipComponent } from './sheets/filter-chip.component';
 // T8 — Pickers
-// export { MultiSelectPickerComponent, DevicePickerComponent, UserPickerComponent, DateRangePickerComponent } from './pickers';
+export { MultiSelectPickerComponent } from './pickers/multi-select-picker.component';
+export type { PickerOption } from './pickers/multi-select-picker.component';
+export { DevicePickerComponent } from './pickers/device-picker.component';
+export type { DevicePickerItem } from './pickers/device-picker.component';
+export { UserPickerComponent } from './pickers/user-picker.component';
+export type { UserPickerItem } from './pickers/user-picker.component';
+export { DateRangePickerComponent } from './pickers/date-range-picker.component';
+export type { DateRangePreset } from './pickers/date-range-picker.component';

@@ -1,0 +1,44 @@
+/* Search field + option rows — ported 1:1 from prototype app.css
+   (".field", ".optlist", ".opt*"). svg → ion-icon. */
+
+.field {
+  display: flex; align-items: center; gap: 9px; height: 38px; padding: 0 12px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-sm);
+}
+.field:focus-within { border-color: var(--primary-line); }
+.field ion-icon { width: 15px; height: 15px; color: var(--text-dim); }
+.field input {
+  border: none; background: none; outline: none; color: var(--text);
+  font-family: var(--font-sans); font-size: 13.5px; width: 100%;
+}
+.field input::placeholder { color: var(--text-dim); }
+
+.optlist { display: flex; flex-direction: column; gap: 3px; margin-top: 12px; }
+.opt {
+  display: flex; align-items: center; gap: 11px; padding: 9px 10px;
+  border-radius: var(--r-sm); cursor: pointer; border: 1px solid transparent;
+  transition: background .1s;
+}
+.opt:hover { background: var(--surface-2); }
+.opt:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+.opt--sel { background: var(--primary-weak); border-color: var(--primary-line); }
+.opt__main { min-width: 0; flex: 1; }
+.opt__title { font-size: 13.5px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+.opt__meta { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); margin-top: 1px; }
+
+.opt__check {
+  width: 19px; height: 19px; border-radius: 6px; border: 1.5px solid var(--border-strong);
+  display: grid; place-items: center; flex: none;
+}
+.opt__check ion-icon { width: 12px; height: 12px; color: var(--primary-ink); opacity: 0; }
+.opt--sel .opt__check { background: var(--primary); border-color: var(--primary); }
+.opt--sel .opt__check ion-icon { opacity: 1; }
+
+.opt__radio {
+  width: 18px; height: 18px; border-radius: 99px;
+  border: 1.5px solid var(--border-strong); flex: none; position: relative;
+}
+.opt--sel .opt__radio { border-color: var(--primary); }
+.opt--sel .opt__radio::after {
+  content: ""; position: absolute; inset: 3px; border-radius: 99px; background: var(--primary);
+}
