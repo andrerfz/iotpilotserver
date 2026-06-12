@@ -1,0 +1,24 @@
+/* Ported 1:1 from prototype app.css — ".chip" (svg → ion-icon). */
+:host { display: inline-flex; }
+
+.chip {
+  display: inline-flex; align-items: center; gap: 7px;
+  height: 32px; padding: 0 11px; border-radius: var(--r-sm);
+  background: var(--surface); border: 1px solid var(--border);
+  font-size: 12.5px; color: var(--text); cursor: pointer; white-space: nowrap;
+  font-family: var(--font-sans);
+  transition: border-color .12s, background .12s;
+}
+.chip:hover { border-color: var(--border-strong); }
+.chip ion-icon { width: 14px; height: 14px; color: var(--text-muted); }
+.chip__key { color: var(--text-dim); }
+.chip__val { font-weight: 550; }
+.chip--active { border-color: var(--primary-line); background: var(--primary-weak); }
+.chip--active ion-icon { color: var(--primary); }
+.chip__count {
+  font-family: var(--font-mono); font-size: 10.5px; background: var(--primary);
+  color: var(--primary-ink); padding: 0 6px; border-radius: 99px; line-height: 16px;
+}
+.chip__x { margin-left: 1px; opacity: .6; display: inline-flex; }
+.chip__x:hover { opacity: 1; }
+.chip__x:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 4px; }

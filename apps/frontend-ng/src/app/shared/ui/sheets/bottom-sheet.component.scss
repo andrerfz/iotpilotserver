@@ -1,0 +1,38 @@
+/* ion-modal themed as the prototype's bottom sheet; inner head/body/foot
+   ported from app.css ".sheet*". ion-modal owns the panel chrome (rounded top,
+   backdrop, drag handle, slide-up). */
+.ui-sheet {
+  --background: var(--elevated);
+  --border-radius: 18px;
+  --box-shadow: var(--shadow-sheet);
+  --width: 100%;
+  --max-width: 560px;
+  --backdrop-opacity: 1;
+  --ion-backdrop-color: var(--scrim);
+}
+
+.sheet__inner {
+  display: flex; flex-direction: column; height: 100%;
+  background: var(--elevated); color: var(--text);
+}
+
+.sheet__head {
+  display: flex; align-items: center; gap: 12px;
+  padding: 8px 18px 14px; border-bottom: 1px solid var(--border);
+}
+.sheet__title { font-size: 15px; font-weight: 600; }
+.sheet__sub { font-size: 12.5px; color: var(--text-muted); margin-top: 1px; }
+.sheet__head .label {
+  margin-left: auto;
+  font-family: var(--font-mono); font-size: var(--fs-label);
+  letter-spacing: var(--ls-label); text-transform: uppercase; color: var(--text-dim);
+}
+
+.sheet__body { padding: 14px 18px; overflow-y: auto; flex: 1; min-height: 120px; }
+
+.sheet__foot {
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 18px; border-top: 1px solid var(--border); background: var(--elevated);
+}
+.sheet__foot--split { justify-content: space-between; }
+.sheet__foot ion-button { flex: 1; --border-radius: var(--r-sm); height: 40px; }

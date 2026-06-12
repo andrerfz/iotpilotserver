@@ -136,6 +136,7 @@ export { EmptyStateComponent } from './data/empty-state.component';
 export { DataTableComponent } from './data/data-table.component';
 export type { ColumnDef } from './data/data-table.component';
 // T7 — Sheets
-// export { BottomSheetComponent, FilterChipComponent } from './sheets';
+export { BottomSheetComponent } from './sheets/bottom-sheet.component';
+export { FilterChipComponent } from './sheets/filter-chip.component';
 // T8 — Pickers
 // export { MultiSelectPickerComponent, DevicePickerComponent, UserPickerComponent, DateRangePickerComponent } from './pickers';
