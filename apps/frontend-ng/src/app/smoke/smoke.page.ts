@@ -1,5 +1,6 @@
 import { Component, computed, inject, OnInit } from '@angular/core';
-import { IonContent, IonHeader, IonTitle, IonToolbar } from '@ng/shared/ui';
+import { RouterLink } from '@angular/router';
+import { IonButton, IonContent, IonHeader, IonTitle, IonToolbar } from '@ng/shared/ui';
 import { GetHealthQuery, HealthResult } from '../core/cqrs/example/get-health.query';
 import { QueryBus } from '../core/cqrs/query-bus';
 import { runQuery } from '../core/cqrs/run-query';
@@ -8,7 +9,7 @@ import { runQuery } from '../core/cqrs/run-query';
   selector: 'app-smoke',
   templateUrl: 'smoke.page.html',
   styleUrls: ['smoke.page.scss'],
-  imports: [IonContent, IonHeader, IonTitle, IonToolbar],
+  imports: [RouterLink, IonButton, IonContent, IonHeader, IonTitle, IonToolbar],
 })
 export class SmokePage implements OnInit {
   // Touch the bus so the example handler is wired (also makes the dependency explicit).

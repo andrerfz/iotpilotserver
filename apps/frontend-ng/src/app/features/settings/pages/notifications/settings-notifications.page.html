@@ -1,0 +1,71 @@
+<ion-content class="ion-padding">
+  @if (isLoading()) {
+    <div class="notif-loading">
+      <ion-spinner name="crescent" />
+    </div>
+  } @else {
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Notification Preferences</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <form [formGroup]="form" (ngSubmit)="onSave()">
+          <ion-item lines="full">
+            <ion-label>
+              <h3>Email Notifications</h3>
+              <p>Receive notifications via email</p>
+            </ion-label>
+            <ion-toggle formControlName="emailNotifications" slot="end" />
+          </ion-item>
+
+          <ion-item lines="full">
+            <ion-label>
+              <h3>Push Notifications</h3>
+              <p>Receive push notifications in your browser</p>
+            </ion-label>
+            <ion-toggle formControlName="pushNotifications" slot="end" />
+          </ion-item>
+
+          <ion-item lines="full">
+            <ion-label>
+              <h3>Alert Notifications</h3>
+              <p>Receive notifications for system alerts and warnings</p>
+            </ion-label>
+            <ion-toggle formControlName="alertNotifications" slot="end" />
+          </ion-item>
+
+          <ion-item lines="none">
+            <ion-label>
+              <h3>Device Offline Notifications</h3>
+              <p>Get notified when devices go offline</p>
+            </ion-label>
+            <ion-toggle formControlName="deviceOfflineNotifications" slot="end" />
+          </ion-item>
+
+          @if (errorMessage()) {
+            <p class="notif-msg notif-msg--error">{{ errorMessage() }}</p>
+          }
+          @if (successMessage()) {
+            <p class="notif-msg notif-msg--success">{{ successMessage() }}</p>
+          }
+
+          <div class="notif-actions">
+            <ion-button
+              type="submit"
+              fill="solid"
+              color="primary"
+              [disabled]="form.pristine || isSaving()"
+            >
+              @if (isSaving()) {
+                <ion-spinner name="crescent" slot="start" />
+                Saving…
+              } @else {
+                Save Changes
+              }
+            </ion-button>
+          </div>
+        </form>
+      </ion-card-content>
+    </ion-card>
+  }
+</ion-content>

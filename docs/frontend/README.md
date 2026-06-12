@@ -61,7 +61,7 @@ reach **done**. Estimates are dev-days for one senior dev.
 | [fe-core](fe-core/) | Generated API client, auth, interceptors, guards, socket, CQRS buses | fe-foundation | 6–9 | ✅ | ✅ done |
 | [fe-ui-kit](fe-ui-kit/) | UI barrel from the design prototype (DataTable, BottomSheet, pickers, palette), tokens/theme, app shell | fe-core | 9–12 | ✅ | done |
 | [fe-auth](fe-auth/) | Login, register, 2FA pages | fe-core, fe-ui-kit | 3–4 | ✅ | ✅ done |
-| fe-settings | Settings hub + profile/security/system/notifications | fe-auth | 3–4 | ⏳ deepen | pending |
+| [fe-settings](fe-settings/) | Settings hub + profile/security/system/notifications | fe-auth | 3–4 | ✅ | pending |
 | fe-dashboard | Home, device list, MetricsDashboard (ECharts) | fe-ui-kit | 4–6 | ⏳ deepen | pending |
 | fe-device-detail | Device overview, alerts, commands, logs, network, storage, add | fe-dashboard | 7–10 | ⏳ deepen | pending |
 | fe-device-advanced | Real-time metrics charts, SSH terminal (xterm), device settings (split the 1,011-line page) | fe-device-detail | 6–9 | ⏳ deepen | pending |

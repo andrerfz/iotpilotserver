@@ -17,6 +17,7 @@ export type { LoginRequest } from './models/login-request';
 export type { NotificationRecord } from './models/notification-record';
 export type { NotificationSettings } from './models/notification-settings';
 export type { ProfileSettings } from './models/profile-settings';
+export type { ProfileSettingsResponse } from './models/profile-settings-response';
 export type { RegisterData } from './models/register-data';
 export type { RegisterRequest } from './models/register-request';
 export type { SecuritySettings } from './models/security-settings';

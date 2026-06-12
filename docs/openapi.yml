@@ -441,6 +441,17 @@ components:
         phoneNumber:
           type: string
 
+    ProfileSettingsResponse:
+      allOf:
+        - $ref: '#/components/schemas/ProfileSettings'
+        - type: object
+          properties:
+            email:
+              type: string
+              format: email
+            username:
+              type: string
+
     SecuritySettings:
       type: object
       properties:
@@ -468,6 +479,18 @@ components:
           type: string
           description: Numeric string (5-100)
           example: '10'
+        isAdmin:
+          type: string
+          enum: ['true', 'false']
+        enableAdvancedMetrics:
+          type: string
+          enum: ['true', 'false']
+        enableBetaFeatures:
+          type: string
+          enum: ['true', 'false']
+        logLevel:
+          type: string
+          enum: [debug, info, warn, error]
 
     NotificationSettings:
       type: object
@@ -751,6 +774,13 @@ paths:
       responses:
         '200':
           description: Password changed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  wasCurrentSession:
+                    type: boolean
         '401':
           description: Current password incorrect
 
@@ -2180,6 +2210,10 @@ paths:
       responses:
         '200':
           description: Profile preferences + personal info
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileSettingsResponse'
     put:
       operationId: updateProfileSettings
       tags: [settings]
@@ -2202,6 +2236,10 @@ paths:
       responses:
         '200':
           description: Security preferences
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SecuritySettings'
     put:
       operationId: updateSecuritySettings
       tags: [settings]
@@ -2224,6 +2262,10 @@ paths:
       responses:
         '200':
           description: System preferences (+ admin settings if ADMIN+)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemSettings'
     put:
       operationId: updateSystemSettings
       tags: [settings]
@@ -2246,6 +2288,10 @@ paths:
       responses:
         '200':
           description: Notification preferences
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationSettings'
     put:
       operationId: updateNotificationSettings
       tags: [settings]

@@ -7,21 +7,22 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
+import { SecuritySettings } from '../../models/security-settings';
 
 export interface GetSecuritySettings$Params {
 }
 
-export function getSecuritySettings(http: HttpClient, rootUrl: string, params?: GetSecuritySettings$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
+export function getSecuritySettings(http: HttpClient, rootUrl: string, params?: GetSecuritySettings$Params, context?: HttpContext): Observable<StrictHttpResponse<SecuritySettings>> {
   const rb = new RequestBuilder(rootUrl, getSecuritySettings.PATH, 'get');
   if (params) {
   }
 
   return http.request(
-    rb.build({ responseType: 'text', accept: '*/*', context })
+    rb.build({ responseType: 'json', accept: 'application/json', context })
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return (r as HttpResponse<any>).clone({ body: undefined }) as StrictHttpResponse<void>;
+      return r as StrictHttpResponse<SecuritySettings>;
     })
   );
 }

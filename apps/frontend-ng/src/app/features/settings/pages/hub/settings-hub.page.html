@@ -1,0 +1,20 @@
+<div class="settings-hub">
+  <aside class="settings-hub__nav">
+    <ion-list lines="none">
+      @for (item of navItems; track item.path) {
+        <ion-item
+          [routerLink]="item.path"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: false }"
+          button
+        >
+          <ion-label>{{ item.label }}</ion-label>
+        </ion-item>
+      }
+    </ion-list>
+  </aside>
+
+  <main class="settings-hub__content">
+    <router-outlet />
+  </main>
+</div>

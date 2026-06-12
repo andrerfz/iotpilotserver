@@ -1,0 +1,25 @@
+.notif-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+}
+
+.notif-msg {
+  margin: 12px 0 4px;
+  font-size: 13px;
+
+  &--error {
+    color: var(--ion-color-danger);
+  }
+
+  &--success {
+    color: var(--ion-color-success);
+  }
+}
+
+.notif-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}

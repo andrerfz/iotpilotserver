@@ -1,0 +1,160 @@
+.sec-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+
+  &--sm {
+    height: 80px;
+  }
+}
+
+.sec-card {
+  margin-bottom: 16px;
+}
+
+.sec-timeout {
+  padding: 12px 0;
+
+  &__label {
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  &__range {
+    padding: 0;
+  }
+
+  &__input-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 4px;
+  }
+
+  &__label-min {
+    font-size: 13px;
+    color: var(--ion-color-medium);
+    min-width: 60px;
+  }
+
+  &__input {
+    max-width: 80px;
+    --padding-start: 8px;
+    --padding-end: 8px;
+    border: 1px solid var(--ion-color-light-shade);
+    border-radius: 6px;
+    font-size: 14px;
+  }
+}
+
+.sec-pw-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.sec-msg {
+  margin: 12px 0 4px;
+  font-size: 13px;
+
+  &--error {
+    color: var(--ion-color-danger);
+  }
+
+  &--success {
+    color: var(--ion-color-success);
+  }
+}
+
+.sec-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.sec-sessions-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sec-sessions-desc {
+  font-size: 13px;
+  color: var(--ion-color-medium);
+  margin: 4px 0 0;
+}
+
+.sec-session-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--ion-color-light-shade);
+  margin-bottom: 8px;
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  &__id {
+    font-size: 12px;
+    font-family: monospace;
+    color: var(--ion-color-medium);
+  }
+
+  &__current {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ion-color-primary);
+    background: var(--ion-color-primary-tint);
+    padding: 1px 8px;
+    border-radius: 20px;
+    width: fit-content;
+  }
+
+  &__dates {
+    font-size: 11px;
+    color: var(--ion-color-medium);
+    margin: 2px 0 0;
+  }
+}
+
+.sec-empty {
+  text-align: center;
+  font-size: 13px;
+  color: var(--ion-color-medium);
+  padding: 16px 0;
+}
+
+.sec-rec-item {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--ion-color-light-shade);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &--warn &__title {
+    color: var(--ion-color-warning);
+  }
+
+  &__title {
+    font-size: 14px;
+    font-weight: 500;
+    margin: 0 0 4px;
+  }
+
+  &__desc {
+    font-size: 12px;
+    color: var(--ion-color-medium);
+    margin: 0;
+  }
+}

@@ -1,0 +1,244 @@
+<ion-content class="ion-padding">
+  @if (isLoading()) {
+    <div class="sec-loading">
+      <ion-spinner name="crescent" />
+    </div>
+  } @else {
+    <!-- Card 1: Account Security -->
+    <ion-card class="sec-card">
+      <ion-card-header>
+        <ion-card-title>Account Security</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <form [formGroup]="securityForm" (ngSubmit)="onSaveSecurity()">
+          <ion-item lines="full">
+            <ion-label>
+              <h3>Two-Factor Authentication</h3>
+              <p>Add an extra layer of security to your account</p>
+            </ion-label>
+            <ion-toggle formControlName="twoFactorAuth" slot="end" />
+          </ion-item>
+
+          <ion-item lines="full">
+            <ion-label>
+              <h3>Login Notifications</h3>
+              <p>Receive notifications when someone logs into your account</p>
+            </ion-label>
+            <ion-toggle formControlName="loginNotifications" slot="end" />
+          </ion-item>
+
+          <div class="sec-timeout">
+            <ion-label class="sec-timeout__label">
+              <h3>Session Timeout</h3>
+              <p>Automatically log out after a period of inactivity</p>
+            </ion-label>
+            <ion-range
+              class="sec-timeout__range"
+              [min]="5"
+              [max]="240"
+              [step]="5"
+              [value]="securityForm.controls.sessionTimeout.value"
+              (ionChange)="onSessionTimeoutSliderChange($event)"
+            />
+            <div class="sec-timeout__input-row">
+              <span class="sec-timeout__label-min">{{ securityForm.controls.sessionTimeout.value }} min</span>
+              <ion-input
+                class="sec-timeout__input"
+                type="number"
+                [min]="5"
+                [max]="1440"
+                [value]="securityForm.controls.sessionTimeout.value"
+                (ionChange)="onSessionTimeoutInputChange($event)"
+              />
+            </div>
+          </div>
+
+          @if (securityError()) {
+            <p class="sec-msg sec-msg--error">{{ securityError() }}</p>
+          }
+          @if (securitySuccess()) {
+            <p class="sec-msg sec-msg--success">{{ securitySuccess() }}</p>
+          }
+
+          <div class="sec-actions">
+            <ion-button
+              type="submit"
+              fill="solid"
+              color="primary"
+              [disabled]="securityForm.pristine || isSavingSecurity()"
+            >
+              @if (isSavingSecurity()) {
+                <ion-spinner name="crescent" slot="start" />
+                Saving…
+              } @else {
+                Save Changes
+              }
+            </ion-button>
+          </div>
+        </form>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Card 2: Change Password -->
+    <ion-card class="sec-card">
+      <ion-card-header>
+        <ion-card-title>Change Password</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <form [formGroup]="passwordForm" (ngSubmit)="onChangePassword()">
+          <div class="sec-pw-fields">
+            <ui-input
+              label="Current password"
+              type="password"
+              formControlName="currentPassword"
+            />
+            <ui-input
+              label="New password"
+              type="password"
+              formControlName="newPassword"
+              [error]="passwordForm.controls.newPassword.touched && passwordForm.controls.newPassword.hasError('minlength') ? 'At least 8 characters required' : ''"
+            />
+            <ui-input
+              label="Confirm new password"
+              type="password"
+              formControlName="confirmPassword"
+              [error]="confirmPasswordError"
+            />
+          </div>
+
+          @if (passwordError()) {
+            <p class="sec-msg sec-msg--error">{{ passwordError() }}</p>
+          }
+          @if (passwordSuccess()) {
+            <p class="sec-msg sec-msg--success">{{ passwordSuccess() }}</p>
+          }
+
+          <div class="sec-actions">
+            <ion-button
+              type="submit"
+              fill="solid"
+              color="primary"
+              [disabled]="passwordForm.invalid || isChangingPassword()"
+            >
+              @if (isChangingPassword()) {
+                <ion-spinner name="crescent" slot="start" />
+                Updating…
+              } @else {
+                Update Password
+              }
+            </ion-button>
+          </div>
+        </form>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Card 3: Active Sessions -->
+    <ion-card class="sec-card">
+      <ion-card-header>
+        <div class="sec-sessions-header">
+          <ion-card-title>Active Sessions</ion-card-title>
+          <ion-button fill="outline" size="small" (click)="toggleSessions()">
+            {{ showSessions() ? 'Hide' : 'Show sessions' }}
+          </ion-button>
+        </div>
+        <p class="sec-sessions-desc">Devices and browsers currently signed in to your account</p>
+      </ion-card-header>
+
+      @if (showSessions()) {
+        <ion-card-content>
+          @if (isLoadingSessions()) {
+            <div class="sec-loading sec-loading--sm">
+              <ion-spinner name="crescent" />
+            </div>
+          } @else if (sessions().length === 0) {
+            <p class="sec-empty">No active sessions found</p>
+          } @else {
+            @for (s of sessions(); track s.id) {
+              <div class="sec-session-item">
+                <div class="sec-session-item__info">
+                  <span class="sec-session-item__id">{{ s.id?.slice(0, 12) }}…</span>
+                  @if (s.isCurrent) {
+                    <span class="sec-session-item__current">Current</span>
+                  }
+                  <p class="sec-session-item__dates">
+                    Started {{ s.createdAt | date:'short' }} · Expires {{ s.expiresAt | date:'short' }}
+                  </p>
+                </div>
+                @if (!s.isCurrent) {
+                  <ion-button
+                    fill="clear"
+                    color="danger"
+                    size="small"
+                    [disabled]="revokingId() === s.id"
+                    (click)="onRevokeSession(s.id!)"
+                  >
+                    @if (revokingId() === s.id) {
+                      <ion-spinner name="crescent" slot="start" />
+                    }
+                    Revoke
+                  </ion-button>
+                }
+              </div>
+            }
+
+            @if (sessions().length > 1) {
+              <div class="sec-actions">
+                <ion-button
+                  fill="outline"
+                  color="danger"
+                  size="small"
+                  [disabled]="isRevokingAll()"
+                  (click)="onRevokeAllOthers()"
+                >
+                  @if (isRevokingAll()) {
+                    <ion-spinner name="crescent" slot="start" />
+                  }
+                  Revoke all other sessions ({{ sessions().length - 1 }})
+                </ion-button>
+              </div>
+            }
+          }
+
+          @if (sessionError()) {
+            <p class="sec-msg sec-msg--error">{{ sessionError() }}</p>
+          }
+          @if (sessionMessage()) {
+            <p class="sec-msg sec-msg--success">{{ sessionMessage() }}</p>
+          }
+        </ion-card-content>
+      }
+    </ion-card>
+
+    <!-- Card 4: Security Recommendations -->
+    <ion-card class="sec-card">
+      <ion-card-header>
+        <ion-card-title>Security Recommendations</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="sec-rec-item">
+          <p class="sec-rec-item__title">Use a strong, unique password</p>
+          <p class="sec-rec-item__desc">
+            Ensure your password is at least 12 characters long and includes a mix of letters, numbers, and symbols.
+          </p>
+        </div>
+
+        <div class="sec-rec-item" [class.sec-rec-item--warn]="!securityForm.controls.twoFactorAuth.value">
+          <p class="sec-rec-item__title">Enable two-factor authentication</p>
+          <p class="sec-rec-item__desc">
+            Add an extra layer of security by requiring a second verification step when logging in.
+          </p>
+        </div>
+
+        <div class="sec-rec-item" [class.sec-rec-item--warn]="!sessionsLoaded() || sessions().length > 1">
+          <p class="sec-rec-item__title">Review active sessions</p>
+          <p class="sec-rec-item__desc">
+            Regularly check and terminate any suspicious sessions.
+            @if (sessionsLoaded() && sessions().length > 1) {
+              You have {{ sessions().length }} active sessions.
+            }
+          </p>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  }
+</ion-content>

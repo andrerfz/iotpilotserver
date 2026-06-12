@@ -33,8 +33,13 @@ export const SHELL_CHILDREN: Routes = [
   },
   {
     path: 'settings',
-    loadComponent: () => import('./placeholder.page').then(m => m.PlaceholderPage),
-    data: { breadcrumb: ['Administer', 'Settings'], title: 'Settings', sub: 'Profile · security · system · notifications' },
+    loadComponent: () =>
+      import('../features/settings/pages/hub/settings-hub.page').then(
+        (m) => m.SettingsHubPage,
+      ),
+    loadChildren: () =>
+      import('../features/settings/settings.routes').then((m) => m.SETTINGS_ROUTES),
+    data: { breadcrumb: ['Administer', 'Settings'] },
   },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
 ];
