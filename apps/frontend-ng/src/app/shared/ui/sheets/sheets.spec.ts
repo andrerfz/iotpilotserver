@@ -80,6 +80,15 @@ describe('BottomSheetComponent', () => {
     expect(modal.classList.contains('ui-sheet')).toBe(true);
   });
 
+  it('card presentation: drops sheet breakpoints and flags the card class', async () => {
+    const { container } = await render(BottomSheetComponent, {
+      inputs: { title: 'Pick', presentation: 'card' },
+    });
+    const modal = container.querySelector('ion-modal') as HTMLElement & { breakpoints?: number[] };
+    expect(modal.breakpoints).toBeUndefined();
+    expect(modal.classList.contains('ui-sheet--card')).toBe(true);
+  });
+
   it('open() presents the modal (honoring initialBreakpoint)', async () => {
     const { fixture, container } = await render(BottomSheetComponent, {
       inputs: { title: 'Pick' },
