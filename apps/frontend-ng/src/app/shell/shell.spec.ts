@@ -3,6 +3,8 @@ import { describe, it, expect, vi } from 'vitest';
 import { signal } from '@angular/core';
 import { provideRouter, ActivatedRouteSnapshot } from '@angular/router';
 import { ThemeService } from '@ng/shared/ui';
+import { AuthService } from '../core/auth/auth.service';
+import { ToastService } from '../core/errors/toast.service';
 import { breadcrumbFromSnapshot } from './breadcrumbs';
 import { RailComponent } from './rail.component';
 import { TopbarComponent } from './topbar.component';
@@ -94,6 +96,8 @@ describe('ShellComponent', () => {
   const providers = () => [
     provideRouter([]),
     { provide: ThemeService, useValue: themeStub() },
+    { provide: AuthService, useValue: { currentUser: signal(null), role: signal(null), logout: vi.fn() } },
+    { provide: ToastService, useValue: { success: vi.fn() } },
   ];
 
   it('renders a split-pane (rail inline ≥1080px) hosting rail, topbar and the outlet', async () => {

@@ -5,6 +5,8 @@ import { filter } from 'rxjs/operators';
 import { IonSplitPane, IonMenu, IonContent, IonRouterOutlet } from '@ng/shared/ui';
 import { RailComponent } from './rail.component';
 import { TopbarComponent } from './topbar.component';
+import { UserMenuComponent } from './user-menu.component';
+import { TenantMenuComponent } from './tenant-menu.component';
 import { breadcrumbFromSnapshot } from './breadcrumbs';
 
 /**
@@ -16,17 +18,24 @@ import { breadcrumbFromSnapshot } from './breadcrumbs';
   selector: 'app-shell',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonSplitPane, IonMenu, IonContent, IonRouterOutlet, RailComponent, TopbarComponent],
+  imports: [
+    IonSplitPane, IonMenu, IonContent, IonRouterOutlet,
+    RailComponent, TopbarComponent, UserMenuComponent, TenantMenuComponent,
+  ],
   template: `
     <ion-split-pane contentId="shell-main" when="(min-width: 1080px)">
       <ion-menu menuId="shell-menu" contentId="shell-main" type="overlay">
         <ion-content class="rail-host">
-          <app-rail></app-rail>
+          <app-rail>
+            <app-tenant-menu tenant></app-tenant-menu>
+          </app-rail>
         </ion-content>
       </ion-menu>
 
       <div class="ion-page main" id="shell-main">
-        <app-topbar [breadcrumbs]="breadcrumbs()" (openSearch)="onSearch()"></app-topbar>
+        <app-topbar [breadcrumbs]="breadcrumbs()" (openSearch)="onSearch()">
+          <app-user-menu userMenu (openPalette)="onSearch()"></app-user-menu>
+        </app-topbar>
         <!-- maintenance banner slot — wired in T12 -->
         <ion-router-outlet></ion-router-outlet>
       </div>

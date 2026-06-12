@@ -1,0 +1,52 @@
+/* Ported from prototype app.css — ".tenant*" + ".menu menu--up". */
+:host { display: block; }
+
+.tenant-wrap { position: relative; }
+
+.tenant {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 8px 10px; border-radius: var(--r-sm);
+  background: var(--surface); border: 1px solid var(--border);
+  cursor: pointer; text-align: left; font-family: var(--font-sans);
+}
+.tenant:hover { border-color: var(--border-strong); }
+.tenant__logo {
+  width: 26px; height: 26px; border-radius: 6px; flex: none;
+  background: var(--surface-3); display: grid; place-items: center;
+  font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--text-muted);
+}
+.tenant__main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.tenant__name { font-size: 12.5px; font-weight: 550; color: var(--text); }
+.tenant__meta { font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); }
+.tenant__chev { width: 15px; height: 15px; color: var(--text-dim); transition: transform .15s; flex: none; }
+.tenant__chev--open { transform: rotate(180deg); }
+
+/* popover (opens upward from the rail footer) */
+.menu {
+  position: absolute; left: 0; right: 0; bottom: calc(100% + 8px); z-index: 200;
+  background: var(--elevated); border: 1px solid var(--border-strong);
+  border-radius: var(--r-lg); box-shadow: var(--shadow-pop); overflow: hidden;
+}
+.menu__sec { padding: 6px; border-bottom: 1px solid var(--border); }
+.menu__sec:last-child { border-bottom: none; }
+.menu__info { padding: 10px 14px 8px; }
+.tenant__title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.tenant__tags { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.tenant__tags .badge {
+  display: inline-flex; align-items: center; height: 22px; padding: 0 9px;
+  border-radius: 99px; font-size: 11.5px; font-weight: 550; font-family: var(--font-mono);
+  background: var(--primary-weak); color: var(--primary);
+}
+.tenant__tags .mono { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); }
+.tenant__stats { display: flex; gap: 16px; margin-top: 10px; font-size: 12px; color: var(--text-muted); }
+.tenant__stats b { font-family: var(--font-mono); font-weight: 600; font-size: 16px; color: var(--text); margin-right: 5px; }
+
+.menu__item {
+  display: flex; align-items: center; gap: 11px; width: 100%;
+  padding: 8px 10px; border-radius: var(--r-sm);
+  cursor: pointer; font-size: 13px; color: var(--text);
+  text-decoration: none; background: none; border: none; text-align: left;
+  font-family: var(--font-sans);
+}
+.menu__item:hover { background: var(--surface-2); }
+.menu__item ion-icon { width: 16px; height: 16px; color: var(--text-muted); }
