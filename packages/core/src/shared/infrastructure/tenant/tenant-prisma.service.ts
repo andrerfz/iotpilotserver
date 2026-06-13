@@ -184,6 +184,10 @@ export class TenantPrismaClient {
                                 // For User model: Allow access to tenant users OR non-SUPERADMIN users (for cross-tenant visibility)
                                 if (prop === 'user') {
                                     this.addUserAccessFilter(newParams, customerId);
+                                } else if (['deviceCommand', 'deviceLog', 'deviceMetric'].includes(prop)) {
+                                    // These models have no direct customerId — isolated through device relation
+                                    if (!newParams.where.device) newParams.where.device = {};
+                                    newParams.where.device.customerId = customerId;
                                 } else if (prop !== 'customer') {
                                     // For all other models except Customer, add customerId filter
                                     newParams.where.customerId = customerId;
@@ -201,8 +205,8 @@ export class TenantPrismaClient {
                                     newParams.data = {};
                                 }
 
-                                // Don't add customerId for Customer model
-                                if (prop !== 'customer') {
+                                // Don't add customerId for Customer or device-child models (no direct customerId field)
+                                if (!['customer', 'deviceCommand', 'deviceLog', 'deviceMetric'].includes(prop)) {
                                     newParams.data.customerId = customerId;
                                 }
 
@@ -218,8 +222,8 @@ export class TenantPrismaClient {
                                     newParams.data = [];
                                 }
 
-                                // Don't add customerId for Customer model
-                                if (prop !== 'customer' && Array.isArray(newParams.data)) {
+                                // Don't add customerId for Customer or device-child models (no direct customerId field)
+                                if (!['customer', 'deviceCommand', 'deviceLog', 'deviceMetric'].includes(prop) && Array.isArray(newParams.data)) {
                                     newParams.data = newParams.data.map((item: any) => ({
                                         ...item,
                                         customerId: customerId
@@ -324,6 +328,10 @@ export class TenantPrismaClient {
                                             newParams.where.id = customerId;
                                         }
                                     }
+                                } else if (['deviceCommand', 'deviceLog', 'deviceMetric'].includes(prop)) {
+                                    // These models have no direct customerId — isolated through device relation
+                                    if (!newParams.where.device) newParams.where.device = {};
+                                    newParams.where.device.customerId = customerId;
                                 } else {
                                     // For all other models, add customerId filter
                                     newParams.where.customerId = customerId;
