@@ -1,0 +1,21 @@
+/* Ported 1:1 from prototype app.css — ".field" */
+:host { display: contents; }
+
+.field {
+  display: flex; align-items: center; gap: 9px;
+  height: 38px; padding: 0 12px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  transition: border-color .12s;
+}
+.field:focus-within { border-color: var(--primary-line); }
+
+.field ion-icon { width: 15px; height: 15px; color: var(--text-dim); flex: none; }
+
+.field input {
+  border: none; background: none; outline: none;
+  color: var(--text); caret-color: var(--primary);
+  font-family: var(--font-sans); font-size: 13.5px;
+  width: 100%; min-width: 0;
+}
+.field input::placeholder { color: var(--text-dim); }

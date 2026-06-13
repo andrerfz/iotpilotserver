@@ -359,6 +359,66 @@ components:
           type: object
           additionalProperties: true
 
+    ClaimResult:
+      type: object
+      properties:
+        deviceId:
+          type: string
+        claimingToken:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+        instructions:
+          type: string
+
+    MonitoringMetrics:
+      type: object
+      properties:
+        metrics:
+          type: array
+          items:
+            type: object
+            properties:
+              metricName:
+                type: string
+              value:
+                type: number
+              timestamp:
+                type: string
+                format: date-time
+              unit:
+                type: string
+              deviceId:
+                type: string
+                nullable: true
+        summary:
+          type: object
+          additionalProperties: true
+        timeRange:
+          type: object
+          properties:
+            startTime:
+              type: string
+              format: date-time
+            endTime:
+              type: string
+              format: date-time
+            period:
+              type: string
+        metadata:
+          type: object
+          properties:
+            totalMetrics:
+              type: integer
+            availableMetrics:
+              type: array
+              items:
+                type: string
+            lastUpdated:
+              type: string
+              format: date-time
+
     Threshold:
       type: object
       properties:
@@ -394,6 +454,25 @@ components:
         customerId:
           type: string
         createdAt:
+          type: string
+          format: date-time
+
+    DeviceLogEntry:
+      type: object
+      properties:
+        id:
+          type: string
+        deviceId:
+          type: string
+        level:
+          type: string
+          enum: [DEBUG, INFO, WARN, ERROR, FATAL]
+        message:
+          type: string
+        source:
+          type: string
+          nullable: true
+        timestamp:
           type: string
           format: date-time
 
@@ -894,6 +973,17 @@ paths:
       responses:
         '200':
           description: Device list with pagination
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Device'
     post:
       operationId: createDevice
       tags: [devices]
@@ -993,6 +1083,15 @@ paths:
       responses:
         '200':
           description: Device claimed — returns claiming token (TTL 15 min)
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ClaimResult'
 
   /devices/bulk:
     post:
@@ -1112,6 +1211,17 @@ paths:
       responses:
         '200':
           description: Alert list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Alert'
     post:
       operationId: createDeviceAlert
       tags: [devices]
@@ -1231,6 +1341,17 @@ paths:
       responses:
         '200':
           description: Command list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/DeviceCommand'
     post:
       operationId: createDeviceCommand
       tags: [devices]
@@ -1319,6 +1440,17 @@ paths:
       responses:
         '200':
           description: Log entries with metadata
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/DeviceLogEntry'
 
   /devices/{id}/metrics:
     get:
@@ -1502,6 +1634,17 @@ paths:
       responses:
         '200':
           description: Alert list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Alert'
     post:
       operationId: createAlert
       tags: [monitoring]
@@ -1667,6 +1810,15 @@ paths:
       responses:
         '200':
           description: Aggregated metrics
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/MonitoringMetrics'
 
   /monitoring/reports:
     get:
@@ -1711,6 +1863,17 @@ paths:
       responses:
         '200':
           description: Threshold list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Threshold'
     post:
       operationId: createThreshold
       tags: [monitoring]

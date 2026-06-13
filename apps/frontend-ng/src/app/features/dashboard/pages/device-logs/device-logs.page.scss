@@ -1,0 +1,111 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+.filter-card {
+  margin-bottom: 8px;
+}
+
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+
+  ui-select {
+    min-width: 140px;
+  }
+
+  ui-search-field {
+    flex: 1;
+    min-width: 160px;
+  }
+
+  .source-input {
+    flex: 1;
+    min-width: 140px;
+    --border-radius: 6px;
+    --border-color: var(--ion-color-medium-shade);
+    --border-width: 1px;
+    --padding-start: 10px;
+    --padding-end: 10px;
+    font-size: 0.875rem;
+  }
+}
+
+.actions-row {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+
+  .card-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .card-count {
+    font-size: 0.8rem;
+    color: var(--ion-color-medium);
+  }
+}
+
+.log-badge {
+  display: inline-block;
+  font-family: var(--ion-font-family-mono, monospace);
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 3px;
+  min-width: 46px;
+  text-align: center;
+  border: 1px solid transparent;
+
+  &--debug {
+    background: var(--ion-color-medium-tint);
+    color: var(--ion-color-dark);
+    border-color: var(--ion-color-medium-shade);
+  }
+
+  &--info {
+    background: var(--ion-color-primary-tint);
+    color: var(--ion-color-primary);
+    border-color: var(--ion-color-primary-shade);
+  }
+
+  &--warn {
+    background: var(--ion-color-warning-tint);
+    color: var(--ion-color-warning-shade);
+    border-color: var(--ion-color-warning);
+  }
+
+  &--error {
+    background: var(--ion-color-danger-tint);
+    color: var(--ion-color-danger);
+    border-color: var(--ion-color-danger-shade);
+  }
+
+  &--fatal {
+    background: var(--ion-color-danger);
+    color: white;
+    border-color: var(--ion-color-danger-shade);
+  }
+}
+
+.mono {
+  font-family: var(--ion-font-family-mono, monospace);
+  font-size: 0.85rem;
+}
+
+.dim {
+  color: var(--ion-color-medium);
+}

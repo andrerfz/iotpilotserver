@@ -1,0 +1,139 @@
+.offline-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  background: var(--ion-color-warning-tint);
+  border: 1px solid var(--ion-color-warning-shade);
+  border-radius: 10px;
+  font-size: 0.875rem;
+  color: var(--ion-color-warning-shade);
+
+  ion-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+}
+
+.confirm-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  background: var(--ion-color-light);
+  border: 1px solid var(--ion-color-light-shade);
+  border-radius: 10px;
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 0.875rem;
+
+    strong {
+      font-weight: 600;
+      color: var(--ion-color-dark);
+    }
+
+    span {
+      color: var(--ion-color-medium);
+    }
+  }
+
+  &__warn {
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 16px;
+  align-items: start;
+
+  &__sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    ion-card {
+      margin: 0;
+    }
+  }
+
+  &__main {
+    ion-card {
+      margin: 0;
+    }
+  }
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.card-title {
+  margin: 0 0 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ion-color-dark);
+}
+
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.card-count {
+  font-size: 0.82rem;
+  color: var(--ion-color-medium);
+}
+
+.quick-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.quick-action {
+  --padding-start: 12px;
+  --padding-end: 12px;
+  text-align: left;
+  height: auto;
+  min-height: 52px;
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1px;
+  }
+
+  &__label {
+    font-weight: 600;
+    font-size: 0.875rem;
+  }
+
+  &__desc {
+    font-size: 0.75rem;
+    opacity: 0.75;
+  }
+}
+
+.mono {
+  font-family: var(--ion-font-family-mono, 'Courier New', monospace);
+  font-size: 0.875rem;
+  font-weight: 600;
+}

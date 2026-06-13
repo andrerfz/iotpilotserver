@@ -1,0 +1,121 @@
+<ion-content class="ion-padding">
+
+  <!-- Offline warning -->
+  @if (device.data() !== null && device.data()?.status !== 'ONLINE') {
+    <div class="offline-banner">
+      <ion-icon name="alert-circle-outline"></ion-icon>
+      <span>Device is offline. Commands will be queued until the device comes online.</span>
+    </div>
+  }
+
+  <!-- Confirmation banner -->
+  @if (pendingAction(); as pending) {
+    <div class="confirm-banner">
+      <div class="confirm-banner__body">
+        <strong>{{ pending.label }}</strong>
+        <span>{{ pending.description }}</span>
+        @if (pending.id === 'SHUTDOWN') {
+          <ion-text color="danger" class="confirm-banner__warn">
+            Warning: Device must be powered on manually to restart.
+          </ion-text>
+        }
+      </div>
+      <div class="confirm-banner__actions">
+        <ion-button fill="outline" size="small" (click)="onCancelAction()">Cancel</ion-button>
+        <ion-button [color]="pending.color" size="small" (click)="dispatch(pending.id)" [disabled]="executing()">
+          Confirm
+        </ion-button>
+      </div>
+    </div>
+  }
+
+  <div class="layout">
+
+    <!-- Quick actions column -->
+    <div class="layout__sidebar">
+      <ion-card>
+        <ion-card-content>
+          <h3 class="card-title">Quick Actions</h3>
+          <div class="quick-actions">
+            @for (action of quickActions; track action.id) {
+              <ion-button
+                fill="outline"
+                [color]="action.color"
+                expand="block"
+                class="quick-action"
+                [disabled]="executing()"
+                (click)="onQuickAction(action)">
+                <ion-icon slot="start" [name]="action.icon"></ion-icon>
+                <div class="quick-action__text">
+                  <span class="quick-action__label">{{ action.label }}</span>
+                  <span class="quick-action__desc">{{ action.description }}</span>
+                </div>
+              </ion-button>
+            }
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-button fill="solid" color="primary" expand="block" (click)="onIssueCommand()">
+        <ion-icon slot="start" name="flash-outline"></ion-icon>
+        Issue Command
+      </ion-button>
+    </div>
+
+    <!-- Command history column -->
+    <div class="layout__main">
+      <ion-card>
+        <ion-card-content>
+          <div class="card-head">
+            <h3 class="card-title">Command History</h3>
+            @if (commands.data()) {
+              <span class="card-count">{{ commands.data()!.length }} commands</span>
+            }
+          </div>
+
+          <!-- Loading skeleton -->
+          @if (commands.loading() && !commands.data()) {
+            <div>
+              @for (_ of [1,2,3]; track $index) {
+                <ion-skeleton-text [animated]="true" style="height: 52px; border-radius: 6px; margin-bottom: 8px;"></ion-skeleton-text>
+              }
+            </div>
+          }
+
+          <!-- Error -->
+          @if (commands.error() && !commands.data()) {
+            <ui-empty-state title="Could not load commands" [hasAction]="true">
+              <ion-button action fill="outline" size="small" (click)="onRetry()">Retry</ion-button>
+            </ui-empty-state>
+          }
+
+          <!-- Empty -->
+          @if (!commands.loading() && (commands.data()?.length ?? 0) === 0 && !commands.error()) {
+            <ui-empty-state title="No commands yet" description="Use Quick Actions or Issue Command to get started"></ui-empty-state>
+          }
+
+          <!-- Table -->
+          @if ((commands.data()?.length ?? 0) > 0) {
+            <ng-template #commandCell let-row>
+              <code class="mono">{{ row.command }}{{ row.arguments ? ' ' + row.arguments : '' }}</code>
+            </ng-template>
+            <ng-template #statusCell let-row>
+              <ui-status-badge [status]="row.status ?? 'UNKNOWN'"></ui-status-badge>
+            </ng-template>
+            <ui-data-table
+              [rows]="commands.data() ?? []"
+              [columns]="columns()"
+              [pageSize]="10"
+              [rowClickable]="true"
+              (rowClick)="onRowClick($event)"
+            ></ui-data-table>
+          }
+        </ion-card-content>
+      </ion-card>
+    </div>
+  </div>
+
+  <!-- CommandSheet (issue + detail) -->
+  <app-command-sheet [deviceId]="device.data()?.id ?? ''"></app-command-sheet>
+
+</ion-content>

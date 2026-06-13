@@ -1,0 +1,161 @@
+<ion-content class="ion-padding">
+
+  <!-- Loading skeletons -->
+  @if (device.loading() && !device.data()) {
+    <div class="metrics">
+      @for (_ of [1,2,3,4]; track $index) {
+        <ion-card class="metric-skeleton">
+          <ion-card-content>
+            <ion-skeleton-text [animated]="true" style="height: 14px; width: 60%;"></ion-skeleton-text>
+            <ion-skeleton-text [animated]="true" style="height: 28px; width: 40%; margin-top: 8px;"></ion-skeleton-text>
+          </ion-card-content>
+        </ion-card>
+      }
+    </div>
+  }
+
+  <!-- Error state -->
+  @if (device.error() && !device.data()) {
+    <ui-empty-state title="Could not load overview" [hasAction]="true">
+      <ion-button action fill="outline" size="small" (click)="onRetry()">Retry</ion-button>
+    </ui-empty-state>
+  }
+
+  @if (device.data(); as d) {
+    <!-- Metric cards -->
+    <div class="metrics">
+      <ui-metric-card
+        label="CPU"
+        [value]="metricVal(deviceMetrics().cpu)"
+        unit="%"
+        iconColor="var(--primary)"
+        iconBg="var(--primary-weak)"
+      >
+        <ion-icon name="hardware-chip-outline" icon></ion-icon>
+      </ui-metric-card>
+      <ui-metric-card
+        label="Memory"
+        [value]="metricVal(deviceMetrics().memory)"
+        unit="%"
+        iconColor="var(--info)"
+        iconBg="var(--info-weak)"
+      >
+        <ion-icon name="server-outline" icon></ion-icon>
+      </ui-metric-card>
+      <ui-metric-card
+        label="Temperature"
+        [value]="metricVal(deviceMetrics().temp)"
+        unit="°C"
+        iconColor="var(--warning)"
+        iconBg="var(--warning-weak)"
+      >
+        <ion-icon name="thermometer-outline" icon></ion-icon>
+      </ui-metric-card>
+      <ui-metric-card
+        label="Disk"
+        [value]="metricVal(deviceMetrics().disk)"
+        unit="%"
+        iconColor="var(--success)"
+        iconBg="var(--success-weak)"
+      >
+        <ion-icon name="save-outline" icon></ion-icon>
+      </ui-metric-card>
+    </div>
+
+    <!-- ng-template for commands cell — outside @if so ViewChild resolves -->
+    <ng-template #statusCell let-row>
+      <ui-status-badge [status]="row.status ?? 'UNKNOWN'"></ui-status-badge>
+    </ng-template>
+    <ng-template #cmdCell let-row>
+      <span class="td-mono td-strong">{{ row.command }}</span>
+    </ng-template>
+
+    <!-- grid-2: left = chart + commands, right = device info -->
+    <div class="grid-2">
+      <div class="stack">
+
+        <!-- Chart placeholder (ECharts — wired in fe-device-advanced) -->
+        <ion-card class="chart-placeholder">
+          <ion-card-content>
+            <div class="chart-placeholder__inner">
+              <ion-icon name="stats-chart-outline"></ion-icon>
+              <span>CPU &amp; Memory trends — available in the Metrics tab</span>
+            </div>
+          </ion-card-content>
+        </ion-card>
+
+        <!-- Recent commands -->
+        <ion-card>
+          <ion-card-content>
+            <div class="card-head">
+              <h3 class="card-title">Recent commands</h3>
+              <ion-button fill="clear" size="small" (click)="openRunCommand()">
+                <ion-icon slot="start" name="add-outline"></ion-icon>
+                New
+              </ion-button>
+            </div>
+            @if (commands.loading()) {
+              <ion-skeleton-text [animated]="true" style="height: 80px; width: 100%; border-radius: 6px;"></ion-skeleton-text>
+            } @else if ((commands.data()?.length ?? 0) === 0) {
+              <ui-empty-state title="No commands yet"></ui-empty-state>
+            } @else {
+              <ui-data-table
+                [rows]="commands.data() ?? []"
+                [columns]="commandColumns()"
+                [pageSize]="5"
+              ></ui-data-table>
+            }
+          </ion-card-content>
+        </ion-card>
+
+      </div>
+
+      <!-- Device info sidebar -->
+      <ion-card class="devinfo-card">
+        <ion-card-content>
+          <h3 class="card-title">Device info</h3>
+          <div class="kv">
+            @if (d.deviceId) {
+              <span class="kv__k">Public ID</span>
+              <span class="kv__v mono">{{ d.deviceId }}</span>
+            }
+            @if (d.deviceType) {
+              <span class="kv__k">Hardware</span>
+              <span class="kv__v">{{ d.deviceType }}{{ d.deviceModel ? ' · ' + d.deviceModel : '' }}</span>
+            }
+            @if (d.ipAddress) {
+              <span class="kv__k">IP Address</span>
+              <span class="kv__v mono">{{ d.ipAddress }}</span>
+            }
+            @if (d.tailscaleIp) {
+              <span class="kv__k">Tailscale IP</span>
+              <span class="kv__v mono">{{ d.tailscaleIp }}</span>
+            }
+            @if (d.agentVersion) {
+              <span class="kv__k">Firmware</span>
+              <span class="kv__v mono">{{ d.agentVersion }}</span>
+            }
+            @if (d.location) {
+              <span class="kv__k">Location</span>
+              <span class="kv__v">{{ d.location }}</span>
+            }
+            @if (d.macAddress) {
+              <span class="kv__k">MAC</span>
+              <span class="kv__v mono">{{ d.macAddress }}</span>
+            }
+            @if (d.lastSeen) {
+              <span class="kv__k">Last Seen</span>
+              <span class="kv__v mono">{{ formatLastSeen(d.lastSeen) }}</span>
+            }
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+  }
+
+  <!-- Command sheet triggered from "New" button in commands card -->
+  @if (device.data()) {
+    <app-command-sheet [deviceId]="device.data()!.id ?? ''"></app-command-sheet>
+  }
+
+</ion-content>

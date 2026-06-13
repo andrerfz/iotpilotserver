@@ -8,18 +8,39 @@ import { Routes } from '@angular/router';
 export const SHELL_CHILDREN: Routes = [
   {
     path: 'dashboard',
-    loadComponent: () => import('./placeholder.page').then(m => m.PlaceholderPage),
-    data: { breadcrumb: ['Operate', 'Dashboard'], title: 'Dashboard', sub: 'Fleet overview & telemetry' },
+    loadComponent: () =>
+      import('../features/dashboard/pages/dashboard/dashboard.page').then(
+        (m) => m.DashboardPage,
+      ),
+    data: { breadcrumb: ['Operate', 'Dashboard'] },
   },
   {
     path: 'devices',
-    loadComponent: () => import('./placeholder.page').then(m => m.PlaceholderPage),
-    data: { breadcrumb: ['Operate', 'Devices'], title: 'Devices', sub: 'Registered devices & status' },
+    loadComponent: () =>
+      import('../features/dashboard/pages/devices/devices.page').then(
+        (m) => m.DevicesPage,
+      ),
+    data: { breadcrumb: ['Operate', 'Devices'] },
+  },
+  {
+    path: 'devices/:id',
+    loadComponent: () =>
+      import('../features/dashboard/pages/device-detail/device-detail.page').then(
+        (m) => m.DeviceDetailPage,
+      ),
+    loadChildren: () =>
+      import('../features/dashboard/device-detail.routes').then(
+        (m) => m.DEVICE_DETAIL_ROUTES,
+      ),
+    data: { breadcrumb: ['Operate', 'Devices'] },
   },
   {
     path: 'monitoring',
-    loadComponent: () => import('./placeholder.page').then(m => m.PlaceholderPage),
-    data: { breadcrumb: ['Operate', 'Monitoring'], title: 'Monitoring', sub: 'Alerts & thresholds' },
+    loadComponent: () =>
+      import('../features/dashboard/pages/monitoring/monitoring.page').then(
+        (m) => m.MonitoringPage,
+      ),
+    data: { breadcrumb: ['Operate', 'Monitoring'] },
   },
   {
     path: 'logs',

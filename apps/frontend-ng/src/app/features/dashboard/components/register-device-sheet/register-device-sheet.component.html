@@ -1,0 +1,99 @@
+<ui-bottom-sheet
+  title="Register Device"
+  [saveLabel]="step() === 'success' ? 'Done' : ''"
+  [saveDisabled]="step() !== 'success'"
+  (dismiss)="onSheetDismiss()">
+
+  <!-- ── Step 1: Claim form ──────────────────────────────────────────────── -->
+  @if (step() === 'form') {
+    <div class="form-step">
+      <p class="form-step__intro">Claim a new device to your account</p>
+
+      @if (error()) {
+        <div class="error-banner">{{ error() }}</div>
+      }
+
+      <ion-item class="form-item">
+        <ion-label position="stacked">
+          Device ID <ion-text color="danger">*</ion-text>
+        </ion-label>
+        <ion-input
+          placeholder="IOT-XXXX-YYYY"
+          [value]="deviceId()"
+          (ionInput)="deviceId.set($any($event).detail.value?.toUpperCase() ?? '')"
+          autocomplete="off"
+          autocorrect="off"
+          spellcheck="false">
+          <ion-icon name="qr-code-outline" slot="start" color="medium"></ion-icon>
+        </ion-input>
+        <ion-note slot="helper">Found on the device label or QR code</ion-note>
+      </ion-item>
+
+      <ion-item class="form-item">
+        <ion-label position="stacked">Device Name <ion-text color="medium">(optional)</ion-text></ion-label>
+        <ion-input
+          placeholder="e.g. Kitchen Freezer"
+          [value]="deviceName()"
+          (ionInput)="deviceName.set($any($event).detail.value ?? '')">
+        </ion-input>
+        <ion-note slot="helper">A friendly name to identify this device</ion-note>
+      </ion-item>
+
+      <ion-button
+        expand="block"
+        color="primary"
+        class="claim-btn"
+        [disabled]="loading() || !deviceId().trim()"
+        (click)="onClaim()">
+        @if (loading()) {
+          <ion-spinner name="crescent" slot="start"></ion-spinner>
+          Claiming…
+        } @else {
+          Claim Device
+        }
+      </ion-button>
+
+    </div>
+  }
+
+  <!-- ── Step 2: Success — token display ───────────────────────────────── -->
+  @if (step() === 'success') {
+    <div class="success-step">
+
+      <div class="success-head">
+        <ion-icon name="checkmark-outline" class="success-head__icon" color="success"></ion-icon>
+        <div>
+          <div class="success-head__title">Device Claimed!</div>
+          <div class="success-head__sub">Set up your device with the token below</div>
+        </div>
+      </div>
+
+      <!-- Token display -->
+      <div class="token-card">
+        <div class="token-card__label">Setup Token</div>
+        <div class="token-card__value">{{ claimResult()?.claimingToken }}</div>
+        <div class="token-card__expiry">
+          Expires in {{ minutesLeft() }} minute{{ minutesLeft() !== 1 ? 's' : '' }}
+        </div>
+        <ion-button
+          fill="outline"
+          size="small"
+          class="token-card__copy"
+          (click)="copyToken()">
+          <ion-icon slot="start" [name]="copied() ? 'checkmark-outline' : 'copy-outline'"></ion-icon>
+          {{ copied() ? 'Copied!' : 'Copy token' }}
+        </ion-button>
+      </div>
+
+      <!-- Setup instructions -->
+      @if (claimResult()?.instructions) {
+        <div class="instructions">
+          <div class="instructions__title">Setup Instructions</div>
+          <div class="instructions__body">{{ claimResult()?.instructions }}</div>
+        </div>
+      }
+
+    </div>
+  }
+
+</ui-bottom-sheet>

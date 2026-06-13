@@ -1,0 +1,148 @@
+<ion-content class="ion-padding">
+
+  <!-- Toolbar -->
+  <div class="page-toolbar">
+    <div class="page-toolbar__left">
+      <ion-icon name="save-outline"></ion-icon>
+      <span class="page-toolbar__title">Storage &amp; System</span>
+    </div>
+    <div class="page-toolbar__right">
+      <span class="page-toolbar__toggle-label">Auto-refresh</span>
+      <ion-toggle
+        [checked]="autoRefresh()"
+        (ionChange)="onAutoRefreshToggle($any($event).detail.checked)"
+        size="small">
+      </ion-toggle>
+      <ion-button fill="outline" color="medium" size="small" (click)="onRefresh()">
+        <ion-icon slot="start" name="refresh-outline"></ion-icon>
+        Refresh
+      </ion-button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  @if (device.loading() && !device.data()) {
+    <div class="storage-grid">
+      @for (_ of [1,2,3]; track $index) {
+        <ion-card>
+          <ion-card-content>
+            <ion-skeleton-text [animated]="true" style="height: 16px; width: 50%; border-radius: 4px; margin-bottom: 16px;"></ion-skeleton-text>
+            <ion-skeleton-text [animated]="true" style="height: 10px; border-radius: 5px; margin-bottom: 12px;"></ion-skeleton-text>
+            <ion-skeleton-text [animated]="true" style="height: 36px; border-radius: 4px;"></ion-skeleton-text>
+          </ion-card-content>
+        </ion-card>
+      }
+    </div>
+  }
+
+  <!-- Error -->
+  @if (device.error() && !device.data()) {
+    <ui-empty-state title="Could not load storage info" [hasAction]="true">
+      <ion-button action fill="outline" size="small" (click)="onRetry()">Retry</ion-button>
+    </ui-empty-state>
+  }
+
+  @if (storage(); as d) {
+    <div class="storage-grid">
+
+      <!-- Disk usage card -->
+      <ion-card>
+        <ion-card-header>
+          <ion-card-title>Disk Usage</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          @if (d.diskUsage !== null && d.diskUsage !== undefined) {
+            <div class="usage-block">
+              <div class="usage-block__head">
+                <span>Used</span>
+                <span class="usage-block__pct" [style.color]="barColor(diskBarWidth())">
+                  {{ d.diskUsage.toFixed(1) }}%
+                </span>
+              </div>
+              <div class="usage-bar">
+                <div class="usage-bar__fill"
+                  [style.width.%]="diskBarWidth()"
+                  [style.background]="barColor(diskBarWidth())">
+                </div>
+              </div>
+            </div>
+          } @else {
+            <p class="no-data">No disk data available</p>
+          }
+          <div class="kv kv--small">
+            <span class="kv__k">Total capacity</span>
+            <span class="kv__v mono">{{ d.diskTotal || '—' }}</span>
+            @if (d.diskUsage !== null && d.diskUsage !== undefined && d.diskTotal) {
+              <span class="kv__k">Free (estimated)</span>
+              <span class="kv__v mono">~{{ (100 - d.diskUsage).toFixed(1) }}% of {{ d.diskTotal }}</span>
+            }
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- Memory usage card -->
+      <ion-card>
+        <ion-card-header>
+          <ion-card-title>Memory Usage</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          @if (d.memoryUsage !== null && d.memoryUsage !== undefined) {
+            <div class="usage-block">
+              <div class="usage-block__head">
+                <span>Used</span>
+                <span class="usage-block__pct" [style.color]="barColor(memBarWidth())">
+                  {{ d.memoryUsage.toFixed(1) }}%
+                </span>
+              </div>
+              <div class="usage-bar usage-bar--purple">
+                <div class="usage-bar__fill"
+                  [style.width.%]="memBarWidth()"
+                  [style.background]="barColor(memBarWidth())">
+                </div>
+              </div>
+            </div>
+          } @else {
+            <p class="no-data">No memory data available</p>
+          }
+          <div class="kv kv--small">
+            <span class="kv__k">Total RAM</span>
+            <span class="kv__v mono">{{ formatMemory(d.memoryTotal) }}</span>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- System load card -->
+      <ion-card>
+        <ion-card-header>
+          <ion-card-title>System Load</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <div class="kv kv--small">
+            <span class="kv__k">Load average</span>
+            <span class="kv__v mono">{{ d.loadAverage || '—' }}</span>
+            <span class="kv__k">Uptime</span>
+            <span class="kv__v mono">{{ d.uptime || '—' }}</span>
+          </div>
+          @if (d.cpuUsage !== null && d.cpuUsage !== undefined) {
+            <div class="usage-block" style="margin-top: 12px;">
+              <div class="usage-block__head">
+                <span>CPU</span>
+                <span class="usage-block__pct" [style.color]="barColor(cpuBarWidth())">
+                  {{ d.cpuUsage.toFixed(1) }}%
+                </span>
+              </div>
+              <div class="usage-bar">
+                <div class="usage-bar__fill"
+                  [style.width.%]="cpuBarWidth()"
+                  [style.background]="barColor(cpuBarWidth())">
+                </div>
+              </div>
+            </div>
+          }
+        </ion-card-content>
+      </ion-card>
+
+    </div>
+  }
+
+</ion-content>

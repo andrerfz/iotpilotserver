@@ -7,6 +7,8 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
+import { Alert } from '../../models/alert';
+import { SuccessResponse } from '../../models/success-response';
 
 export interface ListAlerts$Params {
   deviceId?: string;
@@ -18,7 +20,9 @@ export interface ListAlerts$Params {
   offset?: number;
 }
 
-export function listAlerts(http: HttpClient, rootUrl: string, params?: ListAlerts$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
+export function listAlerts(http: HttpClient, rootUrl: string, params?: ListAlerts$Params, context?: HttpContext): Observable<StrictHttpResponse<SuccessResponse & {
+'data'?: Array<Alert>;
+}>> {
   const rb = new RequestBuilder(rootUrl, listAlerts.PATH, 'get');
   if (params) {
     rb.query('deviceId', params.deviceId, {});
@@ -31,11 +35,13 @@ export function listAlerts(http: HttpClient, rootUrl: string, params?: ListAlert
   }
 
   return http.request(
-    rb.build({ responseType: 'text', accept: '*/*', context })
+    rb.build({ responseType: 'json', accept: 'application/json', context })
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return (r as HttpResponse<any>).clone({ body: undefined }) as StrictHttpResponse<void>;
+      return r as StrictHttpResponse<SuccessResponse & {
+      'data'?: Array<Alert>;
+      }>;
     })
   );
 }

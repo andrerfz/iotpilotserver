@@ -7,23 +7,29 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
+import { MonitoringMetrics } from '../../models/monitoring-metrics';
+import { SuccessResponse } from '../../models/success-response';
 
 export interface GetMonitoringMetrics$Params {
   period?: '1h' | '6h' | '24h' | '7d' | '30d';
 }
 
-export function getMonitoringMetrics(http: HttpClient, rootUrl: string, params?: GetMonitoringMetrics$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
+export function getMonitoringMetrics(http: HttpClient, rootUrl: string, params?: GetMonitoringMetrics$Params, context?: HttpContext): Observable<StrictHttpResponse<SuccessResponse & {
+'data'?: MonitoringMetrics;
+}>> {
   const rb = new RequestBuilder(rootUrl, getMonitoringMetrics.PATH, 'get');
   if (params) {
     rb.query('period', params.period, {});
   }
 
   return http.request(
-    rb.build({ responseType: 'text', accept: '*/*', context })
+    rb.build({ responseType: 'json', accept: 'application/json', context })
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return (r as HttpResponse<any>).clone({ body: undefined }) as StrictHttpResponse<void>;
+      return r as StrictHttpResponse<SuccessResponse & {
+      'data'?: MonitoringMetrics;
+      }>;
     })
   );
 }

@@ -131,6 +131,7 @@ export { UiSwitchComponent } from './forms/ui-switch.component';
 export { UiCheckboxComponent } from './forms/ui-checkbox.component';
 export { UiSelectComponent } from './forms/ui-select.component';
 export type { SelectOption } from './forms/ui-select.component';
+export { UiSearchFieldComponent } from './forms/ui-search-field.component';
 // T5 — Metric, Sparkline, EmptyState
 export { SparklineComponent } from './data/sparkline.component';
 export { MetricCardComponent } from './data/metric-card.component';

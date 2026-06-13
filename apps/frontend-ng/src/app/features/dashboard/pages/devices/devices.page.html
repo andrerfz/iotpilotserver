@@ -1,0 +1,150 @@
+<ion-content class="ion-padding">
+
+  <!-- Page head -->
+  <div class="pagehead">
+    <div>
+      <div class="pagehead__title">Devices</div>
+      <div class="pagehead__sub">{{ totalCount() }} device{{ totalCount() !== 1 ? 's' : '' }} registered</div>
+    </div>
+    <div class="pagehead__actions">
+      <ion-button fill="solid" color="primary" (click)="onRegisterDevice()">
+        <ion-icon slot="start" name="add-outline"></ion-icon>
+        Register device
+      </ion-button>
+    </div>
+  </div>
+
+  <!-- Loading skeletons -->
+  @if (devicesLoading()) {
+    <div class="metrics">
+      @for (_ of [1,2,3,4]; track $index) {
+        <ion-card class="metric-skeleton">
+          <ion-card-content>
+            <ion-skeleton-text [animated]="true" style="height: 14px; width: 60%;"></ion-skeleton-text>
+            <ion-skeleton-text [animated]="true" style="height: 28px; width: 40%; margin-top: 8px;"></ion-skeleton-text>
+          </ion-card-content>
+        </ion-card>
+      }
+    </div>
+  }
+
+  <!-- Error state -->
+  @if (devicesError()) {
+    <ui-empty-state
+      title="Failed to load devices"
+      [description]="devicesError()?.message ?? 'Check your connection and try again.'"
+      [hasAction]="true"
+      (action)="onRetry()">
+    </ui-empty-state>
+  }
+
+  @if (!devicesLoading() && !devicesError()) {
+
+    <!-- KPI row -->
+    <div class="metrics">
+      <ui-metric-card label="Online" [value]="onlineCount() + '/' + totalCount()" iconColor="var(--ion-color-success)">
+        <ion-icon icon name="wifi-outline"></ion-icon>
+      </ui-metric-card>
+
+      <ui-metric-card
+        label="Offline / Error"
+        [value]="offlineErrorCount()"
+        [delta]="offlineErrorCount() > 0 ? 'warning' : null"
+        iconColor="var(--ion-color-danger)">
+        <ion-icon icon name="alert-circle-outline"></ion-icon>
+      </ui-metric-card>
+
+      <ui-metric-card label="Maintenance / Pending" [value]="maintenanceCount()" iconColor="var(--ion-color-warning)">
+        <ion-icon icon name="construct-outline"></ion-icon>
+      </ui-metric-card>
+
+      <ui-metric-card label="Firmware current" [value]="firmwareCurrentCount()" iconColor="var(--ion-color-success)">
+        <ion-icon icon name="checkmark-circle-outline"></ion-icon>
+      </ui-metric-card>
+    </div>
+
+    <!-- Filter bar -->
+    <div class="filterbar">
+      <ui-search-field
+        class="filterbar__search"
+        placeholder="Search hostname, device ID or location…"
+        [value]="search()"
+        (valueChange)="search.set($event)">
+      </ui-search-field>
+      <div class="filterbar__pickers">
+        <ui-multi-select-picker
+          label="Status"
+          title="Filter by status"
+          sub="Show only devices in these states"
+          [options]="statusOptions"
+          [value]="statusFilter()"
+          (valueChange)="statusFilter.set($event)">
+        </ui-multi-select-picker>
+      </div>
+    </div>
+
+    <!-- Bulk actions bar -->
+    @if (selectedCount() > 0) {
+      <div class="bulk-bar">
+        <span class="bulk-bar__label">{{ selectedCount() }} selected</span>
+        <ion-button fill="clear" size="small" color="medium" (click)="onExportSelected()">
+          <ion-icon slot="start" name="download-outline"></ion-icon>
+          Export selected
+        </ion-button>
+      </div>
+    }
+
+    <!-- Device table -->
+    <ui-data-table
+      [columns]="$any(columns())"
+      [rows]="$any(filteredDevices())"
+      [pageSize]="10"
+      [selectable]="true"
+      [rowClickable]="true"
+      (rowClick)="onDeviceRowClick($event)"
+      (selectionChange)="onSelectionChange($any($event))">
+    </ui-data-table>
+
+    @if (!devicesLoading() && filteredDevices().length === 0 && _deviceRows().length > 0) {
+      <ui-empty-state
+        title="No devices match your filters"
+        description="Try clearing the search or status filter.">
+      </ui-empty-state>
+    }
+
+    @if (!devicesLoading() && _deviceRows().length === 0) {
+      <ui-empty-state
+        title="No devices registered"
+        description="Register your first device to get started."
+        [hasAction]="true"
+        (action)="onRegisterDevice()">
+      </ui-empty-state>
+    }
+
+  }
+
+</ion-content>
+
+<!-- Register device FAB -->
+<ion-fab slot="fixed" vertical="bottom" horizontal="end">
+  <ion-fab-button color="primary" (click)="onRegisterDevice()">
+    <ion-icon name="add-outline"></ion-icon>
+  </ion-fab-button>
+</ion-fab>
+
+<!-- Cell templates -->
+<ng-template #deviceCell let-row>
+  <div class="device-cell">
+    <ui-status-dot [status]="row.status ?? 'OFFLINE'"></ui-status-dot>
+    <div>
+      <div class="td-strong">{{ row.hostname ?? row.name ?? row.id }}</div>
+      <div class="td-mono dim">{{ row.deviceId }} · {{ row.deviceType }}</div>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #statusCell let-row>
+  <ui-status-badge [status]="row.status ?? 'OFFLINE'"></ui-status-badge>
+</ng-template>
+
+<app-register-device-sheet (deviceClaimed)="onDeviceClaimed()"></app-register-device-sheet>

@@ -1,0 +1,15 @@
+<nav class="device-tabs">
+  @for (tab of tabs; track tab.path) {
+    <a
+      class="device-tabs__tab"
+      [routerLink]="tab.path === '' ? ['/app/devices', deviceId()] : ['/app/devices', deviceId(), tab.path]"
+      routerLinkActive="device-tabs__tab--active"
+      [routerLinkActiveOptions]="{ exact: tab.path === '' }"
+    >
+      {{ tab.label }}
+      @if (tab.alertsBadge && openAlertCount() > 0) {
+        <span class="device-tabs__badge">{{ openAlertCount() }}</span>
+      }
+    </a>
+  }
+</nav>

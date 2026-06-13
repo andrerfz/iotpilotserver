@@ -7,6 +7,8 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
+import { Device } from '../../models/device';
+import { SuccessResponse } from '../../models/success-response';
 
 export interface ListDevices$Params {
   status?: 'ONLINE' | 'OFFLINE' | 'MAINTENANCE' | 'ERROR' | 'UNCLAIMED';
@@ -16,7 +18,9 @@ export interface ListDevices$Params {
   sortBy?: string;
 }
 
-export function listDevices(http: HttpClient, rootUrl: string, params?: ListDevices$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
+export function listDevices(http: HttpClient, rootUrl: string, params?: ListDevices$Params, context?: HttpContext): Observable<StrictHttpResponse<SuccessResponse & {
+'data'?: Array<Device>;
+}>> {
   const rb = new RequestBuilder(rootUrl, listDevices.PATH, 'get');
   if (params) {
     rb.query('status', params.status, {});
@@ -27,11 +31,13 @@ export function listDevices(http: HttpClient, rootUrl: string, params?: ListDevi
   }
 
   return http.request(
-    rb.build({ responseType: 'text', accept: '*/*', context })
+    rb.build({ responseType: 'json', accept: 'application/json', context })
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return (r as HttpResponse<any>).clone({ body: undefined }) as StrictHttpResponse<void>;
+      return r as StrictHttpResponse<SuccessResponse & {
+      'data'?: Array<Device>;
+      }>;
     })
   );
 }

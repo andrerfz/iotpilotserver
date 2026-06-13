@@ -10,7 +10,7 @@ import {
 import { NgTemplateOutlet } from '@angular/common';
 import { EmptyStateComponent } from './empty-state.component';
 
-export interface ColumnDef<T = Record<string, unknown>> {
+export interface ColumnDef<T extends object = Record<string, unknown>> {
   key: string;
   label: string;
   sortable?: boolean;
@@ -87,7 +87,7 @@ interface SortState { key: string; dir: 1 | -1; }
             </tr>
           </thead>
           <tbody>
-            @for (row of pageView(); track row[rowKey()]) {
+            @for (row of pageView(); track getRowKey(row)) {
               <tr
                 [class.row--clickable]="rowClickable()"
                 (click)="rowClickable() ? rowClick.emit(row) : null">
@@ -157,7 +157,7 @@ interface SortState { key: string; dir: 1 | -1; }
   `,
   styleUrl: './data-table.component.scss',
 })
-export class DataTableComponent<T extends Record<string, unknown> = Record<string, unknown>> {
+export class DataTableComponent<T extends object = Record<string, unknown>> {
   readonly columns = input.required<ColumnDef<T>[]>();
   readonly rows = input<T[]>([]);
   readonly rowKey = input<string>('id');
@@ -178,7 +178,7 @@ export class DataTableComponent<T extends Record<string, unknown> = Record<strin
     const col = this.columns().find(c => c.key === s.key);
     if (!col) return this.rows();
     return [...this.rows()].sort((a, b) => {
-      const av = a[s.key] as string | number, bv = b[s.key] as string | number;
+      const av = (a as Record<string, unknown>)[s.key] as string | number, bv = (b as Record<string, unknown>)[s.key] as string | number;
       if (av === bv) return 0;
       return (av < bv ? -1 : 1) * s.dir;
     });
@@ -197,34 +197,38 @@ export class DataTableComponent<T extends Record<string, unknown> = Record<strin
 
   protected readonly allOnPageSelected = computed(() => {
     const view = this.pageView();
-    return view.length > 0 && view.every(r => this.selected().includes(r[this.rowKey()]));
+    return view.length > 0 && view.every(r => this.selected().includes((r as Record<string, unknown>)[this.rowKey()]));
   });
 
+  protected getRowKey(row: T): unknown {
+    return (row as Record<string, unknown>)[this.rowKey()];
+  }
+
   protected getValue(row: T, key: string): unknown {
-    return row[key];
+    return (row as Record<string, unknown>)[key];
   }
 
   protected isSelected(row: T): boolean {
-    return this.selected().includes(row[this.rowKey()]);
+    return this.selected().includes((row as Record<string, unknown>)[this.rowKey()]);
   }
 
   protected toggleAll(): void {
     const view = this.pageView();
-    const keys = view.map(r => r[this.rowKey()]);
+    const keys = view.map(r => (r as Record<string, unknown>)[this.rowKey()]);
     if (this.allOnPageSelected()) {
       this.selected.update(s => s.filter(k => !keys.includes(k)));
     } else {
       this.selected.update(s => [...new Set([...s, ...keys])]);
     }
-    this.selectionChange.emit(this.rows().filter(r => this.selected().includes(r[this.rowKey()])));
+    this.selectionChange.emit(this.rows().filter(r => this.selected().includes((r as Record<string, unknown>)[this.rowKey()])));
   }
 
   protected toggle(row: T): void {
-    const key = row[this.rowKey()];
+    const key = (row as Record<string, unknown>)[this.rowKey()];
     this.selected.update(s =>
       s.includes(key) ? s.filter(k => k !== key) : [...s, key],
     );
-    this.selectionChange.emit(this.rows().filter(r => this.selected().includes(r[this.rowKey()])));
+    this.selectionChange.emit(this.rows().filter(r => this.selected().includes((r as Record<string, unknown>)[this.rowKey()])));
   }
 
   protected clearSelection(): void {

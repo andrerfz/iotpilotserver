@@ -1,0 +1,172 @@
+<ion-content class="ion-padding">
+
+  <!-- Stats row -->
+  <div class="stats-row">
+    <ui-metric-card label="Open" [value]="openCount()" color="danger"></ui-metric-card>
+    <ui-metric-card label="Acknowledged" [value]="ackCount()" color="warning"></ui-metric-card>
+    <ui-metric-card label="Resolved" [value]="resolvedCount()" color="success"></ui-metric-card>
+  </div>
+
+  <!-- Top actions -->
+  <div class="top-actions">
+    <ui-multi-select-picker
+      label="Severity"
+      [options]="severityOptions"
+      [value]="severityFilter()"
+      (valueChange)="severityFilter.set($event)"
+    ></ui-multi-select-picker>
+
+    <ui-multi-select-picker
+      label="State"
+      [options]="stateOptions"
+      [value]="stateFilter()"
+      (valueChange)="stateFilter.set($event)"
+    ></ui-multi-select-picker>
+
+    @if (hasFilters()) {
+      <ion-button fill="clear" color="medium" size="small"
+        (click)="severityFilter.set([]); stateFilter.set([])">
+        Clear filters
+      </ion-button>
+    }
+
+    <div class="spacer"></div>
+
+    <ion-button fill="outline" color="medium" size="small" (click)="onOpenThresholds()">
+      <ion-icon slot="start" name="settings-outline"></ion-icon>
+      Thresholds
+    </ion-button>
+
+    <ion-button fill="outline" color="medium" size="small" (click)="onRefresh()">
+      <ion-icon slot="start" name="refresh-outline"></ion-icon>
+      Refresh
+    </ion-button>
+  </div>
+
+  <!-- Trend chart card -->
+  @if (trend.data()?.length) {
+    <ion-card class="trend-card">
+      <ion-card-header>
+        <ion-card-title>Alert Trend — Last 7 Days</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="trend-chart">
+          @for (point of trend.data() ?? []; track point.date) {
+            <div class="trend-chart__col">
+              <span class="trend-chart__count">{{ point.count ?? 0 }}</span>
+              <div class="trend-chart__track">
+                <div class="trend-chart__bar"
+                  [style.height.%]="trendBarHeight(point.count)">
+                </div>
+              </div>
+              <span class="trend-chart__label">{{ formatTrendDate(point.date) }}</span>
+            </div>
+          }
+        </div>
+      </ion-card-content>
+    </ion-card>
+  }
+
+  <!-- Bulk actions bar -->
+  @if (selectedAlerts().length > 0) {
+    <div class="bulk-bar">
+      <ion-text color="medium">
+        {{ selectedAlerts().length }} selected
+      </ion-text>
+      <ion-button fill="outline" color="warning" size="small" (click)="onBulkAcknowledge()">
+        Acknowledge selected
+      </ion-button>
+      <ion-button fill="outline" color="success" size="small" (click)="onBulkResolve()">
+        Resolve selected
+      </ion-button>
+    </div>
+  }
+
+  <!-- Alerts table card -->
+  <ion-card>
+    <ion-card-content>
+      <!-- Cell templates — kept outside @if so ViewChild resolves on init -->
+      <ng-template #severityCell let-row>
+        <ui-severity-badge [severity]="row.severity ?? 'INFO'"></ui-severity-badge>
+      </ng-template>
+      <ng-template #titleCell let-row>
+        <div class="alert-title-cell">
+          <span class="alert-title">{{ row.title }}</span>
+          <span class="alert-msg">{{ row.message }}</span>
+        </div>
+      </ng-template>
+      <ng-template #stateCell let-row>
+        <ui-status-badge [status]="alertState(row)"></ui-status-badge>
+      </ng-template>
+      <ng-template #triggeredCell let-row>
+        <span class="mono dim">{{ formatAge(row.createdAt) }}</span>
+      </ng-template>
+      <ng-template #actionsCell let-row>
+        @if (!row.resolved) {
+          <div class="row-actions">
+            @if (!row.acknowledgedAt) {
+              <ion-button
+                fill="clear" color="warning" size="small"
+                [disabled]="actionLoading() === row.id"
+                (click)="$event.stopPropagation(); onAcknowledge(row)">
+                Ack
+              </ion-button>
+            }
+            <ion-button
+              fill="clear" color="success" size="small"
+              [disabled]="actionLoading() === row.id"
+              (click)="$event.stopPropagation(); onResolve(row)">
+              Resolve
+            </ion-button>
+          </div>
+        }
+      </ng-template>
+
+      <!-- Loading skeleton -->
+      @if (alerts.loading() && !localAlerts().length) {
+        @for (_ of [1,2,3,4]; track $index) {
+          <ion-skeleton-text
+            [animated]="true"
+            style="height: 52px; border-radius: 6px; margin-bottom: 8px;">
+          </ion-skeleton-text>
+        }
+      }
+
+      <!-- Error -->
+      @if (alerts.error() && !localAlerts().length) {
+        <ui-empty-state title="Could not load alerts" [hasAction]="true">
+          <ion-button action fill="outline" size="small" (click)="onRefresh()">Retry</ion-button>
+        </ui-empty-state>
+      }
+
+      <!-- Empty (after filter) -->
+      @if (!alerts.loading() && filteredAlerts().length === 0 && !alerts.error()) {
+        <ui-empty-state
+          title="No alerts"
+          [description]="hasFilters() ? 'Try adjusting your filters' : 'This device has no alerts yet'"
+        ></ui-empty-state>
+      }
+
+      <!-- Table -->
+      @if (filteredAlerts().length > 0) {
+        <ui-data-table
+          [rows]="filteredAlerts()"
+          [columns]="columns()"
+          [pageSize]="20"
+          [selectable]="true"
+          (selectionChange)="onSelectionChange($event)"
+        ></ui-data-table>
+      }
+    </ion-card-content>
+  </ion-card>
+
+</ion-content>
+
+<!-- Threshold config sheet -->
+@if (svc.device.data()) {
+  <app-threshold-config-sheet
+    [deviceId]="deviceId()"
+    [deviceType]="svc.device.data()?.deviceType"
+    (thresholdsSaved)="onRefresh()">
+  </app-threshold-config-sheet>
+}

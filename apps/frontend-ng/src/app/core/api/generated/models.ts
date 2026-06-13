@@ -3,12 +3,15 @@
 
 export type { Alert } from './models/alert';
 export type { AuthData } from './models/auth-data';
+export type { ClaimResult } from './models/claim-result';
 export type { Device } from './models/device';
 export type { DeviceCommand } from './models/device-command';
+export type { DeviceLogEntry } from './models/device-log-entry';
 export type { DeviceSettings } from './models/device-settings';
 export type { ErrorResponse } from './models/error-response';
 export type { LoginData } from './models/login-data';
 export type { LoginRequest } from './models/login-request';
+export type { MonitoringMetrics } from './models/monitoring-metrics';
 export type { NotificationRecord } from './models/notification-record';
 export type { NotificationSettings } from './models/notification-settings';
 export type { ProfileSettings } from './models/profile-settings';

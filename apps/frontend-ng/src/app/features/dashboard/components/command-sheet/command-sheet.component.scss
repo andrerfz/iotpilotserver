@@ -1,0 +1,93 @@
+.cmd-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 8px 0;
+
+  ui-select {
+    display: block;
+  }
+
+  &__warning {
+    padding: 12px;
+    background: var(--ion-color-danger-tint);
+    border: 1px solid var(--ion-color-danger-shade);
+    border-radius: 8px;
+    font-size: 0.85rem;
+  }
+}
+
+.form-item {
+  --background: transparent;
+  --border-color: var(--ion-color-light-shade);
+  --highlight-color-focused: var(--ion-color-primary);
+}
+
+.cmd-detail {
+  padding: 4px 0;
+
+  &__grid {
+    margin: 0 0 16px;
+    display: grid;
+    gap: 0;
+  }
+
+  &__row {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--ion-color-light);
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    dt {
+      min-width: 90px;
+      font-size: 0.82rem;
+      color: var(--ion-color-medium);
+      flex-shrink: 0;
+    }
+
+    dd {
+      margin: 0;
+      font-size: 0.9rem;
+      color: var(--ion-color-dark);
+    }
+  }
+
+  &__section {
+    margin-top: 12px;
+  }
+
+  &__section-title {
+    margin: 0 0 6px;
+    font-size: 0.82rem;
+    color: var(--ion-color-medium);
+    font-weight: 500;
+  }
+
+  &__pre {
+    margin: 0;
+    padding: 10px 12px;
+    background: var(--ion-color-light);
+    border-radius: 6px;
+    font-family: var(--ion-font-family-mono, 'Courier New', monospace);
+    font-size: 0.8rem;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 180px;
+    overflow-y: auto;
+
+    &--error {
+      background: var(--ion-color-danger-tint);
+      color: var(--ion-color-danger-shade);
+    }
+  }
+}
+
+.mono {
+  font-family: var(--ion-font-family-mono, 'Courier New', monospace);
+  font-size: 0.9em;
+}

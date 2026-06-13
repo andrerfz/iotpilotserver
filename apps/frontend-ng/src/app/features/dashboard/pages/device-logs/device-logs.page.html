@@ -1,0 +1,112 @@
+<ion-content class="ion-padding">
+
+  <!-- Filter bar -->
+  <ion-card class="filter-card">
+    <ion-card-content>
+      <div class="filter-bar">
+        <ui-select
+          label="Level"
+          [options]="levelOptions"
+          [ngModel]="levelFilter()"
+          (ngModelChange)="onLevelChange($event)"
+        ></ui-select>
+
+        <ui-search-field
+          placeholder="Search messages…"
+          [value]="search()"
+          (valueChange)="onSearchChange($event)"
+        ></ui-search-field>
+
+        <ion-input
+          class="source-input"
+          placeholder="Filter by source…"
+          [value]="sourceFilter()"
+          (ionInput)="onSourceChange($any($event).detail.value ?? '')"
+        ></ion-input>
+
+        @if (hasFilters()) {
+          <ion-button fill="clear" color="medium" size="small" (click)="onClearFilters()">
+            <ion-icon slot="start" name="close-outline"></ion-icon>
+            Clear
+          </ion-button>
+        }
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Actions -->
+  <div class="actions-row">
+    <ion-button
+      fill="outline"
+      [color]="autoRefresh() ? 'primary' : 'medium'"
+      size="small"
+      (click)="autoRefresh.set(!autoRefresh())">
+      Auto-refresh {{ autoRefresh() ? 'ON' : 'OFF' }}
+    </ion-button>
+    <ion-button fill="outline" color="medium" size="small" (click)="onRefresh()">
+      <ion-icon slot="start" name="refresh-outline"></ion-icon>
+      Refresh
+    </ion-button>
+  </div>
+
+  <!-- Log table -->
+  <ion-card>
+    <ion-card-content>
+      <div class="card-head">
+        <h3 class="card-title">Device Logs</h3>
+        @if (logs.data()) {
+          <span class="card-count">{{ logs.data()!.length }} entries</span>
+        }
+      </div>
+
+      <!-- Cell templates — kept outside @if so ViewChild finds them on init -->
+      <ng-template #tsCell let-row>
+        <span class="mono dim">{{ formatTs(row.timestamp) }}</span>
+      </ng-template>
+      <ng-template #levelCell let-row>
+        <span class="log-badge log-badge--{{ row.level?.toLowerCase() ?? 'debug' }}">{{ row.level ?? '?' }}</span>
+      </ng-template>
+      <ng-template #sourceCell let-row>
+        <span class="mono dim">{{ row.source ?? '—' }}</span>
+      </ng-template>
+      <ng-template #messageCell let-row>
+        <span>{{ row.message }}</span>
+      </ng-template>
+
+      <!-- Loading skeleton -->
+      @if (logs.loading() && !logs.data()) {
+        @for (_ of [1,2,3,4,5]; track $index) {
+          <ion-skeleton-text
+            [animated]="true"
+            style="height: 40px; border-radius: 4px; margin-bottom: 6px;">
+          </ion-skeleton-text>
+        }
+      }
+
+      <!-- Error -->
+      @if (logs.error() && !logs.data()) {
+        <ui-empty-state title="Could not load logs" [hasAction]="true">
+          <ion-button action fill="outline" size="small" (click)="onRetry()">Retry</ion-button>
+        </ui-empty-state>
+      }
+
+      <!-- Empty -->
+      @if (!logs.loading() && (logs.data()?.length ?? 0) === 0 && !logs.error()) {
+        <ui-empty-state
+          title="No logs found"
+          [description]="hasFilters() ? 'Try adjusting your filters' : 'This device has no log entries yet'"
+        ></ui-empty-state>
+      }
+
+      <!-- Table -->
+      @if ((logs.data()?.length ?? 0) > 0) {
+        <ui-data-table
+          [rows]="logs.data() ?? []"
+          [columns]="columns()"
+          [pageSize]="100"
+        ></ui-data-table>
+      }
+    </ion-card-content>
+  </ion-card>
+
+</ion-content>

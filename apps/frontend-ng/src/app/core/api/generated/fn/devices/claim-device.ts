@@ -7,6 +7,8 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
+import { ClaimResult } from '../../models/claim-result';
+import { SuccessResponse } from '../../models/success-response';
 
 export interface ClaimDevice$Params {
       body: {
@@ -15,18 +17,22 @@ export interface ClaimDevice$Params {
 }
 }
 
-export function claimDevice(http: HttpClient, rootUrl: string, params: ClaimDevice$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
+export function claimDevice(http: HttpClient, rootUrl: string, params: ClaimDevice$Params, context?: HttpContext): Observable<StrictHttpResponse<SuccessResponse & {
+'data'?: ClaimResult;
+}>> {
   const rb = new RequestBuilder(rootUrl, claimDevice.PATH, 'post');
   if (params) {
     rb.body(params.body, 'application/json');
   }
 
   return http.request(
-    rb.build({ responseType: 'text', accept: '*/*', context })
+    rb.build({ responseType: 'json', accept: 'application/json', context })
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return (r as HttpResponse<any>).clone({ body: undefined }) as StrictHttpResponse<void>;
+      return r as StrictHttpResponse<SuccessResponse & {
+      'data'?: ClaimResult;
+      }>;
     })
   );
 }

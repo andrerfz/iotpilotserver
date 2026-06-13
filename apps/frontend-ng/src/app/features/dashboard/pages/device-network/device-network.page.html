@@ -1,0 +1,113 @@
+<ion-content class="ion-padding">
+
+  <!-- Toolbar -->
+  <div class="page-toolbar">
+    <div class="page-toolbar__left">
+      <ion-icon name="wifi-outline"></ion-icon>
+      <span class="page-toolbar__title">Network</span>
+    </div>
+    <div class="page-toolbar__right">
+      <span class="page-toolbar__toggle-label">Auto-refresh</span>
+      <ion-toggle
+        [checked]="autoRefresh()"
+        (ionChange)="onAutoRefreshToggle($any($event).detail.checked)"
+        size="small">
+      </ion-toggle>
+      <ion-button fill="outline" color="medium" size="small" (click)="onRefresh()">
+        <ion-icon slot="start" name="refresh-outline"></ion-icon>
+        Refresh
+      </ion-button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  @if (device.loading() && !device.data()) {
+    <div class="net-grid">
+      @for (_ of [1,2,3]; track $index) {
+        <ion-card>
+          <ion-card-content>
+            <ion-skeleton-text [animated]="true" style="height: 16px; width: 50%; border-radius: 4px; margin-bottom: 12px;"></ion-skeleton-text>
+            @for (__ of [1,2,3]; track $index) {
+              <ion-skeleton-text [animated]="true" style="height: 36px; border-radius: 4px; margin-bottom: 6px;"></ion-skeleton-text>
+            }
+          </ion-card-content>
+        </ion-card>
+      }
+    </div>
+  }
+
+  <!-- Error -->
+  @if (device.error() && !device.data()) {
+    <ui-empty-state title="Could not load network info" [hasAction]="true">
+      <ion-button action fill="outline" size="small" (click)="onRetry()">Retry</ion-button>
+    </ui-empty-state>
+  }
+
+  @if (net(); as d) {
+    <div class="net-grid">
+
+      <!-- Connectivity card -->
+      <ion-card>
+        <ion-card-header>
+          <ion-card-title>Connectivity</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <div class="kv">
+            <span class="kv__k">Status</span>
+            <span class="kv__v">
+              <ui-status-badge [status]="d.status ?? 'OFFLINE'"></ui-status-badge>
+            </span>
+            @if (d.connectionQuality) {
+              <span class="kv__k">Quality</span>
+              <span class="kv__v">
+                <ui-status-badge [status]="connectionQualityStatus()"></ui-status-badge>
+              </span>
+            }
+            <span class="kv__k">Last seen</span>
+            <span class="kv__v mono">{{ formatLastSeen(d.lastSeen) }}</span>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- IP Addresses card -->
+      <ion-card>
+        <ion-card-header>
+          <ion-card-title>IP Addresses</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <div class="kv">
+            <span class="kv__k">Primary IP</span>
+            <span class="kv__v mono">{{ d.ipAddress || '—' }}</span>
+            <span class="kv__k">Tailscale IP</span>
+            <span class="kv__v mono">{{ d.tailscaleIp || '—' }}</span>
+            <span class="kv__k">MAC address</span>
+            <span class="kv__v mono">{{ d.macAddress || '—' }}</span>
+            <span class="kv__k">Hostname</span>
+            <span class="kv__v mono">{{ d.hostname || '—' }}</span>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- Device Identity card -->
+      <ion-card>
+        <ion-card-header>
+          <ion-card-title>Device Identity</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <div class="kv">
+            <span class="kv__k">Device type</span>
+            <span class="kv__v">{{ d.deviceType || '—' }}</span>
+            <span class="kv__k">Architecture</span>
+            <span class="kv__v mono">{{ d.architecture || '—' }}</span>
+            <span class="kv__k">Agent version</span>
+            <span class="kv__v mono">{{ d.agentVersion || '—' }}</span>
+            <span class="kv__k">Location</span>
+            <span class="kv__v">{{ d.location || '—' }}</span>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+    </div>
+  }
+
+</ion-content>

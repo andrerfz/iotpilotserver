@@ -1,0 +1,124 @@
+.page-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  gap: 12px;
+  flex-wrap: wrap;
+
+  &__left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-muted);
+
+    ion-icon {
+      font-size: 18px;
+    }
+  }
+
+  &__title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  &__right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  &__toggle-label {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+  }
+}
+
+.storage-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.usage-block {
+  margin-bottom: 12px;
+
+  &__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    margin-bottom: 6px;
+    color: var(--text-muted);
+  }
+
+  &__pct {
+    font-weight: 700;
+    font-size: 0.9rem;
+  }
+}
+
+.usage-bar {
+  width: 100%;
+  height: 8px;
+  background: var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+
+  &__fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.4s ease;
+  }
+}
+
+.kv {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 0 12px;
+
+  &--small {
+    grid-template-columns: 100px 1fr;
+  }
+
+  &__k {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    padding: 7px 0;
+    border-bottom: 1px solid var(--border);
+    align-self: start;
+  }
+
+  &__v {
+    font-size: 0.85rem;
+    color: var(--text);
+    padding: 7px 0;
+    border-bottom: 1px solid var(--border);
+    word-break: break-all;
+
+    &.mono {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+    }
+  }
+
+  &__k:nth-last-child(2),
+  &__v:last-child {
+    border-bottom: none;
+  }
+}
+
+.mono {
+  font-family: var(--font-mono, 'Courier New', monospace);
+  font-size: 0.82rem;
+}
+
+.no-data {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  margin: 0 0 12px;
+}
