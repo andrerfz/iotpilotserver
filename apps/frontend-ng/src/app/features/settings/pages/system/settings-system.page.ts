@@ -100,7 +100,8 @@ export class SettingsSystemPage implements OnInit {
 
   async ngOnInit(): Promise<void> {
     try {
-      const data = await this.api.invoke(getSystemSettings, {});
+      const res = await this.api.invoke(getSystemSettings, {});
+      const data = (res as unknown as { data?: typeof res }).data ?? res;
       this.systemData.set(data);
       this.displayForm.patchValue({
         dashboardLayout: data.dashboardLayout ?? 'default',

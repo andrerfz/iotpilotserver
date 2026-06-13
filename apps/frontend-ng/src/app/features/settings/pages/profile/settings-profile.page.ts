@@ -99,7 +99,8 @@ export class SettingsProfilePage implements OnInit {
 
   async ngOnInit(): Promise<void> {
     try {
-      const data = await this.api.invoke(getProfileSettings, {});
+      const res = await this.api.invoke(getProfileSettings, {});
+      const data = (res as unknown as { data?: typeof res }).data ?? res;
       this.email.set(data.email ?? '');
       this.username.set(data.username ?? '');
       this.personalForm.patchValue({

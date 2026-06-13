@@ -12,20 +12,20 @@
           <ion-card-title>Personal Information</ion-card-title>
         </ion-card-header>
         <ion-card-content>
-          <form [formGroup]="personalForm" (ngSubmit)="onSavePersonal()">
+          <div class="profile-form">
             <div class="profile-grid">
               <ui-input
-                formControlName="firstName"
+                [formControl]="personalForm.controls.firstName"
                 label="First name"
                 placeholder="Enter first name" />
               <ui-input
-                formControlName="lastName"
+                [formControl]="personalForm.controls.lastName"
                 label="Last name"
                 placeholder="Enter last name" />
             </div>
 
             <ui-input
-              formControlName="phoneNumber"
+              [formControl]="personalForm.controls.phoneNumber"
               label="Phone number"
               placeholder="Enter phone number"
               class="profile-phone" />
@@ -56,10 +56,11 @@
 
             <div class="profile-actions">
               <ion-button
-                type="submit"
+                type="button"
                 fill="solid"
                 color="primary"
                 [disabled]="personalForm.pristine || isSavingPersonal()"
+                (click)="onSavePersonal()"
               >
                 @if (isSavingPersonal()) {
                   <ion-spinner name="crescent" slot="start" />
@@ -69,7 +70,7 @@
                 }
               </ion-button>
             </div>
-          </form>
+          </div>
         </ion-card-content>
       </ion-card>
 
@@ -79,19 +80,19 @@
           <ion-card-title>Display Preferences</ion-card-title>
         </ion-card-header>
         <ion-card-content>
-          <form [formGroup]="displayForm" (ngSubmit)="onSaveDisplay()">
+          <div class="profile-form">
             <ui-select
-              formControlName="language"
+              [formControl]="displayForm.controls.language"
               label="Language"
               [options]="languageOptions" />
 
             <ui-select
-              formControlName="timezone"
+              [formControl]="displayForm.controls.timezone"
               label="Timezone"
               [options]="timezoneOptions" />
 
             <ui-select
-              formControlName="dateFormat"
+              [formControl]="displayForm.controls.dateFormat"
               label="Date Format"
               [options]="dateFormatOptions" />
 
@@ -104,10 +105,11 @@
 
             <div class="profile-actions">
               <ion-button
-                type="submit"
+                type="button"
                 fill="solid"
                 color="primary"
                 [disabled]="displayForm.pristine || isSavingDisplay()"
+                (click)="onSaveDisplay()"
               >
                 @if (isSavingDisplay()) {
                   <ion-spinner name="crescent" slot="start" />
@@ -117,7 +119,7 @@
                 }
               </ion-button>
             </div>
-          </form>
+          </div>
         </ion-card-content>
       </ion-card>
 
