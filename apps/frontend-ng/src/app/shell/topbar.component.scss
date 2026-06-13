@@ -26,11 +26,12 @@
   margin-left: auto;
   display: flex; align-items: center; gap: 9px;
   height: 34px; padding: 0 11px; min-width: 234px;
-  background: var(--surface); border: 1px solid var(--border);
+  background: var(--surface-2); border: 1px solid var(--border);
   border-radius: var(--r-sm); color: var(--text-dim);
   cursor: pointer; font-size: 13px; font-family: var(--font-sans);
+  transition: border-color .12s;
 }
-.searchbtn:hover { border-color: var(--border-strong); }
+.searchbtn:hover { border-color: var(--border-strong); color: var(--text); }
 .searchbtn ion-icon { width: 15px; height: 15px; }
 .searchbtn__label { white-space: nowrap; }
 .searchbtn kbd {
@@ -42,7 +43,7 @@
 .iconbtn {
   width: 34px; height: 34px; flex: none;
   display: grid; place-items: center; cursor: pointer;
-  background: var(--surface); border: 1px solid var(--border);
+  background: var(--surface-2); border: 1px solid var(--border);
   border-radius: var(--r-sm); color: var(--text-muted);
   transition: color .12s, border-color .12s;
 }

@@ -31,7 +31,7 @@ describe('CommandPaletteComponent', () => {
     input.value = 'dev';
     fireEvent.input(input);
     fixture.detectChanges();
-    expect([...container.querySelectorAll('.palette__label')].map(l => l.textContent?.trim()))
+    expect(Array.from(container.querySelectorAll('.palette__label')).map(l => l.textContent?.trim()))
       .toEqual(['Devices']);
   });
 
@@ -66,7 +66,7 @@ describe('CommandPaletteComponent', () => {
 
   it('groups commands with a header per group', async () => {
     const { container } = await setup(true);
-    expect([...container.querySelectorAll('.palette__group')].map(g => g.textContent?.trim()))
+    expect(Array.from(container.querySelectorAll('.palette__group')).map(g => g.textContent?.trim()))
       .toEqual(['Navigate', 'Actions']);
   });
 });

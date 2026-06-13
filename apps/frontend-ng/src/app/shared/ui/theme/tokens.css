@@ -21,7 +21,7 @@
   --font-sans: "IBM Plex Sans Variable", "IBM Plex Sans", system-ui, -apple-system, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
   --rail-w: 232px;
-  --shadow-sheet: 0 -24px 60px -12px rgba(0, 0, 0, 0.55);
+  --shadow-sheet: 0 -4px 24px rgba(0, 0, 0, 0.14);
   --shadow-pop: 0 16px 40px -12px rgba(0, 0, 0, 0.45);
 }
 

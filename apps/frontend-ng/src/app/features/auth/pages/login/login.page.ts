@@ -105,8 +105,8 @@ export class LoginPage {
   }
 
   onCodeInput(event: Event): void {
-    const val = (event as CustomEvent<{ value: string | null | undefined }>).detail?.value ?? '';
-    this.code.set(val.slice(0, 6));
+    const raw = (event as CustomEvent<{ value: string | null | undefined }>).detail?.value ?? '';
+    this.code.set(raw.replace(/\D/g, '').slice(0, 6));
   }
 
   emailError(): string {

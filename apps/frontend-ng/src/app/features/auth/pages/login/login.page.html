@@ -62,9 +62,11 @@
             <ion-input
               #twoFaInput
               class="twofa-input"
-              type="number"
+              type="text"
               inputmode="numeric"
-              [maxlength]="6"
+              pattern="[0-9]*"
+              maxlength="6"
+              autocomplete="one-time-code"
               placeholder="000000"
               [value]="code()"
               (ionInput)="onCodeInput($event)" />

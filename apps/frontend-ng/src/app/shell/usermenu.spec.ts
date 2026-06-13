@@ -34,7 +34,7 @@ async function openMenu(role: Role, hostIsLocal: boolean) {
 }
 
 function itemText(container: HTMLElement): string {
-  return [...container.querySelectorAll('.menu__item')].map(i => i.textContent?.trim() ?? '').join(' | ');
+  return Array.from(container.querySelectorAll('.menu__item')).map(i => i.textContent?.trim() ?? '').join(' | ');
 }
 
 // ─── UserMenu role × host matrix (legacy parity) ─────────────────────────────

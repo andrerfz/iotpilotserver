@@ -6,7 +6,7 @@ import { defineConfig } from 'vite';
 // Vitest via @analogjs/vite-plugin-angular (fe-foundation Q4). jsdom + Testing
 // Library Angular; 15s timeout to match the repo's Vitest convention.
 export default defineConfig(() => ({
-  plugins: [angular()],
+  plugins: [angular({ tsconfig: 'tsconfig.spec.json' })],
   resolve: {
     alias: {
       // Mirror tsconfig.json "paths": { "@ng/*": ["src/app/*"] }

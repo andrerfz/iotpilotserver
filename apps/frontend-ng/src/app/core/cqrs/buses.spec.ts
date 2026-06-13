@@ -5,6 +5,7 @@ import { provideQueryHandler, QueryBus } from './query-bus';
 import { Command, CommandHandler, Query, QueryHandler } from './types';
 
 class PingCommand implements Command {
+  declare readonly __command?: never;
   static readonly type = 'PingCommand';
   constructor(readonly value: string) {}
 }
@@ -18,6 +19,7 @@ class PingHandler implements CommandHandler<PingCommand, string> {
 }
 
 class SumQuery implements Query<number> {
+  declare readonly __result?: number;
   static readonly type = 'SumQuery';
   constructor(readonly a: number, readonly b: number) {}
 }
@@ -40,7 +42,7 @@ describe('CommandBus', () => {
   it('throws for an unregistered command', () => {
     TestBed.configureTestingModule({ providers: [] });
     const bus = TestBed.inject(CommandBus);
-    class Unknown implements Command {}
+    class Unknown implements Command { declare readonly __command?: never; }
     expect(() => bus.execute(new Unknown())).toThrow(/No handler registered/);
   });
 });
@@ -49,17 +51,22 @@ describe('QueryBus', () => {
   it('dispatches a query to its registered handler', async () => {
     TestBed.configureTestingModule({ providers: [provideQueryHandler(SumHandler)] });
     const bus = TestBed.inject(QueryBus);
-    expect(await bus.execute(new SumQuery(2, 3))).toBe(5);
+    expect(await bus.execute<number>(new SumQuery(2, 3))).toBe(5);
   });
 
   it('throws for an unregistered query', () => {
     TestBed.configureTestingModule({ providers: [] });
     const bus = TestBed.inject(QueryBus);
-    class Unknown implements Query<void> {}
-    expect(() => bus.execute(new Unknown())).toThrow(/No handler registered/);
+    class Unknown implements Query<void> { declare readonly __result?: void; }
+    expect(() => bus.execute<void>(new Unknown())).toThrow(/No handler registered/);
   });
 
   it('supports multiple handlers registered together', async () => {
+    class EchoQuery implements Query<string> {
+      declare readonly __result?: string;
+      static readonly type = 'EchoQuery';
+      constructor(readonly text: string) {}
+    }
     @Injectable()
     class EchoHandler implements QueryHandler<EchoQuery, string> {
       readonly query = EchoQuery;
@@ -67,15 +74,11 @@ describe('QueryBus', () => {
         return Promise.resolve(q.text);
       }
     }
-    class EchoQuery implements Query<string> {
-      static readonly type = 'EchoQuery';
-      constructor(readonly text: string) {}
-    }
     TestBed.configureTestingModule({
       providers: [provideQueryHandler(SumHandler), provideQueryHandler(EchoHandler as Type<QueryHandler>)],
     });
     const bus = TestBed.inject(QueryBus);
-    expect(await bus.execute(new SumQuery(1, 1))).toBe(2);
-    expect(await bus.execute(new EchoQuery('hey'))).toBe('hey');
+    expect(await bus.execute<number>(new SumQuery(1, 1))).toBe(2);
+    expect(await bus.execute<string>(new EchoQuery('hey'))).toBe('hey');
   });
 });

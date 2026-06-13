@@ -37,7 +37,7 @@
 .opt__main { min-width: 0; flex: 1; }
 .opt__title { font-size: 13.5px; font-weight: 500; }
 .opt__check {
-  width: 19px; height: 19px; border-radius: 99px; border: 1.5px solid var(--border-strong);
+  width: 19px; height: 19px; border-radius: 6px; border: 1.5px solid var(--border-strong);
   display: grid; place-items: center; flex: none;
 }
 .opt__check ion-icon { width: 12px; height: 12px; color: var(--primary-ink); opacity: 0; }

@@ -1,5 +1,6 @@
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAppInitializer, inject } from '@angular/core';
+import { provideEchartsCore } from 'ngx-echarts';
 import { bootstrapApplication } from '@angular/platform-browser';
 import {
   PreloadAllModules,
@@ -20,6 +21,7 @@ import { AuthService } from './app/core/auth/auth.service';
 import { provideTokenStorage } from './app/core/auth/token.storage';
 import { provideQueryHandler } from './app/core/cqrs/query-bus';
 import { GetHealthHandler } from './app/core/cqrs/example/get-health.handler';
+import { ThemeService } from './app/shared/ui/theme/theme.service';
 
 bootstrapApplication(AppComponent, {
   providers: [
@@ -31,7 +33,10 @@ bootstrapApplication(AppComponent, {
     provideTokenStorage(),
     // CQRS: register query/command handlers via DI multi-providers.
     provideQueryHandler(GetHealthHandler),
+    // Apply saved theme before any route renders (constructor does the work).
+    provideAppInitializer(() => { inject(ThemeService); }),
     // Restore any existing session before the first route renders.
     provideAppInitializer(() => inject(AuthService).restoreSession()),
+    provideEchartsCore({ echarts: () => import('echarts') }),
   ],
 }).catch((err) => console.error(err));

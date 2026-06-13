@@ -21,8 +21,8 @@ describe('PasswordStrengthComponent', () => {
     // 'abcABC123' — 9 chars: no length, has upper, lower, number; no special
     const { container } = await setup('abcABC123');
     const rules = container.querySelectorAll('.pwd-rule');
-    const valid = [...rules].filter((r) => r.classList.contains('pwd-rule--valid'));
-    const invalid = [...rules].filter((r) => !r.classList.contains('pwd-rule--valid'));
+    const valid = Array.from(rules).filter((r) => r.classList.contains('pwd-rule--valid'));
+    const invalid = Array.from(rules).filter((r) => !r.classList.contains('pwd-rule--valid'));
     expect(valid.length).toBe(3); // upper, lower, number
     expect(invalid.length).toBe(2); // length, special
   });
@@ -30,7 +30,7 @@ describe('PasswordStrengthComponent', () => {
   it('marks all 5 rules valid for a fully compliant password', async () => {
     const { container } = await setup('ValidPassword12!');
     const rules = container.querySelectorAll('.pwd-rule');
-    const allValid = [...rules].every((r) => r.classList.contains('pwd-rule--valid'));
+    const allValid = Array.from(rules).every((r) => r.classList.contains('pwd-rule--valid'));
     expect(allValid).toBe(true);
   });
 });

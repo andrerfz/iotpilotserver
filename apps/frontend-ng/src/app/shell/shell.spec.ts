@@ -39,10 +39,10 @@ describe('RailComponent', () => {
   it('renders the brand and both nav groups with items + badges', async () => {
     const { container } = await render(RailComponent, { providers: [provideRouter([])] });
     expect(container.querySelector('.brand-name')?.textContent).toContain('IoT Pilot');
-    expect([...container.querySelectorAll('.nav-group__label')].map(g => g.textContent?.trim()))
+    expect(Array.from(container.querySelectorAll('.nav-group__label')).map(g => g.textContent?.trim()))
       .toEqual(['Operate', 'Administer']);
     expect(container.querySelectorAll('.nav-item').length).toBe(6);
-    expect([...container.querySelectorAll('.nav-item__badge')].map(b => b.textContent?.trim()))
+    expect(Array.from(container.querySelectorAll('.nav-item__badge')).map(b => b.textContent?.trim()))
       .toEqual(['10', '4', '2']);
   });
 
@@ -61,7 +61,7 @@ describe('TopbarComponent', () => {
       providers: [{ provide: ThemeService, useValue: themeStub() }],
     });
     const segs = container.querySelectorAll('.crumbs__seg');
-    expect([...segs].map(s => s.textContent?.trim())).toEqual(['Operate', 'Devices']);
+    expect(Array.from(segs).map(s => s.textContent?.trim())).toEqual(['Operate', 'Devices']);
     expect(segs[1].classList.contains('crumbs__seg--current')).toBe(true);
     expect(container.querySelectorAll('.crumbs__sep').length).toBe(1);
   });

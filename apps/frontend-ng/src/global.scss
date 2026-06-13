@@ -35,3 +35,51 @@
 /* Design tokens (fe-ui-kit T2): prototype CSS variables + Ionic variable bridge.
  * ThemeService toggles data-theme="light|dark" and .dark on <html>. */
 @import "app/shared/ui/theme/tokens.css";
+
+/*
+ * Golden rule — card border-radius
+ * All card/panel surfaces (ion-card, MetricCard, DataTable, BottomSheet) use --r-lg.
+ * Do not hard-code a different radius on any card-level container.
+ * Exception: ion-modal bottom sheets use --border-radius: 18px (intentional, larger).
+ */
+ion-card {
+  --border-radius: var(--r-lg);
+}
+
+/*
+ * Explicit background overrides — bypass Ionic's two-step CSS variable chain
+ * (--background: var(--ion-background-color, #fff)) which can fall back to #fff
+ * inside shadow DOM when the chain doesn't resolve.
+ *
+ * Light mode: solid --bg on ion-content gives the page a light-blue-gray
+ * background so white surfaces (cards, search fields, chips) have contrast.
+ *
+ * Dark mode: ion-content is transparent so the shell's ambient gradient
+ * (applied on .main below) shows through. The .rail-host ion-content keeps
+ * its --background: var(--elevated) via the shell component's scoped CSS
+ * (higher specificity), so only the page area is transparent.
+ */
+ion-content {
+  --background: var(--bg);
+}
+ion-toolbar {
+  --background: var(--elevated);
+}
+ion-menu {
+  --background: var(--elevated);
+}
+
+[data-theme="dark"] ion-content {
+  --background: transparent;
+}
+
+/*
+ * Dark mode ambient gradient — ported 1:1 from prototype "[data-theme="dark"] .app".
+ * Uses html prefix to raise specificity above the shell component's scoped
+ * .main[_ngcontent-xxx] rule so this gradient wins in dark mode.
+ */
+html[data-theme="dark"] .main {
+  background:
+    radial-gradient(ellipse 75% 36% at 50% -2%, hsl(217 65% 22% / 0.22), transparent 100%),
+    linear-gradient(180deg, hsl(226 22% 9.5%) 0%, hsl(226 18% 7.5%) 100%);
+}

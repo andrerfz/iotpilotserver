@@ -10,13 +10,13 @@
   --ion-backdrop-color: var(--scrim);
 }
 
-.sheet__header { --background: var(--elevated); }
-.sheet__header::after { display: none; }   /* kill the md shadow line */
+.sheet__header { --background: var(--elevated); box-shadow: none; }
+.sheet__header::after { display: none; }
 .sheet__content { --background: var(--elevated); }
 
 .sheet__bar {
   display: flex; align-items: center; gap: 12px;
-  padding: 6px 14px 12px; border-bottom: 1px solid var(--border);
+  padding: 15px 14px 12px; border-bottom: 1px solid var(--border);
   background: var(--elevated);
 }
 .sheet__titles { flex: 1; min-width: 0; text-align: center; }
@@ -24,10 +24,11 @@
 .sheet__sub { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
 
 .sheet__act {
-  background: none; border: none; cursor: pointer; padding: 6px 2px;
+  flex: 1; background: none; border: none; cursor: pointer; padding: 6px 2px;
   font-family: var(--font-sans); font-size: 14px; color: var(--text-muted);
-  white-space: nowrap; flex: none;
+  white-space: nowrap; text-align: left;
 }
+.sheet__act--save { text-align: right; }
 .sheet__act:hover { color: var(--text); }
 .sheet__act--save { color: var(--primary); font-weight: 600; }
 .sheet__act--save:hover { color: var(--primary); }
