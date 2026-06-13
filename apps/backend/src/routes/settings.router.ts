@@ -38,16 +38,16 @@ const securitySettingsSchema = v.object({
 // System settings schemas
 const regexStringSchema = z.string().regex(/^\d+$/);
 const systemSettingsSchemaZod = z.object({
-  theme: z.enum(['light', 'dark', 'system']),
-  dashboardLayout: z.enum(['default', 'compact', 'expanded']),
-  itemsPerPage: regexStringSchema, // numeric string
+  theme: z.enum(['light', 'dark', 'system']).optional(),
+  dashboardLayout: z.enum(['default', 'compact', 'expanded']).optional(),
+  itemsPerPage: regexStringSchema.optional(),
 });
 const systemSettingsSchema = (v as any).fromZodSchema(systemSettingsSchemaZod);
 
 const adminSystemSettingsSchemaZod = systemSettingsSchemaZod.extend({
-  enableAdvancedMetrics: z.enum(['true', 'false']),
-  enableBetaFeatures: z.enum(['true', 'false']),
-  logLevel: z.enum(['debug', 'info', 'warn', 'error']),
+  enableAdvancedMetrics: z.enum(['true', 'false']).optional(),
+  enableBetaFeatures: z.enum(['true', 'false']).optional(),
+  logLevel: z.enum(['debug', 'info', 'warn', 'error']).optional(),
 });
 const adminSystemSettingsSchema = (v as any).fromZodSchema(adminSystemSettingsSchemaZod);
 
@@ -420,11 +420,13 @@ settingsRouter.put('/system', requireAuth(), async (req: AuthenticatedRequest, r
       throw e;
     }
 
-    // Additional validation for itemsPerPage
-    const itemsPerPage = parseInt(validatedData.itemsPerPage);
-    if (isNaN(itemsPerPage) || itemsPerPage < 5 || itemsPerPage > 100) {
-      send.badRequest(res, 'Items per page must be between 5 and 100');
-      return;
+    // Additional validation for itemsPerPage (only if provided)
+    if (validatedData.itemsPerPage !== undefined) {
+      const itemsPerPage = parseInt(validatedData.itemsPerPage);
+      if (isNaN(itemsPerPage) || itemsPerPage < 5 || itemsPerPage > 100) {
+        send.badRequest(res, 'Items per page must be between 5 and 100');
+        return;
+      }
     }
 
     // Separate user preferences from system config settings

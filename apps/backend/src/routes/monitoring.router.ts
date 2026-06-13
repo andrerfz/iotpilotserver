@@ -329,6 +329,125 @@ monitoringRouter.post('/alerts', requireAuth(), async (req: AuthenticatedRequest
     }
 });
 
+// ---------------------------------------------------------------------------
+// GET /monitoring/alerts/trend?deviceId=&period=7d
+// Returns daily alert counts for the Analytics chart.
+// MUST be before /alerts/:id to avoid Express swallowing "trend" as an :id param.
+// ---------------------------------------------------------------------------
+monitoringRouter.get('/alerts/trend', requireAuth(), async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const customerId = req.user?.customerId;
+        const devicePublicId = req.query.deviceId as string | undefined;
+        const period = (req.query.period as string) || '7d';
+
+        const daysMap: Record<string, number> = { '1h': 1, '6h': 1, '24h': 1, '7d': 7, '30d': 30 };
+        const days = daysMap[period] ?? 7;
+        const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+        let internalDeviceId: string | undefined;
+        if (devicePublicId) {
+            const rec = await prisma.getClient().device.findFirst({
+                where: { publicId: devicePublicId },
+                select: { id: true },
+            });
+            internalDeviceId = rec?.id;
+        }
+
+        const where: any = { deletedAt: null, createdAt: { gte: since } };
+        if (customerId && req.user?.role !== 'SUPERADMIN') where.customerId = customerId;
+        if (internalDeviceId) where.deviceId = internalDeviceId;
+
+        const alerts = await prisma.getClient().alert.findMany({
+            where,
+            select: { createdAt: true, severity: true },
+            orderBy: { createdAt: 'asc' },
+        });
+
+        const buckets: Record<string, { count: number; bySeverity: Record<string, number> }> = {};
+        for (const alert of alerts) {
+            const date = alert.createdAt.toISOString().slice(0, 10);
+            if (!buckets[date]) buckets[date] = { count: 0, bySeverity: {} };
+            buckets[date].count++;
+            const sev = DOMAIN_TO_FRONTEND_SEVERITY[alert.severity as string] || alert.severity;
+            buckets[date].bySeverity[sev] = (buckets[date].bySeverity[sev] || 0) + 1;
+        }
+
+        const trend = Object.entries(buckets)
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([date, data]) => ({ date, ...data }));
+
+        send.ok(res, trend);
+    } catch (err) {
+        send.fromError(res, err);
+    }
+});
+
+// ---------------------------------------------------------------------------
+// PUT /monitoring/alerts/batch — Batch acknowledge or resolve alerts
+// MUST be before /alerts/:id to avoid Express swallowing "batch" as an :id param.
+// ---------------------------------------------------------------------------
+const batchAlertSchema = v.object({
+    action: v.enum(['acknowledge', 'resolve'] as const),
+    alertIds: v.array(v.string({ min: 1 })),
+    resolutionNote: v.optional(v.string({ max: 2000 })),
+});
+
+monitoringRouter.put('/alerts/batch', requireAuth(), async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const customerId = req.user?.customerId;
+        const userId = req.user?.id;
+
+        let body: ReturnType<typeof batchAlertSchema.parse>;
+        try {
+            body = batchAlertSchema.parse(req.body);
+        } catch (e: any) {
+            send.badRequest(res, 'Invalid input', e.errors ?? []);
+            return;
+        }
+
+        const tenantContext = customerId
+            ? TenantContextImpl.create(CustomerId.create(customerId))
+            : TenantContextImpl.createSuperAdmin();
+
+        const commandBus = ServiceContainer.getInstance().getCommandBus();
+
+        const internalIdRows = await prisma.getClient().alert.findMany({
+            where: {
+                publicId: { in: body.alertIds },
+                ...(customerId ? { customerId } : {}),
+                deletedAt: null,
+            },
+            select: { id: true, resolved: true, acknowledgedAt: true },
+        });
+
+        let processed = 0;
+        let skipped = 0;
+
+        for (const row of internalIdRows) {
+            try {
+                if (body.action === 'acknowledge') {
+                    if (row.acknowledgedAt || row.resolved) { skipped++; continue; }
+                    const cmd = AcknowledgeAlertCommand.create(row.id, userId!, customerId || 'system', tenantContext);
+                    await commandBus.execute(cmd);
+                } else {
+                    if (row.resolved) { skipped++; continue; }
+                    const cmd = ResolveAlertCommand.create(row.id, userId!, customerId || 'system', tenantContext);
+                    await commandBus.execute(cmd);
+                }
+                processed++;
+            } catch {
+                skipped++;
+            }
+        }
+
+        skipped += body.alertIds.length - internalIdRows.length;
+
+        send.ok(res, { processed, skipped });
+    } catch (err) {
+        send.fromError(res, err);
+    }
+});
+
 // ===========================================================================
 // ALERTS — /alerts/:id
 // ===========================================================================
@@ -1263,123 +1382,3 @@ monitoringRouter.delete('/thresholds/:id', requireAuth('ADMIN'), async (req: Aut
     }
 });
 
-// ---------------------------------------------------------------------------
-// GET /monitoring/alerts/trend?deviceId=&period=7d
-// Returns daily alert counts for the Analytics chart.
-// ---------------------------------------------------------------------------
-monitoringRouter.get('/alerts/trend', requireAuth(), async (req: AuthenticatedRequest, res: Response) => {
-    try {
-        const customerId = req.user?.customerId;
-        const devicePublicId = req.query.deviceId as string | undefined;
-        const period = (req.query.period as string) || '7d';
-
-        const daysMap: Record<string, number> = { '1h': 1, '6h': 1, '24h': 1, '7d': 7, '30d': 30 };
-        const days = daysMap[period] ?? 7;
-        const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-
-        let internalDeviceId: string | undefined;
-        if (devicePublicId) {
-            const rec = await prisma.getClient().device.findFirst({
-                where: { publicId: devicePublicId },
-                select: { id: true },
-            });
-            internalDeviceId = rec?.id;
-        }
-
-        const where: any = { deletedAt: null, createdAt: { gte: since } };
-        if (customerId && req.user?.role !== 'SUPERADMIN') where.customerId = customerId;
-        if (internalDeviceId) where.deviceId = internalDeviceId;
-
-        const alerts = await prisma.getClient().alert.findMany({
-            where,
-            select: { createdAt: true, severity: true },
-            orderBy: { createdAt: 'asc' },
-        });
-
-        // Group by date (YYYY-MM-DD)
-        const buckets: Record<string, { count: number; bySeverity: Record<string, number> }> = {};
-        for (const alert of alerts) {
-            const date = alert.createdAt.toISOString().slice(0, 10);
-            if (!buckets[date]) buckets[date] = { count: 0, bySeverity: {} };
-            buckets[date].count++;
-            const sev = DOMAIN_TO_FRONTEND_SEVERITY[alert.severity as string] || alert.severity;
-            buckets[date].bySeverity[sev] = (buckets[date].bySeverity[sev] || 0) + 1;
-        }
-
-        const trend = Object.entries(buckets)
-            .sort(([a], [b]) => a.localeCompare(b))
-            .map(([date, data]) => ({ date, ...data }));
-
-        send.ok(res, trend);
-    } catch (err) {
-        send.fromError(res, err);
-    }
-});
-
-// ---------------------------------------------------------------------------
-// PUT /monitoring/alerts/batch — Batch acknowledge or resolve alerts
-// Body: { action: "acknowledge" | "resolve", alertIds: string[], resolutionNote?: string }
-// ---------------------------------------------------------------------------
-const batchAlertSchema = v.object({
-    action: v.enum(['acknowledge', 'resolve'] as const),
-    alertIds: v.array(v.string({ min: 1 })),
-    resolutionNote: v.optional(v.string({ max: 2000 })),
-});
-
-monitoringRouter.put('/alerts/batch', requireAuth(), async (req: AuthenticatedRequest, res: Response) => {
-    try {
-        const customerId = req.user?.customerId;
-        const userId = req.user?.id;
-
-        let body: ReturnType<typeof batchAlertSchema.parse>;
-        try {
-            body = batchAlertSchema.parse(req.body);
-        } catch (e: any) {
-            send.badRequest(res, 'Invalid input', e.errors ?? []);
-            return;
-        }
-
-        const tenantContext = customerId
-            ? TenantContextImpl.create(CustomerId.create(customerId))
-            : TenantContextImpl.createSuperAdmin();
-
-        const commandBus = ServiceContainer.getInstance().getCommandBus();
-
-        // Resolve publicIds → internal ids, scoped to tenant
-        const internalIdRows = await prisma.getClient().alert.findMany({
-            where: {
-                publicId: { in: body.alertIds },
-                ...(customerId ? { customerId } : {}),
-                deletedAt: null,
-            },
-            select: { id: true, resolved: true, acknowledgedAt: true },
-        });
-
-        let processed = 0;
-        let skipped = 0;
-
-        for (const row of internalIdRows) {
-            try {
-                if (body.action === 'acknowledge') {
-                    if (row.acknowledgedAt || row.resolved) { skipped++; continue; }
-                    const cmd = AcknowledgeAlertCommand.create(row.id, userId!, customerId || 'system', tenantContext);
-                    await commandBus.execute(cmd);
-                } else {
-                    if (row.resolved) { skipped++; continue; }
-                    const cmd = ResolveAlertCommand.create(row.id, userId!, customerId || 'system', tenantContext);
-                    await commandBus.execute(cmd);
-                }
-                processed++;
-            } catch {
-                skipped++;
-            }
-        }
-
-        // IDs in request but not found in DB count as skipped
-        skipped += body.alertIds.length - internalIdRows.length;
-
-        send.ok(res, { processed, skipped });
-    } catch (err) {
-        send.fromError(res, err);
-    }
-});
