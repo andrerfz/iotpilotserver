@@ -1,13 +1,12 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { IonItem, IonLabel, IonList } from '@ng/shared/ui';
 
 @Component({
   selector: 'app-settings-hub',
   templateUrl: 'settings-hub.page.html',
   styleUrls: ['settings-hub.page.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, RouterLinkActive, RouterOutlet, IonList, IonItem, IonLabel],
+  imports: [RouterLink, RouterLinkActive, RouterOutlet],
 })
 export class SettingsHubPage {
   readonly navItems = [
