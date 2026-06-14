@@ -236,6 +236,15 @@ components:
         status:
           type: string
           enum: [ONLINE, OFFLINE, MAINTENANCE, ERROR, UNCLAIMED]
+        rawStatus:
+          type: string
+          enum: [ONLINE, OFFLINE, MAINTENANCE, ERROR, UNCLAIMED]
+          nullable: true
+          description: >-
+            Connectivity status enum returned by the detail endpoint. There the
+            `status` field carries a lifecycle value (e.g. "active") instead, so
+            clients should prefer `rawStatus` when present. The list endpoint
+            already returns the enum directly in `status`.
         ipAddress:
           type: string
           nullable: true
@@ -256,6 +265,54 @@ components:
         lastSeen:
           type: string
           format: date-time
+          nullable: true
+        # ── Detail-endpoint fields (GET /devices/{id}) ──
+        architecture:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        cpuUsage:
+          type: number
+          nullable: true
+        cpuTemp:
+          type: number
+          nullable: true
+        memoryUsage:
+          type: number
+          nullable: true
+        memoryTotal:
+          type: number
+          nullable: true
+        diskUsage:
+          type: number
+          nullable: true
+        diskTotal:
+          type: string
+          description: Human-readable total disk (e.g. "16GB")
+          nullable: true
+        loadAverage:
+          type: string
+          description: Space-separated 1/5/15-minute load averages
+          nullable: true
+        appStatus:
+          type: string
+          nullable: true
+        lastBoot:
+          type: string
+          format: date-time
+          nullable: true
+        registeredAt:
+          type: string
+          format: date-time
+          nullable: true
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
+        alertsCount:
+          type: integer
           nullable: true
 
     DeviceCommand:
@@ -475,6 +532,44 @@ components:
         timestamp:
           type: string
           format: date-time
+
+    MetricPoint:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        value:
+          type: number
+        unit:
+          type: string
+
+    DeviceMetrics:
+      type: object
+      properties:
+        metrics:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/MetricPoint'
+        period:
+          type: string
+        resolution:
+          type: string
+        total_points:
+          type: integer
+        processed_points:
+          type: integer
+
+    SshResult:
+      type: object
+      properties:
+        output:
+          type: string
+        error:
+          type: string
+          nullable: true
 
     # ── Notifications ──────────────────────────────────────────────────────────
     NotificationRecord:
@@ -1472,6 +1567,15 @@ paths:
       responses:
         '200':
           description: Time-series metrics
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/DeviceMetrics'
 
   /devices/{id}/settings:
     get:
@@ -1539,6 +1643,15 @@ paths:
       responses:
         '200':
           description: SSH command result
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/SshResult'
         '400':
           description: Empty command or device offline
 

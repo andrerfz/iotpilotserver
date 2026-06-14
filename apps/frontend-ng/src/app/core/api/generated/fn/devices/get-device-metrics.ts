@@ -7,13 +7,17 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
+import { DeviceMetrics } from '../../models/device-metrics';
+import { SuccessResponse } from '../../models/success-response';
 
 export interface GetDeviceMetrics$Params {
   id: string;
   period?: '1h' | '6h' | '24h' | '7d';
 }
 
-export function getDeviceMetrics(http: HttpClient, rootUrl: string, params: GetDeviceMetrics$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
+export function getDeviceMetrics(http: HttpClient, rootUrl: string, params: GetDeviceMetrics$Params, context?: HttpContext): Observable<StrictHttpResponse<SuccessResponse & {
+'data'?: DeviceMetrics;
+}>> {
   const rb = new RequestBuilder(rootUrl, getDeviceMetrics.PATH, 'get');
   if (params) {
     rb.path('id', params.id, {});
@@ -21,11 +25,13 @@ export function getDeviceMetrics(http: HttpClient, rootUrl: string, params: GetD
   }
 
   return http.request(
-    rb.build({ responseType: 'text', accept: '*/*', context })
+    rb.build({ responseType: 'json', accept: 'application/json', context })
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return (r as HttpResponse<any>).clone({ body: undefined }) as StrictHttpResponse<void>;
+      return r as StrictHttpResponse<SuccessResponse & {
+      'data'?: DeviceMetrics;
+      }>;
     })
   );
 }
