@@ -1,15 +1,34 @@
-<nav class="device-tabs">
-  @for (tab of tabs(); track tab.path) {
-    <a
-      class="device-tabs__tab"
-      [routerLink]="tab.path === '' ? ['/app/devices', deviceId()] : ['/app/devices', deviceId(), tab.path]"
-      routerLinkActive="device-tabs__tab--active"
-      [routerLinkActiveOptions]="{ exact: tab.path === '' }"
-    >
-      {{ tab.label }}
-      @if (tab.alertsBadge && openAlertCount() > 0) {
-        <span class="device-tabs__badge">{{ openAlertCount() }}</span>
-      }
-    </a>
-  }
-</nav>
+<div class="device-nav">
+  <!-- Group selector -->
+  <div class="device-nav__groups" role="tablist" aria-label="Navigation groups">
+    @for (group of groups(); track group.key) {
+      <button
+        class="device-nav__group"
+        [class.device-nav__group--active]="group.key === activeGroupKey()"
+        (click)="switchGroup(group.key)"
+        type="button"
+        role="tab"
+        [attr.aria-selected]="group.key === activeGroupKey()"
+      >
+        {{ group.label }}
+      </button>
+    }
+  </div>
+
+  <!-- Sub-tabs for the active group -->
+  <nav class="device-tabs" role="tablist" [attr.aria-label]="activeGroupKey() + ' tabs'">
+    @for (tab of activeTabs(); track tab.path) {
+      <a
+        class="device-tabs__tab"
+        [routerLink]="tab.path === '' ? ['/app/devices', deviceId()] : ['/app/devices', deviceId(), tab.path]"
+        routerLinkActive="device-tabs__tab--active"
+        [routerLinkActiveOptions]="{ exact: tab.path === '' }"
+      >
+        {{ tab.label }}
+        @if (tab.alertsBadge && openAlertCount() > 0) {
+          <span class="device-tabs__badge">{{ openAlertCount() }}</span>
+        }
+      </a>
+    }
+  </nav>
+</div>
