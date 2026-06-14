@@ -29,28 +29,32 @@ addIcons({ eyeOutline, eyeOffOutline });
       @if (label()) {
         <ion-label class="ui-field__label">{{ label() }}</ion-label>
       }
-      <ion-input
-        class="ui-input"
-        [type]="showPassword() ? 'text' : effectiveType()"
-        [placeholder]="placeholder()"
-        [disabled]="isDisabled()"
-        [value]="value()"
-        (ionInput)="onInput($event)"
-        (ionBlur)="onTouched()">
-        @if (effectiveType() === 'password') {
-          <ion-button
-            slot="end"
-            fill="clear"
-            size="small"
-            class="ui-input__reveal"
-            (click)="showPassword.set(!showPassword())"
-            [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'">
-            <ion-icon slot="icon-only" [name]="showPassword() ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
-          </ion-button>
+      @if (loading()) {
+        <span class="sk ui-input-sk"></span>
+      } @else {
+        <ion-input
+          class="ui-input"
+          [type]="showPassword() ? 'text' : effectiveType()"
+          [placeholder]="placeholder()"
+          [disabled]="isDisabled()"
+          [value]="value()"
+          (ionInput)="onInput($event)"
+          (ionBlur)="onTouched()">
+          @if (effectiveType() === 'password') {
+            <ion-button
+              slot="end"
+              fill="clear"
+              size="small"
+              class="ui-input__reveal"
+              (click)="showPassword.set(!showPassword())"
+              [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'">
+              <ion-icon slot="icon-only" [name]="showPassword() ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
+            </ion-button>
+          }
+        </ion-input>
+        @if (error()) {
+          <ion-note class="ui-field__error" color="danger">{{ error() }}</ion-note>
         }
-      </ion-input>
-      @if (error()) {
-        <ion-note class="ui-field__error" color="danger">{{ error() }}</ion-note>
       }
     </div>
   `,
@@ -60,6 +64,7 @@ export class UiInputComponent implements ControlValueAccessor {
   readonly label = input('');
   readonly placeholder = input('');
   readonly type = input<string>('text');
+  readonly loading = input(false);
   /** Error message to display. Pass AbstractControl's first error or empty string. */
   readonly error = input('');
 

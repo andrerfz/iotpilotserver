@@ -1,0 +1,60 @@
+<ion-content class="ion-padding">
+
+  <!-- Period selector -->
+  <div class="metrics-header">
+    <ion-segment [value]="period()" (ionChange)="onPeriodChange($event)" mode="md" class="metrics-period">
+      @for (p of periods; track p.value) {
+        <ion-segment-button [value]="p.value">
+          <ion-label>{{ p.label }}</ion-label>
+        </ion-segment-button>
+      }
+    </ion-segment>
+    <ion-button fill="outline" color="medium" size="small" (click)="onRefresh()" [disabled]="metrics.loading()">
+      <ion-icon slot="icon-only" name="refresh-outline"></ion-icon>
+    </ion-button>
+  </div>
+
+  @if (metrics.loading() && !metrics.data()) {
+    <div class="metrics-cards">
+      @for (_ of [1,2,3,4]; track $index) {
+        <ion-skeleton-text [animated]="true" style="height: 80px; border-radius: 8px;"></ion-skeleton-text>
+      }
+    </div>
+  } @else if (metrics.error() && !metrics.data()) {
+    <ui-empty-state title="Failed to load metrics" [hasAction]="true">
+      <ion-button action fill="outline" size="small" (click)="onRefresh()">Retry</ion-button>
+    </ui-empty-state>
+  } @else {
+    <!-- Current-value cards -->
+    <div class="metrics-cards">
+      <ui-metric-card label="CPU Usage"    [value]="fmt(cpuLast(), '%')"  [color]="cpuColor()"></ui-metric-card>
+      <ui-metric-card label="Memory"       [value]="fmt(memLast(), '%')"  [color]="memColor()"></ui-metric-card>
+      <ui-metric-card label="Disk Usage"   [value]="fmt(diskLast(), '%')" [color]="diskColor()"></ui-metric-card>
+      <ui-metric-card label="Temperature"  [value]="fmt(tempLast(), '°C')" [color]="tempColor()"></ui-metric-card>
+    </div>
+
+    <!-- Line charts -->
+    <div class="metrics-charts">
+      @for (chart of [
+        { title: 'CPU Usage',    option: cpuChart() },
+        { title: 'Memory Usage', option: memChart() },
+        { title: 'Disk Usage',   option: diskChart() },
+        { title: 'Temperature',  option: tempChart() }
+      ]; track chart.title) {
+        <ion-card class="chart-card">
+          <ion-card-header>
+            <ion-card-title class="chart-card__title">{{ chart.title }}</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            @if (chart.option) {
+              <div echarts [options]="chart.option" class="chart-canvas"></div>
+            } @else {
+              <div class="chart-empty">No data available</div>
+            }
+          </ion-card-content>
+        </ion-card>
+      }
+    </div>
+  }
+
+</ion-content>

@@ -38,16 +38,19 @@ export interface SelectOption<T = string> {
         <ion-label class="ui-field__label">{{ label() }}</ion-label>
       }
 
-      <button type="button" class="ui-select" [disabled]="isDisabled()"
-        (click)="sheet.open()" (blur)="onTouched()">
-        <span class="ui-select__value" [class.ui-select__value--placeholder]="!selectedLabel()">
-          {{ selectedLabel() || placeholder() }}
-        </span>
-        <ion-icon name="chevron-down" class="ui-select__chev"></ion-icon>
-      </button>
-
-      @if (error()) {
-        <ion-note class="ui-field__error" color="danger">{{ error() }}</ion-note>
+      @if (loading()) {
+        <span class="sk ui-select-sk"></span>
+      } @else {
+        <button type="button" class="ui-select" [disabled]="isDisabled()"
+          (click)="sheet.open()" (blur)="onTouched()">
+          <span class="ui-select__value" [class.ui-select__value--placeholder]="!selectedLabel()">
+            {{ selectedLabel() || placeholder() }}
+          </span>
+          <ion-icon name="chevron-down" class="ui-select__chev"></ion-icon>
+        </button>
+        @if (error()) {
+          <ion-note class="ui-field__error" color="danger">{{ error() }}</ion-note>
+        }
       }
 
       <ui-bottom-sheet
@@ -78,6 +81,7 @@ export interface SelectOption<T = string> {
 export class UiSelectComponent<T = string> implements ControlValueAccessor {
   readonly label = input('');
   readonly placeholder = input('Select…');
+  readonly loading = input(false);
   readonly error = input('');
   readonly options = input<SelectOption<T>[]>([]);
 

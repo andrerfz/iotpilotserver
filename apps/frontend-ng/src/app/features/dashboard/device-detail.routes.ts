@@ -32,8 +32,18 @@ export const DEVICE_DETAIL_ROUTES: Routes = [
       import('./pages/device-storage/device-storage.page').then(m => m.DeviceStoragePage),
   },
   {
+    path: 'metrics',
+    loadComponent: () =>
+      import('./pages/device-metrics/device-metrics.page').then(m => m.DeviceMetricsPage),
+  },
+  {
     path: 'terminal',
-    loadComponent: () => import('../../shell/placeholder.page').then(m => m.PlaceholderPage),
-    data: { title: 'Terminal', sub: 'SSH terminal — coming in fe-device-advanced' },
+    loadComponent: () =>
+      import('./pages/device-terminal/device-terminal.page').then(m => m.DeviceTerminalPage),
+  },
+  {
+    path: 'settings',
+    loadComponent: () =>
+      import('./pages/device-settings/device-settings.page').then(m => m.DeviceSettingsPage),
   },
 ];

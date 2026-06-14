@@ -10,42 +10,52 @@ export type DeltaDir = 'up' | 'down' | 'flat';
   imports: [SparklineComponent],
   template: `
     <div class="metric">
-      <div class="metric__top">
-        <span class="metric__icon" [style.background]="iconBg()" [style.color]="iconColor()">
-          <ng-content select="[icon]"></ng-content>
-        </span>
-        <span class="metric__label">{{ label() }}</span>
-      </div>
-      <div class="metric__val">
-        {{ value() }}@if (unit()) {<span class="metric__unit">{{ unit() }}</span>}
-      </div>
-      @if (delta() !== null && delta() !== undefined) {
-        <div class="metric__delta" [class]="'delta--' + deltaDir()">
-          @if (deltaDir() !== 'flat') {
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-              stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-              width="12" height="12">
-              @if (deltaDir() === 'up') {
-                <polyline points="18 15 12 9 6 15"></polyline>
-              }
-              @if (deltaDir() === 'down') {
-                <polyline points="6 9 12 15 18 9"></polyline>
-              }
-            </svg>
-          }
-          {{ delta() }}
+      @if (loading()) {
+        <div class="metric__top">
+          <span class="sk metric-sk__icon"></span>
+          <span class="sk metric-sk__label"></span>
         </div>
-      }
-      @if (spark().length) {
-        <ui-sparkline class="metric__spark" [data]="spark()" [color]="iconColor()" [h]="30"></ui-sparkline>
+        <span class="sk metric-sk__val"></span>
+        <span class="sk metric-sk__delta"></span>
+      } @else {
+        <div class="metric__top">
+          <span class="metric__icon" [style.background]="iconBg()" [style.color]="iconColor()">
+            <ng-content select="[icon]"></ng-content>
+          </span>
+          <span class="metric__label">{{ label() }}</span>
+        </div>
+        <div class="metric__val">
+          {{ value() }}@if (unit()) {<span class="metric__unit">{{ unit() }}</span>}
+        </div>
+        @if (delta() !== null && delta() !== undefined) {
+          <div class="metric__delta" [class]="'delta--' + deltaDir()">
+            @if (deltaDir() !== 'flat') {
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                width="12" height="12">
+                @if (deltaDir() === 'up') {
+                  <polyline points="18 15 12 9 6 15"></polyline>
+                }
+                @if (deltaDir() === 'down') {
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                }
+              </svg>
+            }
+            {{ delta() }}
+          </div>
+        }
+        @if (spark().length) {
+          <ui-sparkline class="metric__spark" [data]="spark()" [color]="iconColor()" [h]="30"></ui-sparkline>
+        }
       }
     </div>
   `,
   styleUrl: './metric-card.component.scss',
 })
 export class MetricCardComponent {
-  readonly label = input.required<string>();
-  readonly value = input.required<string | number>();
+  readonly loading = input(false);
+  readonly label = input<string>('');
+  readonly value = input<string | number>('');
   readonly unit = input('');
   readonly iconColor = input('var(--primary)');
   readonly iconBg = input('color-mix(in srgb, var(--primary) 15%, transparent)');

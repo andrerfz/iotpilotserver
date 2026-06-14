@@ -35,21 +35,10 @@ import {
 } from '@ng/shared/ui';
 import type { ColumnDef } from '@ng/shared/ui';
 import type { DeviceCommand } from '@ng/core/api/generated/models/device-command';
-import type { Device } from '@ng/core/api/generated/models/device';
 import { DeviceDetailService } from '../../services/device-detail.service';
 import { CommandSheetComponent } from '../../components/command-sheet/command-sheet.component';
 
 addIcons({ flashOutline, serverOutline, statsChartOutline, hardwareChipOutline, thermometerOutline, saveOutline, addOutline });
-
-type DeviceWithMetrics = Device & {
-  cpuUsage?: number;
-  memoryUsage?: number;
-  cpuTemp?: number;
-  diskUsage?: number;
-  architecture?: string;
-  uptime?: string;
-  lastBoot?: string;
-};
 
 @Component({
   selector: 'app-device-overview',
@@ -81,7 +70,7 @@ export class DeviceOverviewPage implements OnInit, AfterViewInit {
   readonly commands = this.svc.deviceCommands;
 
   readonly deviceMetrics = computed(() => {
-    const d = this.device.data() as DeviceWithMetrics | null;
+    const d = this.device.data();
     return {
       cpu: d?.cpuUsage ?? null,
       memory: d?.memoryUsage ?? null,

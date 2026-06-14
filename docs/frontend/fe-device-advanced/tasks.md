@@ -12,12 +12,12 @@ T5 requires T1 + T2. T6 requires T5 (extends the same page file).
 
 | # | Task | Status |
 |---|---|---|
-| T1 | `DeviceDetailService` extension + fix untyped `getDeviceMetrics` + `executeDeviceSsh` OpenAPI responses | pending |
-| T2 | Extend `DeviceTabNavComponent` + add metrics/terminal/settings child routes (stub pages) | pending |
-| T3 | `DeviceMetricsPage` (period selector, current-value cards, 4 ECharts line charts) | pending |
-| T4 | `DeviceTerminalPage` + `SshTerminalComponent` (offline guard, REST command execution, output display) | pending |
-| T5 | `DeviceSettingsPage` — General + Monitoring sections (device info form, tags, intervals, device-type-aware thresholds) | pending |
-| T6 | `DeviceSettingsPage` — Network, Agent, Security sections + Rotate Key reveal | pending |
+| T1 | `DeviceDetailService` extension + fix untyped `getDeviceMetrics` + `executeDeviceSsh` OpenAPI responses | ✅ done |
+| T2 | Extend `DeviceTabNavComponent` + add metrics/terminal/settings child routes (stub pages) | ✅ done |
+| T3 | `DeviceMetricsPage` (period selector, current-value cards, 4 ECharts line charts) | ✅ done |
+| T4 | `DeviceTerminalPage` + `SshTerminalComponent` (offline guard, REST command execution, output display) | ✅ done |
+| T5 | `DeviceSettingsPage` — General + Monitoring sections (device info form, tags, intervals, device-type-aware thresholds) | ✅ done |
+| T6 | `DeviceSettingsPage` — Network, Agent, Security sections + Rotate Key reveal | ✅ done |
 
 ---
 

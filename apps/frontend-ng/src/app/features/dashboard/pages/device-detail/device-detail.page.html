@@ -111,6 +111,7 @@
   <!-- Tab nav (always visible once deviceId is known) -->
   <app-device-tab-nav
     [deviceId]="deviceId()"
+    [deviceType]="device.data()?.deviceType ?? ''"
     [openAlertCount]="openAlertCount()"
   ></app-device-tab-nav>
 

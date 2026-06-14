@@ -16,7 +16,7 @@
 
 .sheet__bar {
   display: flex; align-items: center; gap: 12px;
-  padding: 15px 14px 12px; border-bottom: 1px solid var(--border);
+  padding: 15px 14px 12px; border-bottom: 1px solid var(--ui-border);
   background: var(--elevated);
 }
 .sheet__titles { flex: 1; min-width: 0; text-align: center; }

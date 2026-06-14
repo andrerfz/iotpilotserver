@@ -20,20 +20,6 @@
     </div>
   </div>
 
-  <!-- Loading state -->
-  @if (devicesLoading() || alertsLoading()) {
-    <div class="metrics">
-      @for (_ of [1,2,3,4]; track $index) {
-        <ion-card class="metric-skeleton">
-          <ion-card-content>
-            <ion-skeleton-text [animated]="true" style="height: 14px; width: 60%;"></ion-skeleton-text>
-            <ion-skeleton-text [animated]="true" style="height: 28px; width: 40%; margin-top: 8px;"></ion-skeleton-text>
-          </ion-card-content>
-        </ion-card>
-      }
-    </div>
-  }
-
   <!-- Error state -->
   @if (devicesError()) {
     <ui-empty-state
@@ -44,31 +30,38 @@
     </ui-empty-state>
   }
 
+  <!-- KPI row — skeleton while loading, real data once available -->
+  <div class="metrics">
+    <ui-metric-card
+      [loading]="devicesLoading() || alertsLoading()"
+      label="Online" [value]="onlineCount() + '/' + totalCount()" iconColor="var(--ion-color-success)">
+      <ion-icon icon name="wifi-outline"></ion-icon>
+    </ui-metric-card>
+
+    <ui-metric-card
+      [loading]="devicesLoading() || alertsLoading()"
+      label="Open alerts" [value]="openAlertsCount()" iconColor="var(--ion-color-danger)">
+      <ion-icon icon name="alert-circle-outline"></ion-icon>
+    </ui-metric-card>
+
+    <ui-metric-card
+      [loading]="devicesLoading() || alertsLoading()"
+      label="Avg CPU"
+      [value]="avgCpu() ?? '—'"
+      [unit]="avgCpu() !== null ? '%' : ''"
+      iconColor="var(--ion-color-primary)">
+      <ion-icon icon name="hardware-chip-outline"></ion-icon>
+    </ui-metric-card>
+
+    <ui-metric-card
+      [loading]="devicesLoading() || alertsLoading()"
+      label="Ingest rate" value="—" unit="pts/s" iconColor="var(--ion-color-tertiary)">
+      <ion-icon icon name="flash-outline"></ion-icon>
+    </ui-metric-card>
+  </div>
+
   <!-- Main content -->
   @if (!devicesLoading() && !devicesError()) {
-
-    <!-- KPI row -->
-    <div class="metrics">
-      <ui-metric-card label="Online" [value]="onlineCount() + '/' + totalCount()" iconColor="var(--ion-color-success)">
-        <ion-icon icon name="wifi-outline"></ion-icon>
-      </ui-metric-card>
-
-      <ui-metric-card label="Open alerts" [value]="openAlertsCount()" iconColor="var(--ion-color-danger)">
-        <ion-icon icon name="alert-circle-outline"></ion-icon>
-      </ui-metric-card>
-
-      <ui-metric-card
-        label="Avg CPU"
-        [value]="avgCpu() ?? '—'"
-        [unit]="avgCpu() !== null ? '%' : ''"
-        iconColor="var(--ion-color-primary)">
-        <ion-icon icon name="hardware-chip-outline"></ion-icon>
-      </ui-metric-card>
-
-      <ui-metric-card label="Ingest rate" value="—" unit="pts/s" iconColor="var(--ion-color-tertiary)">
-        <ion-icon icon name="flash-outline"></ion-icon>
-      </ui-metric-card>
-    </div>
 
     <!-- 2-col grid -->
     <div class="grid-2">

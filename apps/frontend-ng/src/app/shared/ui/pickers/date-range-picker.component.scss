@@ -3,7 +3,7 @@
 
 .presets { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
 .preset {
-  padding: 11px 12px; border-radius: var(--r-sm); border: 1px solid var(--border);
+  padding: 11px 12px; border-radius: var(--r-sm); border: 1px solid var(--ui-border);
   background: var(--surface); cursor: pointer; text-align: left; color: var(--text);
   font-family: var(--font-sans);
 }

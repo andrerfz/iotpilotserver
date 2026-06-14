@@ -12,4 +12,13 @@
       }
     </a>
   }
+  @if (showTerminal()) {
+    <a
+      class="device-tabs__tab"
+      [routerLink]="['/app/devices', deviceId(), terminalTab.path]"
+      routerLinkActive="device-tabs__tab--active"
+    >
+      {{ terminalTab.label }}
+    </a>
+  }
 </nav>

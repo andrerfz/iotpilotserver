@@ -53,7 +53,7 @@
     font-size: 0.8rem;
     color: var(--text-muted);
     padding: 7px 0;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--ui-border);
     align-self: start;
   }
 
@@ -61,7 +61,7 @@
     font-size: 0.85rem;
     color: var(--text);
     padding: 7px 0;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--ui-border);
     word-break: break-all;
 
     &.mono {

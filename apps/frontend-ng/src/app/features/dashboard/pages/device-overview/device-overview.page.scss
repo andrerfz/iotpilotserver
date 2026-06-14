@@ -11,12 +11,12 @@
 
 .grid-2 {
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
   gap: 18px;
   align-items: start;
 
   @media (max-width: 768px) {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -46,22 +46,36 @@
   }
 }
 
+/* Prototype `.card__head` — full-width header with a bottom divider. The
+   breakout margins cancel ion-card-content's 13px/16px padding so the rule
+   spans edge-to-edge like the prototype card chrome. */
 .card-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin: -13px -16px 16px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--ui-border);
 }
 
 .card-title {
   margin: 0;
-  font-size: 0.95rem;
+  font-size: 13.5px;
   font-weight: 600;
   color: var(--text);
 }
 
 .devinfo-card {
   margin: 0;
+
+  /* Device-info title stands alone (no .card-head wrapper) — give it the same
+     edge-to-edge divider so it matches the prototype's "Device info" header. */
+  .card-title {
+    display: block;
+    margin: -13px -16px 0;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--ui-border);
+  }
 }
 
 .kv {

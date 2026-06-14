@@ -6,7 +6,7 @@
 .tenant {
   display: flex; align-items: center; gap: 10px; width: 100%;
   padding: 8px 10px; border-radius: var(--r-sm);
-  background: var(--surface); border: 1px solid var(--border);
+  background: var(--surface); border: 1px solid var(--ui-border);
   cursor: pointer; text-align: left; font-family: var(--font-sans);
 }
 .tenant:hover { border-color: var(--border-strong); }
@@ -27,7 +27,7 @@
   background: var(--elevated); border: 1px solid var(--border-strong);
   border-radius: var(--r-lg); box-shadow: var(--shadow-pop); overflow: hidden;
 }
-.menu__sec { padding: 6px; border-bottom: 1px solid var(--border); }
+.menu__sec { padding: 6px; border-bottom: 1px solid var(--ui-border); }
 .menu__sec:last-child { border-bottom: none; }
 .menu__info { padding: 10px 14px 8px; }
 .tenant__title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }

@@ -1,19 +1,19 @@
-/* Ported 1:1 from prototype app.css — ".topbar" + ".crumbs*" + ".searchbtn" + ".iconbtn". */
+/* Ported 1:1 from prototype app.css — ".topbar" + ".crumbs*" + ".searchbtn". */
 :host { display: block; flex: none; }
 
 .topbar {
   display: flex; align-items: center; gap: 14px;
   padding: 0 22px; height: 56px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--ui-border);
   background: color-mix(in srgb, var(--elevated) 86%, transparent);
   backdrop-filter: blur(8px);
   position: relative; z-index: 20;
 }
 
-/* Hamburger: only below the split-pane breakpoint (rail is inline ≥1080px). */
-.topbar__menu { --color: var(--text-muted); }
-@media (min-width: 1080px) {
-  .topbar__menu { display: none; }
+/* Logo: mobile only — desktop branding lives in the rail. */
+.topbar__logo {
+  flex: none;
+  @media (min-width: 1080px) { display: none; }
 }
 
 .crumbs { display: flex; align-items: center; gap: 8px; font-size: 13px; min-width: 0; }
@@ -22,11 +22,16 @@
 .crumbs__sep { color: var(--text-dim); display: inline-flex; }
 .crumbs__sep ion-icon { width: 13px; height: 13px; }
 
+/* Mobile: no breadcrumb — each view already has its own title heading. */
+@media (max-width: 1079px) {
+  .crumbs { display: none; }
+}
+
 .searchbtn {
   margin-left: auto;
   display: flex; align-items: center; gap: 9px;
   height: 34px; padding: 0 11px; min-width: 234px;
-  background: var(--surface-2); border: 1px solid var(--border);
+  background: var(--surface-2); border: 1px solid var(--ui-border);
   border-radius: var(--r-sm); color: var(--text-dim);
   cursor: pointer; font-size: 13px; font-family: var(--font-sans);
   transition: border-color .12s;
@@ -37,21 +42,16 @@
 .searchbtn kbd {
   margin-left: auto; font-family: var(--font-mono); font-size: 10.5px;
   background: var(--surface-3); color: var(--text-muted);
-  padding: 1px 6px; border-radius: 4px; border: 1px solid var(--border);
+  padding: 1px 6px; border-radius: 4px; border: 1px solid var(--ui-border);
 }
 
-.iconbtn {
-  width: 34px; height: 34px; flex: none;
-  display: grid; place-items: center; cursor: pointer;
-  background: var(--surface-2); border: 1px solid var(--border);
-  border-radius: var(--r-sm); color: var(--text-muted);
-  transition: color .12s, border-color .12s;
-}
-.iconbtn:hover { color: var(--text); border-color: var(--border-strong); }
-.iconbtn ion-icon { width: 17px; height: 17px; }
-
-/* On narrow widths drop the long search label, keep the icon. */
+/* Compact search on narrow viewports: icon only. */
 @media (max-width: 640px) {
-  .searchbtn { min-width: 0; }
+  .searchbtn { min-width: 34px; width: 34px; padding: 0; justify-content: center; }
   .searchbtn__label, .searchbtn kbd { display: none; }
+}
+
+/* User menu slot: desktop only. */
+.topbar__user {
+  @media (max-width: 1079px) { display: none; }
 }

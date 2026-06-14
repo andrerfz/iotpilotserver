@@ -4,11 +4,11 @@
 .rail {
   display: flex; flex-direction: column;
   height: 100%; min-height: 0;
-  background: var(--elevated); border-right: 1px solid var(--border);
+  background: var(--elevated); border-right: 1px solid var(--ui-border);
 }
 
 .rail__brand {
-  padding: 18px 18px 16px; border-bottom: 1px solid var(--border);
+  padding: 18px 18px 16px; border-bottom: 1px solid var(--ui-border);
 }
 
 .rail__scroll { overflow-y: auto; flex: 1; padding: 12px 12px 18px; min-height: 0; }
@@ -37,4 +37,4 @@
 }
 .nav-item--active .nav-item__badge { background: var(--primary); color: var(--primary-ink); }
 
-.rail__foot { border-top: 1px solid var(--border); padding: 12px; }
+.rail__foot { border-top: 1px solid var(--ui-border); padding: 12px; }

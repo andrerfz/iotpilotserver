@@ -3,7 +3,7 @@
 
 .field {
   display: flex; align-items: center; gap: 9px; height: 38px; padding: 0 12px;
-  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-sm);
+  background: var(--surface); border: 1px solid var(--ui-border); border-radius: var(--r-sm);
 }
 .field:focus-within { border-color: var(--primary-line); }
 .field ion-icon { width: 15px; height: 15px; color: var(--text-dim); }

@@ -15,14 +15,13 @@ import { ActivatedRoute } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { interval } from 'rxjs';
 import { addIcons } from 'ionicons';
-import { closeOutline, refreshOutline } from 'ionicons/icons';
+import { closeOutline, refreshOutline, optionsOutline, syncOutline } from 'ionicons/icons';
 import {
   IonButton,
   IonCard,
   IonCardContent,
   IonContent,
   IonIcon,
-  IonInput,
   IonSkeletonText,
   DataTableComponent,
   EmptyStateComponent,
@@ -34,7 +33,7 @@ import type { DeviceLogEntry } from '@ng/core/api/generated/models/device-log-en
 import type { GetDeviceLogs$Params } from '@ng/core/api/generated/fn/devices/get-device-logs';
 import { DeviceDetailService } from '../../services/device-detail.service';
 
-addIcons({ closeOutline, refreshOutline });
+addIcons({ closeOutline, refreshOutline, optionsOutline, syncOutline });
 
 type LogLevel = 'ALL' | 'DEBUG' | 'INFO' | 'WARN' | 'ERROR' | 'FATAL';
 
@@ -60,7 +59,6 @@ const LEVEL_OPTIONS: SelectOption[] = [
     IonCardContent,
     IonButton,
     IonIcon,
-    IonInput,
     IonSkeletonText,
     DataTableComponent,
     EmptyStateComponent,
@@ -78,11 +76,13 @@ export class DeviceLogsPage implements OnInit, AfterViewInit {
 
   readonly levelFilter = signal<LogLevel>('ALL');
   readonly search = signal('');
-  readonly sourceFilter = signal('');
   readonly autoRefresh = signal(false);
+  readonly filterOpen = signal(false);
+  readonly searchInMessages = signal(true);
+  readonly searchInSource = signal(true);
 
   readonly hasFilters = computed(
-    () => this.levelFilter() !== 'ALL' || this.search() !== '' || this.sourceFilter() !== '',
+    () => this.levelFilter() !== 'ALL' || this.search() !== '',
   );
 
   readonly levelOptions = LEVEL_OPTIONS;
@@ -120,8 +120,10 @@ export class DeviceLogsPage implements OnInit, AfterViewInit {
     const p: GetDeviceLogs$Params = { id: this.deviceId(), limit: 100 };
     const lvl = this.levelFilter();
     if (lvl !== 'ALL') p.level = lvl;
-    if (this.search()) p.search = this.search();
-    if (this.sourceFilter()) p.source = this.sourceFilter();
+    if (this.search()) {
+      if (this.searchInMessages()) p.search = this.search();
+      if (this.searchInSource()) p.source = this.search();
+    }
     return p;
   }
 
@@ -135,15 +137,18 @@ export class DeviceLogsPage implements OnInit, AfterViewInit {
     void this.svc.deviceLogs.load(this.buildParams());
   }
 
-  onSourceChange(src: string): void {
-    this.sourceFilter.set(src);
+  onScopeChange(): void {
     void this.svc.deviceLogs.load(this.buildParams());
   }
+
+  toggleFilter(): void { this.filterOpen.update(o => !o); }
+  toggleAutoRefresh(): void { this.autoRefresh.update(o => !o); }
+  toggleSearchInMessages(): void { this.searchInMessages.update(o => !o); this.onScopeChange(); }
+  toggleSearchInSource(): void { this.searchInSource.update(o => !o); this.onScopeChange(); }
 
   onClearFilters(): void {
     this.levelFilter.set('ALL');
     this.search.set('');
-    this.sourceFilter.set('');
     void this.svc.deviceLogs.load({ id: this.deviceId(), limit: 100 });
   }
 

@@ -1,0 +1,261 @@
+<ion-content class="ion-padding">
+
+  @if (settings.loading() && !settings.data()) {
+    <ion-spinner name="crescent"></ion-spinner>
+  } @else if (settings.error() && !settings.data()) {
+    <ui-empty-state title="Failed to load settings" [hasAction]="true">
+      <ion-button action fill="outline" size="small" (click)="settings.reload()">Retry</ion-button>
+    </ui-empty-state>
+  } @else {
+
+    <!-- GENERAL -->
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>General</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-list lines="none">
+          <ion-item>
+            <ion-label>Device</ion-label>
+            <ion-note slot="end">{{ device.data()?.name }}</ion-note>
+          </ion-item>
+          <ion-item>
+            <ion-label>Type</ion-label>
+            <ion-note slot="end">{{ device.data()?.deviceType }}</ion-note>
+          </ion-item>
+          <ion-item>
+            <ion-label>IP Address</ion-label>
+            <ion-note slot="end">{{ device.data()?.ipAddress || '—' }}</ion-note>
+          </ion-item>
+          @if (showSSH()) {
+            <ion-item>
+              <ion-label>SSH Enabled</ion-label>
+              <ui-switch slot="end" [(ngModel)]="formData.sshEnabled" name="sshEnabled"></ui-switch>
+            </ion-item>
+          }
+          <ion-item>
+            <ion-label>Auto Update</ion-label>
+            <ui-switch slot="end" [(ngModel)]="formData.autoUpdate" name="autoUpdate"></ui-switch>
+          </ion-item>
+        </ion-list>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- MONITORING -->
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Monitoring</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-list lines="none">
+          <ion-item>
+            <ion-label>Metrics Enabled</ion-label>
+            <ui-switch slot="end" [(ngModel)]="formData.metricsEnabled" name="metricsEnabled"></ui-switch>
+          </ion-item>
+
+          @if (!isSensor()) {
+            <ion-item>
+              <ion-label>Heartbeat Interval (s)</ion-label>
+              <ui-input
+                slot="end"
+                type="number"
+                [(ngModel)]="formData.heartbeatInterval"
+                name="heartbeatInterval"
+                placeholder="60"
+              ></ui-input>
+            </ion-item>
+            <ion-item>
+              <ion-label>CPU Threshold (%)</ion-label>
+              <ui-input
+                slot="end"
+                type="number"
+                [(ngModel)]="formData.cpuThreshold"
+                name="cpuThreshold"
+                placeholder="80"
+              ></ui-input>
+            </ion-item>
+            <ion-item>
+              <ion-label>Memory Threshold (%)</ion-label>
+              <ui-input
+                slot="end"
+                type="number"
+                [(ngModel)]="formData.memoryThreshold"
+                name="memoryThreshold"
+                placeholder="85"
+              ></ui-input>
+            </ion-item>
+            <ion-item>
+              <ion-label>Disk Threshold (%)</ion-label>
+              <ui-input
+                slot="end"
+                type="number"
+                [(ngModel)]="formData.diskThreshold"
+                name="diskThreshold"
+                placeholder="90"
+              ></ui-input>
+            </ion-item>
+            <ion-item>
+              <ion-label>Temp Threshold (°C)</ion-label>
+              <ui-input
+                slot="end"
+                type="number"
+                [(ngModel)]="formData.temperatureThreshold"
+                name="temperatureThreshold"
+                placeholder="75"
+              ></ui-input>
+            </ion-item>
+          } @else {
+            <ion-item>
+              <ion-label>Reporting Interval (s)</ion-label>
+              <ui-input
+                slot="end"
+                type="number"
+                [(ngModel)]="formData.reportingInterval"
+                name="reportingInterval"
+                placeholder="30"
+              ></ui-input>
+            </ion-item>
+            <ion-item>
+              <ion-label>Sensor Temp Threshold (°C)</ion-label>
+              <ui-input
+                slot="end"
+                type="number"
+                [(ngModel)]="formData.sensorTempThreshold"
+                name="sensorTempThreshold"
+                placeholder="40"
+              ></ui-input>
+            </ion-item>
+            <ion-item>
+              <ion-label>Battery Threshold (%)</ion-label>
+              <ui-input
+                slot="end"
+                type="number"
+                [(ngModel)]="formData.batteryThreshold"
+                name="batteryThreshold"
+                placeholder="20"
+              ></ui-input>
+            </ion-item>
+          }
+        </ion-list>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- NETWORK -->
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Network</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-list lines="none">
+          <ion-item>
+            <ion-label>Network Monitoring</ion-label>
+            <ui-switch slot="end" [(ngModel)]="formData.networkMonitoring" name="networkMonitoring"></ui-switch>
+          </ion-item>
+        </ion-list>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- AGENT -->
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Agent</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-list lines="none">
+          <ion-item>
+            <ion-label>Update Channel</ion-label>
+            <ui-select
+              slot="end"
+              [options]="updateChannels"
+              [(ngModel)]="formData.updateChannel"
+              name="updateChannel"
+              placeholder="stable"
+            ></ui-select>
+          </ion-item>
+        </ion-list>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- SECURITY -->
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Security</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-list lines="none">
+          <ion-item>
+            <ion-label>Key Rotation (days)</ion-label>
+            <ui-input
+              slot="end"
+              type="number"
+              [(ngModel)]="formData.apiKeyRotationDays"
+              name="apiKeyRotationDays"
+              placeholder="90"
+            ></ui-input>
+          </ion-item>
+        </ion-list>
+
+        <div class="rotate-key">
+          <p class="rotate-key__hint">
+            Rotating the API key immediately invalidates the current key.
+            The device agent will reconnect using the new key.
+          </p>
+
+          @if (!newKey()) {
+            <ion-button
+              fill="outline"
+              color="danger"
+              size="small"
+              [disabled]="rotating()"
+              (click)="onRotateKey()"
+            >
+              @if (rotating()) {
+                <ion-spinner slot="start" name="crescent" style="width:16px;height:16px;"></ion-spinner>
+              } @else {
+                <ion-icon slot="start" name="refresh-outline"></ion-icon>
+              }
+              Rotate API Key
+            </ion-button>
+          } @else {
+            <div class="rotate-key__reveal">
+              <p class="rotate-key__label">New API Key (copy now — shown once):</p>
+              <div class="rotate-key__value-row">
+                <code class="rotate-key__value">{{ maskedKey() }}</code>
+                <ion-button fill="clear" size="small" (click)="toggleKeyVisible()">
+                  <ion-icon slot="icon-only" [name]="keyVisible() ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
+                </ion-button>
+                <ion-button fill="clear" size="small" (click)="copyKey()">
+                  <ion-icon slot="icon-only" name="copy-outline"></ion-icon>
+                </ion-button>
+              </div>
+            </div>
+          }
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- SAVE -->
+    @if (saveError()) {
+      <p class="settings-error">{{ saveError() }}</p>
+    }
+    @if (saveSuccess()) {
+      <p class="settings-ok">Settings saved.</p>
+    }
+    <ion-button
+      expand="block"
+      fill="solid"
+      [disabled]="saving()"
+      (click)="onSave()"
+      class="save-btn"
+    >
+      @if (saving()) {
+        <ion-spinner slot="start" name="crescent" style="width:16px;height:16px;"></ion-spinner>
+        Saving…
+      } @else {
+        Save Settings
+      }
+    </ion-button>
+
+  }
+
+</ion-content>

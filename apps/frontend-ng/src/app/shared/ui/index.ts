@@ -136,6 +136,7 @@ export { UiSearchFieldComponent } from './forms/ui-search-field.component';
 export { SparklineComponent } from './data/sparkline.component';
 export { MetricCardComponent } from './data/metric-card.component';
 export type { DeltaDir } from './data/metric-card.component';
+export { UiSkeletonComponent } from './data/skeleton.component';
 export { EmptyStateComponent } from './data/empty-state.component';
 // T6 — DataTable
 export { DataTableComponent } from './data/data-table.component';

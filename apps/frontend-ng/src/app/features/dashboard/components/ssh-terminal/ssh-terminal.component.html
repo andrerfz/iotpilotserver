@@ -1,0 +1,46 @@
+<div class="terminal">
+  <div
+    #outputEl
+    class="terminal__output"
+    role="log"
+    aria-live="polite"
+    aria-label="Terminal output"
+  >
+    @if (output().length === 0) {
+      <span class="terminal__hint">Type a command and press Enter or Send.</span>
+    } @else {
+      @for (line of output(); track $index) {
+        <div class="terminal__line" [class.terminal__line--cmd]="line.startsWith('$ ')">{{ line }}</div>
+      }
+    }
+  </div>
+
+  <form class="terminal__form" (ngSubmit)="onSubmit()">
+    <span class="terminal__prompt">$</span>
+    <ion-input
+      class="terminal__input"
+      [(ngModel)]="command"
+      name="command"
+      placeholder="command"
+      [disabled]="executing()"
+      autocomplete="off"
+      autocorrect="off"
+      spellcheck="false"
+    ></ion-input>
+    <ion-button
+      type="submit"
+      fill="solid"
+      size="small"
+      [disabled]="executing() || !command.trim()"
+    >
+      @if (executing()) { … } @else { Send }
+    </ion-button>
+    <ion-button
+      type="button"
+      fill="clear"
+      color="medium"
+      size="small"
+      (click)="onClear()"
+    >Clear</ion-button>
+  </form>
+</div>

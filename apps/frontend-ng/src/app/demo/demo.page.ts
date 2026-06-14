@@ -250,7 +250,7 @@ addIcons({ hardwareChipOutline, speedometerOutline, notificationsOutline, checkm
   `,
   styles: [`
     .demo { max-width: 980px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
-    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 18px 20px; }
+    .card { background: var(--surface); border: 1px solid var(--ui-border); border-radius: var(--r); padding: 18px 20px; }
     .card.inner { margin-top: 14px; }
     .spark-demo { display: flex; flex-direction: column; gap: 8px; }
     .spark-demo__label { font-family: var(--font-mono); font-size: var(--fs-label); letter-spacing: var(--ls-label); text-transform: uppercase; color: var(--text-dim); }

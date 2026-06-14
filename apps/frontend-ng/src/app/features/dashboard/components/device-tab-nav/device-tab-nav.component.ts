@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+import { hasSSH } from '../../device-capabilities';
 
 interface Tab {
   path: string;
@@ -17,7 +18,10 @@ interface Tab {
 })
 export class DeviceTabNavComponent {
   readonly deviceId = input.required<string>();
+  readonly deviceType = input<string>('');
   readonly openAlertCount = input(0);
+
+  readonly showTerminal = computed(() => hasSSH(this.deviceType()));
 
   readonly tabs: Tab[] = [
     { path: '', label: 'Overview' },
@@ -26,5 +30,9 @@ export class DeviceTabNavComponent {
     { path: 'logs', label: 'Logs' },
     { path: 'network', label: 'Network' },
     { path: 'storage', label: 'Storage' },
+    { path: 'metrics', label: 'Metrics' },
+    { path: 'settings', label: 'Settings' },
   ];
+
+  readonly terminalTab: Tab = { path: 'terminal', label: 'Terminal' };
 }

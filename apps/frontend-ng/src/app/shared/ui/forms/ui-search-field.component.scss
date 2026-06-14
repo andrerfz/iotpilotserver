@@ -1,10 +1,11 @@
 /* Ported 1:1 from prototype app.css — ".field" */
-:host { display: contents; }
+:host { display: block; }
 
 .field {
   display: flex; align-items: center; gap: 9px;
   height: 38px; padding: 0 12px;
-  background: var(--surface); border: 1px solid var(--border);
+  width: 100%;
+  background: var(--surface); border: 1px solid var(--ui-border);
   border-radius: var(--r-sm);
   transition: border-color .12s;
 }

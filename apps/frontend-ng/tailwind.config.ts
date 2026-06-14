@@ -27,7 +27,7 @@ export default {
         'ui-text':     'var(--text)',
         'ui-muted':    'var(--text-muted)',
         'ui-dim':      'var(--text-dim)',
-        'ui-border':   'var(--border)',
+        'ui-border':   'var(--ui-border)',
         'ui-primary':  'var(--primary)',
         'ui-success':  'var(--success)',
         'ui-warning':  'var(--warning)',

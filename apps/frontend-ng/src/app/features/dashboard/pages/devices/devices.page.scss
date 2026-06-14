@@ -22,7 +22,14 @@
     display: flex;
     gap: 8px;
     align-items: center;
+
+    @media (max-width: 767px) { display: none; }
   }
+}
+
+/* FAB: only on mobile — header button covers desktop */
+ion-fab {
+  @media (min-width: 768px) { display: none; }
 }
 
 .metrics {

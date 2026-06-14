@@ -11,16 +11,49 @@
   --background: var(--surface);
   --color: var(--text);
   --placeholder-color: var(--text-dim);
-  --border-color: var(--border);
+  --border-color: var(--ui-border);
   --border-radius: var(--r-sm);
   --highlight-color-focused: var(--primary);
   --padding-start: 12px;
   --padding-end: 12px;
-  --padding-top: 10px;
-  --padding-bottom: 10px;
-  border: 1px solid var(--border);
+  /* Prototype `.field` is a compact 38px control. Ionic's ion-input defaults to a
+     44px tap-target min-height + we previously added 10px top/bottom padding,
+     which inflated every form field to ~62px. Pin it to the prototype height. */
+  --padding-top: 7px;
+  --padding-bottom: 7px;
+  --min-height: 38px;
+  min-height: 38px;
+  border: 1px solid var(--ui-border);
   border-radius: var(--r-sm);
+  font-size: 14px;
 }
 .ui-field--error .ui-input { --border-color: var(--danger); border-color: var(--danger); }
 .ui-field__error { font-family: var(--font-mono); font-size: 11px; color: var(--danger); }
-.ui-input__reveal { --color: var(--text-dim); height: 32px; }
+/* The password reveal button sits in the input row (align-items:stretch), so
+   Ionic's default icon button height (~40px) stretches the whole field. The
+   button's height is driven by its shadow `part(native)`, not the host — pin
+   that compact so the password field keeps the same ~38px height as text
+   fields (which have no reveal button). */
+.ui-input__reveal {
+  --color: var(--text-dim);
+  --padding-top: 0;
+  --padding-bottom: 0;
+  --padding-start: 6px;
+  --padding-end: 6px;
+  /* Ionic's ion-button host carries a ~40px min-height; with the row's
+     align-items:stretch that alone re-inflates the field. Force it down so the
+     reveal button no longer dictates the field height. */
+  --min-height: 24px;
+  min-height: 24px !important;
+  height: 24px;
+  align-self: center;
+  margin: 0;
+}
+/* Skeleton placeholder — same height as the real input */
+.ui-input-sk { height: 38px; width: 100%; border-radius: var(--r-sm); }
+
+.ui-input__reveal::part(native) {
+  min-height: 24px;
+  height: 24px;
+  padding: 0 6px;
+}

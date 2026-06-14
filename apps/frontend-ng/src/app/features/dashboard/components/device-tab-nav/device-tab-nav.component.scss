@@ -1,7 +1,6 @@
 .device-tabs {
   display: flex;
   gap: 0;
-  padding: 0 20px;
   border-bottom: 1px solid var(--ion-color-light-shade);
   background: var(--ion-background-color, #fff);
   overflow-x: auto;
@@ -12,10 +11,12 @@
   }
 
   &__tab {
+    flex: 1;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 6px;
-    padding: 10px 16px;
+    padding: 10px 12px;
     font-size: 0.875rem;
     font-weight: 500;
     color: var(--ion-color-medium);
@@ -24,6 +25,8 @@
     border-bottom: 2px solid transparent;
     transition: color 0.15s, border-color 0.15s;
     cursor: pointer;
+    outline: none;
+    min-width: 0;
 
     &:hover {
       color: var(--ion-color-dark);

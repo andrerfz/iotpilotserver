@@ -48,9 +48,8 @@ addIcons({
           </div>
 
           <div class="menu__sec">
-            <button class="menu__item" (click)="go('/app/settings')"><ion-icon name="person-outline"></ion-icon>Your profile</button>
-            <button class="menu__item" (click)="go('/app/settings')"><ion-icon name="shield-outline"></ion-icon>Security &amp; sessions</button>
-            <button class="menu__item" (click)="go('/app/settings')"><ion-icon name="settings-outline"></ion-icon>Preferences</button>
+            <button class="menu__item" (click)="go('settings/profile')"><ion-icon name="person-outline"></ion-icon>Your profile</button>
+            <button class="menu__item" (click)="go('settings/system')"><ion-icon name="settings-outline"></ion-icon>Settings</button>
           </div>
 
           <div class="menu__sec">
@@ -78,7 +77,7 @@ addIcons({
 
           @if (showAdmin()) {
             <div class="menu__sec">
-              <button class="menu__item" (click)="go('/app/admin')"><ion-icon name="shield-outline"></ion-icon>Admin panel</button>
+              <button class="menu__item" (click)="go('admin')"><ion-icon name="shield-outline"></ion-icon>Admin panel</button>
             </div>
           }
 
@@ -100,6 +99,9 @@ export class UserMenuComponent {
   private readonly toast = inject(ToastService);
   private readonly host = inject(ElementRef<HTMLElement>);
   private readonly hostIsLocal = inject(HOST_IS_LOCAL);
+
+  /** Shell base segment — /app in production, /__shell in dev preview. */
+  readonly base = input('/app');
 
   /** Localhost service URLs (only surfaced on localhost anyway). */
   readonly grafanaUrl = input('http://localhost:3000');
@@ -142,8 +144,8 @@ export class UserMenuComponent {
   protected toggle(): void { this.open.update(o => !o); }
   protected close(): void { this.open.set(false); }
 
-  protected go(path: string): void {
-    this.router.navigateByUrl(path);
+  protected go(segment: string): void {
+    this.router.navigateByUrl(`${this.base()}/${segment}`);
     this.close();
   }
 

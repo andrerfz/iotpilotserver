@@ -1,53 +1,54 @@
 <ion-content class="ion-padding">
 
-  <!-- Filter bar -->
-  <ion-card class="filter-card">
-    <ion-card-content>
-      <div class="filter-bar">
-        <ui-select
-          label="Level"
-          [options]="levelOptions"
-          [ngModel]="levelFilter()"
-          (ngModelChange)="onLevelChange($event)"
-        ></ui-select>
+  <!-- Unified toolbar -->
+  <div class="log-toolbar">
+    <ui-select
+      placeholder="All levels"
+      [options]="levelOptions"
+      [ngModel]="levelFilter()"
+      (ngModelChange)="onLevelChange($event)"
+    ></ui-select>
 
-        <ui-search-field
-          placeholder="Search messages…"
-          [value]="search()"
-          (valueChange)="onSearchChange($event)"
-        ></ui-search-field>
+    <ui-search-field
+      placeholder="Search logs…"
+      [value]="search()"
+      (valueChange)="onSearchChange($event)"
+    ></ui-search-field>
 
-        <ion-input
-          class="source-input"
-          placeholder="Filter by source…"
-          [value]="sourceFilter()"
-          (ionInput)="onSourceChange($any($event).detail.value ?? '')"
-        ></ion-input>
-
-        @if (hasFilters()) {
-          <ion-button fill="clear" color="medium" size="small" (click)="onClearFilters()">
-            <ion-icon slot="start" name="close-outline"></ion-icon>
-            Clear
-          </ion-button>
-        }
-      </div>
-    </ion-card-content>
-  </ion-card>
-
-  <!-- Actions -->
-  <div class="actions-row">
-    <ion-button
-      fill="outline"
-      [color]="autoRefresh() ? 'primary' : 'medium'"
-      size="small"
-      (click)="autoRefresh.set(!autoRefresh())">
-      Auto-refresh {{ autoRefresh() ? 'ON' : 'OFF' }}
-    </ion-button>
-    <ion-button fill="outline" color="medium" size="small" (click)="onRefresh()">
-      <ion-icon slot="start" name="refresh-outline"></ion-icon>
-      Refresh
-    </ion-button>
+    <div class="toolbar-actions">
+      <button class="tbtn" [class.tbtn--active]="filterOpen()"
+        title="Filter options" (click)="toggleFilter()">
+        <ion-icon name="options-outline"></ion-icon>
+      </button>
+      <button class="tbtn" [class.tbtn--active]="autoRefresh()"
+        title="Auto-refresh" (click)="toggleAutoRefresh()">
+        <ion-icon name="sync-outline"></ion-icon>
+      </button>
+      <button class="tbtn" title="Refresh now" (click)="onRefresh()">
+        <ion-icon name="refresh-outline"></ion-icon>
+      </button>
+    </div>
   </div>
+
+  <!-- Filter scope panel -->
+  @if (filterOpen()) {
+    <div class="filter-panel">
+      <span class="filter-panel__label">Search in</span>
+      <label class="scope-check">
+        <input type="checkbox" [checked]="searchInMessages()"
+          (change)="toggleSearchInMessages()">
+        Messages
+      </label>
+      <label class="scope-check">
+        <input type="checkbox" [checked]="searchInSource()"
+          (change)="toggleSearchInSource()">
+        Source
+      </label>
+      @if (hasFilters()) {
+        <button class="filter-panel__clear" (click)="onClearFilters()">Clear filters</button>
+      }
+    </div>
+  }
 
   <!-- Log table -->
   <ion-card>
@@ -59,7 +60,6 @@
         }
       </div>
 
-      <!-- Cell templates — kept outside @if so ViewChild finds them on init -->
       <ng-template #tsCell let-row>
         <span class="mono dim">{{ formatTs(row.timestamp) }}</span>
       </ng-template>
@@ -73,7 +73,6 @@
         <span>{{ row.message }}</span>
       </ng-template>
 
-      <!-- Loading skeleton -->
       @if (logs.loading() && !logs.data()) {
         @for (_ of [1,2,3,4,5]; track $index) {
           <ion-skeleton-text
@@ -83,14 +82,12 @@
         }
       }
 
-      <!-- Error -->
       @if (logs.error() && !logs.data()) {
         <ui-empty-state title="Could not load logs" [hasAction]="true">
           <ion-button action fill="outline" size="small" (click)="onRetry()">Retry</ion-button>
         </ui-empty-state>
       }
 
-      <!-- Empty -->
       @if (!logs.loading() && (logs.data()?.length ?? 0) === 0 && !logs.error()) {
         <ui-empty-state
           title="No logs found"
@@ -98,7 +95,6 @@
         ></ui-empty-state>
       }
 
-      <!-- Table -->
       @if ((logs.data()?.length ?? 0) > 0) {
         <ui-data-table
           [rows]="logs.data() ?? []"

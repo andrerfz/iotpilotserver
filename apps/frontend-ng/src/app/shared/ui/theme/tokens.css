@@ -34,7 +34,10 @@
   --surface:       hsl(225 15% 13%);
   --surface-2:     hsl(224 14% 17%);
   --surface-3:     hsl(222 13% 22%);
-  --border:        hsl(222 13% 21%);
+  /* NOTE: kit border token is --ui-border, NOT --border. Ionic's <ion-split-pane>
+     reserves --border (1px solid ...) and inherits it into the whole app, which
+     would shadow a bare --border token and break every `1px solid var(--border)`. */
+  --ui-border:     hsl(222 13% 21%);
   --border-strong: hsl(220 12% 30%);
   --text:          hsl(210 40% 96%);
   --text-muted:    hsl(215 18% 62%);
@@ -63,7 +66,7 @@
   --surface:       hsl(0 0% 100%);
   --surface-2:     hsl(210 40% 96%);
   --surface-3:     hsl(212 36% 92%);
-  --border:        hsl(214 28% 88%);
+  --ui-border:     hsl(214 28% 88%);
   --border-strong: hsl(214 22% 78%);
   --text:          hsl(222 47% 13%);
   --text-muted:    hsl(215 16% 40%);
@@ -129,7 +132,7 @@
   --ion-popover-background:     var(--surface-2);
 
   /* Border / divider */
-  --ion-border-color:           var(--border);
+  --ion-border-color:           var(--ui-border);
   --ion-color-step-50:          var(--surface-2);
   --ion-color-step-100:         var(--surface-3);
   --ion-color-step-150:         var(--border-strong);

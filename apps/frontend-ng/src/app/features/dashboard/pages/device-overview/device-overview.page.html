@@ -1,19 +1,5 @@
 <ion-content class="ion-padding">
 
-  <!-- Loading skeletons -->
-  @if (device.loading() && !device.data()) {
-    <div class="metrics">
-      @for (_ of [1,2,3,4]; track $index) {
-        <ion-card class="metric-skeleton">
-          <ion-card-content>
-            <ion-skeleton-text [animated]="true" style="height: 14px; width: 60%;"></ion-skeleton-text>
-            <ion-skeleton-text [animated]="true" style="height: 28px; width: 40%; margin-top: 8px;"></ion-skeleton-text>
-          </ion-card-content>
-        </ion-card>
-      }
-    </div>
-  }
-
   <!-- Error state -->
   @if (device.error() && !device.data()) {
     <ui-empty-state title="Could not load overview" [hasAction]="true">
@@ -21,46 +7,51 @@
     </ui-empty-state>
   }
 
+  <!-- Metric cards — show skeleton while loading, real data once available -->
+  <div class="metrics">
+    <ui-metric-card
+      [loading]="device.loading() && !device.data()"
+      label="CPU"
+      [value]="metricVal(deviceMetrics().cpu)"
+      unit="%"
+      iconColor="var(--primary)"
+      iconBg="var(--primary-weak)"
+    >
+      <ion-icon name="hardware-chip-outline" icon></ion-icon>
+    </ui-metric-card>
+    <ui-metric-card
+      [loading]="device.loading() && !device.data()"
+      label="Memory"
+      [value]="metricVal(deviceMetrics().memory)"
+      unit="%"
+      iconColor="var(--info)"
+      iconBg="var(--info-weak)"
+    >
+      <ion-icon name="server-outline" icon></ion-icon>
+    </ui-metric-card>
+    <ui-metric-card
+      [loading]="device.loading() && !device.data()"
+      label="Temperature"
+      [value]="metricVal(deviceMetrics().temp)"
+      unit="°C"
+      iconColor="var(--warning)"
+      iconBg="var(--warning-weak)"
+    >
+      <ion-icon name="thermometer-outline" icon></ion-icon>
+    </ui-metric-card>
+    <ui-metric-card
+      [loading]="device.loading() && !device.data()"
+      label="Disk"
+      [value]="metricVal(deviceMetrics().disk)"
+      unit="%"
+      iconColor="var(--success)"
+      iconBg="var(--success-weak)"
+    >
+      <ion-icon name="save-outline" icon></ion-icon>
+    </ui-metric-card>
+  </div>
+
   @if (device.data(); as d) {
-    <!-- Metric cards -->
-    <div class="metrics">
-      <ui-metric-card
-        label="CPU"
-        [value]="metricVal(deviceMetrics().cpu)"
-        unit="%"
-        iconColor="var(--primary)"
-        iconBg="var(--primary-weak)"
-      >
-        <ion-icon name="hardware-chip-outline" icon></ion-icon>
-      </ui-metric-card>
-      <ui-metric-card
-        label="Memory"
-        [value]="metricVal(deviceMetrics().memory)"
-        unit="%"
-        iconColor="var(--info)"
-        iconBg="var(--info-weak)"
-      >
-        <ion-icon name="server-outline" icon></ion-icon>
-      </ui-metric-card>
-      <ui-metric-card
-        label="Temperature"
-        [value]="metricVal(deviceMetrics().temp)"
-        unit="°C"
-        iconColor="var(--warning)"
-        iconBg="var(--warning-weak)"
-      >
-        <ion-icon name="thermometer-outline" icon></ion-icon>
-      </ui-metric-card>
-      <ui-metric-card
-        label="Disk"
-        [value]="metricVal(deviceMetrics().disk)"
-        unit="%"
-        iconColor="var(--success)"
-        iconBg="var(--success-weak)"
-      >
-        <ion-icon name="save-outline" icon></ion-icon>
-      </ui-metric-card>
-    </div>
 
     <!-- ng-template for commands cell — outside @if so ViewChild resolves -->
     <ng-template #statusCell let-row>

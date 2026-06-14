@@ -1,0 +1,33 @@
+<ion-content>
+
+  @if (device.loading() && !device.data()) {
+    <!-- device still loading — let parent finish -->
+  } @else if (!isOnline()) {
+    <div class="terminal-wrap terminal-wrap--offline">
+      <ui-empty-state
+        title="Device offline"
+        description="The terminal is only available when the device is online."
+      ></ui-empty-state>
+    </div>
+  } @else if (!connected()) {
+    <div class="terminal-wrap terminal-wrap--connect">
+      <ion-card class="connect-card">
+        <ion-card-header>
+          <ion-card-title>SSH Terminal</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <p class="connect-hint">
+            Commands are executed via the device agent over a secure channel.
+            Sessions are stateless — each command runs in a fresh shell.
+          </p>
+          <ion-button fill="solid" (click)="connect()">Connect Terminal</ion-button>
+        </ion-card-content>
+      </ion-card>
+    </div>
+  } @else {
+    <div class="terminal-wrap terminal-wrap--active">
+      <app-ssh-terminal [deviceId]="deviceId()"></app-ssh-terminal>
+    </div>
+  }
+
+</ion-content>
