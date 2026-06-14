@@ -1,22 +1,22 @@
 <div class="device-nav">
-  <!-- Group selector -->
-  <div class="device-nav__groups" role="tablist" aria-label="Navigation groups">
-    @for (group of groups(); track group.key) {
-      <button
-        class="device-nav__group"
-        [class.device-nav__group--active]="group.key === activeGroupKey()"
-        (click)="switchGroup(group.key)"
-        type="button"
-        role="tab"
-        [attr.aria-selected]="group.key === activeGroupKey()"
-      >
-        {{ group.label }}
-      </button>
-    }
+  <!-- Group selector — ios pill segment -->
+  <div class="device-nav__segment-wrap">
+    <ion-segment
+      [value]="activeGroupKey()"
+      (ionChange)="switchGroup($any($event).detail.value)"
+      mode="ios"
+      class="device-nav__segment"
+    >
+      @for (group of groups(); track group.key) {
+        <ion-segment-button [value]="group.key" class="device-nav__seg-btn">
+          <ion-label>{{ group.label }}</ion-label>
+        </ion-segment-button>
+      }
+    </ion-segment>
   </div>
 
   <!-- Sub-tabs for the active group -->
-  <nav class="device-tabs" role="tablist" [attr.aria-label]="activeGroupKey() + ' tabs'">
+  <nav class="device-tabs" role="tablist">
     @for (tab of activeTabs(); track tab.path) {
       <a
         class="device-tabs__tab"

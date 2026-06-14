@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, input } from '@an
 import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, startWith } from 'rxjs';
+import { IonSegment, IonSegmentButton, IonLabel } from '@ng/shared/ui';
 import { hasSSH, isSensorDevice } from '../../device-capabilities';
 
 interface Tab {
@@ -22,7 +23,7 @@ interface Group {
   styleUrls: ['device-tab-nav.component.scss'],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, RouterLinkActive],
+  imports: [RouterLink, RouterLinkActive, IonSegment, IonSegmentButton, IonLabel],
 })
 export class DeviceTabNavComponent {
   readonly deviceId = input.required<string>();
