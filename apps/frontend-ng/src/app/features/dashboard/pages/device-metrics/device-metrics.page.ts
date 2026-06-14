@@ -133,10 +133,14 @@ export class DeviceMetricsPage implements OnInit {
   readonly diskLast   = computed(() => lastValue(this.metricData()['disk']));
   readonly tempLast   = computed(() => lastValue(this.metricData()['temperature']));
 
-  readonly cpuColor   = computed(() => cpuColor(this.cpuLast()));
-  readonly memColor   = computed(() => memColor(this.memLast()));
-  readonly diskColor  = computed(() => diskColor(this.diskLast()));
-  readonly tempColor  = computed(() => tempColor(this.tempLast()));
+  readonly cpuIconColor   = computed(() => `var(--ion-color-${cpuColor(this.cpuLast())})`);
+  readonly memIconColor   = computed(() => `var(--ion-color-${memColor(this.memLast())})`);
+  readonly diskIconColor  = computed(() => `var(--ion-color-${diskColor(this.diskLast())})`);
+  readonly tempIconColor  = computed(() => `var(--ion-color-${tempColor(this.tempLast())})`);
+  readonly cpuIconBg      = computed(() => `color-mix(in srgb, var(--ion-color-${cpuColor(this.cpuLast())}) 15%, transparent)`);
+  readonly memIconBg      = computed(() => `color-mix(in srgb, var(--ion-color-${memColor(this.memLast())}) 15%, transparent)`);
+  readonly diskIconBg     = computed(() => `color-mix(in srgb, var(--ion-color-${diskColor(this.diskLast())}) 15%, transparent)`);
+  readonly tempIconBg     = computed(() => `color-mix(in srgb, var(--ion-color-${tempColor(this.tempLast())}) 15%, transparent)`);
 
   readonly cpuChart   = computed(() => buildLineChart(this.metricData()['cpu'],         this.period(), '#3880ff', '%'));
   readonly memChart   = computed(() => buildLineChart(this.metricData()['memory'],      this.period(), '#7928ca', '%'));

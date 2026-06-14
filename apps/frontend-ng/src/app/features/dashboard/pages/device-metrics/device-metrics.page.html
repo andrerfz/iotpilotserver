@@ -27,10 +27,10 @@
   } @else {
     <!-- Current-value cards -->
     <div class="metrics-cards">
-      <ui-metric-card label="CPU Usage"    [value]="fmt(cpuLast(), '%')"  [color]="cpuColor()"></ui-metric-card>
-      <ui-metric-card label="Memory"       [value]="fmt(memLast(), '%')"  [color]="memColor()"></ui-metric-card>
-      <ui-metric-card label="Disk Usage"   [value]="fmt(diskLast(), '%')" [color]="diskColor()"></ui-metric-card>
-      <ui-metric-card label="Temperature"  [value]="fmt(tempLast(), '°C')" [color]="tempColor()"></ui-metric-card>
+      <ui-metric-card label="CPU Usage"   [value]="fmt(cpuLast(), '%')"   [iconColor]="cpuIconColor()"  [iconBg]="cpuIconBg()"></ui-metric-card>
+      <ui-metric-card label="Memory"      [value]="fmt(memLast(), '%')"   [iconColor]="memIconColor()"  [iconBg]="memIconBg()"></ui-metric-card>
+      <ui-metric-card label="Disk Usage"  [value]="fmt(diskLast(), '%')"  [iconColor]="diskIconColor()" [iconBg]="diskIconBg()"></ui-metric-card>
+      <ui-metric-card label="Temperature" [value]="fmt(tempLast(), '°C')" [iconColor]="tempIconColor()" [iconBg]="tempIconBg()"></ui-metric-card>
     </div>
 
     <!-- Line charts -->
