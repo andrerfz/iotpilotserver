@@ -44,6 +44,115 @@
  */
 ion-card {
   --border-radius: var(--r-lg);
+  --background: var(--surface);
+  /*
+   * Flat prototype `.card` look — Ionic's md ion-card ships a Material drop
+   * shadow + 4px host radius. The prototype panels are flat: a 1px border, no
+   * elevation, --r-lg corners. Override the host so every card across the app
+   * (device detail, dashboard, etc.) matches the design instead of looking
+   * like an Android Material card.
+   */
+  box-shadow: none;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--r-lg);
+  /* Prototype spaces cards via grid/flex gap, never via card margins. */
+  margin: 0;
+}
+
+/*
+ * Flatten Ionic's Material (md) buttons into the prototype `.btn` system.
+ * Ionic md buttons ship UPPERCASE text, a ripple, drop-shadow elevation, a 4px
+ * radius and a 36px height — none of which exist in the flat prototype design.
+ * We strip those traits globally (no markup changes) and map the fill variants:
+ *   fill="solid"   → filled (keeps the themed color via --ion-color-*)
+ *   fill="outline" → .btn--ghost  (neutral) / colored outline (themed)
+ *   fill="clear"   → .btn--subtle (neutral) / colored clear (themed)
+ */
+ion-button {
+  --border-radius: var(--r-sm);
+  --box-shadow: none;
+  --ripple-color: transparent;
+  height: 34px;
+  min-height: 34px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 550;
+  text-transform: none;
+  letter-spacing: normal;
+  margin-top: 0;
+  margin-bottom: 0;
+
+  &::part(native) {
+    text-transform: none;
+    letter-spacing: normal;
+  }
+}
+
+ion-button[size="small"] {
+  height: 28px;
+  min-height: 28px;
+  font-size: 12px;
+}
+
+/* Neutral ghost — outline with no themed color (prototype `.btn--ghost`). */
+ion-button[fill="outline"]:not([color]),
+ion-button[fill="outline"][color="medium"] {
+  --background: var(--surface);
+  --background-hover: var(--surface-2);
+  --background-hover-opacity: 1;
+  --background-activated: var(--surface-2);
+  --background-activated-opacity: 1;
+  --border-width: 1px;
+  --border-color: var(--ui-border);
+  --color: var(--text);
+}
+
+/* Neutral subtle — clear with no themed color (prototype `.btn--subtle`). */
+ion-button[fill="clear"]:not([color]),
+ion-button[fill="clear"][color="medium"] {
+  --background-hover: var(--surface-2);
+  --background-hover-opacity: 1;
+  --color: var(--text-muted);
+}
+
+/*
+ * Flatten the remaining Material controls (toggles, segments, sliders) into the
+ * prototype palette. The kit's ui-switch / threshold sheet already theme these
+ * via CSS variables; promote the same values to global defaults so raw Ionic
+ * controls (e.g. the settings pages) match too. Scoped component styles keep
+ * their higher specificity and still win where present.
+ */
+ion-toggle {
+  --track-background: var(--surface-3);
+  --track-background-checked: var(--primary);
+  --handle-background: var(--text);
+  --handle-background-checked: var(--primary-ink);
+}
+
+ion-segment {
+  --background: var(--surface-2);
+  border-radius: var(--r-sm);
+}
+
+ion-segment-button {
+  --background-checked: var(--surface);
+  --indicator-color: var(--surface);
+  --color: var(--text-muted);
+  --color-checked: var(--text);
+  --border-radius: var(--r-sm);
+  font-family: var(--font-sans);
+  font-weight: 550;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+ion-range {
+  --bar-height: 4px;
+  --bar-border-radius: 2px;
+  --knob-size: 20px;
+  --bar-background: var(--ui-border);
+  --bar-background-active: var(--primary);
+  --knob-background: var(--primary);
 }
 
 /*
@@ -71,6 +180,75 @@ ion-menu {
 
 [data-theme="dark"] ion-content {
   --background: transparent;
+}
+
+/*
+ * Settings hub uses Angular's <router-outlet> (not ion-router-outlet), so the
+ * routed page component never receives Ionic's `.ion-page` sizing and collapses
+ * to height:0 — its <ion-content> then clips everything but the card header.
+ * These hosts are created by the router outside the hub's view-encapsulation
+ * scope, so they must be sized from global CSS. Make each a flex column that
+ * fills the hub's remaining height so the inner ion-content can size and scroll.
+ */
+app-settings-profile,
+app-settings-notifications,
+app-settings-security,
+app-settings-system {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* ── Skeleton shimmer ────────────────────────────────────────────────────────
+ * Global keyframes + utility class. Any element with class="sk" gets the
+ * animated shimmer. Component loading states use this directly in templates.
+ */
+@keyframes sk-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+.sk {
+  display: block;
+  border-radius: var(--r-sm);
+  background: linear-gradient(
+    90deg,
+    var(--surface-2)  0%,
+    var(--surface-3) 50%,
+    var(--surface-2) 100%
+  );
+  background-size: 200% 100%;
+  animation: sk-shimmer 1.4s ease-in-out infinite;
+}
+
+/*
+ * Shared action row for all settings sub-pages: right-aligned on desktop,
+ * full-width button on mobile. Applied globally so view-encapsulation doesn't
+ * prevent it from reaching ion-button (a custom element host).
+ */
+.settings-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+
+  @media (max-width: 640px) {
+    flex-direction: column;
+    ion-button { width: 100%; }
+  }
+}
+
+/*
+ * Mobile bottom-nav floats over the page (position: fixed, out of flex flow).
+ * Add scroll padding so the last page content is never hidden under the bar.
+ * Both selectors needed: `ion-content` for base, `ion-content.ion-padding` to
+ * win over Ionic's padding.css rule (same specificity, but our file loads last).
+ */
+@media (max-width: 1079px) {
+  ion-content,
+  ion-content.ion-padding {
+    --padding-bottom: calc(56px + 20px + env(safe-area-inset-bottom));
+  }
 }
 
 /*

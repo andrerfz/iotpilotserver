@@ -1,128 +1,100 @@
 <ion-content class="ion-padding">
-  @if (isLoading()) {
-    <div class="profile-loading">
-      <ion-spinner name="crescent" />
-    </div>
-  } @else {
-    <div class="profile-cards">
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Profile</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <div class="profile-form">
 
-      <!-- Personal Information -->
-      <ion-card>
-        <ion-card-header>
-          <ion-card-title>Personal Information</ion-card-title>
-        </ion-card-header>
-        <ion-card-content>
-          <div class="profile-form">
-            <div class="profile-grid">
-              <ui-input
-                [formControl]="personalForm.controls.firstName"
-                label="First name"
-                placeholder="Enter first name" />
-              <ui-input
-                [formControl]="personalForm.controls.lastName"
-                label="Last name"
-                placeholder="Enter last name" />
-            </div>
+        <div class="profile-grid">
+          <ui-input
+            [loading]="isLoading()"
+            [formControl]="form.controls.firstName"
+            label="First name"
+            placeholder="Enter first name" />
+          <ui-input
+            [loading]="isLoading()"
+            [formControl]="form.controls.lastName"
+            label="Last name"
+            placeholder="Enter last name" />
+        </div>
 
-            <ui-input
-              [formControl]="personalForm.controls.phoneNumber"
-              label="Phone number"
-              placeholder="Enter phone number"
-              class="profile-phone" />
+        <ui-input
+          [loading]="isLoading()"
+          [formControl]="form.controls.phoneNumber"
+          label="Phone number"
+          placeholder="Enter phone number"
+          class="profile-phone" />
 
-            <div class="profile-grid profile-readonly">
-              <ion-item lines="none" class="profile-readonly__item">
-                <ion-label>
-                  <p class="profile-readonly__label">Email</p>
-                  <p class="profile-readonly__value">{{ email() }}</p>
-                  <ion-note>Email cannot be changed here</ion-note>
-                </ion-label>
-              </ion-item>
-              <ion-item lines="none" class="profile-readonly__item">
-                <ion-label>
-                  <p class="profile-readonly__label">Username</p>
-                  <p class="profile-readonly__value">{{ username() }}</p>
-                  <ion-note>Username cannot be changed here</ion-note>
-                </ion-label>
-              </ion-item>
-            </div>
+        <div class="profile-grid profile-readonly">
+          <ion-item lines="none" class="profile-readonly__item">
+            <ion-label>
+              <p class="profile-readonly__label">Email</p>
+              @if (isLoading()) {
+                <span class="sk profile-sk-text"></span>
+              } @else {
+                <p class="profile-readonly__value">{{ email() }}</p>
+              }
+              <ion-note>Email cannot be changed here</ion-note>
+            </ion-label>
+          </ion-item>
+          <ion-item lines="none" class="profile-readonly__item">
+            <ion-label>
+              <p class="profile-readonly__label">Username</p>
+              @if (isLoading()) {
+                <span class="sk profile-sk-text"></span>
+              } @else {
+                <p class="profile-readonly__value">{{ username() }}</p>
+              }
+              <ion-note>Username cannot be changed here</ion-note>
+            </ion-label>
+          </ion-item>
+        </div>
 
-            @if (personalError()) {
-              <p class="profile-msg profile-msg--error">{{ personalError() }}</p>
-            }
-            @if (personalSuccess()) {
-              <p class="profile-msg profile-msg--success">{{ personalSuccess() }}</p>
-            }
+        <div class="profile-divider"></div>
 
-            <div class="profile-actions">
-              <ion-button
-                type="button"
-                fill="solid"
-                color="primary"
-                [disabled]="personalForm.pristine || isSavingPersonal()"
-                (click)="onSavePersonal()"
-              >
-                @if (isSavingPersonal()) {
-                  <ion-spinner name="crescent" slot="start" />
-                  Saving…
-                } @else {
-                  Save Personal Info
-                }
-              </ion-button>
-            </div>
-          </div>
-        </ion-card-content>
-      </ion-card>
+        <ui-select
+          [loading]="isLoading()"
+          [formControl]="form.controls.language"
+          label="Language"
+          [options]="languageOptions" />
 
-      <!-- Display Preferences -->
-      <ion-card>
-        <ion-card-header>
-          <ion-card-title>Display Preferences</ion-card-title>
-        </ion-card-header>
-        <ion-card-content>
-          <div class="profile-form">
-            <ui-select
-              [formControl]="displayForm.controls.language"
-              label="Language"
-              [options]="languageOptions" />
+        <ui-select
+          [loading]="isLoading()"
+          [formControl]="form.controls.timezone"
+          label="Timezone"
+          [options]="timezoneOptions" />
 
-            <ui-select
-              [formControl]="displayForm.controls.timezone"
-              label="Timezone"
-              [options]="timezoneOptions" />
+        <ui-select
+          [loading]="isLoading()"
+          [formControl]="form.controls.dateFormat"
+          label="Date Format"
+          [options]="dateFormatOptions" />
 
-            <ui-select
-              [formControl]="displayForm.controls.dateFormat"
-              label="Date Format"
-              [options]="dateFormatOptions" />
+      </div>
 
-            @if (displayError()) {
-              <p class="profile-msg profile-msg--error">{{ displayError() }}</p>
-            }
-            @if (displaySuccess()) {
-              <p class="profile-msg profile-msg--success">{{ displaySuccess() }}</p>
-            }
-
-            <div class="profile-actions">
-              <ion-button
-                type="button"
-                fill="solid"
-                color="primary"
-                [disabled]="displayForm.pristine || isSavingDisplay()"
-                (click)="onSaveDisplay()"
-              >
-                @if (isSavingDisplay()) {
-                  <ion-spinner name="crescent" slot="start" />
-                  Saving…
-                } @else {
-                  Save Preferences
-                }
-              </ion-button>
-            </div>
-          </div>
-        </ion-card-content>
-      </ion-card>
-
-    </div>
-  }
+      @if (error()) {
+        <p class="profile-msg profile-msg--error">{{ error() }}</p>
+      }
+      @if (success()) {
+        <p class="profile-msg profile-msg--success">{{ success() }}</p>
+      }
+      <div class="settings-actions">
+        <ion-button
+          type="button"
+          fill="solid"
+          color="primary"
+          [disabled]="form.pristine || isSaving() || isLoading()"
+          (click)="onSave()"
+        >
+          @if (isSaving()) {
+            <ion-spinner name="crescent" slot="start" />
+            Saving…
+          } @else {
+            Save changes
+          }
+        </ion-button>
+      </div>
+    </ion-card-content>
+  </ion-card>
 </ion-content>

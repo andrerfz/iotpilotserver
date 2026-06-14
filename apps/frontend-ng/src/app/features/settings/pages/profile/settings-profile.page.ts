@@ -74,24 +74,18 @@ export class SettingsProfilePage implements OnInit {
   readonly email = signal('');
   readonly username = signal('');
 
-  readonly personalForm = this.fb.nonNullable.group({
+  readonly form = this.fb.nonNullable.group({
     firstName: ['', Validators.maxLength(100)],
     lastName: ['', Validators.maxLength(100)],
     phoneNumber: ['', Validators.maxLength(20)],
-  });
-
-  readonly displayForm = this.fb.nonNullable.group({
     language: ['en'],
     timezone: ['UTC'],
     dateFormat: ['MM/DD/YYYY'],
   });
 
-  readonly isSavingPersonal = signal(false);
-  readonly isSavingDisplay = signal(false);
-  readonly personalError = signal('');
-  readonly displayError = signal('');
-  readonly personalSuccess = signal('');
-  readonly displaySuccess = signal('');
+  readonly isSaving = signal(false);
+  readonly error = signal('');
+  readonly success = signal('');
 
   readonly languageOptions = LANGUAGE_OPTIONS;
   readonly timezoneOptions = TIMEZONE_OPTIONS;
@@ -103,12 +97,10 @@ export class SettingsProfilePage implements OnInit {
       const data = (res as unknown as { data?: typeof res }).data ?? res;
       this.email.set(data.email ?? '');
       this.username.set(data.username ?? '');
-      this.personalForm.patchValue({
+      this.form.patchValue({
         firstName: data.firstName ?? '',
         lastName: data.lastName ?? '',
         phoneNumber: data.phoneNumber ?? '',
-      });
-      this.displayForm.patchValue({
         language: data.language ?? 'en',
         timezone: data.timezone ?? 'UTC',
         dateFormat: data.dateFormat ?? 'MM/DD/YYYY',
@@ -120,43 +112,21 @@ export class SettingsProfilePage implements OnInit {
     }
   }
 
-  async onSavePersonal(): Promise<void> {
-    if (this.personalForm.invalid) return;
-    this.isSavingPersonal.set(true);
-    this.personalError.set('');
-    this.personalSuccess.set('');
+  async onSave(): Promise<void> {
+    if (this.form.invalid) return;
+    this.isSaving.set(true);
+    this.error.set('');
+    this.success.set('');
     try {
       await this.api.invoke(updateProfileSettings, {
-        body: { ...this.displayForm.getRawValue(), ...this.personalForm.getRawValue() } as ProfileSettings,
+        body: this.form.getRawValue() as ProfileSettings,
       });
-      this.personalSuccess.set('Personal information saved');
-      this.personalForm.markAsPristine();
+      this.success.set('Changes saved');
+      this.form.markAsPristine();
     } catch (err) {
-      this.personalError.set(
-        err instanceof Error ? err.message : 'Failed to update personal info',
-      );
+      this.error.set(err instanceof Error ? err.message : 'Failed to save changes');
     } finally {
-      this.isSavingPersonal.set(false);
-    }
-  }
-
-  async onSaveDisplay(): Promise<void> {
-    if (this.displayForm.invalid) return;
-    this.isSavingDisplay.set(true);
-    this.displayError.set('');
-    this.displaySuccess.set('');
-    try {
-      await this.api.invoke(updateProfileSettings, {
-        body: { ...this.personalForm.getRawValue(), ...this.displayForm.getRawValue() } as ProfileSettings,
-      });
-      this.displaySuccess.set('Display preferences saved');
-      this.displayForm.markAsPristine();
-    } catch (err) {
-      this.displayError.set(
-        err instanceof Error ? err.message : 'Failed to update preferences',
-      );
-    } finally {
-      this.isSavingDisplay.set(false);
+      this.isSaving.set(false);
     }
   }
 }

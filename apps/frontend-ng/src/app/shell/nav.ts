@@ -7,6 +7,8 @@ export interface NavItem {
   path: string;
   icon: string;
   badge?: string;
+  /** Visible only to ADMIN and SUPERADMIN roles. */
+  adminOnly?: boolean;
 }
 
 export interface NavGroup {
@@ -29,8 +31,11 @@ export const NAV: NavGroup[] = [
   {
     group: 'Administer',
     items: [
-      { label: 'Users', path: 'admin', icon: 'people-outline', badge: '2' },
+      { label: 'Users', path: 'admin', icon: 'people-outline', badge: '2', adminOnly: true },
       { label: 'Settings', path: 'settings', icon: 'settings-outline' },
     ],
   },
 ];
+
+/** Paths shown as primary tabs in the mobile bottom bar. */
+export const PRIMARY_PATHS = new Set(['dashboard', 'devices', 'monitoring']);

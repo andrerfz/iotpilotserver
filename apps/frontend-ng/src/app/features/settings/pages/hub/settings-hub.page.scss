@@ -4,11 +4,15 @@
   height: 100%;
 }
 
+/* NOTE: the routed page host (app-settings-*) is sized in global.scss — it is
+ * rendered by Angular's router outside this component's view-encapsulation scope,
+ * so a scoped `.settings-hub > *` rule cannot reach it. */
+
 .settings-tabs {
   display: flex;
   gap: 0;
   padding: 0 20px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--ui-border);
   background: var(--elevated);
   overflow-x: auto;
   scrollbar-width: none;

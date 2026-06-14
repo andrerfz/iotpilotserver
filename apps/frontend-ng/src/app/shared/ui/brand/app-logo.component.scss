@@ -1,16 +1,22 @@
-/* Ported 1:1 from prototype app.css — ".brand-*". */
 :host { display: inline-flex; }
 
-.logo { display: inline-flex; align-items: center; gap: 10px; }
-.brand-mark {
-  width: 30px; height: 30px; border-radius: 8px; flex: none;
-  background: var(--primary); color: var(--primary-ink);
-  display: grid; place-items: center;
-  box-shadow: 0 0 0 1px var(--primary-line), 0 6px 18px -6px var(--primary);
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+
+  &--v {
+    flex-direction: column;
+    gap: 6px;
+    align-items: center;
+  }
 }
-.brand-mark ion-icon { width: 17px; height: 17px; }
-.logo__text { display: flex; flex-direction: column; }
-.brand-name { font-weight: 600; letter-spacing: -0.01em; font-size: 14.5px; color: var(--text); }
+
+.brand-mark {
+  width: 40px; height: 40px; border-radius: 10px; flex: none;
+  object-fit: contain;
+}
+
 .brand-sub {
   font-family: var(--font-mono); font-size: 10px; color: var(--text-dim);
   letter-spacing: 0.04em; text-transform: uppercase;
