@@ -101,11 +101,10 @@ export class DeviceTabNavComponent {
   }
 
   private childPath(): string {
-    const id = this.deviceId();
-    if (!id) return '';
-    const url = this.router.url.split('?')[0];
-    const idx = url.indexOf(id);
-    if (idx === -1) return '';
-    return url.slice(idx + id.length).replace(/^\//, '');
+    // URL shape: /app/devices/:id[/child]
+    // Segment positions: 0=app 1=devices 2=:id 3=child
+    // No dependency on deviceId() so this is safe to call at construction time.
+    const segments = this.router.url.split('?')[0].split('/').filter(Boolean);
+    return segments[3] ?? '';
   }
 }
