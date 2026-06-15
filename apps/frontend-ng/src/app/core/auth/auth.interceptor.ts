@@ -10,6 +10,7 @@ import { catchError, from, Observable, switchMap, throwError } from 'rxjs';
 import { WITH_CREDENTIALS } from '../api/http-context';
 import { ApiError } from '../errors/api-error';
 import { AuthService } from './auth.service';
+import { TenantContextService } from './tenant-context.service';
 import { TokenStorage } from './token.storage';
 
 /**
@@ -45,13 +46,18 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const tokens = inject(TokenStorage);
   const auth = inject(AuthService);
   const router = inject(Router);
+  const tenantCtx = inject(TenantContextService);
 
   const withCreds = req.context.get(WITH_CREDENTIALS);
   const skipped = isSkipped(req.url);
 
   return from(tokens.get()).pipe(
     switchMap((token) => {
-      const outgoing = withBearer(req, skipped ? null : token, withCreds);
+      let outgoing = withBearer(req, skipped ? null : token, withCreds);
+      const activeCustomer = tenantCtx.customer();
+      if (activeCustomer && !skipped) {
+        outgoing = outgoing.clone({ setHeaders: { 'X-Customer-Id': activeCustomer.id } });
+      }
 
       return next(outgoing).pipe(
         catchError((err: unknown) => {
