@@ -7,6 +7,7 @@ import { IonIcon } from '@ng/shared/ui';
 import { addIcons } from 'ionicons';
 import { chevronDown, peopleOutline, settingsOutline, closeOutline, searchOutline } from 'ionicons/icons';
 import { AuthService } from '@ng/core/auth/auth.service';
+import { hasRole } from '@ng/core/auth/roles';
 import { AdminStatsService } from '@ng/features/admin/services/admin-stats.service';
 import { TenantContextService, CustomerSummary } from '@ng/core/auth/tenant-context.service';
 import { Api } from '@ng/core/api/generated/api';
@@ -27,7 +28,7 @@ interface Customer { id: string; name: string; status: string; }
         <span class="tenant__logo">{{ logo() }}</span>
         <span class="tenant__main">
           <span class="tenant__name">{{ displayName() }}</span>
-          <span class="tenant__meta">{{ ctx.isActive() ? 'Acting as customer' : 'Platform' }}</span>
+          <span class="tenant__meta">{{ isSuperAdmin() ? (ctx.isActive() ? 'Acting as customer' : 'Platform') : 'Tenant' }}</span>
         </span>
         <ion-icon name="chevron-down" class="tenant__chev" [class.tenant__chev--open]="open()"></ion-icon>
       </button>
@@ -35,7 +36,7 @@ interface Customer { id: string; name: string; status: string; }
       @if (open()) {
         <div class="menu menu--up">
 
-          @if (ctx.isActive()) {
+          @if (isSuperAdmin() && ctx.isActive()) {
             <div class="menu__sec menu__banner">
               <span class="banner__label">Acting as</span>
               <span class="banner__name">{{ ctx.customer()!.name }}</span>
@@ -49,7 +50,7 @@ interface Customer { id: string; name: string; status: string; }
           <div class="menu__sec menu__info">
             <div class="tenant__title">{{ displayName() }}</div>
             <div class="tenant__tags">
-              <span class="badge badge--primary">{{ ctx.isActive() ? 'Customer' : 'Platform' }}</span>
+              <span class="badge badge--primary">{{ isSuperAdmin() ? (ctx.isActive() ? 'Customer' : 'Platform') : 'Tenant' }}</span>
             </div>
             @if (!ctx.isActive()) {
               <div class="tenant__stats">
@@ -59,6 +60,7 @@ interface Customer { id: string; name: string; status: string; }
             }
           </div>
 
+          @if (isSuperAdmin()) {
           <div class="menu__sec menu__picker">
             <div class="picker__label">Switch tenant</div>
             <div class="picker__search">
@@ -83,6 +85,7 @@ interface Customer { id: string; name: string; status: string; }
               }
             </div>
           </div>
+          }
 
           <div class="menu__sec">
             <a class="menu__item" routerLink="admin" (click)="close()"><ion-icon name="people-outline"></ion-icon>Manage users</a>
@@ -117,6 +120,7 @@ export class TenantMenuComponent {
   protected readonly userCount = computed(() => this.stats.data()?.userCount ?? 0);
   protected readonly loading = computed(() => this.stats.loading());
 
+  protected readonly isSuperAdmin = computed(() => hasRole(this.auth.role(), 'SUPERADMIN'));
   protected readonly filteredCustomers = computed(() => {
     const q = this.search().toLowerCase().trim();
     return q ? this.customers().filter(c => c.name.toLowerCase().includes(q)) : this.customers();

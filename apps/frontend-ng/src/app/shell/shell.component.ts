@@ -34,7 +34,7 @@ import { hasRole } from '../core/auth/roles';
       <ion-menu menuId="shell-menu" contentId="shell-main" type="overlay">
         <ion-content class="rail-host">
           <app-rail>
-            @if (isSuperAdmin()) {
+            @if (showTenantMenu()) {
               <app-tenant-menu tenant></app-tenant-menu>
             }
           </app-rail>
@@ -62,6 +62,7 @@ export class ShellComponent {
   private readonly auth = inject(AuthService);
 
   protected readonly isSuperAdmin = computed(() => hasRole(this.auth.role(), 'SUPERADMIN'));
+  protected readonly showTenantMenu = computed(() => hasRole(this.auth.role(), 'ADMIN'));
 
   readonly breadcrumbs = signal<string[]>([]);
   /** Shell base segment (/app or /__shell) so palette commands stay in-tree. */
