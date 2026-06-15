@@ -27,8 +27,8 @@ export const NAV: NavGroup[] = [
     group: 'Operate',
     items: [
       { label: 'Dashboard', path: 'dashboard', icon: 'grid-outline' },
-      { label: 'Devices', path: 'devices', icon: 'hardware-chip-outline', badge: '10' },
-      { label: 'Monitoring', path: 'monitoring', icon: 'notifications-outline', badge: '4' },
+      { label: 'Devices', path: 'devices', icon: 'hardware-chip-outline' },
+      { label: 'Monitoring', path: 'monitoring', icon: 'notifications-outline' },
       { label: 'Logs', path: 'logs', icon: 'document-text-outline' },
     ],
   },
@@ -39,7 +39,7 @@ export const NAV: NavGroup[] = [
         label: 'Overview', path: 'admin', icon: 'stats-chart-outline', exact: true, adminOnly: true,
         children: [
           { label: 'Devices', path: 'admin/devices', icon: 'hardware-chip-outline', adminOnly: true },
-          { label: 'Users',   path: 'admin/users',   icon: 'people-outline', badge: '2', adminOnly: true },
+          { label: 'Users',   path: 'admin/users',   icon: 'people-outline', adminOnly: true },
           { label: 'Logs',    path: 'admin/logs',    icon: 'document-text-outline', adminOnly: true },
           { label: 'System',  path: 'admin/system',  icon: 'server-outline', adminOnly: true },
         ],
