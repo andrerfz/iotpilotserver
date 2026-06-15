@@ -7,7 +7,7 @@ import { ThemeService } from '../theme/theme.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <span class="logo" [class.logo--v]="layout() === 'v'">
-      <img class="brand-mark" [src]="logoSrc()" alt="">
+      <img class="brand-mark" [src]="logoSrc()" [style.width.px]="size()" [style.height.px]="size()" alt="">
       @if (showText()) {
         <span class="brand-sub">{{ sub() }}</span>
       }
@@ -21,6 +21,7 @@ export class AppLogoComponent {
   readonly sub = input('ops console');
   readonly showText = input(true);
   readonly layout = input<'h' | 'v'>('h');
+  readonly size = input(66);
 
   protected logoSrc() {
     return this.theme.theme() === 'dark'
