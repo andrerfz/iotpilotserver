@@ -1,19 +1,19 @@
 import {
-  Component, input, signal, computed, HostListener, ElementRef, inject,
-  ChangeDetectionStrategy,
+  Component, signal, computed, HostListener, ElementRef, inject,
+  ChangeDetectionStrategy, effect,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { IonIcon } from '@ng/shared/ui';
 import { addIcons } from 'ionicons';
 import { chevronDown, peopleOutline, settingsOutline } from 'ionicons/icons';
+import { AuthService } from '@ng/core/auth/auth.service';
+import { AdminStatsService } from '@ng/features/admin/services/admin-stats.service';
 
 addIcons({ chevronDown, peopleOutline, settingsOutline });
 
 /**
- * Tenant block for the rail footer — prototype `TenantMenu`, display-only v1
- * (multi-tenant switching is a deferred backend question). Shows the tenant
- * name + plan · region, with a popover of stats and tenant nav. Tenant data is
- * supplied via inputs (wired to customer data later).
+ * Tenant block for the rail footer — prototype `TenantMenu`.
+ * SUPERADMIN-only: shows platform-wide device/user counts from AdminStatsService.
  */
 @Component({
   selector: 'app-tenant-menu',
@@ -26,7 +26,7 @@ addIcons({ chevronDown, peopleOutline, settingsOutline });
         <span class="tenant__logo">{{ logo() }}</span>
         <span class="tenant__main">
           <span class="tenant__name">{{ name() }}</span>
-          <span class="tenant__meta">{{ plan() }} · {{ region() }}</span>
+          <span class="tenant__meta">Platform</span>
         </span>
         <ion-icon name="chevron-down" class="tenant__chev" [class.tenant__chev--open]="open()"></ion-icon>
       </button>
@@ -36,12 +36,11 @@ addIcons({ chevronDown, peopleOutline, settingsOutline });
           <div class="menu__sec menu__info">
             <div class="tenant__title">{{ name() }}</div>
             <div class="tenant__tags">
-              <span class="badge badge--primary">{{ plan() }}</span>
-              <span class="mono dim">{{ region() }}</span>
+              <span class="badge badge--primary">Platform</span>
             </div>
             <div class="tenant__stats">
-              <span><b>{{ deviceCount() }}</b> devices</span>
-              <span><b>{{ userCount() }}</b> users</span>
+              <span><b>{{ loading() ? '—' : deviceCount() }}</b> devices</span>
+              <span><b>{{ loading() ? '—' : userCount() }}</b> users</span>
             </div>
           </div>
           <div class="menu__sec">
@@ -56,17 +55,28 @@ addIcons({ chevronDown, peopleOutline, settingsOutline });
 })
 export class TenantMenuComponent {
   private readonly host = inject(ElementRef<HTMLElement>);
-
-  readonly name = input('Acme Corp');
-  readonly plan = input('Pro');
-  readonly region = input('EU-West');
-  readonly deviceCount = input(0);
-  readonly userCount = input(0);
+  private readonly auth = inject(AuthService);
+  private readonly stats = inject(AdminStatsService);
 
   protected readonly open = signal(false);
-  protected readonly logo = computed(() =>
-    this.name().split(' ').map(s => s[0]).slice(0, 2).join('').toUpperCase() || 'T',
+
+  protected readonly name = computed(() =>
+    this.auth.currentUser()?.username ?? 'Platform',
   );
+  protected readonly logo = computed(() =>
+    this.name().split(' ').map(s => s[0]).slice(0, 2).join('').toUpperCase() || 'P',
+  );
+  protected readonly deviceCount = computed(() => this.stats.data()?.deviceCount ?? 0);
+  protected readonly userCount = computed(() => this.stats.data()?.userCount ?? 0);
+  protected readonly loading = computed(() => this.stats.loading());
+
+  constructor() {
+    effect(() => {
+      if (!this.stats.data() && !this.stats.loading()) {
+        void this.stats.load();
+      }
+    });
+  }
 
   @HostListener('document:click', ['$event'])
   protected onDocClick(e: MouseEvent): void {
