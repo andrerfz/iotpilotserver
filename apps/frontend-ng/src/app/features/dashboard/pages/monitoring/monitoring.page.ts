@@ -2,6 +2,7 @@ import {
   AfterViewInit,
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   OnInit,
   TemplateRef,
   ViewChild,
@@ -42,6 +43,7 @@ import type { ColumnDef, DevicePickerItem, PickerOption } from '@ng/shared/ui';
 import type { Alert } from '@ng/core/api/generated/models/alert';
 import { DashboardService } from '../../services/dashboard.service';
 import { applyAlertFilters, alertState } from '../../filters/alert-filters';
+import { TopbarService } from '../../../../shell/topbar.service';
 
 addIcons({ alertCircleOutline, checkmarkCircleOutline, settingsOutline });
 
@@ -101,6 +103,8 @@ function presetToTimeRange(preset: string): { startTime?: string; endTime?: stri
 export class MonitoringPage implements OnInit, AfterViewInit {
   private readonly dashService = inject(DashboardService);
   private readonly router = inject(Router);
+  private readonly topbar = inject(TopbarService);
+  private readonly destroy = inject(DestroyRef);
 
   readonly alertsLoading = this.dashService.alerts.loading;
   readonly alertsError = this.dashService.alerts.error;
@@ -181,6 +185,8 @@ export class MonitoringPage implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
+    this.topbar.set('Monitoring');
+    this.destroy.onDestroy(() => this.topbar.clear());
     void this.dashService.alerts.load({});
     void this.dashService.alertsTrend.load({ period: '7d' });
     if (!this.dashService.devices.data()) {
