@@ -20,7 +20,7 @@ addIcons({ chevronForward, search });
   imports: [IonIcon, AppLogoComponent],
   template: `
     <header class="topbar">
-      <ui-app-logo class="topbar__logo"></ui-app-logo>
+      <ui-app-logo class="topbar__logo" [size]="32" [showText]="false"></ui-app-logo>
 
       <nav class="crumbs">
         @for (c of breadcrumbs(); track $index; let i = $index) {
