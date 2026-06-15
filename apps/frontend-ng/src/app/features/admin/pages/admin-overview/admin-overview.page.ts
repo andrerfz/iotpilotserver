@@ -35,7 +35,6 @@ export class AdminOverviewPage implements OnInit {
 
   ngOnInit(): void {
     this.topbar.set('Admin');
-    this.destroy.onDestroy(() => this.topbar.clear());
     void this.svc.load();
   }
 }

@@ -74,7 +74,6 @@ export class AdminDevicesPage implements OnInit, AfterViewInit {
 
   ngOnInit(): void {
     this.topbar.set('Devices');
-    this.destroy.onDestroy(() => this.topbar.clear());
     void this.svc.load();
   }
 

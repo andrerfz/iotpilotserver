@@ -87,7 +87,6 @@ export class AdminLogsPage implements OnInit {
 
   ngOnInit(): void {
     this.topbar.set('Logs');
-    this.destroyRef.onDestroy(() => this.topbar.clear());
     void this.load();
   }
 

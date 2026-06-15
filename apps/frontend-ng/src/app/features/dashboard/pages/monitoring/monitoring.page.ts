@@ -2,7 +2,6 @@ import {
   AfterViewInit,
   ChangeDetectionStrategy,
   Component,
-  DestroyRef,
   OnInit,
   TemplateRef,
   ViewChild,
@@ -104,7 +103,6 @@ export class MonitoringPage implements OnInit, AfterViewInit {
   private readonly dashService = inject(DashboardService);
   private readonly router = inject(Router);
   private readonly topbar = inject(TopbarService);
-  private readonly destroy = inject(DestroyRef);
 
   readonly alertsLoading = this.dashService.alerts.loading;
   readonly alertsError = this.dashService.alerts.error;
@@ -186,7 +184,6 @@ export class MonitoringPage implements OnInit, AfterViewInit {
 
   ngOnInit(): void {
     this.topbar.set('Monitoring');
-    this.destroy.onDestroy(() => this.topbar.clear());
     void this.dashService.alerts.load({});
     void this.dashService.alertsTrend.load({ period: '7d' });
     if (!this.dashService.devices.data()) {

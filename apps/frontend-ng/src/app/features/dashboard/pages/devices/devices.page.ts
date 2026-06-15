@@ -167,7 +167,6 @@ export class DevicesPage implements OnInit, AfterViewInit {
 
   ngOnInit(): void {
     this.topbar.set('Devices', { icon: 'add-outline', handler: () => this.onRegisterDevice() });
-    this.destroy.onDestroy(() => this.topbar.clear());
     void this.dashService.devices.load({ limit: 50 });
   }
 

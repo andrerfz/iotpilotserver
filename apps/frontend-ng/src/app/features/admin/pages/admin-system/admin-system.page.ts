@@ -40,7 +40,6 @@ export class AdminSystemPage implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.topbar.clear();
     this.svc.stopAutoRefresh();
   }
 

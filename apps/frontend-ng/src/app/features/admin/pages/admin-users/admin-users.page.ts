@@ -78,7 +78,6 @@ export class AdminUsersPage implements OnInit, AfterViewInit {
 
   ngOnInit(): void {
     this.topbar.set('Users', { icon: 'add-outline', handler: () => this.openNewUserModal() });
-    this.destroy.onDestroy(() => this.topbar.clear());
     void this.svc.load();
   }
 
