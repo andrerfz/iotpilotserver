@@ -9,14 +9,15 @@ import { addIcons } from 'ionicons';
 import {
   gridOutline, hardwareChipOutline, notificationsOutline, settingsOutline,
   ellipsisHorizontal, documentTextOutline, peopleOutline,
-  moonOutline, sunnyOutline, logOutOutline, businessOutline,
+  moonOutline, sunnyOutline, logOutOutline,
 } from 'ionicons/icons';
+
 import { NAV, NavItem, PRIMARY_PATHS } from './nav';
 
 addIcons({
   gridOutline, hardwareChipOutline, notificationsOutline, settingsOutline,
   ellipsisHorizontal, documentTextOutline, peopleOutline,
-  moonOutline, sunnyOutline, logOutOutline, businessOutline,
+  moonOutline, sunnyOutline, logOutOutline,
 });
 
 @Component({
@@ -91,10 +92,6 @@ addIcons({
             <a class="more-tile" routerLink="admin/users" routerLinkActive="more-tile--active" (click)="close()">
               <span class="more-tile__icon"><ion-icon name="people-outline"></ion-icon></span>
               <span class="more-tile__label">Manage users</span>
-            </a>
-            <a class="more-tile" routerLink="settings" routerLinkActive="more-tile--active" (click)="close()">
-              <span class="more-tile__icon"><ion-icon name="business-outline"></ion-icon></span>
-              <span class="more-tile__label">Tenant settings</span>
             </a>
           </div>
         </div>
