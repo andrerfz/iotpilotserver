@@ -5,9 +5,10 @@ import { ThemeService } from '../theme/theme.service';
   selector: 'ui-app-logo',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { '[style.--ui-logo-size.px]': 'size()' },
   template: `
     <span class="logo" [class.logo--v]="layout() === 'v'">
-      <img class="brand-mark" [src]="logoSrc()" [style.width.px]="size()" [style.height.px]="size()" alt="">
+      <img class="brand-mark" [src]="logoSrc()" alt="">
       @if (showText()) {
         <span class="brand-sub">{{ sub() }}</span>
       }

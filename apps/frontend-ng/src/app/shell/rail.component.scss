@@ -69,3 +69,10 @@
 }
 
 .rail__foot { border-top: 1px solid var(--ui-border); padding: 16px 12px; }
+
+@media (max-width: 1079px) {
+  .rail__brand {
+    height: 56px;
+    ui-app-logo { --ui-logo-size: 40px !important; }
+  }
+}

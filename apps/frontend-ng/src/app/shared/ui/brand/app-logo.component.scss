@@ -13,6 +13,8 @@
 }
 
 .brand-mark {
+  width: var(--ui-logo-size, 44px);
+  height: var(--ui-logo-size, 44px);
   border-radius: 10px; flex: none;
   object-fit: contain;
 }
