@@ -4,18 +4,19 @@ import {
 import { RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { IonIcon, ThemeService } from '@ng/shared/ui';
 import { AuthService } from '../core/auth/auth.service';
+import { hasRole } from '../core/auth/roles';
 import { addIcons } from 'ionicons';
 import {
   gridOutline, hardwareChipOutline, notificationsOutline, settingsOutline,
   ellipsisHorizontal, documentTextOutline, peopleOutline,
-  moonOutline, sunnyOutline, logOutOutline,
+  moonOutline, sunnyOutline, logOutOutline, businessOutline,
 } from 'ionicons/icons';
 import { NAV, NavItem, PRIMARY_PATHS } from './nav';
 
 addIcons({
   gridOutline, hardwareChipOutline, notificationsOutline, settingsOutline,
   ellipsisHorizontal, documentTextOutline, peopleOutline,
-  moonOutline, sunnyOutline, logOutOutline,
+  moonOutline, sunnyOutline, logOutOutline, businessOutline,
 });
 
 @Component({
@@ -81,6 +82,23 @@ addIcons({
           </div>
         </div>
       }
+
+      @if (isSuperAdmin()) {
+        <div class="more-sep"></div>
+        <div class="more-section">
+          <div class="more-section__label">Tenant</div>
+          <div class="more-grid">
+            <a class="more-tile" routerLink="admin/users" routerLinkActive="more-tile--active" (click)="close()">
+              <span class="more-tile__icon"><ion-icon name="people-outline"></ion-icon></span>
+              <span class="more-tile__label">Manage users</span>
+            </a>
+            <a class="more-tile" routerLink="settings" routerLinkActive="more-tile--active" (click)="close()">
+              <span class="more-tile__icon"><ion-icon name="business-outline"></ion-icon></span>
+              <span class="more-tile__label">Tenant settings</span>
+            </a>
+          </div>
+        </div>
+      }
     </div>
 
     <!-- Bottom bar -->
@@ -114,7 +132,8 @@ export class BottomNavComponent {
   protected readonly adminNav = this.allItems.filter(it => it.adminOnly);
 
   protected readonly role = computed(() => this.auth.role() ?? 'USER');
-  protected readonly showAdmin = computed(() => ['ADMIN', 'SUPERADMIN'].includes(this.role()));
+  protected readonly showAdmin = computed(() => hasRole(this.role(), 'ADMIN'));
+  protected readonly isSuperAdmin = computed(() => hasRole(this.role(), 'SUPERADMIN'));
 
   protected readonly themeIcon = computed(() =>
     this.themeService.theme() === 'dark' ? 'sunny-outline' : 'moon-outline',

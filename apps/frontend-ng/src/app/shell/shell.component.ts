@@ -11,6 +11,8 @@ import { BottomNavComponent } from './bottom-nav.component';
 import { CommandPaletteComponent, CommandItem } from './command-palette.component';
 import { breadcrumbFromSnapshot } from './breadcrumbs';
 import { NAV } from './nav';
+import { AuthService } from '../core/auth/auth.service';
+import { hasRole } from '../core/auth/roles';
 
 /**
  * App shell — `ion-split-pane` with the rail inline ≥1080px and an overlay
@@ -32,7 +34,9 @@ import { NAV } from './nav';
       <ion-menu menuId="shell-menu" contentId="shell-main" type="overlay">
         <ion-content class="rail-host">
           <app-rail>
-            <app-tenant-menu tenant></app-tenant-menu>
+            @if (isSuperAdmin()) {
+              <app-tenant-menu tenant></app-tenant-menu>
+            }
           </app-rail>
         </ion-content>
       </ion-menu>
@@ -55,6 +59,9 @@ import { NAV } from './nav';
 export class ShellComponent {
   private readonly router = inject(Router);
   private readonly menuCtrl = inject(MenuController);
+  private readonly auth = inject(AuthService);
+
+  protected readonly isSuperAdmin = computed(() => hasRole(this.auth.role(), 'SUPERADMIN'));
 
   readonly breadcrumbs = signal<string[]>([]);
   /** Shell base segment (/app or /__shell) so palette commands stay in-tree. */
