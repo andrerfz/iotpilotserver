@@ -65,7 +65,7 @@ reach **done**. Estimates are dev-days for one senior dev.
 | [fe-dashboard](fe-dashboard/) | Home, device list, MetricsDashboard (ECharts) | fe-ui-kit | 4–6 | ✅ | ✅ done |
 | [fe-device-detail](fe-device-detail/) | Device overview, alerts, commands, logs, network, storage, add | fe-dashboard | 7–10 | ✅ | ✅ done |
 | fe-device-advanced | Real-time metrics charts, SSH terminal (xterm), device settings (split the 1,011-line page) | fe-device-detail | 6–9 | ✅ | ✅ done |
-| fe-admin | Admin stats, devices, users, users/new, logs, system | fe-ui-kit | 4–6 | ⏳ deepen | pending |
+| fe-admin | Admin stats, devices, users, users/new, logs, system | fe-ui-kit | 4–6 | ✅ | pending |
 | fe-mobile | Capacitor iOS/Android, push (FCM/APNs), touch UX, signed builds | all page modules | 6–9 | ⏳ deepen | pending |
 | fe-cutover | Test migration, parity QA, Traefik switch, remove `apps/frontend` | all | 8–12 | ⏳ deepen | pending |
 

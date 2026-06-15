@@ -146,10 +146,10 @@ export class DeviceServiceProvider implements BoundedContextProvider {
     // SSH — server-side only to avoid bundling ssh2 in client
     if (typeof (globalThis as any).window === 'undefined') {
       try {
-        const {ExecuteSSHCommand} = require('@iotpilot/core/device/application/commands/execute-ssh-command/execute-ssh-command.command');
+        const {ExecuteSshCommandCommand} = require('@iotpilot/core/device/application/commands/execute-ssh-command/execute-ssh-command.command');
         const {ExecuteSSHCommandHandler} = require('@iotpilot/core/device/application/commands/execute-ssh-command/execute-ssh-command.handler');
         const sshConnector = container.resolve('NodeSSHConnectorService');
-        commandBus.register(ExecuteSSHCommand, new ExecuteSSHCommandHandler(sshConnector, deviceRepo, eventBus));
+        commandBus.register(ExecuteSshCommandCommand, new ExecuteSSHCommandHandler(sshConnector, deviceRepo, eventBus));
       } catch {
         console.warn('[DeviceProvider] SSH handler not registered (ssh2 module not loaded)');
       }

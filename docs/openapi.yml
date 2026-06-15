@@ -2230,6 +2230,59 @@ paths:
       responses:
         '200':
           description: CPU, memory, DB counts, app info
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  system:
+                    type: object
+                    properties:
+                      platform: { type: string }
+                      nodeVersion: { type: string }
+                      uptime: { type: number }
+                      cpuUsage: { type: number }
+                      memoryUsage:
+                        type: object
+                        properties:
+                          used: { type: number }
+                          total: { type: number }
+                          percentage: { type: number }
+                  database:
+                    type: object
+                    properties:
+                      status: { type: string }
+                      version: { type: string }
+                      size: { type: string }
+                      connections:
+                        type: object
+                        properties:
+                          active: { type: number }
+                          idle: { type: number }
+                          max: { type: number }
+                  application:
+                    type: object
+                    properties:
+                      version: { type: string }
+                      environment: { type: string }
+                      buildDate: { type: string }
+                      features:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            name: { type: string }
+                            enabled: { type: boolean }
+                  recentActivity:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        type: { type: string }
+                        description: { type: string }
+                        timestamp: { type: string }
+                        userId: { type: string }
 
   /admin/customers:
     get:
