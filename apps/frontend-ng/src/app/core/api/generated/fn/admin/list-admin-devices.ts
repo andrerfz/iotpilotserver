@@ -14,7 +14,7 @@ export interface ListAdminDevices$Params {
   limit?: number;
 }
 
-export function listAdminDevices(http: HttpClient, rootUrl: string, params?: ListAdminDevices$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
+export function listAdminDevices(http: HttpClient, rootUrl: string, params?: ListAdminDevices$Params, context?: HttpContext): Observable<StrictHttpResponse<Record<string, unknown>>> {
   const rb = new RequestBuilder(rootUrl, listAdminDevices.PATH, 'get');
   if (params) {
     rb.query('status', params.status, {});
@@ -23,11 +23,11 @@ export function listAdminDevices(http: HttpClient, rootUrl: string, params?: Lis
   }
 
   return http.request(
-    rb.build({ responseType: 'text', accept: '*/*', context })
+    rb.build({ responseType: 'json', accept: 'application/json', context })
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return (r as HttpResponse<any>).clone({ body: undefined }) as StrictHttpResponse<void>;
+      return r as StrictHttpResponse<Record<string, unknown>>;
     })
   );
 }

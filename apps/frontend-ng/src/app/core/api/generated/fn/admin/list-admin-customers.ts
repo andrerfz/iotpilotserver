@@ -15,7 +15,7 @@ export interface ListAdminCustomers$Params {
   status?: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED' | 'PENDING';
 }
 
-export function listAdminCustomers(http: HttpClient, rootUrl: string, params?: ListAdminCustomers$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
+export function listAdminCustomers(http: HttpClient, rootUrl: string, params?: ListAdminCustomers$Params, context?: HttpContext): Observable<StrictHttpResponse<Record<string, unknown>>> {
   const rb = new RequestBuilder(rootUrl, listAdminCustomers.PATH, 'get');
   if (params) {
     rb.query('page', params.page, {});
@@ -25,11 +25,11 @@ export function listAdminCustomers(http: HttpClient, rootUrl: string, params?: L
   }
 
   return http.request(
-    rb.build({ responseType: 'text', accept: '*/*', context })
+    rb.build({ responseType: 'json', accept: 'application/json', context })
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return (r as HttpResponse<any>).clone({ body: undefined }) as StrictHttpResponse<void>;
+      return r as StrictHttpResponse<Record<string, unknown>>;
     })
   );
 }
