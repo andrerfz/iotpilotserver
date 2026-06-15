@@ -2,10 +2,11 @@
    the other form controls; the option rows reuse the prototype ".opt" pattern. */
 :host { display: block; }
 
-.ui-field { display: flex; flex-direction: column; gap: 6px; }
+.ui-field { display: flex; flex-direction: column; }
 .ui-field__label {
   font-family: var(--font-mono); font-size: var(--fs-label);
   letter-spacing: var(--ls-label); text-transform: uppercase; color: var(--text-dim);
+  margin-bottom: 6px;
 }
 
 /* Skeleton placeholder — same height as the real select button */

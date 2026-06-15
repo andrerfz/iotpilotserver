@@ -10,13 +10,7 @@
   }
 
   &--active {
-    height: calc(100% - 32px);
-    display: flex;
-    flex-direction: column;
-  }
-
-  app-ssh-terminal {
-    flex: 1;
+    /* terminal manages its own height via dvh — no inherited height needed */
   }
 }
 

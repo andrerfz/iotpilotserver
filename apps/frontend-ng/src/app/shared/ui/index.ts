@@ -67,6 +67,7 @@ export {
   PopoverController,
   AnimationController,
   NavController,
+  MenuController,
 } from '@ionic/angular/standalone';
 
 // Overlays (used via ModalController / ActionSheetController in services)

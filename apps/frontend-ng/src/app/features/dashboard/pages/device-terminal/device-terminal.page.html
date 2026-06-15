@@ -1,4 +1,4 @@
-<ion-content>
+<ion-content [scrollY]="false">
 
   @if (device.loading() && !device.data()) {
     <!-- device still loading — let parent finish -->

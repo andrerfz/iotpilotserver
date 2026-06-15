@@ -28,7 +28,7 @@
 
 .metric-row {
   padding: 12px 0;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--ui-border);
 
   &:last-child {
     border-bottom: none;
@@ -60,7 +60,7 @@
     --bar-height: 4px;
     --bar-border-radius: 2px;
     --knob-size: 20px;
-    --bar-background: var(--border);
+    --bar-background: var(--ui-border);
     --bar-background-active: var(--primary);
     --knob-background: var(--primary);
     padding: 4px 0;

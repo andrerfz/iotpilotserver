@@ -1,7 +1,21 @@
 <ion-content class="ion-padding">
 
   @if (settings.loading() && !settings.data()) {
-    <ion-spinner name="crescent"></ion-spinner>
+    @for (_ of [1, 2, 3]; track $index) {
+      <ion-card>
+        <ion-card-header>
+          <ion-skeleton-text [animated]="true" style="height: 18px; width: 30%; border-radius: 4px;"></ion-skeleton-text>
+        </ion-card-header>
+        <ion-card-content>
+          @for (__ of [1, 2, 3, 4]; track $index) {
+            <div style="display:flex; justify-content:space-between; align-items:center; padding: 10px 0; border-bottom: 1px solid var(--ui-border);">
+              <ion-skeleton-text [animated]="true" style="height: 14px; width: 40%; border-radius: 3px;"></ion-skeleton-text>
+              <ion-skeleton-text [animated]="true" style="height: 14px; width: 25%; border-radius: 3px;"></ion-skeleton-text>
+            </div>
+          }
+        </ion-card-content>
+      </ion-card>
+    }
   } @else if (settings.error() && !settings.data()) {
     <ui-empty-state title="Failed to load settings" [hasAction]="true">
       <ion-button action fill="outline" size="small" (click)="settings.reload()">Retry</ion-button>
