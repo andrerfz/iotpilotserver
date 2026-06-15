@@ -4,7 +4,6 @@
     <ion-segment
       [value]="activeGroupKey()"
       (ionChange)="switchGroup($any($event).detail.value)"
-      mode="ios"
       class="device-nav__segment"
     >
       @for (group of groups(); track group.key) {

@@ -1,0 +1,96 @@
+<ion-content class="ion-padding">
+
+  <app-admin-tabs></app-admin-tabs>
+
+  <!-- Filters -->
+  <ion-card class="filter-bar">
+    <ion-card-content>
+      <div class="filter-row">
+        <ui-search-field placeholder="Search logs…"
+          [value]="searchQuery()" (valueChange)="onSearchInput($event)">
+        </ui-search-field>
+        <ui-select placeholder="All Levels"  [options]="levelOptions"  [(ngModel)]="levelFilter"  (ngModelChange)="onFilterChange()"></ui-select>
+        <ui-select placeholder="All Devices" [options]="deviceOptions()" [(ngModel)]="deviceFilter" (ngModelChange)="onFilterChange()"></ui-select>
+        @if (hasSourceFilter()) {
+          <ui-select placeholder="All Sources" [options]="sourceOptions()" [(ngModel)]="sourceFilter" (ngModelChange)="onFilterChange()"></ui-select>
+        }
+        <div class="filter-row__actions">
+          <ion-button fill="outline" color="medium" size="small" (click)="svc.reload()" [disabled]="svc.loading()">
+            <ion-icon slot="icon-only" name="reload-outline"></ion-icon>
+          </ion-button>
+          <ion-button fill="outline" size="small" (click)="exportCsv()" [disabled]="!svc.logs().length">
+            <ion-icon slot="start" name="download-outline"></ion-icon>
+            Export
+          </ion-button>
+        </div>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Table -->
+  @if (svc.error() && !svc.logs().length) {
+    <ui-empty-state title="Failed to load logs" [hasAction]="true">
+      <ion-button action fill="outline" size="small" (click)="svc.reload()">Retry</ion-button>
+    </ui-empty-state>
+  } @else {
+    <ion-card>
+      <ion-card-content class="logs-table-wrap">
+        <table class="logs-table">
+          <thead>
+            <tr>
+              <th class="col-ts">Timestamp</th>
+              <th class="col-level">Level</th>
+              <th class="col-device">Device</th>
+              <th class="col-source">Source</th>
+              <th>Message</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (svc.loading()) {
+              @for (_ of [1,2,3,4,5]; track $index) {
+                <tr>
+                  <td colspan="5"><ion-skeleton-text [animated]="true" style="height:18px;border-radius:4px;"></ion-skeleton-text></td>
+                </tr>
+              }
+            } @else if (!svc.logs().length) {
+              <tr>
+                <td colspan="5" class="logs-empty">No logs found.</td>
+              </tr>
+            } @else {
+              @for (log of svc.logs(); track log.id) {
+                <tr>
+                  <td class="col-ts">{{ formatTs(log.timestamp) }}</td>
+                  <td class="col-level">
+                    <ion-badge [color]="levelColor(log.level)">{{ log.level }}</ion-badge>
+                  </td>
+                  <td class="col-device">{{ log.device?.hostname ?? '—' }}</td>
+                  <td class="col-source">{{ log.source ?? 'system' }}</td>
+                  <td class="col-msg">{{ log.message }}</td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </ion-card-content>
+
+      <!-- Pagination -->
+      @if (svc.pagination().pages > 1) {
+        <div class="logs-pager">
+          <ion-button fill="clear" size="small"
+            [disabled]="currentPage() <= 1 || svc.loading()"
+            (click)="goToPage(currentPage() - 1)">Previous</ion-button>
+
+          <span class="logs-pager__info">
+            Page {{ currentPage() }} of {{ svc.pagination().pages }}
+            &nbsp;·&nbsp; {{ svc.pagination().total }} total
+          </span>
+
+          <ion-button fill="clear" size="small"
+            [disabled]="currentPage() >= svc.pagination().pages || svc.loading()"
+            (click)="goToPage(currentPage() + 1)">Next</ion-button>
+        </div>
+      }
+    </ion-card>
+  }
+
+</ion-content>

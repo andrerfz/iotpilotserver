@@ -7,8 +7,12 @@ export interface NavItem {
   path: string;
   icon: string;
   badge?: string;
+  /** When true, routerLinkActive uses exact matching (for prefix-free paths). */
+  exact?: boolean;
   /** Visible only to ADMIN and SUPERADMIN roles. */
   adminOnly?: boolean;
+  /** Sub-items always rendered indented below this item. */
+  children?: NavItem[];
 }
 
 export interface NavGroup {
@@ -31,8 +35,15 @@ export const NAV: NavGroup[] = [
   {
     group: 'Administer',
     items: [
-      { label: 'Users', path: 'admin', icon: 'people-outline', badge: '2', adminOnly: true },
-      { label: 'Settings', path: 'settings', icon: 'settings-outline' },
+      {
+        label: 'Overview', path: 'admin', icon: 'stats-chart-outline', exact: true, adminOnly: true,
+        children: [
+          { label: 'Devices', path: 'admin/devices', icon: 'hardware-chip-outline', adminOnly: true },
+          { label: 'Users',   path: 'admin/users',   icon: 'people-outline', badge: '2', adminOnly: true },
+          { label: 'Logs',    path: 'admin/logs',    icon: 'document-text-outline', adminOnly: true },
+          { label: 'System',  path: 'admin/system',  icon: 'server-outline', adminOnly: true },
+        ],
+      },
     ],
   },
 ];

@@ -1,19 +1,5 @@
 <ion-content class="ion-padding">
 
-  <!-- Page head -->
-  <div class="pagehead">
-    <div>
-      <div class="pagehead__title">Devices</div>
-      <div class="pagehead__sub">{{ totalCount() }} device{{ totalCount() !== 1 ? 's' : '' }} registered</div>
-    </div>
-    <div class="pagehead__actions">
-      <ion-button fill="solid" color="primary" (click)="onRegisterDevice()">
-        <ion-icon slot="start" name="add-outline"></ion-icon>
-        Register device
-      </ion-button>
-    </div>
-  </div>
-
   <!-- Loading skeletons -->
   @if (devicesLoading()) {
     <div class="metrics">
@@ -124,13 +110,6 @@
   }
 
 </ion-content>
-
-<!-- Register device FAB -->
-<ion-fab slot="fixed" vertical="bottom" horizontal="end">
-  <ion-fab-button color="primary" (click)="onRegisterDevice()">
-    <ion-icon name="add-outline"></ion-icon>
-  </ion-fab-button>
-</ion-fab>
 
 <!-- Cell templates -->
 <ng-template #deviceCell let-row>

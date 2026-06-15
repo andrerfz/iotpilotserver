@@ -1,0 +1,56 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>New User</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="onCancel()">
+        <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+
+    <ui-input label="Email" type="email" placeholder="user@example.com"
+      formControlName="email" [error]="fieldError('email')">
+    </ui-input>
+
+    <ui-input label="Username" placeholder="johndoe"
+      formControlName="username" [error]="fieldError('username')">
+    </ui-input>
+
+    <ui-input label="Password" type="password" placeholder="Min 8 characters"
+      formControlName="password" [error]="fieldError('password')">
+    </ui-input>
+
+    <ui-select label="Role" [options]="roleOptions"
+      formControlName="role" [error]="fieldError('role')">
+    </ui-select>
+
+    <ui-select label="Customer / Tenant" [options]="customerOptions()"
+      [loading]="customerOptions().length === 0"
+      formControlName="customerId" [error]="fieldError('customerId')"
+      placeholder="Select a customer…">
+    </ui-select>
+
+    @if (error()) {
+      <p class="form-error">{{ error() }}</p>
+    }
+
+  </form>
+</ion-content>
+
+<ion-footer>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button fill="outline" color="medium" (click)="onCancel()">Cancel</ion-button>
+    </ion-buttons>
+    <ion-buttons slot="end">
+      <ion-button fill="solid" color="primary" (click)="onSubmit()" [disabled]="saving()">
+        @if (saving()) { <ion-spinner name="crescent" slot="start"></ion-spinner> }
+        Create User
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-footer>

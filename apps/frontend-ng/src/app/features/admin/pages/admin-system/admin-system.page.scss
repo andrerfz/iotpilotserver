@@ -1,0 +1,91 @@
+.system-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.system-last-updated {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.system-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+
+  ion-card { margin: 0; }
+}
+
+ion-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+}
+
+.info-list {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 16px;
+  margin: 0 0 16px;
+  font-size: 0.85rem;
+
+  dt {
+    color: var(--text-dim);
+    font-weight: 500;
+  }
+}
+
+.resource-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 0.82rem;
+
+  span:first-child {
+    width: 70px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+
+  ion-progress-bar { flex: 1; height: 8px; border-radius: 4px; }
+}
+
+.resource-pct {
+  width: 110px;
+  text-align: right;
+  flex-shrink: 0;
+  font-size: 0.78rem;
+}
+
+.conn-detail {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.features-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+
+  ion-chip { font-size: 0.75rem; height: 24px; }
+}
+
+.activity-card ion-list { padding: 0; }
+
+.act-desc {
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.act-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin: 2px 0 0;
+}

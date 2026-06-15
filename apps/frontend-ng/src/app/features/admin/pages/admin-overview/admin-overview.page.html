@@ -1,0 +1,75 @@
+<ion-content class="ion-padding">
+
+  <app-admin-tabs></app-admin-tabs>
+
+  @if (svc.loading() && !svc.data()) {
+    <div class="overview-stats">
+      @for (_ of [1,2,3,4]; track $index) {
+        <ion-skeleton-text [animated]="true" style="height: 88px; border-radius: 12px;"></ion-skeleton-text>
+      }
+    </div>
+  } @else if (svc.error() && !svc.data()) {
+    <ui-empty-state title="Failed to load stats" [hasAction]="true">
+      <ion-button action fill="outline" size="small" (click)="svc.load()">Retry</ion-button>
+    </ui-empty-state>
+  } @else {
+    <div class="overview-stats">
+      <ui-metric-card label="Total Users" [value]="svc.data()?.userCount ?? 0">
+        <ion-icon icon name="people-outline"></ion-icon>
+      </ui-metric-card>
+      <ui-metric-card label="Total Devices" [value]="svc.data()?.deviceCount ?? 0">
+        <ion-icon icon name="hardware-chip-outline"></ion-icon>
+      </ui-metric-card>
+      <ui-metric-card label="Active Devices" [value]="svc.data()?.activeDevices ?? 0"
+        iconColor="var(--success)" iconBg="var(--success-weak)">
+        <ion-icon icon name="stats-chart-outline"></ion-icon>
+      </ui-metric-card>
+      <ui-metric-card label="Open Alerts" [value]="svc.data()?.alertCount ?? 0"
+        iconColor="var(--danger)" iconBg="var(--danger-weak)">
+        <ion-icon icon name="document-text-outline"></ion-icon>
+      </ui-metric-card>
+    </div>
+  }
+
+  <h3 class="overview-section">Quick Access</h3>
+
+  <div class="overview-links">
+    <a class="overview-link" routerLink="/app/admin/devices">
+      <div class="overview-link__icon">
+        <ion-icon name="hardware-chip-outline"></ion-icon>
+      </div>
+      <div>
+        <div class="overview-link__title">Device Management</div>
+        <div class="overview-link__sub">View, restart and manage all devices</div>
+      </div>
+    </a>
+    <a class="overview-link" routerLink="/app/admin/users">
+      <div class="overview-link__icon">
+        <ion-icon name="people-outline"></ion-icon>
+      </div>
+      <div>
+        <div class="overview-link__title">User Management</div>
+        <div class="overview-link__sub">Approve, suspend and manage accounts</div>
+      </div>
+    </a>
+    <a class="overview-link" routerLink="/app/admin/logs">
+      <div class="overview-link__icon">
+        <ion-icon name="document-text-outline"></ion-icon>
+      </div>
+      <div>
+        <div class="overview-link__title">Logs Viewer</div>
+        <div class="overview-link__sub">Browse and export device logs</div>
+      </div>
+    </a>
+    <a class="overview-link" routerLink="/app/admin/system">
+      <div class="overview-link__icon">
+        <ion-icon name="server-outline"></ion-icon>
+      </div>
+      <div>
+        <div class="overview-link__title">System Health</div>
+        <div class="overview-link__sub">CPU, memory and database status</div>
+      </div>
+    </a>
+  </div>
+
+</ion-content>

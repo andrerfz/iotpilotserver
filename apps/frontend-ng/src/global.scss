@@ -146,6 +146,34 @@ ion-segment-button {
   letter-spacing: normal;
 }
 
+/* Dark mode: surface (13% L) is darker than surface-2 (17% L), so the active pill
+   must use surface-3 (22% L) to be visibly lighter than the track (surface). */
+[data-theme="dark"] ion-segment { --background: var(--surface); }
+[data-theme="dark"] ion-segment-button {
+  --background-checked: var(--surface-3);
+  --indicator-color: var(--surface-3);
+}
+
+/* Filter-row alignment: all controls (inputs, selects, chips, buttons) share 38px. */
+.filter-row ion-button,
+.filterbar ion-button {
+  height: 38px;
+}
+
+/* Icon-only buttons must stay square. */
+.filter-row ion-button:has([slot="icon-only"]),
+.filterbar ion-button:has([slot="icon-only"]) {
+  width: 38px;
+}
+
+/* On mobile the bottom nav is a fixed 56px overlay — push FABs above it.
+   margin-bottom on position:absolute bottom:0 lifts the element by that amount. */
+@media (max-width: 1079px) {
+  ion-fab[vertical="bottom"] {
+    margin-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 ion-range {
   --bar-height: 4px;
   --bar-border-radius: 2px;

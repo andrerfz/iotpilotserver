@@ -52,6 +52,7 @@
 
   ion-icon { width: 22px; height: 22px; }
 
+  &:visited { color: var(--text-muted); }
   &:hover { color: var(--text); }
 
   &--active {
@@ -138,6 +139,7 @@
   border-radius: var(--r-md);
   transition: background .1s;
 
+  &:visited { color: inherit; }
   &:active { background: var(--surface-2); }
 
   &__icon {

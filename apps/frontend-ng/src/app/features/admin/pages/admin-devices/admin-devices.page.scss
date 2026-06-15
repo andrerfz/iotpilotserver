@@ -1,0 +1,30 @@
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.filter-bar {
+  margin-bottom: 16px;
+
+  .filter-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+
+    ui-search-field { flex: 1; min-width: 160px; }
+    ui-select       { flex: 0 0 140px; }
+    ion-button      { flex-shrink: 0; margin: 0; }
+  }
+}
+
+.row-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}

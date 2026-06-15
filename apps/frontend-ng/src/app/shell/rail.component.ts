@@ -1,16 +1,20 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { IonIcon, AppLogoComponent } from '@ng/shared/ui';
 import { addIcons } from 'ionicons';
 import {
   gridOutline, hardwareChipOutline, notificationsOutline,
-  documentTextOutline, peopleOutline, settingsOutline,
+  documentTextOutline, peopleOutline,
+  statsChartOutline, serverOutline,
 } from 'ionicons/icons';
 import { NAV } from './nav';
+import { AuthService } from '../core/auth/auth.service';
+import { hasRole } from '../core/auth/roles';
 
 addIcons({
   gridOutline, hardwareChipOutline, notificationsOutline,
-  documentTextOutline, peopleOutline, settingsOutline,
+  documentTextOutline, peopleOutline,
+  statsChartOutline, serverOutline,
 });
 
 /**
@@ -30,17 +34,31 @@ addIcons({
       </div>
 
       <div class="rail__scroll">
-        @for (g of nav; track g.group) {
+        @for (g of visibleNav(); track g.group) {
           <div class="nav-group">
             <div class="nav-group__label">{{ g.group }}</div>
             @for (it of g.items; track it.path) {
-              <a class="nav-item" [routerLink]="it.path" routerLinkActive="nav-item--active">
+              <a class="nav-item" [routerLink]="it.path" routerLinkActive="nav-item--active"
+                 [routerLinkActiveOptions]="{ exact: it.exact ?? false }">
                 <ion-icon [name]="it.icon"></ion-icon>
                 <span>{{ it.label }}</span>
                 @if (it.badge) {
                   <span class="nav-item__badge">{{ it.badge }}</span>
                 }
               </a>
+              @if (it.children?.length) {
+                <div class="nav-sub">
+                  @for (sub of it.children; track sub.path) {
+                    <a class="nav-sub__item" [routerLink]="sub.path" routerLinkActive="nav-sub__item--active">
+                      <ion-icon [name]="sub.icon"></ion-icon>
+                      <span>{{ sub.label }}</span>
+                      @if (sub.badge) {
+                        <span class="nav-item__badge">{{ sub.badge }}</span>
+                      }
+                    </a>
+                  }
+                </div>
+              }
             }
           </div>
         }
@@ -54,5 +72,18 @@ addIcons({
   styleUrl: './rail.component.scss',
 })
 export class RailComponent {
-  protected readonly nav = NAV;
+  private readonly auth = inject(AuthService);
+
+  protected readonly visibleNav = computed(() => {
+    const isAdmin = hasRole(this.auth.role(), 'ADMIN');
+    return NAV.map(g => ({
+      ...g,
+      items: g.items
+        .filter(it => !it.adminOnly || isAdmin)
+        .map(it => ({
+          ...it,
+          children: it.children?.filter(c => !c.adminOnly || isAdmin),
+        })),
+    })).filter(g => g.items.length > 0);
+  });
 }

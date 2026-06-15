@@ -14,3 +14,13 @@ ion-menu { --width: var(--rail-w); --background: var(--elevated); }
   background: var(--bg);
 }
 ion-router-outlet { position: relative; flex: 1; min-height: 0; overflow: hidden; }
+
+/* Lightweight CSS fade on page enter — avoids Ionic's custom [animation] lifecycle bugs.
+   ::ng-deep needed because .ion-page elements are injected by the router, not in this template. */
+ion-router-outlet ::ng-deep > .ion-page {
+  animation: page-enter 0.16s ease-out both;
+}
+@keyframes page-enter {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}

@@ -2,8 +2,7 @@ import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@a
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
-import { createAnimation } from '@ionic/angular';
-import { IonSplitPane, IonMenu, IonContent, IonRouterOutlet, MaintenanceBannerComponent, NetworkStatusComponent } from '@ng/shared/ui';
+import { IonSplitPane, IonMenu, IonContent, IonRouterOutlet, MaintenanceBannerComponent, NetworkStatusComponent, MenuController } from '@ng/shared/ui';
 import { RailComponent } from './rail.component';
 import { TopbarComponent } from './topbar.component';
 import { UserMenuComponent } from './user-menu.component';
@@ -44,7 +43,7 @@ import { NAV } from './nav';
         </app-topbar>
         <ui-maintenance-banner [message]="maintenanceMessage()"></ui-maintenance-banner>
         <ui-network-status></ui-network-status>
-        <ion-router-outlet [animation]="fadeAnimation"></ion-router-outlet>
+        <ion-router-outlet [animated]="false"></ion-router-outlet>
         <app-bottom-nav></app-bottom-nav>
       </div>
     </ion-split-pane>
@@ -55,19 +54,12 @@ import { NAV } from './nav';
 })
 export class ShellComponent {
   private readonly router = inject(Router);
+  private readonly menuCtrl = inject(MenuController);
 
   readonly breadcrumbs = signal<string[]>([]);
   /** Shell base segment (/app or /__shell) so palette commands stay in-tree. */
   protected readonly base = signal('/app');
 
-  protected readonly fadeAnimation = (
-    _baseEl: HTMLElement,
-    opts: { enteringEl: HTMLElement; leavingEl: HTMLElement },
-  ) => {
-    const enter = createAnimation().addElement(opts.enteringEl).duration(180).easing('ease-out').fromTo('opacity', '0', '1');
-    const leave = createAnimation().addElement(opts.leavingEl).duration(180).easing('ease-out').fromTo('opacity', '1', '0');
-    return createAnimation().addAnimation([enter, leave]);
-  };
   protected readonly paletteOpen = signal(false);
   /** Maintenance banner copy; empty hides it. Wired to a system setting later. */
   protected readonly maintenanceMessage = signal('');
@@ -90,6 +82,7 @@ export class ShellComponent {
     const update = () => {
       this.breadcrumbs.set(breadcrumbFromSnapshot(this.router.routerState.snapshot.root));
       this.base.set('/' + (this.router.url.split('/')[1] || 'app'));
+      void this.menuCtrl.close('shell-menu');
     };
     this.router.events
       .pipe(filter(e => e instanceof NavigationEnd), takeUntilDestroyed())

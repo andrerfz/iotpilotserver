@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { roleGuard } from '../core/auth/guards';
 
 /**
  * Child routes rendered inside the shell outlet. Each carries `breadcrumb`
@@ -49,8 +50,9 @@ export const SHELL_CHILDREN: Routes = [
   },
   {
     path: 'admin',
-    loadComponent: () => import('./placeholder.page').then(m => m.PlaceholderPage),
-    data: { breadcrumb: ['Administer', 'Users'], title: 'Users', sub: 'Accounts, roles & access' },
+    canActivate: [roleGuard('ADMIN')],
+    loadChildren: () =>
+      import('../features/admin/admin.routes').then(m => m.ADMIN_ROUTES),
   },
   {
     path: 'settings',

@@ -136,4 +136,17 @@
   --ion-color-step-50:          var(--surface-2);
   --ion-color-step-100:         var(--surface-3);
   --ion-color-step-150:         var(--border-strong);
+
+  /*
+   * Text steps — Ionic components use these for headings and labels.
+   * Without mapping, they fall back to Ionic's light-palette values
+   * (e.g. step-850 = #262626) which are unreadable in dark mode.
+   * ion-card-title, ion-card-subtitle, ion-list-header all use step-600+.
+   */
+  --ion-color-step-600:         var(--text-muted);
+  --ion-color-step-700:         var(--text-dim);
+  --ion-color-step-800:         var(--text-muted);
+  --ion-color-step-850:         var(--text);
+  --ion-color-step-900:         var(--text);
+  --ion-color-step-950:         var(--text);
 }

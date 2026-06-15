@@ -2,6 +2,7 @@ import {
   AfterViewInit,
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   OnInit,
   TemplateRef,
   ViewChild,
@@ -32,8 +33,6 @@ import {
   IonCard,
   IonCardContent,
   IonContent,
-  IonFab,
-  IonFabButton,
   IonIcon,
   IonSkeletonText,
   MetricCardComponent,
@@ -48,6 +47,7 @@ import { SocketService } from '@ng/core/realtime/socket.service';
 import { DashboardService } from '../../services/dashboard.service';
 import { applyDeviceFilters } from '../../filters/device-filters';
 import { RegisterDeviceSheetComponent } from '../../components/register-device-sheet/register-device-sheet.component';
+import { TopbarService } from '../../../../shell/topbar.service';
 
 addIcons({
   addOutline,
@@ -81,8 +81,6 @@ const STATUS_OPTIONS: PickerOption[] = [
     IonCardContent,
     IonSkeletonText,
     UiSearchFieldComponent,
-    IonFab,
-    IonFabButton,
     MetricCardComponent,
     DataTableComponent,
     StatusBadgeComponent,
@@ -97,6 +95,8 @@ export class DevicesPage implements OnInit, AfterViewInit {
   private readonly dashService = inject(DashboardService);
   private readonly socketService = inject(SocketService);
   private readonly router = inject(Router);
+  private readonly topbar = inject(TopbarService);
+  private readonly destroy = inject(DestroyRef);
 
   readonly devicesLoading = this.dashService.devices.loading;
   readonly devicesError = this.dashService.devices.error;
@@ -166,6 +166,8 @@ export class DevicesPage implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
+    this.topbar.set('Devices', { icon: 'add-outline', handler: () => this.onRegisterDevice() });
+    this.destroy.onDestroy(() => this.topbar.clear());
     void this.dashService.devices.load({ limit: 50 });
   }
 

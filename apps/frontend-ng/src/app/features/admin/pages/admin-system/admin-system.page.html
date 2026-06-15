@@ -1,0 +1,156 @@
+<ion-content class="ion-padding">
+
+  <app-admin-tabs></app-admin-tabs>
+
+  <div class="system-header">
+    <span class="system-last-updated">
+      @if (svc.lastUpdated()) {
+        Last updated: {{ formatTs(svc.lastUpdated()!.toISOString()) }}
+      }
+    </span>
+    <ion-button fill="outline" size="small" (click)="svc.load()" [disabled]="svc.loading()">
+      <ion-icon slot="start" name="reload-outline"></ion-icon>
+      Refresh
+    </ion-button>
+  </div>
+
+  @if (svc.error() && !svc.data()) {
+    <ui-empty-state title="Failed to load system info" [hasAction]="true">
+      <ion-button action fill="outline" size="small" (click)="svc.load()">Retry</ion-button>
+    </ui-empty-state>
+  } @else if (!svc.data() && svc.loading()) {
+    <div class="system-grid">
+      @for (_ of [1,2,3]; track $index) {
+        <ion-card>
+          <ion-card-content>
+            <ion-skeleton-text [animated]="true" style="height:120px;border-radius:4px;"></ion-skeleton-text>
+          </ion-card-content>
+        </ion-card>
+      }
+    </div>
+  } @else if (svc.data(); as info) {
+    <div class="system-grid">
+
+      <!-- System card -->
+      @if (info.system; as sys) {
+      <ion-card>
+        <ion-card-header>
+          <ion-card-title>
+            <ion-icon name="server-outline"></ion-icon> System
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <dl class="info-list">
+            <dt>Platform</dt><dd>{{ sys.platform }}</dd>
+            <dt>Node.js</dt><dd>{{ sys.nodeVersion }}</dd>
+            <dt>Uptime</dt><dd>{{ formatUptime(sys.uptime) }}</dd>
+          </dl>
+          <div class="resource-row">
+            <span>CPU</span>
+            <ion-progress-bar
+              [value]="sys.cpuUsage / 100"
+              [color]="sys.cpuUsage > 80 ? 'danger' : sys.cpuUsage > 60 ? 'warning' : 'success'">
+            </ion-progress-bar>
+            <span class="resource-pct">{{ sys.cpuUsage.toFixed(0) }}%</span>
+          </div>
+          <div class="resource-row">
+            <span>Memory</span>
+            <ion-progress-bar
+              [value]="sys.memoryUsage.percentage / 100"
+              [color]="sys.memoryUsage.percentage > 80 ? 'danger' : sys.memoryUsage.percentage > 60 ? 'warning' : 'success'">
+            </ion-progress-bar>
+            <span class="resource-pct">
+              {{ formatBytes(sys.memoryUsage.used) }} / {{ formatBytes(sys.memoryUsage.total) }}
+            </span>
+          </div>
+        </ion-card-content>
+      </ion-card>
+      }
+
+      <!-- Database card -->
+      @if (info.database; as db) {
+      <ion-card>
+        <ion-card-header>
+          <ion-card-title>
+            <ion-icon name="layers-outline"></ion-icon> Database
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <dl class="info-list">
+            <dt>Status</dt>
+            <dd>
+              <ion-badge [color]="db.status === 'connected' ? 'success' : 'danger'">
+                {{ db.status }}
+              </ion-badge>
+            </dd>
+            <dt>Version</dt><dd>{{ db.version }}</dd>
+            <dt>Size</dt><dd>{{ db.size }}</dd>
+          </dl>
+          <div class="resource-row">
+            <span>Connections</span>
+            <ion-progress-bar
+              [value]="dbConnPct(db)"
+              [color]="dbColor(db)">
+            </ion-progress-bar>
+            <span class="resource-pct">
+              {{ db.connections.active }} / {{ db.connections.max }}
+            </span>
+          </div>
+          <p class="conn-detail">{{ db.connections.idle }} idle</p>
+        </ion-card-content>
+      </ion-card>
+      }
+
+      <!-- Application card -->
+      @if (info.application; as app) {
+      <ion-card>
+        <ion-card-header>
+          <ion-card-title>
+            <ion-icon name="albums-outline"></ion-icon> Application
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <dl class="info-list">
+            <dt>Version</dt><dd>{{ app.version }}</dd>
+            <dt>Environment</dt>
+            <dd>
+              <ion-badge [color]="app.environment === 'production' ? 'success' : 'warning'">
+                {{ app.environment }}
+              </ion-badge>
+            </dd>
+            <dt>Built</dt><dd>{{ app.buildDate }}</dd>
+          </dl>
+          <div class="features-row">
+            @for (feat of app.features; track feat.name) {
+              <ion-chip [color]="feat.enabled ? 'success' : 'medium'" [outline]="!feat.enabled">
+                {{ feat.name }}
+              </ion-chip>
+            }
+          </div>
+        </ion-card-content>
+      </ion-card>
+      }
+
+    </div>
+
+    <!-- Recent activity -->
+    @if (info.recentActivity?.length) {
+      <ion-card class="activity-card">
+        <ion-card-header>
+          <ion-card-title>Recent Activity</ion-card-title>
+        </ion-card-header>
+        <ion-list lines="full">
+          @for (act of info.recentActivity; track act.id) {
+            <ion-item>
+              <ion-label>
+                <p class="act-desc">{{ act.description }}</p>
+                <p class="act-meta">{{ act.type }} · {{ formatTs(act.timestamp) }}</p>
+              </ion-label>
+            </ion-item>
+          }
+        </ion-list>
+      </ion-card>
+    }
+  }
+
+</ion-content>

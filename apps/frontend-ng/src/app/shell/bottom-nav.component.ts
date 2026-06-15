@@ -86,7 +86,7 @@ addIcons({
     <!-- Bottom bar -->
     <nav class="bnav">
       @for (it of primary; track it.path) {
-        <a class="bnav-tab" [routerLink]="it.path" routerLinkActive="bnav-tab--active">
+        <a class="bnav-tab" [routerLink]="it.path" routerLinkActive="bnav-tab--active" (click)="close()">
           <ion-icon [name]="it.icon"></ion-icon>
           <span>{{ it.label }}</span>
         </a>
