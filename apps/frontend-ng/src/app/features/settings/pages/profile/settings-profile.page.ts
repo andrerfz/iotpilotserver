@@ -16,6 +16,7 @@ import {
 } from '@ng/shared/ui';
 import type { SelectOption } from '@ng/shared/ui';
 import { Api } from '@ng/core/api/generated/api';
+import { TopbarService } from '@ng/shell/topbar.service';
 import { getProfileSettings } from '@ng/core/api/generated/fn/settings/get-profile-settings';
 import { updateProfileSettings } from '@ng/core/api/generated/fn/settings/update-profile-settings';
 import type { ProfileSettings } from '@ng/core/api/generated/models/profile-settings';
@@ -68,6 +69,7 @@ const DATE_FORMAT_OPTIONS: SelectOption[] = [
 })
 export class SettingsProfilePage implements OnInit {
   private readonly api = inject(Api);
+  private readonly topbar = inject(TopbarService);
   private readonly fb = inject(FormBuilder);
 
   readonly isLoading = signal(true);
@@ -92,6 +94,7 @@ export class SettingsProfilePage implements OnInit {
   readonly dateFormatOptions = DATE_FORMAT_OPTIONS;
 
   async ngOnInit(): Promise<void> {
+    this.topbar.set('Profile');
     try {
       const res = await this.api.invoke(getProfileSettings, {});
       const data = (res as unknown as { data?: typeof res }).data ?? res;

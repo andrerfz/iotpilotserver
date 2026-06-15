@@ -15,6 +15,7 @@ import {
   IonToggle,
 } from '@ng/shared/ui';
 import { Api } from '@ng/core/api/generated/api';
+import { TopbarService } from '@ng/shell/topbar.service';
 import { ThemeService, type Theme } from '@ng/shared/ui/theme/theme.service';
 import { UiSelectComponent, type SelectOption } from '@ng/shared/ui';
 import { getSystemSettings } from '@ng/core/api/generated/fn/settings/get-system-settings';
@@ -66,6 +67,7 @@ const LOG_LEVEL_OPTIONS: SelectOption[] = [
 })
 export class SettingsSystemPage implements OnInit {
   private readonly api = inject(Api);
+  private readonly topbar = inject(TopbarService);
   private readonly fb = inject(FormBuilder);
   private readonly themeService = inject(ThemeService);
 
@@ -99,6 +101,7 @@ export class SettingsSystemPage implements OnInit {
   readonly logLevelOptions = LOG_LEVEL_OPTIONS;
 
   async ngOnInit(): Promise<void> {
+    this.topbar.set('System');
     try {
       const res = await this.api.invoke(getSystemSettings, {});
       const data = (res as unknown as { data?: typeof res }).data ?? res;

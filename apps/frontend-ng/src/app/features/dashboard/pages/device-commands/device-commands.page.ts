@@ -11,6 +11,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { TopbarService } from '@ng/shell/topbar.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { interval } from 'rxjs';
 import { addIcons } from 'ionicons';
@@ -80,6 +81,7 @@ const QUICK_ACTIONS: QuickAction[] = [
 })
 export class DeviceCommandsPage implements OnInit, AfterViewInit {
   private readonly route = inject(ActivatedRoute);
+  private readonly topbar = inject(TopbarService);
   private readonly svc = inject(DeviceDetailService);
   private readonly toast = inject(ToastService);
   private readonly destroyRef = inject(DestroyRef);
@@ -104,6 +106,7 @@ export class DeviceCommandsPage implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
+    this.topbar.set('Commands');
     void this.svc.deviceCommands.load({ id: this.deviceId(), limit: 50 });
     interval(5000)
       .pipe(takeUntilDestroyed(this.destroyRef))

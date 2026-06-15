@@ -12,6 +12,7 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
+import { TopbarService } from '@ng/shell/topbar.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { interval } from 'rxjs';
 import { addIcons } from 'ionicons';
@@ -68,6 +69,7 @@ const LEVEL_OPTIONS: SelectOption[] = [
 })
 export class DeviceLogsPage implements OnInit, AfterViewInit {
   private readonly route = inject(ActivatedRoute);
+  private readonly topbar = inject(TopbarService);
   private readonly svc = inject(DeviceDetailService);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -99,6 +101,7 @@ export class DeviceLogsPage implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
+    this.topbar.set('Logs');
     void this.svc.deviceLogs.load({ id: this.deviceId(), limit: 100 });
     interval(10000)
       .pipe(takeUntilDestroyed(this.destroyRef))

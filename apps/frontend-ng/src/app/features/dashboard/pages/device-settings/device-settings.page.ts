@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
+import { TopbarService } from '@ng/shell/topbar.service';
 import { addIcons } from 'ionicons';
 import { copyOutline, eyeOffOutline, eyeOutline, refreshOutline } from 'ionicons/icons';
 import {
@@ -72,6 +73,7 @@ const UPDATE_CHANNELS: SelectOption[] = [
 })
 export class DeviceSettingsPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
+  private readonly topbar = inject(TopbarService);
   private readonly svc = inject(DeviceDetailService);
 
   readonly device = this.svc.device;
@@ -103,6 +105,7 @@ export class DeviceSettingsPage implements OnInit {
   }
 
   ngOnInit(): void {
+    this.topbar.set('Settings');
     void this.settings.load({ id: this.deviceId() });
   }
 

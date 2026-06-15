@@ -7,6 +7,7 @@ import {
   signal,
 } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { TopbarService } from '@ng/shell/topbar.service';
 import { NgxEchartsDirective } from 'ngx-echarts';
 import type { EChartsOption } from 'echarts';
 import { addIcons } from 'ionicons';
@@ -119,6 +120,7 @@ function tempColor(v: number | null): string {
 })
 export class DeviceMetricsPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
+  private readonly topbar = inject(TopbarService);
   private readonly svc = inject(DeviceDetailService);
 
   private readonly deviceId = signal('');
@@ -153,6 +155,7 @@ export class DeviceMetricsPage implements OnInit {
   }
 
   ngOnInit(): void {
+    this.topbar.set('Metrics');
     void this.metrics.load({ id: this.deviceId(), period: this.period() });
   }
 

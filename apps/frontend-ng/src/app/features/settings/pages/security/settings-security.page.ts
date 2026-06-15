@@ -14,6 +14,7 @@ import {
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { Router } from '@angular/router';
+import { TopbarService } from '@ng/shell/topbar.service';
 import {
   IonButton,
   IonCard,
@@ -73,6 +74,7 @@ function passwordMatchValidator(group: AbstractControl): ValidationErrors | null
 })
 export class SettingsSecurityPage implements OnInit {
   private readonly api = inject(Api);
+  private readonly topbar = inject(TopbarService);
   private readonly fb = inject(FormBuilder);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
@@ -112,6 +114,7 @@ export class SettingsSecurityPage implements OnInit {
   readonly isRevokingAll = signal(false);
 
   async ngOnInit(): Promise<void> {
+    this.topbar.set('Security');
     try {
       const data = await this.api.invoke(getSecuritySettings, {});
       this.securityForm.patchValue({

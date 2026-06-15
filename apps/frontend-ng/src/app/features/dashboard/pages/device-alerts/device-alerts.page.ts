@@ -12,6 +12,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { TopbarService } from '@ng/shell/topbar.service';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { filter } from 'rxjs';
 import { addIcons } from 'ionicons';
@@ -91,6 +92,7 @@ const STATE_OPTIONS: PickerOption[] = [
 })
 export class DeviceAlertsPage implements OnInit, AfterViewInit {
   private readonly route = inject(ActivatedRoute);
+  private readonly topbar = inject(TopbarService);
   protected readonly svc = inject(DeviceDetailService);
   private readonly dashSvc = inject(DashboardService);
   private readonly alertsStream = inject(AlertsStream);
@@ -166,6 +168,7 @@ export class DeviceAlertsPage implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
+    this.topbar.set('Alerts');
     void this.svc.deviceAlerts.load({ id: this.deviceId() });
     void this.dashSvc.alertsTrend.load({ deviceId: this.deviceId(), period: '7d' });
   }

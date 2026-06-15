@@ -8,6 +8,7 @@ import {
   signal,
 } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { TopbarService } from '@ng/shell/topbar.service';
 import { addIcons } from 'ionicons';
 import { refreshOutline, wifiOutline, globeOutline } from 'ionicons/icons';
 import {
@@ -55,6 +56,7 @@ type DeviceWithNetwork = Device & {
 })
 export class DeviceNetworkPage implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
+  private readonly topbar = inject(TopbarService);
   protected readonly svc = inject(DeviceDetailService);
 
   private readonly deviceId = signal('');
@@ -79,6 +81,7 @@ export class DeviceNetworkPage implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.topbar.set('Network');
     void this.svc.device.load({ id: this.deviceId() });
   }
 

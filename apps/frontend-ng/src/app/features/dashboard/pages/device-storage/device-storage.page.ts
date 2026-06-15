@@ -8,6 +8,7 @@ import {
   signal,
 } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { TopbarService } from '@ng/shell/topbar.service';
 import { addIcons } from 'ionicons';
 import { refreshOutline, saveOutline } from 'ionicons/icons';
 import {
@@ -58,6 +59,7 @@ type DeviceWithStorage = Device & {
 })
 export class DeviceStoragePage implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
+  private readonly topbar = inject(TopbarService);
   private readonly svc = inject(DeviceDetailService);
 
   private readonly deviceId = signal('');
@@ -88,6 +90,7 @@ export class DeviceStoragePage implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.topbar.set('Storage');
     void this.svc.device.load({ id: this.deviceId() });
   }
 

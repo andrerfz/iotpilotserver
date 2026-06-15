@@ -13,6 +13,7 @@ import {
   IonToggle,
 } from '@ng/shared/ui';
 import { Api } from '@ng/core/api/generated/api';
+import { TopbarService } from '@ng/shell/topbar.service';
 import { getNotificationSettings } from '@ng/core/api/generated/fn/settings/get-notification-settings';
 import { updateNotificationSettings } from '@ng/core/api/generated/fn/settings/update-notification-settings';
 import type { NotificationSettings } from '@ng/core/api/generated/models/notification-settings';
@@ -38,6 +39,7 @@ import type { NotificationSettings } from '@ng/core/api/generated/models/notific
 })
 export class SettingsNotificationsPage implements OnInit {
   private readonly api = inject(Api);
+  private readonly topbar = inject(TopbarService);
   private readonly fb = inject(FormBuilder);
 
   readonly isLoading = signal(true);
@@ -53,6 +55,7 @@ export class SettingsNotificationsPage implements OnInit {
   });
 
   async ngOnInit(): Promise<void> {
+    this.topbar.set('Notifications');
     try {
       const res = await this.api.invoke(getNotificationSettings, {});
       const data = (res as unknown as { data?: typeof res }).data ?? res;

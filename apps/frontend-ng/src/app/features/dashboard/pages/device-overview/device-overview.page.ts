@@ -11,6 +11,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { TopbarService } from '@ng/shell/topbar.service';
 import { addIcons } from 'ionicons';
 import {
   flashOutline,
@@ -62,6 +63,7 @@ addIcons({ flashOutline, serverOutline, statsChartOutline, hardwareChipOutline, 
 })
 export class DeviceOverviewPage implements OnInit, AfterViewInit {
   private readonly route = inject(ActivatedRoute);
+  private readonly topbar = inject(TopbarService);
   private readonly svc = inject(DeviceDetailService);
   private readonly commandSheet = viewChild(CommandSheetComponent);
 
@@ -88,6 +90,7 @@ export class DeviceOverviewPage implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
+    this.topbar.set('Overview');
     void this.svc.deviceCommands.load({ id: this.deviceId(), limit: 5 });
   }
 

@@ -7,6 +7,7 @@ import {
   signal,
 } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { TopbarService } from '@ng/shell/topbar.service';
 import {
   IonContent,
   IonCard,
@@ -38,6 +39,7 @@ import { DeviceDetailService } from '../../services/device-detail.service';
 })
 export class DeviceTerminalPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
+  private readonly topbar = inject(TopbarService);
   private readonly svc = inject(DeviceDetailService);
 
   readonly device = this.svc.device;
@@ -52,6 +54,7 @@ export class DeviceTerminalPage implements OnInit {
   }
 
   ngOnInit(): void {
+    this.topbar.set('Terminal');
     if (!this.device.data()) {
       void this.device.load({ id: this.deviceId() });
     }
