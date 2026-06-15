@@ -2,6 +2,7 @@ import {
   AfterViewInit,
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   OnInit,
   TemplateRef,
   ViewChild,
@@ -50,6 +51,7 @@ import { SocketService } from '@ng/core/realtime/socket.service';
 import { DashboardService } from '../../services/dashboard.service';
 import { applyDeviceFilters } from '../../filters/device-filters';
 import { RegisterDeviceSheetComponent } from '../../components/register-device-sheet/register-device-sheet.component';
+import { TopbarService } from '../../../../shell/topbar.service';
 
 addIcons({
   addOutline,
@@ -99,6 +101,8 @@ export class DashboardPage implements OnInit, AfterViewInit {
   private readonly alertsStream = inject(AlertsStream);
   private readonly socketService = inject(SocketService);
   private readonly router = inject(Router);
+  private readonly topbar = inject(TopbarService);
+  private readonly destroy = inject(DestroyRef);
 
   // ── Service surfaces (read-only passthrough) ──────────────────────────────
   readonly devicesLoading = this.dashService.devices.loading;
@@ -200,6 +204,8 @@ export class DashboardPage implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
+    this.topbar.set('Dashboard', { icon: 'add-outline', handler: () => this.onRegisterDevice() });
+    this.destroy.onDestroy(() => this.topbar.clear());
     void this.dashService.devices.load({});
     void this.dashService.alerts.load({ status: 'active', limit: 5 });
     void this.dashService.monitoringMetrics.load({ period: '24h' });
