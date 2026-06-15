@@ -30,7 +30,7 @@ addIcons({
   template: `
     <div class="rail">
       <div class="rail__brand">
-        <ui-app-logo layout="v"></ui-app-logo>
+        <ui-app-logo></ui-app-logo>
       </div>
 
       <div class="rail__scroll">
