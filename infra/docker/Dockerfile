@@ -17,6 +17,13 @@ COPY packages/core/package.json     packages/core/
 
 RUN pnpm install --frozen-lockfile
 
+# Tar frontend-ng/node_modules preserving pnpm symlinks.
+# Docker COPY --from dereferences symlinks, which breaks pnpm's virtual store:
+# echarts becomes a real dir and webpack can no longer find zrender (a pnpm
+# store sibling, not a direct dep). Tar preserves the symlinks; target stages
+# extract with tar instead of COPY so the links survive.
+RUN tar -czf /tmp/frontend-ng-nm.tar.gz -C /app/apps/frontend-ng node_modules
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Stage 2: Development — hot-reload mode for backend + worker
 # Source code is volume-mounted at runtime; node_modules stay in the image.
@@ -81,9 +88,14 @@ ENV NODE_ENV=development
 ENV PATH="/app/node_modules/.bin:/app/apps/frontend-ng/node_modules/.bin:$PATH"
 ENV NODE_PATH="/app/node_modules"
 
-# Workspace node_modules from deps stage (root + frontend-ng pnpm symlinks)
+# Workspace node_modules from deps stage (root + frontend-ng pnpm symlinks).
+# Root node_modules: COPY --from is fine here (symlinks in .pnpm are internal).
+# frontend-ng/node_modules: extract from tar to preserve pnpm symlinks that
+# COPY --from would dereference, breaking webpack resolution of transitive deps.
 COPY --from=deps /app/node_modules                    ./node_modules
-COPY --from=deps /app/apps/frontend-ng/node_modules   ./apps/frontend-ng/node_modules
+COPY --from=deps /tmp/frontend-ng-nm.tar.gz           /tmp/frontend-ng-nm.tar.gz
+RUN tar -xzf /tmp/frontend-ng-nm.tar.gz -C /app/apps/frontend-ng \
+    && rm /tmp/frontend-ng-nm.tar.gz
 
 # Static workspace + app config (source is volume-mounted at runtime)
 COPY pnpm-workspace.yaml   ./
@@ -120,7 +132,9 @@ ENV PATH="/app/node_modules/.bin:/app/apps/frontend-ng/node_modules/.bin:$PATH"
 ENV NODE_PATH="/app/node_modules"
 
 COPY --from=deps /app/node_modules                    ./node_modules
-COPY --from=deps /app/apps/frontend-ng/node_modules   ./apps/frontend-ng/node_modules
+COPY --from=deps /tmp/frontend-ng-nm.tar.gz           /tmp/frontend-ng-nm.tar.gz
+RUN tar -xzf /tmp/frontend-ng-nm.tar.gz -C /app/apps/frontend-ng \
+    && rm /tmp/frontend-ng-nm.tar.gz
 
 COPY pnpm-workspace.yaml   ./
 COPY apps/frontend-ng/     ./apps/frontend-ng/
