@@ -109,6 +109,33 @@ jobs:
           path: apps/frontend/coverage/
           retention-days: 14
 
+  # ──────────────────────────────────────────────────────────────────
+  # Capacitor sync: verify web build copies cleanly into native shells
+  # (does not compile native code — no Xcode/Android SDK required)
+  # ──────────────────────────────────────────────────────────────────
+  ng-cap-sync:
+    name: Capacitor sync check (frontend-ng)
+    runs-on: ubuntu-24.04
+    needs: [build]
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build frontend-ng
+        run: cd apps/frontend-ng && npx ng build --configuration production
+
+      - name: Capacitor sync (web assets → native shells)
+        run: cd apps/frontend-ng && npx cap sync --inline
+
   # ──────────────────────────────────────────────
   # Docker: validate compose config + build image
   # ──────────────────────────────────────────────

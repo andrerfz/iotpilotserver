@@ -11,7 +11,45 @@ import { RequestBuilder } from '../../request-builder';
 export interface GetAdminSystem$Params {
 }
 
-export function getAdminSystem(http: HttpClient, rootUrl: string, params?: GetAdminSystem$Params, context?: HttpContext): Observable<StrictHttpResponse<Record<string, unknown>>> {
+export function getAdminSystem(http: HttpClient, rootUrl: string, params?: GetAdminSystem$Params, context?: HttpContext): Observable<StrictHttpResponse<{
+'system'?: {
+'platform'?: string;
+'nodeVersion'?: string;
+'uptime'?: number;
+'cpuUsage'?: number;
+'memoryUsage'?: {
+'used'?: number;
+'total'?: number;
+'percentage'?: number;
+};
+};
+'database'?: {
+'status'?: string;
+'version'?: string;
+'size'?: string;
+'connections'?: {
+'active'?: number;
+'idle'?: number;
+'max'?: number;
+};
+};
+'application'?: {
+'version'?: string;
+'environment'?: string;
+'buildDate'?: string;
+'features'?: Array<{
+'name'?: string;
+'enabled'?: boolean;
+}>;
+};
+'recentActivity'?: Array<{
+'id'?: string;
+'type'?: string;
+'description'?: string;
+'timestamp'?: string;
+'userId'?: string;
+}>;
+}>> {
   const rb = new RequestBuilder(rootUrl, getAdminSystem.PATH, 'get');
   if (params) {
   }
@@ -21,7 +59,45 @@ export function getAdminSystem(http: HttpClient, rootUrl: string, params?: GetAd
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<Record<string, unknown>>;
+      return r as StrictHttpResponse<{
+      'system'?: {
+      'platform'?: string;
+      'nodeVersion'?: string;
+      'uptime'?: number;
+      'cpuUsage'?: number;
+      'memoryUsage'?: {
+      'used'?: number;
+      'total'?: number;
+      'percentage'?: number;
+      };
+      };
+      'database'?: {
+      'status'?: string;
+      'version'?: string;
+      'size'?: string;
+      'connections'?: {
+      'active'?: number;
+      'idle'?: number;
+      'max'?: number;
+      };
+      };
+      'application'?: {
+      'version'?: string;
+      'environment'?: string;
+      'buildDate'?: string;
+      'features'?: Array<{
+      'name'?: string;
+      'enabled'?: boolean;
+      }>;
+      };
+      'recentActivity'?: Array<{
+      'id'?: string;
+      'type'?: string;
+      'description'?: string;
+      'timestamp'?: string;
+      'userId'?: string;
+      }>;
+      }>;
     })
   );
 }

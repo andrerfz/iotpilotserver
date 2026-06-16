@@ -15,7 +15,7 @@
 .PHONY: sync-node-modules clean-dev
 .PHONY: queue-status queue-failed queue-retry queue-clean queue-drain queue-dashboard
 .PHONY: ssh prod-logs prod-deploy prod-rollback prod-restart prod-status prod-migrate
-.PHONY: ng-dev ng-lint ng-test ng-type-check ng-build ng-image ng-logs ng-api-generate ng-api-check _ng-running
+.PHONY: ng-dev ng-lint ng-test ng-type-check ng-build ng-image ng-logs ng-api-generate ng-api-check ng-cap-sync ng-cap-build-ios ng-cap-build-android _ng-running
 
 # Variables - Using .env for both production and local
 COMPOSE_FILE = infra/docker/docker-compose.yml --env-file .env
@@ -108,6 +108,9 @@ help:
 	@echo "  ng-api-generate      - Regenerate typed API client from docs/openapi.yml (host)"
 	@echo "  ng-api-check         - Fail if the committed API client is stale (CI guard)"
 	@echo "  ng-logs              - Follow frontend-ng dev server logs"
+	@echo "  ng-cap-sync          - Build frontend-ng then sync web assets to native projects"
+	@echo "  ng-cap-build-ios     - Build signed iOS .ipa (macOS + Xcode required)"
+	@echo "  ng-cap-build-android - Build signed Android .aab (JDK 17 required)"
 	@echo ""
 	@echo "🏭 Production:"
 	@echo "  install              - Initial installation and setup"
@@ -730,6 +733,34 @@ ng-api-check:
 		exit 1; \
 	fi
 	@echo "✅ Generated API client is in sync."
+
+ng-cap-sync: _ng-running
+	@echo "📱 Building frontend-ng and syncing to native projects..."
+	@$(EXEC_NG) npm run build
+	@$(EXEC_NG) npx cap sync
+	@echo "✅ Capacitor sync complete"
+
+ng-cap-build-ios:
+	@echo "🍎 Building signed iOS archive (requires macOS + Xcode + signing certs)..."
+	@cd apps/frontend-ng && npm run build && npx cap sync
+	@cd apps/frontend-ng/ios/App && \
+		xcodebuild -workspace App.xcworkspace \
+		           -scheme App \
+		           -configuration Release \
+		           -archivePath ../../build/App.xcarchive \
+		           archive
+	@cd apps/frontend-ng/ios/App && \
+		xcodebuild -exportArchive \
+		           -archivePath ../../build/App.xcarchive \
+		           -exportOptionsPlist ExportOptions.plist \
+		           -exportPath ../../build/ipa
+	@echo "✅ iOS archive at apps/frontend-ng/build/ipa/"
+
+ng-cap-build-android:
+	@echo "🤖 Building signed Android bundle (requires JDK 17 + signing keystore)..."
+	@cd apps/frontend-ng && npm run build && npx cap sync
+	@cd apps/frontend-ng/android && ./gradlew bundleRelease
+	@echo "✅ Android .aab at apps/frontend-ng/android/app/build/outputs/bundle/release/"
 
 route-list:
 	@echo "📋 Listing all routes (from docs/openapi.yml + Next.js pages)..."

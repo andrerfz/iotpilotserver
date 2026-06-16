@@ -145,6 +145,10 @@ export type { GetUserNotificationPreferences$Params as GetUserNotificationPrefer
 export { getUserNotificationPreferences as getUserNotificationPreferences } from './fn/users/get-user-notification-preferences';
 export type { UpdateUserNotificationPreferences$Params as UpdateUserNotificationPreferences$Params } from './fn/users/update-user-notification-preferences';
 export { updateUserNotificationPreferences as updateUserNotificationPreferences } from './fn/users/update-user-notification-preferences';
+export type { RegisterPushToken$Params as RegisterPushToken$Params } from './fn/users/register-push-token';
+export { registerPushToken as registerPushToken } from './fn/users/register-push-token';
+export type { DeregisterPushToken$Params as DeregisterPushToken$Params } from './fn/users/deregister-push-token';
+export { deregisterPushToken as deregisterPushToken } from './fn/users/deregister-push-token';
 export type { GetSettings$Params as GetSettings$Params } from './fn/settings/get-settings';
 export { getSettings as getSettings } from './fn/settings/get-settings';
 export type { GetProfileSettings$Params as GetProfileSettings$Params } from './fn/settings/get-profile-settings';

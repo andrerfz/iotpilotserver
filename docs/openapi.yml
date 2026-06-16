@@ -2520,6 +2520,56 @@ paths:
         '200':
           description: Preferences updated
 
+  /users/me/push-token:
+    post:
+      operationId: registerPushToken
+      tags: [users]
+      summary: Register FCM/APNs push token for the current user (fe-mobile)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, platform]
+              properties:
+                token:
+                  type: string
+                  description: FCM or APNs device token
+                platform:
+                  type: string
+                  enum: [ios, android]
+      responses:
+        '201':
+          description: Token registered
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  registered:
+                    type: boolean
+        '400':
+          description: Invalid request body
+        '401':
+          description: Unauthenticated
+    delete:
+      operationId: deregisterPushToken
+      tags: [users]
+      summary: Remove the push token for the current user (fe-mobile)
+      responses:
+        '200':
+          description: Token removed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deregistered:
+                    type: boolean
+        '401':
+          description: Unauthenticated
+
   # ────────────── SETTINGS ────────────────────────────────────────────────────
 
   /settings:

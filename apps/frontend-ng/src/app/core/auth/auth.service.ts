@@ -1,5 +1,5 @@
 import { HttpContext } from '@angular/common/http';
-import { computed, inject, Injectable, signal } from '@angular/core';
+import { computed, inject, Injectable, Injector, signal } from '@angular/core';
 import { Api } from '../api/generated/api';
 import { login as loginRequest } from '../api/generated/fn/auth/login';
 import { logout as logoutRequest } from '../api/generated/fn/auth/logout';
@@ -30,6 +30,7 @@ export type LoginResult =
 export class AuthService {
   private readonly api = inject(Api);
   private readonly tokens = inject(TokenStorage);
+  private readonly injector = inject(Injector);
 
   private readonly _user = signal<User | null>(null);
 
@@ -80,6 +81,13 @@ export class AuthService {
 
   /** Revoke the session server-side and clear local state (best-effort on the network call). */
   async logout(): Promise<void> {
+    // Deregister push token before revoking the session (while auth is still valid).
+    try {
+      const { PushNotificationService } = await import('../native/push-notification.service');
+      await this.injector.get(PushNotificationService).deregister();
+    } catch {
+      // Non-fatal: push deregister is best-effort.
+    }
     try {
       await this.api.invoke(logoutRequest, {});
     } finally {

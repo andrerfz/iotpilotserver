@@ -2,6 +2,7 @@ import { effect, inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { ApiConfiguration } from '@ng/core/api/generated/api-configuration';
+import { StatusBarService } from '@ng/core/native/status-bar.service';
 
 export type Theme = 'light' | 'dark' | 'system';
 
@@ -22,6 +23,7 @@ function applyToDom(effective: 'light' | 'dark'): void {
 export class ThemeService {
   private readonly http = inject(HttpClient);
   private readonly apiConfig = inject(ApiConfiguration);
+  private readonly statusBar = inject(StatusBarService);
 
   private readonly _theme = signal<Theme>(this.getInitialTheme());
   /** Current theme preference ('light' | 'dark' | 'system'). */
@@ -36,10 +38,12 @@ export class ThemeService {
     // Apply immediately from the localStorage-cached preference to avoid flash.
     applyToDom(resolveEffective(this._theme()));
 
-    // Re-apply whenever the signal changes.
+    // Re-apply to DOM and native status bar whenever the signal changes.
     effect(() => {
       const t = this._theme();
-      applyToDom(resolveEffective(t));
+      const effective = resolveEffective(t);
+      applyToDom(effective);
+      void this.statusBar.applyTheme(effective);
     });
 
     // Live system preference tracking.

@@ -1,7 +1,7 @@
 import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
+import { filter, skip } from 'rxjs/operators';
 import { Router, NavigationEnd } from '@angular/router';
-import { filter } from 'rxjs/operators';
 import { IonSplitPane, IonMenu, IonContent, IonRouterOutlet, MaintenanceBannerComponent, NetworkStatusComponent, MenuController } from '@ng/shared/ui';
 import { RailComponent } from './rail.component';
 import { TopbarComponent } from './topbar.component';
@@ -13,6 +13,8 @@ import { breadcrumbFromSnapshot } from './breadcrumbs';
 import { NAV } from './nav';
 import { AuthService } from '../core/auth/auth.service';
 import { hasRole } from '../core/auth/roles';
+import { SplashService } from '../core/native/splash.service';
+import { PushNotificationService } from '../core/native/push-notification.service';
 
 /**
  * App shell — `ion-split-pane` with the rail inline ≥1080px and an overlay
@@ -60,6 +62,8 @@ export class ShellComponent {
   private readonly router = inject(Router);
   private readonly menuCtrl = inject(MenuController);
   private readonly auth = inject(AuthService);
+  private readonly splash = inject(SplashService);
+  private readonly push = inject(PushNotificationService);
 
   protected readonly isSuperAdmin = computed(() => hasRole(this.auth.role(), 'SUPERADMIN'));
   protected readonly showTenantMenu = computed(() => hasRole(this.auth.role(), 'SUPERADMIN'));
@@ -96,6 +100,20 @@ export class ShellComponent {
       .pipe(filter(e => e instanceof NavigationEnd), takeUntilDestroyed())
       .subscribe(update);
     update();
+
+    // Hide splash once the shell is constructed (Angular has bootstrapped).
+    void this.splash.hide();
+
+    // Request push permission and register on native platforms (T5).
+    void this.push.init();
+
+    // Deeplink routing: navigate to the route embedded in a notification tap (T6).
+    toObservable(this.push.latestTap)
+      .pipe(skip(1), filter(Boolean), takeUntilDestroyed())
+      .subscribe(action => {
+        const route = (action.notification.data as { route?: string }).route;
+        if (route) void this.router.navigateByUrl(route);
+      });
   }
 
   protected onSearch(): void {

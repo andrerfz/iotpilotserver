@@ -16,7 +16,7 @@ export interface GetAdminLogs$Params {
   page?: number;
 }
 
-export function getAdminLogs(http: HttpClient, rootUrl: string, params?: GetAdminLogs$Params, context?: HttpContext): Observable<StrictHttpResponse<Record<string, unknown>>> {
+export function getAdminLogs(http: HttpClient, rootUrl: string, params?: GetAdminLogs$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
   const rb = new RequestBuilder(rootUrl, getAdminLogs.PATH, 'get');
   if (params) {
     rb.query('level', params.level, {});
@@ -27,11 +27,11 @@ export function getAdminLogs(http: HttpClient, rootUrl: string, params?: GetAdmi
   }
 
   return http.request(
-    rb.build({ responseType: 'json', accept: 'application/json', context })
+    rb.build({ responseType: 'text', accept: '*/*', context })
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<Record<string, unknown>>;
+      return (r as HttpResponse<any>).clone({ body: undefined }) as StrictHttpResponse<void>;
     })
   );
 }

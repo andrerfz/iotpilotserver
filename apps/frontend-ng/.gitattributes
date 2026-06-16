@@ -1,0 +1,9 @@
+# Suppress noisy diffs on auto-generated Capacitor native files.
+# Manual edits (entitlements, plist keys, build settings) are still tracked —
+# only the diff rendering is suppressed for these high-churn generated files.
+ios/App/App.xcodeproj/project.pbxproj -diff
+ios/App/App.xcodeproj/project.pbxproj merge=union
+android/app/src/main/assets/capacitor.config.json -diff
+android/app/src/main/assets/capacitor.plugins.json -diff
+android/.gradle/** -diff
+android/gradle/wrapper/gradle-wrapper.jar binary

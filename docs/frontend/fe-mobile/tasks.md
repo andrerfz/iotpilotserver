@@ -9,15 +9,15 @@ can proceed independently once T3 is green. T9 (CI pipeline) can only start afte
 
 | # | Task | Status |
 |---|---|---|
-| T1 | Capacitor scaffold: config + CLI + platform packages | pending |
-| T2 | SecureStorage adapter + mobile token provider | pending |
-| T3 | `cap add ios` + `cap add android` + `cap sync` in CI check | pending |
-| T4 | Status bar + splash screen service | pending |
-| T5 | Push notifications: plugin + permission flow + FCM setup | pending |
-| T6 | APNs entitlements + deeplink routing | pending |
-| T7 | Touch UX polish: safe-area, tap highlights, bottom-nav clearance | pending |
-| T8 | Push token registration endpoint (backend gap + frontend consumer) | pending |
-| T9 | Signed build pipeline: GitHub Actions iOS + Android workflows | pending |
+| T1 | Capacitor scaffold: config + CLI + platform packages | ✅ done |
+| T2 | SecureStorage adapter + mobile token provider | ✅ done |
+| T3 | `cap add ios` + `cap add android` + `cap sync` in CI check | ✅ done |
+| T4 | Status bar + splash screen service | ✅ done |
+| T5 | Push notifications: plugin + permission flow + FCM setup | ✅ done |
+| T6 | APNs entitlements + deeplink routing | ✅ done |
+| T7 | Touch UX polish: safe-area, tap highlights, bottom-nav clearance | ✅ done |
+| T8 | Push token registration endpoint (backend gap + frontend consumer) | ✅ done |
+| T9 | Signed build pipeline: GitHub Actions iOS + Android workflows | ✅ done |
 
 ---
 

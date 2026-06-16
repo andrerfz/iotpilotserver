@@ -1,0 +1,77 @@
+name: Mobile — Android signed build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [release/mobile]
+
+env:
+  NODE_VERSION: '22'
+  PNPM_VERSION: '11'
+  JAVA_VERSION: '17'
+
+jobs:
+  android-build:
+    name: Build + sign Android .aab
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: apps/frontend-ng
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Install dependencies
+        run: cd ../.. && pnpm install --frozen-lockfile
+
+      - name: Build frontend-ng (production)
+        run: npx ng build --configuration production
+
+      - name: Capacitor sync
+        run: npx cap sync android
+
+      - name: Write google-services.json
+        env:
+          GOOGLE_SERVICES_JSON_BASE64: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}
+        run: |
+          echo "$GOOGLE_SERVICES_JSON_BASE64" | base64 --decode > android/app/google-services.json
+
+      - name: Write signing keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 --decode > android/app/release.jks
+
+      - name: Build release bundle
+        env:
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+        working-directory: apps/frontend-ng/android
+        run: |
+          ./gradlew bundleRelease \
+            -Pandroid.injected.signing.store.file="$(pwd)/app/release.jks" \
+            -Pandroid.injected.signing.store.password="$STORE_PASSWORD" \
+            -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
+            -Pandroid.injected.signing.key.password="$KEY_PASSWORD"
+
+      - name: Upload .aab artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: iotpilot-android-${{ github.sha }}
+          path: apps/frontend-ng/android/app/build/outputs/bundle/release/app-release.aab
+          retention-days: 30

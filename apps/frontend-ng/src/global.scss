@@ -280,6 +280,20 @@ app-settings-system {
 }
 
 /*
+ * Native safe-area insets for Capacitor (T7).
+ * The topbar needs top padding on iOS notch/Dynamic Island devices.
+ * The bottom-nav needs bottom padding above the home indicator.
+ * These rules are no-ops on web (env() resolves to 0px).
+ */
+app-topbar {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+app-bottom-nav {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/*
  * Dark mode ambient gradient — ported 1:1 from prototype "[data-theme="dark"] .app".
  * Uses html prefix to raise specificity above the shell component's scoped
  * .main[_ngcontent-xxx] rule so this gradient wins in dark mode.

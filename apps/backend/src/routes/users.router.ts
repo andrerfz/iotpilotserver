@@ -1,6 +1,7 @@
 import { Router, Response } from 'express';
 import { AuthenticatedRequest, requireAuth } from '../middleware/auth.middleware';
 import { send } from '../http/response.util';
+import { prisma } from '@iotpilot/core/shared/infrastructure/database/prisma.service';
 import { ServiceContainer } from '@iotpilot/core/shared/infrastructure/container/service-container';
 import { ListUsersQuery } from '@iotpilot/core/user/application/queries/list-users/list-users.query';
 import { RegisterUserCommand } from '@iotpilot/core/user/application/commands/register-user/register-user.command';
@@ -672,6 +673,74 @@ usersRouter.put('/:id/notification-preferences', requireAuth(), async (req: Auth
         send.ok(res, { updated: true });
         return;
 
+    } catch (err) {
+        send.fromError(res, err);
+    }
+});
+
+// ──────────────────────────────────────────────────────────────
+// Push token management (fe-mobile T8)
+// One token per user — POST upserts, DELETE removes.
+// ──────────────────────────────────────────────────────────────
+const pushTokenSchema = v.object({
+    token: v.string({ min: 1, message: 'token is required' }),
+    platform: v.enum(['ios', 'android'] as const),
+});
+
+// POST /users/me/push-token — register FCM/APNs token for the current user
+usersRouter.post('/me/push-token', requireAuth(), async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const userId = req.user?.id;
+        const customerId = req.user?.customerId;
+        if (!userId || !customerId) {
+            send.forbidden(res, 'Authentication required');
+            return;
+        }
+
+        const parsed = pushTokenSchema.safeParse(req.body);
+        if (!parsed.success) {
+            send.badRequest(res, 'Invalid request body');
+            return;
+        }
+
+        const { token, platform } = parsed.data;
+        const db = prisma.getClient();
+
+        // One token per user: delete any existing token, then insert the new one.
+        await db.$transaction([
+            db.userPushToken.deleteMany({ where: { userId, deletedAt: null } }),
+            db.userPushToken.create({
+                data: {
+                    userId,
+                    customerId,
+                    platform: platform === 'ios' ? 'IOS' : 'ANDROID',
+                    token,
+                    lastSeenAt: new Date(),
+                },
+            }),
+        ]);
+
+        send.created(res, { registered: true });
+        return;
+    } catch (err) {
+        send.fromError(res, err);
+    }
+});
+
+// DELETE /users/me/push-token — remove the push token for the current user
+usersRouter.delete('/me/push-token', requireAuth(), async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const userId = req.user?.id;
+        if (!userId) {
+            send.forbidden(res, 'Authentication required');
+            return;
+        }
+
+        const db = prisma.getClient();
+        await db.userPushToken.deleteMany({ where: { userId, deletedAt: null } });
+
+        send.ok(res, { deregistered: true });
+        return;
     } catch (err) {
         send.fromError(res, err);
     }

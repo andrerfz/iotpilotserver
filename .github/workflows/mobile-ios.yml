@@ -1,0 +1,115 @@
+name: Mobile — iOS signed build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [release/mobile]
+
+env:
+  NODE_VERSION: '22'
+  PNPM_VERSION: '11'
+
+jobs:
+  ios-build:
+    name: Build + sign iOS .ipa
+    runs-on: macos-15
+    defaults:
+      run:
+        working-directory: apps/frontend-ng
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: cd ../.. && pnpm install --frozen-lockfile
+
+      - name: Build frontend-ng (production)
+        run: npx ng build --configuration production
+
+      - name: Capacitor sync
+        run: npx cap sync ios
+
+      - name: Install CocoaPods dependencies
+        working-directory: apps/frontend-ng/ios/App
+        run: pod install --repo-update
+
+      - name: Import code-signing certificate
+        env:
+          CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        run: |
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          security create-keychain -p "keychain-password" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "keychain-password" "$KEYCHAIN_PATH"
+          echo "$CERTIFICATE_BASE64" | base64 --decode > $RUNNER_TEMP/certificate.p12
+          security import $RUNNER_TEMP/certificate.p12 -P "$CERTIFICATE_PASSWORD" \
+            -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security list-keychain -d user -s "$KEYCHAIN_PATH"
+
+      - name: Install provisioning profile
+        env:
+          PROFILE_BASE64: ${{ secrets.APPLE_PROVISIONING_PROFILE_BASE64 }}
+        run: |
+          PROFILE_PATH=$RUNNER_TEMP/build_pp.mobileprovision
+          echo "$PROFILE_BASE64" | base64 --decode > "$PROFILE_PATH"
+          PP_UUID=$(grep -a -A1 UUID "$PROFILE_PATH" | grep -io '[-A-F0-9]\{36\}')
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp "$PROFILE_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/"$PP_UUID".mobileprovision
+
+      - name: Write GoogleService-Info.plist
+        env:
+          PLIST_BASE64: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST_BASE64 }}
+        run: |
+          echo "$PLIST_BASE64" | base64 --decode > ios/App/App/GoogleService-Info.plist
+
+      - name: Build Xcode archive
+        env:
+          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        working-directory: apps/frontend-ng/ios/App
+        run: |
+          xcodebuild \
+            -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -archivePath $RUNNER_TEMP/App.xcarchive \
+            DEVELOPMENT_TEAM="$TEAM_ID" \
+            CODE_SIGN_STYLE=Manual \
+            archive
+
+      - name: Export .ipa
+        working-directory: apps/frontend-ng/ios/App
+        run: |
+          cat > $RUNNER_TEMP/ExportOptions.plist <<'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>ad-hoc</string>
+            <key>signingStyle</key>
+            <string>manual</string>
+          </dict>
+          </plist>
+          EOF
+          xcodebuild \
+            -exportArchive \
+            -archivePath $RUNNER_TEMP/App.xcarchive \
+            -exportOptionsPlist $RUNNER_TEMP/ExportOptions.plist \
+            -exportPath $RUNNER_TEMP/ipa
+
+      - name: Upload .ipa artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: iotpilot-ios-${{ github.sha }}
+          path: ${{ runner.temp }}/ipa/*.ipa
+          retention-days: 30

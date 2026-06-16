@@ -65,6 +65,10 @@ yarn-error.log
 testem.log
 /typings
 
+# Firebase / FCM config — contain project-specific keys; added per-env by CI
+ios/App/App/GoogleService-Info.plist
+android/app/google-services.json
+
 # System files
 .DS_Store
 Thumbs.db
