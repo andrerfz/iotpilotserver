@@ -20,7 +20,7 @@
 
   .tenant--active & { background: var(--primary); color: var(--primary-ink); }
 }
-.tenant__main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.tenant__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .tenant__name { font-size: 12.5px; font-weight: 550; color: var(--text); }
 .tenant__meta { font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); }
 .tenant__chev { width: 15px; height: 15px; color: var(--text-dim); transition: transform .15s; flex: none; }

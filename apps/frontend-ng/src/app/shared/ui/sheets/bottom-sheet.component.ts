@@ -97,6 +97,10 @@ export class BottomSheetComponent {
     return c !== null && c !== undefined ? `${c} selected` : this.sub();
   });
 
+  close(): void {
+    void this.modal().dismiss();
+  }
+
   /**
    * Open the sheet. Uses present() so the breakpoint is honored. For card
    * presentation, wires presentingElement so the view behind recedes — the

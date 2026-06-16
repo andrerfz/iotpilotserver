@@ -62,7 +62,7 @@ export class ShellComponent {
   private readonly auth = inject(AuthService);
 
   protected readonly isSuperAdmin = computed(() => hasRole(this.auth.role(), 'SUPERADMIN'));
-  protected readonly showTenantMenu = computed(() => hasRole(this.auth.role(), 'ADMIN'));
+  protected readonly showTenantMenu = computed(() => hasRole(this.auth.role(), 'SUPERADMIN'));
 
   readonly breadcrumbs = signal<string[]>([]);
   /** Shell base segment (/app or /__shell) so palette commands stay in-tree. */

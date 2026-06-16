@@ -1,6 +1,5 @@
 /// <reference types="vitest" />
 import angular from '@analogjs/vite-plugin-angular';
-import { resolve } from 'path';
 import { defineConfig } from 'vite';
 
 // Vitest via @analogjs/vite-plugin-angular (fe-foundation Q4). jsdom + Testing

@@ -59,6 +59,10 @@ function isoTimestamp(): string {
     return new Date().toISOString();
 }
 
+function resolveTenantId(req: AuthenticatedRequest): string | undefined {
+    return req.tenant?.getCustomerId()?.getValue() ?? req.user?.customerId ?? undefined;
+}
+
 const DOMAIN_TO_FRONTEND_SEVERITY: Record<string, string> = {
     LOW: 'INFO', MEDIUM: 'WARNING', HIGH: 'ERROR', CRITICAL: 'CRITICAL',
 };
@@ -1126,8 +1130,8 @@ devicesRouter.get('/:id/alerts', requireAuth(), async (req: AuthenticatedRequest
         const limit = parseInt(req.query.limit as string || '50');
         const offset = parseInt(req.query.offset as string || '0');
 
-        const tenantId = req.user?.customerId;
-        if (!tenantId && req.user?.role !== 'SUPERADMIN') {
+        const tenantId = resolveTenantId(req);
+        if (!tenantId) {
             send.badRequest(res, 'Customer ID is required');
             return;
         }
@@ -1139,7 +1143,7 @@ devicesRouter.get('/:id/alerts', requireAuth(), async (req: AuthenticatedRequest
         const domainStatus = status ? status.toUpperCase() : undefined;
 
         const listAlertsQuery = ListAlertsQuery.create(
-            tenantId || 'system',
+            tenantId,
             deviceInternalId,
             domainSeverity as any,
             domainStatus as any,
@@ -1188,14 +1192,15 @@ devicesRouter.post('/:id/alerts', requireAuth(), async (req: AuthenticatedReques
     try {
         const publicId = req.params.id;
 
-        if (!req.user?.customerId && req.user?.role !== 'SUPERADMIN') {
+        const callerTenantId = resolveTenantId(req);
+        if (!callerTenantId && req.user?.role !== 'SUPERADMIN') {
             send.forbidden(res, 'Tenant context required');
             return;
         }
         const deviceRecord = await prisma.getClient().device.findFirst({
             where: {
                 publicId,
-                ...(req.user.role === 'SUPERADMIN' ? {} : { customerId: req.user.customerId }),
+                ...(callerTenantId ? { customerId: callerTenantId } : {}),
             },
             select: { id: true, customerId: true },
         });
@@ -1212,7 +1217,12 @@ devicesRouter.post('/:id/alerts', requireAuth(), async (req: AuthenticatedReques
             return;
         }
 
-        const tenantId = req.user?.customerId || deviceRecord.customerId || 'system';
+        const tenantId = callerTenantId ?? deviceRecord.customerId;
+
+        if (!tenantId) {
+            send.badRequest(res, 'Customer ID is required for alert creation');
+            return;
+        }
 
         const domainSeverity = FRONTEND_TO_DOMAIN_SEVERITY[severity.toUpperCase()] || 'LOW';
         const alertType = type || 'CUSTOM';
@@ -1279,7 +1289,11 @@ devicesRouter.get('/:id/alerts/:alertId', requireAuth(), async (req: Authenticat
             return;
         }
 
-        const tenantId = req.user?.customerId || 'system';
+        const tenantId = resolveTenantId(req);
+        if (!tenantId) {
+            send.badRequest(res, 'Customer ID is required');
+            return;
+        }
         const alertRepo = getAlertRepo();
         const alert = await alertRepo.findById(
             AlertId.fromString(alertRecord.id),
@@ -1326,12 +1340,14 @@ devicesRouter.patch('/:id/alerts/:alertId', requireAuth(), async (req: Authentic
             return;
         }
 
-        const tenantId = req.user?.customerId || 'system';
-        const userId = req.user?.id || 'system';
+        const tenantId = resolveTenantId(req);
+        if (!tenantId) {
+            send.badRequest(res, 'Customer ID is required');
+            return;
+        }
+        const userId = req.user?.id ?? 'system';
 
-        const tenantContext = req.user?.customerId
-            ? TenantContextImpl.create(CustomerId.create(req.user.customerId))
-            : TenantContextImpl.createSuperAdmin();
+        const tenantContext = req.tenant ?? TenantContextImpl.createSuperAdmin();
 
         const serviceContainer = ServiceContainer.getInstance();
         const commandBus = serviceContainer.getCommandBus();
@@ -1387,12 +1403,14 @@ devicesRouter.delete('/:id/alerts/:alertId', requireAuth(), async (req: Authenti
             return;
         }
 
-        const tenantId = req.user?.customerId || 'system';
-        const userId = req.user?.id || 'system';
+        const tenantId = resolveTenantId(req);
+        if (!tenantId) {
+            send.badRequest(res, 'Customer ID is required');
+            return;
+        }
+        const userId = req.user?.id ?? 'system';
 
-        const tenantContext = req.user?.customerId
-            ? TenantContextImpl.create(CustomerId.create(req.user.customerId))
-            : TenantContextImpl.createSuperAdmin();
+        const tenantContext = req.tenant ?? TenantContextImpl.createSuperAdmin();
 
         const serviceContainer = ServiceContainer.getInstance();
         const commandBus = serviceContainer.getCommandBus();

@@ -10,6 +10,8 @@ import {
   inject,
   signal,
 } from '@angular/core';
+import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
+import { skip } from 'rxjs';
 import { Router } from '@angular/router';
 import { NgxEchartsDirective } from 'ngx-echarts';
 import type { EChartsOption } from 'echarts';
@@ -37,12 +39,16 @@ import {
   StatusBadgeComponent,
   StatusDotComponent,
   UiSearchFieldComponent,
+  ViewWillEnter,
+  IonRefresher,
+  IonRefresherContent,
 } from '@ng/shared/ui';
 import type { ColumnDef, DevicePickerItem, PickerOption } from '@ng/shared/ui';
 import type { Alert } from '@ng/core/api/generated/models/alert';
 import { DashboardService } from '../../services/dashboard.service';
 import { applyAlertFilters, alertState } from '../../filters/alert-filters';
 import { TopbarService } from '../../../../shell/topbar.service';
+import { TenantContextService } from '@ng/core/auth/tenant-context.service';
 
 addIcons({ alertCircleOutline, checkmarkCircleOutline, settingsOutline });
 
@@ -97,12 +103,14 @@ function presetToTimeRange(preset: string): { startTime?: string; endTime?: stri
     DevicePickerComponent,
     MultiSelectPickerComponent,
     DateRangePickerComponent,
+    IonRefresher, IonRefresherContent,
   ],
 })
-export class MonitoringPage implements OnInit, AfterViewInit {
+export class MonitoringPage implements OnInit, AfterViewInit, ViewWillEnter {
   private readonly dashService = inject(DashboardService);
   private readonly router = inject(Router);
   private readonly topbar = inject(TopbarService);
+  private readonly tenantCtx = inject(TenantContextService);
 
   readonly alertsLoading = this.dashService.alerts.loading;
   readonly alertsError = this.dashService.alerts.error;
@@ -180,15 +188,32 @@ export class MonitoringPage implements OnInit, AfterViewInit {
       const t = this.dashService.alertsTrend.data();
       if (t !== null) this._trendData.set(t);
     });
+
+    toObservable(this.tenantCtx.customer)
+        .pipe(skip(1), takeUntilDestroyed())
+        .subscribe(() => void this.loadData());
   }
 
   ngOnInit(): void {
     this.topbar.set('Monitoring');
-    void this.dashService.alerts.load({});
-    void this.dashService.alertsTrend.load({ period: '7d' });
-    if (!this.dashService.devices.data()) {
-      void this.dashService.devices.load({ limit: 50 });
-    }
+  }
+
+  ionViewWillEnter(): void {
+    void this.loadData();
+  }
+
+  protected onRefresh(ev: Event): void {
+    void this.loadData().finally(() => {
+      ((ev as CustomEvent).target as HTMLIonRefresherElement | null)?.complete();
+    });
+  }
+
+  private async loadData(): Promise<void> {
+    await Promise.allSettled([
+      this.dashService.alerts.load({}),
+      this.dashService.alertsTrend.load({ period: '7d' }),
+      this.dashService.devices.load({ limit: 50 }),
+    ]);
   }
 
   ngAfterViewInit(): void {

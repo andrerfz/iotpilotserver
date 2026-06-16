@@ -20,7 +20,6 @@ import { CreateThresholdCommand } from '@iotpilot/core/monitoring/application/co
 import { UpdateThresholdCommand } from '@iotpilot/core/monitoring/application/commands/update-threshold/update-threshold.command';
 import { ComparisonOperator, ThresholdType } from '@iotpilot/core/monitoring/domain/entities/threshold.entity';
 import { TenantContextImpl } from '@iotpilot/core/shared/domain/tenant-context';
-import { CustomerId } from '@iotpilot/core/shared/domain/value-objects/customer-id.vo';
 import { validator } from '@iotpilot/core/shared/infrastructure/validation/validation-helper';
 import { Pagination } from '@iotpilot/core/shared/infrastructure/http/pagination.util';
 import { prisma } from '@iotpilot/core/shared/infrastructure/database/prisma.service';
@@ -30,6 +29,13 @@ export const monitoringRouter = Router();
 
 function isoTimestamp(): string {
     return new Date().toISOString();
+}
+
+// Resolves the effective tenant ID for a request.
+// For SUPERADMIN, reads from req.tenant (built by middleware from X-Customer-Id header).
+// For regular users, req.tenant.getCustomerId() equals their JWT customerId.
+function resolveTenantId(req: AuthenticatedRequest): string | undefined {
+    return req.tenant?.getCustomerId()?.getValue() ?? req.user?.customerId ?? undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -161,9 +167,9 @@ monitoringRouter.get('/alerts', requireAuth(), async (req: AuthenticatedRequest,
             return;
         }
 
-        // Get tenant ID - use customer ID from user context
-        const tenantId = req.user?.customerId;
-        if (!tenantId && req.user?.role !== 'SUPERADMIN') {
+        // Get tenant ID — prefer X-Customer-Id (SUPERADMIN tenant switch) over JWT customerId
+        const tenantId = resolveTenantId(req);
+        if (!tenantId) {
             send.badRequest(res, 'Customer ID is required for alerts access');
             return;
         }
@@ -184,7 +190,7 @@ monitoringRouter.get('/alerts', requireAuth(), async (req: AuthenticatedRequest,
 
         // Create and execute ListAlerts query
         const listAlertsQuery = ListAlertsQuery.create(
-            tenantId || 'system',
+            tenantId,
             internalDeviceId,
             domainSeverity as any,
             domainStatus as any,
@@ -267,17 +273,15 @@ monitoringRouter.post('/alerts', requireAuth(), async (req: AuthenticatedRequest
 
         const alertData = validationResult.data;
 
-        // Get tenant ID - use customer ID from user context
-        const customerId = req.user?.customerId;
-        if (!customerId && req.user?.role !== 'SUPERADMIN') {
+        // Get tenant ID — prefer X-Customer-Id (SUPERADMIN tenant switch) over JWT customerId
+        const customerId = resolveTenantId(req);
+        if (!customerId) {
             send.badRequest(res, 'Customer ID is required for alert creation');
             return;
         }
 
-        // Create tenant context
-        const tenantContext = req.user?.customerId
-            ? TenantContextImpl.create(CustomerId.create(req.user.customerId))
-            : TenantContextImpl.createSuperAdmin();
+        // Use tenant context already built by auth middleware
+        const tenantContext = req.tenant ?? TenantContextImpl.createSuperAdmin();
 
         // Create and execute CreateAlert command
         const createAlertCommand = CreateAlertCommand.create(
@@ -287,7 +291,7 @@ monitoringRouter.post('/alerts', requireAuth(), async (req: AuthenticatedRequest
             alertData.message,
             alertData.severity,
             alertData.metadata || {},
-            customerId || 'system',
+            customerId,
             tenantContext
         );
 
@@ -336,7 +340,7 @@ monitoringRouter.post('/alerts', requireAuth(), async (req: AuthenticatedRequest
 // ---------------------------------------------------------------------------
 monitoringRouter.get('/alerts/trend', requireAuth(), async (req: AuthenticatedRequest, res: Response) => {
     try {
-        const customerId = req.user?.customerId;
+        const customerId = resolveTenantId(req);
         const devicePublicId = req.query.deviceId as string | undefined;
         const period = (req.query.period as string) || '7d';
 
@@ -354,7 +358,7 @@ monitoringRouter.get('/alerts/trend', requireAuth(), async (req: AuthenticatedRe
         }
 
         const where: any = { deletedAt: null, createdAt: { gte: since } };
-        if (customerId && req.user?.role !== 'SUPERADMIN') where.customerId = customerId;
+        if (customerId) where.customerId = customerId;
         if (internalDeviceId) where.deviceId = internalDeviceId;
 
         const alerts = await prisma.getClient().alert.findMany({
@@ -394,7 +398,7 @@ const batchAlertSchema = v.object({
 
 monitoringRouter.put('/alerts/batch', requireAuth(), async (req: AuthenticatedRequest, res: Response) => {
     try {
-        const customerId = req.user?.customerId;
+        const customerId = resolveTenantId(req);
         const userId = req.user?.id;
 
         let body: ReturnType<typeof batchAlertSchema.parse>;
@@ -405,9 +409,7 @@ monitoringRouter.put('/alerts/batch', requireAuth(), async (req: AuthenticatedRe
             return;
         }
 
-        const tenantContext = customerId
-            ? TenantContextImpl.create(CustomerId.create(customerId))
-            : TenantContextImpl.createSuperAdmin();
+        const tenantContext = req.tenant ?? TenantContextImpl.createSuperAdmin();
 
         const commandBus = ServiceContainer.getInstance().getCommandBus();
 
@@ -417,21 +419,23 @@ monitoringRouter.put('/alerts/batch', requireAuth(), async (req: AuthenticatedRe
                 ...(customerId ? { customerId } : {}),
                 deletedAt: null,
             },
-            select: { id: true, resolved: true, acknowledgedAt: true },
+            select: { id: true, customerId: true, resolved: true, acknowledgedAt: true },
         });
 
         let processed = 0;
         let skipped = 0;
 
         for (const row of internalIdRows) {
+            const effectiveTenant = customerId ?? row.customerId;
+            if (!effectiveTenant) { skipped++; continue; }
             try {
                 if (body.action === 'acknowledge') {
                     if (row.acknowledgedAt || row.resolved) { skipped++; continue; }
-                    const cmd = AcknowledgeAlertCommand.create(row.id, userId!, customerId || 'system', tenantContext);
+                    const cmd = AcknowledgeAlertCommand.create(row.id, userId!, effectiveTenant, tenantContext);
                     await commandBus.execute(cmd);
                 } else {
                     if (row.resolved) { skipped++; continue; }
-                    const cmd = ResolveAlertCommand.create(row.id, userId!, customerId || 'system', tenantContext);
+                    const cmd = ResolveAlertCommand.create(row.id, userId!, effectiveTenant, tenantContext);
                     await commandBus.execute(cmd);
                 }
                 processed++;
@@ -473,9 +477,9 @@ monitoringRouter.get('/alerts/:id', requireAuth(), async (req: AuthenticatedRequ
             customerId: req.user?.customerId
         });
 
-        // Get tenant ID - use customer ID from user context
-        const tenantId = req.user?.customerId;
-        if (!tenantId && req.user?.role !== 'SUPERADMIN') {
+        // Get tenant ID — prefer X-Customer-Id (SUPERADMIN tenant switch) over JWT customerId
+        const tenantId = resolveTenantId(req);
+        if (!tenantId) {
             send.badRequest(res, 'Customer ID is required for alert access');
             return;
         }
@@ -483,7 +487,7 @@ monitoringRouter.get('/alerts/:id', requireAuth(), async (req: AuthenticatedRequ
         // Create and execute GetAlertDetails query
         const getAlertDetailsQuery = GetAlertDetailsQuery.create(
             alertId,
-            tenantId || 'system'
+            tenantId
         );
 
         const alertDetails = await queryBus.execute(getAlertDetailsQuery);
@@ -579,17 +583,15 @@ monitoringRouter.put('/alerts/:id', requireAuth(), async (req: AuthenticatedRequ
 
         const { action } = validationResult.data;
 
-        // Get tenant ID - use customer ID from user context
-        const customerId = req.user?.customerId;
-        if (!customerId && req.user?.role !== 'SUPERADMIN') {
+        // Get tenant ID — prefer X-Customer-Id (SUPERADMIN tenant switch) over JWT customerId
+        const customerId = resolveTenantId(req);
+        if (!customerId) {
             send.badRequest(res, 'Customer ID is required for alert actions');
             return;
         }
 
-        // Create tenant context
-        const tenantContext = req.user?.customerId
-            ? TenantContextImpl.create(CustomerId.create(req.user.customerId))
-            : TenantContextImpl.createSuperAdmin();
+        // Use tenant context already built by auth middleware
+        const tenantContext = req.tenant ?? TenantContextImpl.createSuperAdmin();
 
         let result: any;
 
@@ -598,7 +600,7 @@ monitoringRouter.put('/alerts/:id', requireAuth(), async (req: AuthenticatedRequ
             const acknowledgeAlertCommand = AcknowledgeAlertCommand.create(
                 alertId,
                 req.user!.id,
-                customerId || 'system',
+                customerId,
                 tenantContext
             );
 
@@ -613,7 +615,7 @@ monitoringRouter.put('/alerts/:id', requireAuth(), async (req: AuthenticatedRequ
             const resolveAlertCommand = ResolveAlertCommand.create(
                 alertId,
                 req.user!.id,
-                customerId || 'system',
+                customerId,
                 tenantContext
             );
 
@@ -678,23 +680,21 @@ monitoringRouter.delete('/alerts/:id', requireAuth(), async (req: AuthenticatedR
             customerId: req.user?.customerId
         });
 
-        // Get tenant ID - use customer ID from user context
-        const customerId = req.user?.customerId;
-        if (!customerId && req.user?.role !== 'SUPERADMIN') {
+        // Get tenant ID — prefer X-Customer-Id (SUPERADMIN tenant switch) over JWT customerId
+        const customerId = resolveTenantId(req);
+        if (!customerId) {
             send.badRequest(res, 'Customer ID is required for alert deletion');
             return;
         }
 
-        // Create tenant context
-        const tenantContext = req.user?.customerId
-            ? TenantContextImpl.create(CustomerId.create(req.user.customerId))
-            : TenantContextImpl.createSuperAdmin();
+        // Use tenant context already built by auth middleware
+        const tenantContext = req.tenant ?? TenantContextImpl.createSuperAdmin();
 
         // Create and execute DeleteAlert command
         const deleteAlertCommand = DeleteAlertCommand.create(
             alertId,
             req.user!.id,
-            customerId || 'system',
+            customerId,
             tenantContext
         );
 
@@ -793,16 +793,16 @@ monitoringRouter.get('/metrics', requireAuth(), async (req: AuthenticatedRequest
             return;
         }
 
-        // Get tenant ID - use customer ID from user context or allow SUPERADMIN to specify
-        const tenantId = req.user?.customerId;
-        if (!tenantId && req.user?.role !== 'SUPERADMIN') {
+        // Get tenant ID — prefer X-Customer-Id (SUPERADMIN tenant switch) over JWT customerId
+        const tenantId = resolveTenantId(req);
+        if (!tenantId) {
             send.badRequest(res, 'Customer ID is required for metrics access');
             return;
         }
 
         // Create and execute GetSystemMetrics query
         const getSystemMetricsQuery = GetSystemMetricsQuery.create(
-            tenantId || 'system', // Use 'system' for SUPERADMIN without specific tenant
+            tenantId,
             startTime,
             endTime,
             metricNames,
@@ -956,9 +956,9 @@ monitoringRouter.get('/reports', requireAuth(), async (req: AuthenticatedRequest
             return;
         }
 
-        // Get tenant ID - use customer ID from user context
-        const tenantId = req.user?.customerId;
-        if (!tenantId && req.user?.role !== 'SUPERADMIN') {
+        // Get tenant ID — prefer X-Customer-Id (SUPERADMIN tenant switch) over JWT customerId
+        const tenantId = resolveTenantId(req);
+        if (!tenantId) {
             send.badRequest(res, 'Customer ID is required for report generation');
             return;
         }
@@ -975,7 +975,7 @@ monitoringRouter.get('/reports', requireAuth(), async (req: AuthenticatedRequest
 
         // Create and execute GenerateReport query
         const generateReportQuery = GenerateReportQuery.create(
-            tenantId || 'system', // Use 'system' for SUPERADMIN without specific tenant
+            tenantId,
             reportType,
             startTime,
             endTime,
@@ -1091,16 +1091,16 @@ monitoringRouter.get('/thresholds', requireAuth(), async (req: AuthenticatedRequ
             customerId: req.user?.customerId
         });
 
-        // Get tenant ID - use customer ID from user context
-        const tenantId = req.user?.customerId;
-        if (!tenantId && req.user?.role !== 'SUPERADMIN') {
+        // Get tenant ID — prefer X-Customer-Id (SUPERADMIN tenant switch) over JWT customerId
+        const tenantId = resolveTenantId(req);
+        if (!tenantId) {
             send.badRequest(res, 'Customer ID is required for thresholds access');
             return;
         }
 
         // Create and execute GetThresholds query
         const getThresholdsQuery = GetThresholdsQuery.create(
-            tenantId || 'system', // Use 'system' for SUPERADMIN without specific tenant
+            tenantId,
             deviceId || undefined,
             type || undefined,
             metricName || undefined,
@@ -1205,17 +1205,15 @@ monitoringRouter.post('/thresholds', requireAuth(), async (req: AuthenticatedReq
 
         const thresholdData = validationResult.data;
 
-        // Get tenant ID - use customer ID from user context
-        const customerId = req.user?.customerId;
-        if (!customerId && req.user?.role !== 'SUPERADMIN') {
+        // Get tenant ID — prefer X-Customer-Id (SUPERADMIN tenant switch) over JWT customerId
+        const customerId = resolveTenantId(req);
+        if (!customerId) {
             send.badRequest(res, 'Customer ID is required for threshold creation');
             return;
         }
 
-        // Create tenant context
-        const tenantContext = req.user?.customerId
-            ? TenantContextImpl.create(CustomerId.create(req.user.customerId))
-            : TenantContextImpl.createSuperAdmin();
+        // Use tenant context already built by auth middleware
+        const tenantContext = req.tenant ?? TenantContextImpl.createSuperAdmin();
 
         // Create and execute CreateThreshold command
         const createThresholdCommand = CreateThresholdCommand.create(
@@ -1230,7 +1228,7 @@ monitoringRouter.post('/thresholds', requireAuth(), async (req: AuthenticatedReq
             thresholdData.type as any,
             thresholdData.cooldownMinutes,
             thresholdData.metadata || {},
-            customerId || 'system',
+            customerId,
             tenantContext
         );
 
@@ -1294,7 +1292,7 @@ const updateThresholdSchema = v.object({
 monitoringRouter.put('/thresholds/:id', requireAuth('ADMIN'), async (req: AuthenticatedRequest, res: Response) => {
     try {
         const { id } = req.params;
-        const customerId = req.user?.customerId;
+        const customerId = resolveTenantId(req);
 
         let body: ReturnType<typeof updateThresholdSchema.parse>;
         try {
@@ -1322,9 +1320,7 @@ monitoringRouter.put('/thresholds/:id', requireAuth('ADMIN'), async (req: Authen
         // Effective customerId: prefer caller's (tenant-scoped), fall back to threshold's own.
         const effectiveCustomerId = customerId ?? existing.customerId ?? '';
 
-        const tenantContext = customerId
-            ? TenantContextImpl.create(CustomerId.create(customerId))
-            : TenantContextImpl.createSuperAdmin();
+        const tenantContext = req.tenant ?? TenantContextImpl.createSuperAdmin();
 
         const commandBus = ServiceContainer.getInstance().getCommandBus();
         // Note: the domain ComparisonOperator / ThresholdType use symbolic values ('>', '>=', …)
@@ -1359,7 +1355,7 @@ monitoringRouter.put('/thresholds/:id', requireAuth('ADMIN'), async (req: Authen
 monitoringRouter.delete('/thresholds/:id', requireAuth('ADMIN'), async (req: AuthenticatedRequest, res: Response) => {
     try {
         const { id } = req.params;
-        const customerId = req.user?.customerId;
+        const customerId = resolveTenantId(req);
 
         const where = customerId
             ? { id, customerId, deletedAt: null }

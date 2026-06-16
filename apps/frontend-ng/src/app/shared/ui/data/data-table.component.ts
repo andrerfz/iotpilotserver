@@ -174,10 +174,11 @@ export class DataTableComponent<T extends object = Record<string, unknown>> {
 
   protected readonly sorted = computed(() => {
     const s = this.sort();
-    if (!s.key) return this.rows();
+    const rows = Array.isArray(this.rows()) ? this.rows() : [];
+    if (!s.key) return rows;
     const col = this.columns().find(c => c.key === s.key);
-    if (!col) return this.rows();
-    return [...this.rows()].sort((a, b) => {
+    if (!col) return rows;
+    return [...rows].sort((a, b) => {
       const av = (a as Record<string, unknown>)[s.key] as string | number, bv = (b as Record<string, unknown>)[s.key] as string | number;
       if (av === bv) return 0;
       return (av < bv ? -1 : 1) * s.dir;

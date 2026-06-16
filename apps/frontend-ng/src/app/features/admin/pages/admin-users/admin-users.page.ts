@@ -2,6 +2,8 @@ import {
   AfterViewInit, ChangeDetectionStrategy, Component,
   computed, DestroyRef, inject, OnInit, signal, TemplateRef, ViewChild,
 } from '@angular/core';
+import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
+import { skip } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { addIcons } from 'ionicons';
 import {
@@ -14,6 +16,9 @@ import {
   DataTableComponent, EmptyStateComponent,
   StatusBadgeComponent,
   UiSearchFieldComponent, UiSelectComponent,
+  ViewWillEnter,
+  IonRefresher,
+  IonRefresherContent,
 } from '@ng/shared/ui';
 import type { ColumnDef, SelectOption } from '@ng/shared/ui';
 import { AdminNewUserModalComponent } from '../admin-new-user/admin-new-user.modal';
@@ -21,6 +26,7 @@ import { AuthService } from '../../../../core/auth/auth.service';
 import { hasRole } from '../../../../core/auth/roles';
 import { AdminUsersService, AdminUser } from '../../services/admin-users.service';
 import { TopbarService } from '../../../../shell/topbar.service';
+import { TenantContextService } from '@ng/core/auth/tenant-context.service';
 import { AdminTabsComponent } from '../../components/admin-tabs.component';
 
 addIcons({ checkmarkOutline, closeOutline, banOutline, personOutline, addOutline });
@@ -40,13 +46,15 @@ addIcons({ checkmarkOutline, closeOutline, banOutline, personOutline, addOutline
     UiSearchFieldComponent, UiSelectComponent,
     AdminNewUserModalComponent,
     AdminTabsComponent,
+    IonRefresher, IonRefresherContent,
   ],
 })
-export class AdminUsersPage implements OnInit, AfterViewInit {
+export class AdminUsersPage implements OnInit, AfterViewInit, ViewWillEnter {
   protected readonly svc = inject(AdminUsersService);
   private readonly auth = inject(AuthService);
   private readonly alertCtrl = inject(AlertController);
   private readonly topbar = inject(TopbarService);
+  private readonly tenantCtx = inject(TenantContextService);
   private readonly destroy = inject(DestroyRef);
 
   protected statusFilter = '';
@@ -76,9 +84,24 @@ export class AdminUsersPage implements OnInit, AfterViewInit {
     );
   });
 
+  constructor() {
+    toObservable(this.tenantCtx.customer)
+      .pipe(skip(1), takeUntilDestroyed())
+      .subscribe(() => void this.svc.load());
+  }
+
   ngOnInit(): void {
     this.topbar.set('Users', { icon: 'add-outline', handler: () => this.openNewUserModal() });
+  }
+
+  ionViewWillEnter(): void {
     void this.svc.load();
+  }
+
+  protected onRefresh(ev: Event): void {
+    void this.svc.load().finally(() => {
+      ((ev as CustomEvent).target as HTMLIonRefresherElement | null)?.complete();
+    });
   }
 
   ngAfterViewInit(): void {

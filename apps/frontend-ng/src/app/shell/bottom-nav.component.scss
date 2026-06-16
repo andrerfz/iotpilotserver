@@ -185,3 +185,58 @@
 
   &--danger &__label { color: var(--danger); }
 }
+
+/* ── Tenant picker (inside bottom sheet) ────────────────────────────────── */
+.tp {
+  padding: 0 16px 16px;
+
+  &__banner {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 12px; border-radius: var(--r-sm);
+    background: var(--primary-weak); border: 1px solid var(--primary-line);
+    margin-bottom: 12px;
+  }
+  &__banner-label {
+    font-size: 10px; font-family: var(--font-mono); color: var(--primary);
+    text-transform: uppercase; letter-spacing: .06em;
+  }
+  &__banner-name { flex: 1; font-size: 13px; font-weight: 600; color: var(--text); }
+  &__banner-exit {
+    display: flex; align-items: center; gap: 4px;
+    padding: 4px 10px; border-radius: 99px; border: 1px solid var(--primary-line);
+    background: none; cursor: pointer; font-size: 12px; font-family: var(--font-sans);
+    color: var(--primary);
+    ion-icon { width: 13px; height: 13px; }
+  }
+
+  &__search {
+    display: flex; align-items: center; gap: 8px;
+    padding: 0 10px; height: 38px; border-radius: var(--r-sm);
+    background: var(--surface-2); border: 1px solid var(--ui-border);
+    margin-bottom: 8px;
+  }
+  &__search-icon { width: 15px; height: 15px; color: var(--text-dim); flex: none; }
+  &__input {
+    flex: 1; background: none; border: none; outline: none;
+    font-size: 14px; font-family: var(--font-sans); color: var(--text);
+    &::placeholder { color: var(--text-dim); }
+  }
+
+  &__list { display: flex; flex-direction: column; gap: 2px; }
+  &__empty { font-size: 13px; color: var(--text-dim); text-align: center; padding: 20px 0; }
+
+  &__item {
+    display: flex; align-items: center; gap: 10px; width: 100%;
+    padding: 11px 10px; border-radius: var(--r-sm); border: none;
+    background: none; cursor: pointer; font-size: 14px; font-family: var(--font-sans);
+    color: var(--text); text-align: left;
+    &:hover, &:active { background: var(--surface-2); }
+    &--active { color: var(--primary); font-weight: 600; }
+  }
+
+  &__dot {
+    width: 8px; height: 8px; border-radius: 50%; flex: none;
+    background: var(--surface-3); border: 1px solid var(--ui-border);
+    &--active { background: var(--primary); border-color: var(--primary); }
+  }
+}

@@ -7,6 +7,7 @@ import {
   provideRouter,
   RouteReuseStrategy,
   withPreloading,
+  withRouterConfig,
 } from '@angular/router';
 import {
   IonicRouteStrategy,
@@ -27,7 +28,7 @@ bootstrapApplication(AppComponent, {
   providers: [
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
     provideIonicAngular(),
-    provideRouter(routes, withPreloading(PreloadAllModules)),
+    provideRouter(routes, withPreloading(PreloadAllModules), withRouterConfig({ onSameUrlNavigation: 'reload' })),
     provideHttpClient(withInterceptors([authInterceptor])),
     provideApi(),
     provideTokenStorage(),

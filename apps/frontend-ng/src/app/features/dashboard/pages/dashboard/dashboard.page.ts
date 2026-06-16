@@ -12,7 +12,8 @@ import {
   viewChild,
 } from '@angular/core';
 import { Router } from '@angular/router';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
+import { skip } from 'rxjs';
 import { NgxEchartsDirective } from 'ngx-echarts';
 import type { EChartsOption } from 'echarts';
 import { addIcons } from 'ionicons';
@@ -32,15 +33,16 @@ import {
   EmptyStateComponent,
   IonButton,
   IonCard,
-  IonCardContent,
   IonContent,
   IonIcon,
   IonSkeletonText,
   MetricCardComponent,
   MultiSelectPickerComponent,
-  SeverityBadgeComponent,
   StatusBadgeComponent,
   StatusDotComponent,
+  ViewWillEnter,
+  IonRefresher,
+  IonRefresherContent,
 } from '@ng/shared/ui';
 import type { ColumnDef, DevicePickerItem, PickerOption } from '@ng/shared/ui';
 import type { Device } from '@ng/core/api/generated/models/device';
@@ -50,7 +52,8 @@ import { SocketService } from '@ng/core/realtime/socket.service';
 import { DashboardService } from '../../services/dashboard.service';
 import { applyDeviceFilters } from '../../filters/device-filters';
 import { RegisterDeviceSheetComponent } from '../../components/register-device-sheet/register-device-sheet.component';
-import { TopbarService } from '../../../../shell/topbar.service';
+import { TopbarService } from '@ng/shell/topbar.service';
+import { TenantContextService } from '@ng/core/auth/tenant-context.service';
 
 addIcons({
   addOutline,
@@ -81,26 +84,26 @@ const STATUS_OPTIONS: PickerOption[] = [
     IonButton,
     IonIcon,
     IonCard,
-    IonCardContent,
     IonSkeletonText,
     MetricCardComponent,
     DataTableComponent,
     StatusBadgeComponent,
     StatusDotComponent,
-    SeverityBadgeComponent,
     EmptyStateComponent,
     DevicePickerComponent,
     MultiSelectPickerComponent,
     DateRangePickerComponent,
     RegisterDeviceSheetComponent,
+    IonRefresher, IonRefresherContent,
   ],
 })
-export class DashboardPage implements OnInit, AfterViewInit {
+export class DashboardPage implements OnInit, AfterViewInit, ViewWillEnter {
   private readonly dashService = inject(DashboardService);
   private readonly alertsStream = inject(AlertsStream);
   private readonly socketService = inject(SocketService);
   private readonly router = inject(Router);
   private readonly topbar = inject(TopbarService);
+  private readonly tenantCtx = inject(TenantContextService);
 
   // ── Service surfaces (read-only passthrough) ──────────────────────────────
   readonly devicesLoading = this.dashService.devices.loading;
@@ -199,13 +202,32 @@ export class DashboardPage implements OnInit, AfterViewInit {
           rows.map(r => r.id === ev.deviceId ? { ...r, ...ev.update } : r),
         );
       });
+
+    toObservable(this.tenantCtx.customer)
+        .pipe(skip(1), takeUntilDestroyed())
+        .subscribe(() => void this.loadData());
   }
 
   ngOnInit(): void {
     this.topbar.set('Dashboard', { icon: 'add-outline', handler: () => this.onRegisterDevice() });
-    void this.dashService.devices.load({});
-    void this.dashService.alerts.load({ status: 'active', limit: 5 });
-    void this.dashService.monitoringMetrics.load({ period: '24h' });
+  }
+
+  ionViewWillEnter(): void {
+    void this.loadData();
+  }
+
+  protected onRefresh(ev: Event): void {
+    void this.loadData().finally(() => {
+      ((ev as CustomEvent).target as HTMLIonRefresherElement | null)?.complete();
+    });
+  }
+
+  private async loadData(): Promise<void> {
+    await Promise.allSettled([
+      this.dashService.devices.load({}),
+      this.dashService.alerts.load({ status: 'active', limit: 5 }),
+      this.dashService.monitoringMetrics.load({ period: this.period() as '1h' | '6h' | '24h' | '7d' | '30d' }),
+    ]);
   }
 
   ngAfterViewInit(): void {

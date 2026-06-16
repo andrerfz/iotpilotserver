@@ -2,6 +2,8 @@ import {
   AfterViewInit, ChangeDetectionStrategy, Component,
   computed, DestroyRef, inject, OnInit, signal, TemplateRef, ViewChild,
 } from '@angular/core';
+import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
+import { skip } from 'rxjs';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { addIcons } from 'ionicons';
@@ -15,10 +17,14 @@ import {
   MetricCardComponent, DataTableComponent, EmptyStateComponent,
   StatusBadgeComponent, DeviceTypeBadgeComponent,
   UiSearchFieldComponent, UiSelectComponent,
+  ViewWillEnter,
+  IonRefresher,
+  IonRefresherContent,
 } from '@ng/shared/ui';
 import type { ColumnDef, SelectOption } from '@ng/shared/ui';
 import { AdminDevicesService, AdminDevice } from '../../services/admin-devices.service';
 import { TopbarService } from '../../../../shell/topbar.service';
+import { TenantContextService } from '@ng/core/auth/tenant-context.service';
 import { AdminTabsComponent } from '../../components/admin-tabs.component';
 
 addIcons({ refreshOutline, eyeOutline, reloadOutline, hardwareChipOutline, checkmarkCircleOutline, closeCircleOutline, warningOutline });
@@ -36,12 +42,14 @@ addIcons({ refreshOutline, eyeOutline, reloadOutline, hardwareChipOutline, check
     StatusBadgeComponent, DeviceTypeBadgeComponent,
     UiSearchFieldComponent, UiSelectComponent,
     AdminTabsComponent,
+    IonRefresher, IonRefresherContent,
   ],
 })
-export class AdminDevicesPage implements OnInit, AfterViewInit {
+export class AdminDevicesPage implements OnInit, AfterViewInit, ViewWillEnter {
   protected readonly svc = inject(AdminDevicesService);
   private readonly alertCtrl = inject(AlertController);
   private readonly topbar = inject(TopbarService);
+  private readonly tenantCtx = inject(TenantContextService);
   private readonly destroy = inject(DestroyRef);
 
   protected statusFilter = '';
@@ -72,9 +80,24 @@ export class AdminDevicesPage implements OnInit, AfterViewInit {
     );
   });
 
+  constructor() {
+    toObservable(this.tenantCtx.customer)
+      .pipe(skip(1), takeUntilDestroyed())
+      .subscribe(() => void this.svc.load());
+  }
+
   ngOnInit(): void {
     this.topbar.set('Devices');
+  }
+
+  ionViewWillEnter(): void {
     void this.svc.load();
+  }
+
+  protected onRefresh(ev: Event): void {
+    void this.svc.load().finally(() => {
+      ((ev as CustomEvent).target as HTMLIonRefresherElement | null)?.complete();
+    });
   }
 
   ngAfterViewInit(): void {

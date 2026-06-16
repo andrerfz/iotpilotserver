@@ -10,6 +10,12 @@
  *   size sm  → size="small"
  */
 
+// Lifecycle interfaces (from @ionic/angular, not standalone)
+export { ViewWillEnter } from '@ionic/angular';
+
+// Pull-to-refresh
+export { IonRefresher, IonRefresherContent } from '@ionic/angular/standalone';
+
 // Structural (shell-level, exported for convenience in deep shell components)
 export { IonApp, IonRouterOutlet } from '@ionic/angular/standalone';
 

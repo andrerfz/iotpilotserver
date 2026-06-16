@@ -31,10 +31,14 @@
   white-space: nowrap;
   flex-shrink: 0;
   border: 1px solid transparent;
+  background: transparent;
+  appearance: none;
+  cursor: pointer;
   transition: background .12s, color .12s;
 
   ion-icon { width: 15px; height: 15px; flex: none; }
 
+  &:focus { outline: none; }
   &:hover { background: var(--surface-2); color: var(--text); }
 
   &--active {

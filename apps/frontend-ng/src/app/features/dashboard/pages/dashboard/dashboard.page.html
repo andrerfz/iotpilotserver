@@ -1,4 +1,7 @@
 <ion-content class="ion-padding">
+  <ion-refresher slot="fixed" (ionRefresh)="onRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
 
   <!-- Page head -->
   <div class="pagehead">

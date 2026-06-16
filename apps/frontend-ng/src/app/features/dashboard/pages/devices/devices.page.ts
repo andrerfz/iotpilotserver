@@ -13,7 +13,8 @@ import {
   viewChild,
 } from '@angular/core';
 import { Router } from '@angular/router';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
+import { skip } from 'rxjs';
 import { addIcons } from 'ionicons';
 import {
   addOutline,
@@ -40,6 +41,9 @@ import {
   StatusBadgeComponent,
   StatusDotComponent,
   UiSearchFieldComponent,
+  ViewWillEnter,
+  IonRefresher,
+  IonRefresherContent,
 } from '@ng/shared/ui';
 import type { ColumnDef, DevicePickerItem, PickerOption } from '@ng/shared/ui';
 import type { Device } from '@ng/core/api/generated/models/device';
@@ -48,6 +52,7 @@ import { DashboardService } from '../../services/dashboard.service';
 import { applyDeviceFilters } from '../../filters/device-filters';
 import { RegisterDeviceSheetComponent } from '../../components/register-device-sheet/register-device-sheet.component';
 import { TopbarService } from '../../../../shell/topbar.service';
+import { TenantContextService } from '@ng/core/auth/tenant-context.service';
 
 addIcons({
   addOutline,
@@ -89,13 +94,15 @@ const STATUS_OPTIONS: PickerOption[] = [
     DevicePickerComponent,
     MultiSelectPickerComponent,
     RegisterDeviceSheetComponent,
+    IonRefresher, IonRefresherContent,
   ],
 })
-export class DevicesPage implements OnInit, AfterViewInit {
+export class DevicesPage implements OnInit, AfterViewInit, ViewWillEnter {
   private readonly dashService = inject(DashboardService);
   private readonly socketService = inject(SocketService);
   private readonly router = inject(Router);
   private readonly topbar = inject(TopbarService);
+  private readonly tenantCtx = inject(TenantContextService);
   private readonly destroy = inject(DestroyRef);
 
   readonly devicesLoading = this.dashService.devices.loading;
@@ -163,11 +170,24 @@ export class DevicesPage implements OnInit, AfterViewInit {
           rows.map(r => r.id === ev.deviceId ? { ...r, ...ev.update } : r),
         );
       });
+
+    toObservable(this.tenantCtx.customer)
+        .pipe(skip(1), takeUntilDestroyed())
+        .subscribe(() => void this.dashService.devices.load({ limit: 50 }));
   }
 
   ngOnInit(): void {
     this.topbar.set('Devices', { icon: 'add-outline', handler: () => this.onRegisterDevice() });
+  }
+
+  ionViewWillEnter(): void {
     void this.dashService.devices.load({ limit: 50 });
+  }
+
+  protected onRefresh(ev: Event): void {
+    void this.dashService.devices.load({ limit: 50 }).finally(() => {
+      ((ev as CustomEvent).target as HTMLIonRefresherElement | null)?.complete();
+    });
   }
 
   ngAfterViewInit(): void {

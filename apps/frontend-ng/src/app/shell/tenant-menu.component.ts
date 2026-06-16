@@ -2,10 +2,13 @@ import {
   Component, signal, computed, HostListener, ElementRef, inject,
   ChangeDetectionStrategy, effect,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
 import { IonIcon } from '@ng/shared/ui';
 import { addIcons } from 'ionicons';
 import { chevronDown, peopleOutline, settingsOutline, closeOutline, searchOutline } from 'ionicons/icons';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AuthService } from '@ng/core/auth/auth.service';
 import { hasRole } from '@ng/core/auth/roles';
 import { AdminStatsService } from '@ng/features/admin/services/admin-stats.service';
@@ -66,21 +69,24 @@ interface Customer { id: string; name: string; status: string; }
             <div class="picker__search">
               <ion-icon name="search-outline" class="picker__search-icon"></ion-icon>
               <input class="picker__input" type="text" placeholder="Search customers…"
-                     [value]="search()" (input)="search.set($any($event.target).value)">
+                     [value]="search()" (input)="onSearchInput($event)">
             </div>
-            <div class="picker__list">
-              @if (loadingCustomers()) {
+            <div class="picker__list" (scroll)="onPickerScroll($event)">
+              @if (loadingCustomers() && customers().length === 0) {
                 <div class="picker__empty">Loading…</div>
-              } @else if (filteredCustomers().length === 0) {
+              } @else if (customers().length === 0) {
                 <div class="picker__empty">No customers found</div>
               } @else {
-                @for (c of filteredCustomers(); track c.id) {
+                @for (c of customers(); track c.id) {
                   <button class="picker__item"
                           [class.picker__item--active]="ctx.customer()?.id === c.id"
                           (click)="selectCustomer(c)">
                     <span class="picker__dot" [class.picker__dot--active]="ctx.customer()?.id === c.id"></span>
                     {{ c.name }}
                   </button>
+                }
+                @if (loadingCustomers()) {
+                  <div class="picker__empty">Loading more…</div>
                 }
               }
             </div>
@@ -100,6 +106,7 @@ interface Customer { id: string; name: string; status: string; }
 export class TenantMenuComponent {
   private readonly host = inject(ElementRef<HTMLElement>);
   private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
   private readonly stats = inject(AdminStatsService);
   protected readonly ctx = inject(TenantContextService);
   private readonly api = inject(Api);
@@ -107,8 +114,11 @@ export class TenantMenuComponent {
   protected readonly open = signal(false);
   protected readonly customers = signal<Customer[]>([]);
   protected readonly loadingCustomers = signal(false);
+  protected readonly customersHasMore = signal(false);
   protected readonly search = signal('');
-  private customersLoaded = false;
+  private customersPage = 1;
+
+  private readonly searchInput$ = new Subject<string>();
 
   protected readonly displayName = computed(() =>
     this.ctx.customer()?.name ?? this.auth.currentUser()?.username ?? 'Platform',
@@ -121,10 +131,6 @@ export class TenantMenuComponent {
   protected readonly loading = computed(() => this.stats.loading());
 
   protected readonly isSuperAdmin = computed(() => hasRole(this.auth.role(), 'SUPERADMIN'));
-  protected readonly filteredCustomers = computed(() => {
-    const q = this.search().toLowerCase().trim();
-    return q ? this.customers().filter(c => c.name.toLowerCase().includes(q)) : this.customers();
-  });
 
   constructor() {
     effect(() => {
@@ -132,24 +138,67 @@ export class TenantMenuComponent {
         void this.stats.load();
       }
     });
+
+    this.searchInput$.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      takeUntilDestroyed(),
+    ).subscribe(() => {
+      this.customersPage = 1;
+      this.customers.set([]);
+      void this.fetchCustomers();
+    });
   }
 
   protected toggle(): void {
     this.open.update(o => !o);
-    if (this.open() && !this.customersLoaded) {
-      void this.loadCustomers();
+    if (this.open()) {
+      this.search.set('');
+      this.customersPage = 1;
+      this.customers.set([]);
+      this.customersHasMore.set(false);
+      void this.fetchCustomers();
     }
   }
 
   protected close(): void { this.open.set(false); }
 
-  protected async loadCustomers(): Promise<void> {
+  protected onSearchInput(e: Event): void {
+    const v = (e.target as HTMLInputElement).value;
+    this.search.set(v);
+    this.searchInput$.next(v);
+  }
+
+  protected onPickerScroll(e: Event): void {
+    const el = e.target as HTMLElement;
+    if (
+      el.scrollHeight - el.scrollTop - el.clientHeight < 30 &&
+      this.customersHasMore() &&
+      !this.loadingCustomers()
+    ) {
+      void this.fetchCustomers();
+    }
+  }
+
+  private async fetchCustomers(): Promise<void> {
+    if (this.loadingCustomers()) return;
     this.loadingCustomers.set(true);
     try {
-      const res = await this.api.invoke(listAdminCustomers, { limit: 100 });
-      const body = res as unknown as { data?: Customer[] };
-      this.customers.set(body.data ?? (Array.isArray(res) ? (res as Customer[]) : []));
-      this.customersLoaded = true;
+      const res = await this.api.invoke(listAdminCustomers, {
+        limit: 50,
+        page: this.customersPage,
+        search: this.search() || undefined,
+      });
+      const body = res as unknown as { data?: Customer[]; pagination?: { total: number } };
+      const items: Customer[] = body.data ?? (Array.isArray(res) ? (res as Customer[]) : []);
+      const total = body.pagination?.total ?? items.length;
+      if (this.customersPage === 1) {
+        this.customers.set(items);
+      } else {
+        this.customers.update(prev => [...prev, ...items]);
+      }
+      this.customersHasMore.set(this.customers().length < total);
+      this.customersPage++;
     } finally {
       this.loadingCustomers.set(false);
     }
@@ -159,6 +208,7 @@ export class TenantMenuComponent {
     const summary: CustomerSummary = { id: c.id, name: c.name, status: c.status };
     this.ctx.set(summary);
     this.close();
+    // Pages react reactively via toObservable(tenantCtx.customer).pipe(skip(1))
   }
 
   protected exitCustomer(): void {
