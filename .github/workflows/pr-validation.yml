@@ -41,14 +41,8 @@ jobs:
       - name: Generate Prisma client
         run: pnpm --filter @iotpilot/backend exec prisma generate --schema=./prisma/schema.prisma
 
-      - name: Lint
-        run: cd apps/frontend && npm run lint
-
       - name: Type-check
         run: pnpm turbo type-check
-
-      - name: Unit tests
-        run: cd apps/frontend && npm run test:unit -- --run
 
   # ──────────────────────────────────────────────
   # Workspace lock validation (now same as quick-check install)

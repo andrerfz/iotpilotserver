@@ -35,92 +35,97 @@ services:
     networks:
       - iotpilot-network
     depends_on:
-      iotpilot-app:
+      iotpilot-backend:
         condition: service_healthy
 
-  # Main IotPilot Application
-  iotpilot-app:
+  # ── frontend-ng (Ionic + Angular) — PRIMARY FRONTEND (fe-cutover complete) ───
+  iotpilot-ng:
     build:
       context: ../..
       dockerfile: ./infra/docker/Dockerfile
-      args:
-        - NODE_ENV=production
-        - NEXT_PUBLIC_DOMAIN_TUNEL=${NEXT_PUBLIC_DOMAIN_TUNEL}
-        - NEXT_PUBLIC_GRAFANA_CLOUDFLARE_URL=${NEXT_PUBLIC_GRAFANA_CLOUDFLARE_URL}
-        - NEXT_PUBLIC_INFLUXDB_CLOUDFLARE_URL=${NEXT_PUBLIC_INFLUXDB_CLOUDFLARE_URL}
-    container_name: iotpilot-app
-    environment:
-      - NODE_ENV=production
-      - DATABASE_URL=${DATABASE_URL}
-      - GRAFANA_URL=http://grafana:3000
-      - INFLUXDB_URL=http://influxdb:8086
-      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN}
-      - INFLUXDB_ORG=${INFLUXDB_ORG}
-      - INFLUXDB_BUCKET=${INFLUXDB_BUCKET}
-      - LOKI_URL=http://loki:3100
-      - REDIS_URL=redis://redis:6379
-      - JWT_SECRET=${JWT_SECRET}
-      - DEVICE_API_KEY=${DEVICE_API_KEY}
-      - SESSION_SECRET=${SESSION_SECRET}
-      - DOMAIN=${DOMAIN}
-      - TAILSCALE_DOMAIN=${NEXT_PUBLIC_TAILSCALE_DOMAIN}
-      - BACKEND_URL=http://iotpilot-backend:3100
-      - WEBHOOK_SECRET=${WEBHOOK_SECRET}
-      - SMTP_HOST=${SMTP_HOST}
-      - SMTP_PORT=${SMTP_PORT}
-      - SMTP_USER=${SMTP_USER}
-      - SMTP_PASS=${SMTP_PASS}
-      - FROM_EMAIL=${FROM_EMAIL}
-    volumes:
-      - ../../data:/app/data
-      - ../../logs:/app/logs
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - tailscale-socket:/tmp/tailscale
+      target: production-ng
+    container_name: iotpilot-ng
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-      influxdb:
-        condition: service_healthy
-      tailscale:
-        condition: service_started
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
     networks:
       - iotpilot-network
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.iotpilot.rule=Host(`${DOMAIN}`) || Host(`${TAILSCALE_DOMAIN}`)"
-      - "traefik.http.routers.iotpilot.tls=true"
-      - "traefik.http.routers.iotpilot.tls.certresolver=letsencrypt"
-      - "traefik.http.services.iotpilot.loadbalancer.server.port=3000"
-      - "traefik.http.routers.iotpilot.middlewares=compression,rate-limit,security-headers"
+      - "traefik.http.services.iotpilot-ng.loadbalancer.server.port=80"
+      - "traefik.http.routers.iotpilot-ng.rule=Host(`${DOMAIN}`) || Host(`${TAILSCALE_DOMAIN}`)"
+      - "traefik.http.routers.iotpilot-ng.tls=true"
+      - "traefik.http.routers.iotpilot-ng.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.iotpilot-ng.middlewares=compression,security-headers"
+      - "traefik.http.routers.iotpilot-ng.priority=100"
 
-  # ── frontend-ng (Ionic + Angular) — DISABLED until fe-cutover ────────────────
-  # When ready: uncomment this block, disable/remove iotpilot-app above,
-  # and ensure iotpilot-backend is reachable at /api/* via Traefik path routing.
-  # iotpilot-ng:
+  # ── legacy Next.js app — DISABLED (fe-cutover complete; remove after 24h prod green) ─
+  # Rollback: remove iotpilot-ng above, uncomment this block, docker compose up -d
+  # iotpilot-app:
   #   build:
   #     context: ../..
   #     dockerfile: ./infra/docker/Dockerfile
-  #     target: production-ng
-  #   container_name: iotpilot-ng
+  #     args:
+  #       - NODE_ENV=production
+  #       - NEXT_PUBLIC_DOMAIN_TUNEL=${NEXT_PUBLIC_DOMAIN_TUNEL}
+  #       - NEXT_PUBLIC_GRAFANA_CLOUDFLARE_URL=${NEXT_PUBLIC_GRAFANA_CLOUDFLARE_URL}
+  #       - NEXT_PUBLIC_INFLUXDB_CLOUDFLARE_URL=${NEXT_PUBLIC_INFLUXDB_CLOUDFLARE_URL}
+  #   container_name: iotpilot-app
+  #   environment:
+  #     - NODE_ENV=production
+  #     - DATABASE_URL=${DATABASE_URL}
+  #     - GRAFANA_URL=http://grafana:3000
+  #     - INFLUXDB_URL=http://influxdb:8086
+  #     - INFLUXDB_TOKEN=${INFLUXDB_TOKEN}
+  #     - INFLUXDB_ORG=${INFLUXDB_ORG}
+  #     - INFLUXDB_BUCKET=${INFLUXDB_BUCKET}
+  #     - LOKI_URL=http://loki:3100
+  #     - REDIS_URL=redis://redis:6379
+  #     - JWT_SECRET=${JWT_SECRET}
+  #     - DEVICE_API_KEY=${DEVICE_API_KEY}
+  #     - SESSION_SECRET=${SESSION_SECRET}
+  #     - DOMAIN=${DOMAIN}
+  #     - TAILSCALE_DOMAIN=${NEXT_PUBLIC_TAILSCALE_DOMAIN}
+  #     - BACKEND_URL=http://iotpilot-backend:3100
+  #     - WEBHOOK_SECRET=${WEBHOOK_SECRET}
+  #     - SMTP_HOST=${SMTP_HOST}
+  #     - SMTP_PORT=${SMTP_PORT}
+  #     - SMTP_USER=${SMTP_USER}
+  #     - SMTP_PASS=${SMTP_PASS}
+  #     - FROM_EMAIL=${FROM_EMAIL}
+  #   volumes:
+  #     - ../../data:/app/data
+  #     - ../../logs:/app/logs
+  #     - /var/run/docker.sock:/var/run/docker.sock:ro
+  #     - tailscale-socket:/tmp/tailscale
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #     influxdb:
+  #       condition: service_healthy
+  #     tailscale:
+  #       condition: service_started
   #   restart: unless-stopped
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #     start_period: 60s
   #   networks:
   #     - iotpilot-network
   #   labels:
   #     - "traefik.enable=true"
-  #     - "traefik.http.services.iotpilot-ng.loadbalancer.server.port=80"
-  #     - "traefik.http.routers.iotpilot-ng.rule=Host(`${DOMAIN}`) || Host(`${TAILSCALE_DOMAIN}`)"
-  #     - "traefik.http.routers.iotpilot-ng.tls=true"
-  #     - "traefik.http.routers.iotpilot-ng.tls.certresolver=letsencrypt"
-  #     - "traefik.http.routers.iotpilot-ng.middlewares=compression,security-headers"
+  #     - "traefik.http.routers.iotpilot.rule=Host(`${DOMAIN}`) || Host(`${TAILSCALE_DOMAIN}`)"
+  #     - "traefik.http.routers.iotpilot.tls=true"
+  #     - "traefik.http.routers.iotpilot.tls.certresolver=letsencrypt"
+  #     - "traefik.http.services.iotpilot.loadbalancer.server.port=3000"
+  #     - "traefik.http.routers.iotpilot.middlewares=compression,rate-limit,security-headers"
 
   # Express API Backend
   iotpilot-backend:

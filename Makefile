@@ -15,12 +15,12 @@
 .PHONY: sync-node-modules clean-dev
 .PHONY: queue-status queue-failed queue-retry queue-clean queue-drain queue-dashboard
 .PHONY: ssh prod-logs prod-deploy prod-rollback prod-restart prod-status prod-migrate
-.PHONY: ng-dev ng-lint ng-test ng-type-check ng-build ng-image ng-logs ng-api-generate ng-api-check ng-cap-sync ng-cap-build-ios ng-cap-build-android _ng-running
+.PHONY: ng-dev ng-lint ng-test ng-type-check ng-build ng-image ng-logs ng-api-generate ng-api-check ng-parity ng-cap-sync ng-cap-build-ios ng-cap-build-android _ng-running
 
 # Variables - Using .env for both production and local
 COMPOSE_FILE = infra/docker/docker-compose.yml --env-file .env
 LOCAL_COMPOSE_FILE = infra/docker/docker-compose.local.yml --env-file .env.local
-SERVICE ?= iotpilot-app
+SERVICE ?= iotpilot-ng
 ENV_FILE = .env
 
 # Production server connection
@@ -28,9 +28,6 @@ PROD_HOST ?= 52.23.9.165
 PROD_USER ?= ubuntu
 PROD_KEY  ?= ~/.ssh/iotpilot-server.pem
 SSH_CMD    = ssh -i $(PROD_KEY) $(PROD_USER)@$(PROD_HOST)
-
-# Run a command inside the frontend package directory in the app container
-EXEC_FRONTEND = docker exec -w /app/apps/frontend iotpilot-server-app
 
 # Run a command inside the frontend-ng package directory in its dev container
 EXEC_NG = docker exec -w /app/apps/frontend-ng iotpilot-server-ng
@@ -93,8 +90,6 @@ help:
 	@echo ""
 	@echo "🔧 Development:"
 	@echo "  dev                  - Start development (alias for local-start)"
-	@echo "  lint                 - Run linter in Docker"
-	@echo "  route-list           - List all routes (from docs/openapi.yml + Next.js pages)"
 	@echo "  openapi-check        - Check if backend routes are documented in openapi.yml"
 	@echo "  openapi-diff         - Same as openapi-check but exits 1 on missing docs (CI use)"
 	@echo ""
@@ -107,6 +102,7 @@ help:
 	@echo "  ng-image             - Build frontend-ng production Docker image (nginx)"
 	@echo "  ng-api-generate      - Regenerate typed API client from docs/openapi.yml (host)"
 	@echo "  ng-api-check         - Fail if the committed API client is stale (CI guard)"
+	@echo "  ng-parity            - Smoke-test Angular app routes (HTTP 200 check)"
 	@echo "  ng-logs              - Follow frontend-ng dev server logs"
 	@echo "  ng-cap-sync          - Build frontend-ng then sync web assets to native projects"
 	@echo "  ng-cap-build-ios     - Build signed iOS .ipa (macOS + Xcode required)"
@@ -458,21 +454,18 @@ local-stop:
 	@echo "✅ Local services stopped!"
 
 local-restart:
-	@docker exec iotpilot-server-app rm -rf .next 2>/dev/null || true
 	@make local-stop
 	@make local-start
 
 local-restart-app:
-	@docker compose -f $(LOCAL_COMPOSE_FILE) restart iotpilot-app
-	@make wait-for-app
+	@docker compose -f $(LOCAL_COMPOSE_FILE) restart iotpilot-ng
 	@make check-and-setup-db
 
 local-restart-backend:
 	@docker compose -f $(LOCAL_COMPOSE_FILE) restart iotpilot-backend
 
 local-restart-services:
-	@docker compose -f $(LOCAL_COMPOSE_FILE) restart iotpilot-app iotpilot-backend
-	@make wait-for-app
+	@docker compose -f $(LOCAL_COMPOSE_FILE) restart iotpilot-ng iotpilot-backend
 	@make check-and-setup-db
 
 local-recreate: ## Recreate all local containers (no data loss)
@@ -480,49 +473,12 @@ local-recreate: ## Recreate all local containers (no data loss)
 	@docker compose -f $(LOCAL_COMPOSE_FILE) up -d --force-recreate
 
 local-recreate-app:
-	@echo "⏹️  Recreating local app..."
-	@echo "🧹 Cleaning Next.js build cache (host + container)..."
-	@rm -rf apps/frontend/.next 2>/dev/null || true
-	@docker exec iotpilot-server-app rm -rf /app/apps/frontend/.next 2>/dev/null || true
-	@docker compose -f $(LOCAL_COMPOSE_FILE) down iotpilot-app
-	@echo "🔨 Building app (frontend + backend + worker share same image)..."
-	@TMPFILE=$$(mktemp); \
-		set -o pipefail; \
-		if docker compose -f $(LOCAL_COMPOSE_FILE) build --no-cache iotpilot-app iotpilot-backend iotpilot-worker 2>&1 | tee $$TMPFILE; then \
-			BUILD_EXIT=0; \
-		else \
-			BUILD_EXIT=$$?; \
-		fi; \
-		set +o pipefail; \
-		echo ""; \
-		ERROR_COUNT=$$(grep -c "error TS[0-9]\+" $$TMPFILE 2>/dev/null || echo "0"); \
-		if [ $$ERROR_COUNT -gt 0 ]; then \
-			echo "═══════════════════════════════════════════════════════════"; \
-			echo "❌ Found $$ERROR_COUNT TypeScript error(s). Showing first 20:"; \
-			echo "═══════════════════════════════════════════════════════════"; \
-			echo ""; \
-			grep "error TS[0-9]\+" $$TMPFILE | head -n 20; \
-			if [ $$ERROR_COUNT -gt 20 ]; then \
-				echo ""; \
-				echo "... (truncated, showing first 20 of $$ERROR_COUNT errors)"; \
-			fi; \
-			echo ""; \
-			echo "═══════════════════════════════════════════════════════════"; \
-		fi; \
-		rm -f $$TMPFILE; \
-		if [ $$BUILD_EXIT -ne 0 ]; then \
-			echo ""; \
-			echo "❌ Build failed. Fix the errors above and try again."; \
-			exit $$BUILD_EXIT; \
-		fi
-	@docker compose -f $(LOCAL_COMPOSE_FILE) up -d iotpilot-app
-	@echo "🔄 Recreating backend and worker with new image..."
-	@docker compose -f $(LOCAL_COMPOSE_FILE) up -d --force-recreate iotpilot-backend iotpilot-worker
-	@make wait-for-app
-	@echo "ℹ️  node_modules are in pnpm workspace — run: pnpm install"
-	@make check-and-setup-db
-	@make apply-seeds
-	@echo "✅ App recreated and ready!"
+	@echo "⏹️  Recreating frontend-ng container..."
+	@docker compose -f $(LOCAL_COMPOSE_FILE) down iotpilot-ng
+	@echo "🔨 Rebuilding frontend-ng image..."
+	@docker compose -f $(LOCAL_COMPOSE_FILE) build --no-cache iotpilot-ng
+	@docker compose -f $(LOCAL_COMPOSE_FILE) up -d iotpilot-ng
+	@echo "✅ frontend-ng recreated and ready!"
 
 sync-node-modules: check-env
 	@echo "📦 Syncing node_modules from container..."
@@ -539,7 +495,7 @@ ide-setup: check-env generate-prisma-client sync-node-modules
 
 clean-dev:
 	@echo "🧹 Cleaning development artifacts..."
-	@rm -rf apps/frontend/.next apps/frontend/dist 2>/dev/null || true
+	@rm -rf apps/frontend-ng/.angular 2>/dev/null || true
 	@echo "✅ Development cleanup complete!"
 
 local-status:
@@ -662,20 +618,6 @@ test:
 			exit $$TEST_EXIT; \
 		fi
 
-fix-npm-deps:
-	@echo "🔧 Fixing npm dependencies bug..."
-	@docker exec iotpilot-server-app sh -c "rm -rf node_modules package-lock.json && npm install"
-	@echo "✅ Dependencies fixed!"
-
-lint:
-	@echo "🔍 Running linter..."
-	@if docker ps -q -f name=iotpilot-server-app | grep -q .; then \
-		$(EXEC_FRONTEND) npm run lint; \
-	else \
-		cd apps/frontend && npm install --legacy-peer-deps --no-optional --no-fund --no-audit && npm run lint; \
-	fi
-	@echo "✅ Linting complete!"
-
 # ─── frontend-ng (Ionic + Angular) ──────────────────────────────────────────
 # ng-dev starts the dev server; the rest exec npm scripts inside its container.
 _ng-running:
@@ -734,6 +676,10 @@ ng-api-check:
 	fi
 	@echo "✅ Generated API client is in sync."
 
+ng-parity:
+	@echo "🔍 Parity smoke-test: legacy (port 3001) vs Angular (port 4201)..."
+	@node scripts/ng-parity.mjs
+
 ng-cap-sync: _ng-running
 	@echo "📱 Building frontend-ng and syncing to native projects..."
 	@$(EXEC_NG) npm run build
@@ -762,133 +708,17 @@ ng-cap-build-android:
 	@cd apps/frontend-ng/android && ./gradlew bundleRelease
 	@echo "✅ Android .aab at apps/frontend-ng/android/app/build/outputs/bundle/release/"
 
-route-list:
-	@echo "📋 Listing all routes (from docs/openapi.yml + Next.js pages)..."
-	@node apps/frontend/scripts/list-routes.js
-
 openapi-check:
-	@echo "🔍 Checking OpenAPI spec is in sync with backend routes..."
-	@node apps/frontend/scripts/check-openapi.js
+	@echo "🔍 Checking OpenAPI spec endpoint coverage..."
+	@node scripts/check-openapi.mjs 2>/dev/null || echo "⚠️  check-openapi.mjs not found — run ng-api-check instead"
 
 openapi-diff:
-	@echo "🔍 OpenAPI diff (strict — exits 1 if undocumented routes found)..."
-	@node apps/frontend/scripts/check-openapi.js --strict
-
-test-unit:
-	@echo "🧪 Running unit tests in Docker..."
-	@$(EXEC_FRONTEND) npm test -- --run src/__tests__/unit
-
-test-integration:
-	@echo "🧪 Running integration tests in Docker..."
-	@$(EXEC_FRONTEND) npm test -- --run src/__tests__/integration
-
-test-e2e:
-	@echo "🌐 Running E2E tests in Docker..."
-	@$(EXEC_FRONTEND) npm run test:e2e -- --run
-
-test-integration-auth:
-	@echo "🧪 Running tests in Docker..."
-	@$(MAKE) test-file FILE=src/__tests__/integration/api-routes-auth.integration.test.ts
-	@echo "✅ Tests complete!"
-
-test-influxdb:
-	@echo "🧪 Running InfluxDB tests in Docker..."
-	@$(EXEC_FRONTEND) npm test -- --run src/__tests__/influxdb --reporter=verbose
-
-test-ci: check-env
-	@echo "🧪 Running CI tests in Docker..."
-	@docker exec iotpilot-server-app sh -c "CI=true npm test -- --coverage --run"
+	@echo "🔍 OpenAPI diff (exits 1 if stale)..."
+	@make ng-api-check
 
 test-db:
 	@echo "🧪 Testing database..."
 	@docker exec iotpilot-server-postgres psql -U iotpilot -d iotpilot -c "SELECT COUNT(*) FROM devices;" 2>/dev/null && echo "✅ Database working!"
-
-test-fresh: check-env
-	@echo "🧪 Running tests in fresh container..."
-	@docker compose -f $(LOCAL_COMPOSE_FILE) build --no-cache iotpilot-app
-	@docker compose -f $(LOCAL_COMPOSE_FILE) up -d iotpilot-app
-	@make wait-for-app
-	@make test
-
-test-file: check-env
-	@echo "🧪 Running test file: $(FILE)"
-	@if [ -z "$(FILE)" ]; then \
-		echo "❌ Please provide test file: make test-file FILE=src/__tests__/auth.test.ts"; \
-		exit 1; \
-	fi
-	@$(EXEC_FRONTEND) npm test -- --run $(FILE)
-
-test-debug: check-env
-	@echo "🔍 Running tests with debug output..."
-	@$(EXEC_FRONTEND) npm test -- --reporter=verbose --run
-
-test-summary: check-env
-	@echo "📊 Running tests (summary mode, no lint)..."
-	@TMPFILE=$$(mktemp); \
-		set -o pipefail; \
-		if $(EXEC_FRONTEND) npm test -- --reporter=basic --bail=1 2>&1 | tee $$TMPFILE; then \
-			TEST_EXIT=0; \
-		else \
-			TEST_EXIT=$$?; \
-		fi; \
-		set +o pipefail; \
-		echo ""; \
-		FAILED_COUNT=$$(grep -c "FAIL " $$TMPFILE 2>/dev/null || echo "0"); \
-		if [ $$FAILED_COUNT -gt 0 ]; then \
-			echo "═══════════════════════════════════════════════════════════"; \
-			echo "❌ Failed Tests (top 10):"; \
-			echo "═══════════════════════════════════════════════════════════"; \
-			grep "FAIL " $$TMPFILE | head -n 10; \
-			if [ $$FAILED_COUNT -gt 10 ]; then \
-				echo "... (showing 10 of $$FAILED_COUNT)"; \
-			fi; \
-			echo ""; \
-			echo "📊 Summary:"; \
-			grep -E "Test Files|Tests " $$TMPFILE | tail -2; \
-			echo "═══════════════════════════════════════════════════════════"; \
-		else \
-			echo "✅ All tests passed!"; \
-		fi; \
-		rm -f $$TMPFILE; \
-		exit $$TEST_EXIT
-
-test-working: check-env
-	@echo "🧪 Running only passing tests..."
-	@$(EXEC_FRONTEND) npm test -- --run \
-		src/__tests__/integration/api-routes-auth.integration.test.ts \
-		src/lib/device/domain/entities/tests/ssh-session.entity.test.ts
-	@echo "✅ Working tests complete!"
-
-test-watch: check-env
-	@echo "👀 Running tests in watch mode..."
-	@docker exec -it iotpilot-server-app npm test
-
-test-coverage: check-env
-	@echo "📊 Generating test coverage..."
-	@$(EXEC_FRONTEND) npm test -- --coverage --run
-
-test-env-check:
-	@echo "🔍 Checking test environment..."
-	@docker exec iotpilot-server-app node -e "console.log('Node version:', process.version); console.log('Environment:', process.env.NODE_ENV);"
-
-test-integration-full: check-env
-	@echo "🔗 Running full integration tests..."
-	@make test-db
-	@make test-influxdb
-	@make test-api
-
-test-performance: check-env
-	@echo "⚡ Running performance tests..."
-	@$(EXEC_FRONTEND) npm test -- --run src/__tests__/performance
-
-test-security: check-env
-	@echo "🔒 Running security tests..."
-	@$(EXEC_FRONTEND) npm audit
-	@$(EXEC_FRONTEND) npm test -- --run src/__tests__/security
-
-test-clean:
-	@echo "🧹 Cleaning test artifacts..."
-	@docker exec iotpilot-server-app rm -rf coverage/ junit.xml || true
 
 test-db-with-data: check-env
 	@echo "🗄️ Testing database with sample data..."

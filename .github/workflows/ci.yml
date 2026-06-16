@@ -88,26 +88,8 @@ jobs:
       - name: Push database schema
         run: cd apps/backend && npx prisma db push --schema=./prisma/schema.prisma --accept-data-loss
 
-      - name: Lint (frontend)
-        run: cd apps/frontend && npm run lint
-
       - name: Type-check (all workspace packages via Turborepo)
         run: pnpm turbo type-check
-
-      - name: Unit tests (frontend)
-        run: cd apps/frontend && npm run test:unit -- --run
-
-      - name: Integration tests (frontend)
-        continue-on-error: true # TEMP: legacy-frontend integration tests need CI service setup; frontend is being replaced (fe-cutover). Non-blocking until then.
-        run: cd apps/frontend && npm run test:integration -- --run
-
-      - name: Upload coverage
-        uses: actions/upload-artifact@v7
-        if: always()
-        with:
-          name: coverage-${{ github.run_number }}
-          path: apps/frontend/coverage/
-          retention-days: 14
 
   # ──────────────────────────────────────────────────────────────────
   # Capacitor sync: verify web build copies cleanly into native shells
@@ -151,5 +133,5 @@ jobs:
       - name: Validate Docker Compose config
         run: docker compose -f infra/docker/docker-compose.local.yml config
 
-      - name: Build Docker image
-        run: docker compose -f infra/docker/docker-compose.local.yml build --no-cache iotpilot-app
+      - name: Build Docker image (development stage)
+        run: docker compose -f infra/docker/docker-compose.local.yml build --no-cache iotpilot-ng

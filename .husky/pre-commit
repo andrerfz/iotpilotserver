@@ -12,34 +12,7 @@ if ! docker info > /dev/null 2>&1; then
     exit 1
 fi
 
-# Check if app container is running
-if ! docker ps --format '{{.Names}}' | grep -q '^iotpilot-server-app$'; then
-    echo "❌ Container 'iotpilot-server-app' is not running!"
-    echo "💡 Start the development environment first:"
-    echo "   make dev-start   (recommended: hot reload)"
-    echo "   make local-start (alternative)"
-    exit 1
-fi
-
 echo "✅ Docker environment ready"
-echo ""
-
-# Run linting
-echo "📝 Linting code..."
-if ! make lint; then
-    echo ""
-    echo "❌ Linting failed! Please fix errors before committing."
-    exit 1
-fi
-
-echo ""
-echo "🔎 Type checking..."
-if ! docker exec -w /app/apps/frontend iotpilot-server-app npm run type-check; then
-    echo ""
-    echo "❌ TypeScript errors found! Please fix before committing."
-    exit 1
-fi
-
 echo ""
 
 # Warn when backend routes change but openapi.yml is not updated

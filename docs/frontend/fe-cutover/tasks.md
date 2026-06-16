@@ -7,13 +7,13 @@ T4 gates T5, T5 gates T6–T7. T8 (zoneless evaluation) is independent and non-b
 
 | # | Task | Status |
 |---|---|---|
-| T1 | Flip fe-admin status to done; pre-flight CI green check | pending |
-| T2 | Build parity smoke-test script (`make ng-parity`) | pending |
-| T3 | Local compose: add `iotpilot-ng` Traefik labels, run parity QA locally | pending |
-| T4 | Local compose: remove `iotpilot-app` frontend routing (keep backend), verify locally | pending |
-| T5 | Prod compose: uncomment `iotpilot-ng` block, disable `iotpilot-app`, deploy to staging | pending |
+| T1 | Flip fe-admin status to done; pre-flight CI green check | ✅ done |
+| T2 | Build parity smoke-test script (`make ng-parity`) | ✅ done |
+| T3 | Local compose: add `iotpilot-ng` Traefik labels, run parity QA locally | ✅ done |
+| T4 | Local compose: remove `iotpilot-app` frontend routing (keep backend), verify locally | ✅ done |
+| T5 | Prod compose: uncomment `iotpilot-ng` block, disable `iotpilot-app`, deploy to staging | ✅ done |
 | T6 | Production cutover: deploy prod compose, verify with smoke tests, monitor for 24 h | pending |
-| T7 | Remove `apps/frontend` from the repo | pending |
+| T7 | Remove `apps/frontend` from the repo | ✅ done |
 | T8 | Zoneless change-detection evaluation and migration (optional, non-blocking) | pending |
 
 ---

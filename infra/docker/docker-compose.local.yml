@@ -19,83 +19,16 @@ services:
       - TS_USERSPACE=false
     restart: unless-stopped
 
-  # Main IotPilot Application
-  iotpilot-app:
-    build:
-      context: ../..
-      dockerfile: ./infra/docker/Dockerfile
-      target: development
-      args:
-        - NODE_ENV=development
-    container_name: iotpilot-server-app
-    environment:
-      - NODE_ENV=production
-      - DATABASE_URL=postgresql://iotpilot:${POSTGRES_PASSWORD}@postgres:5432/iotpilot
-      - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN}
-      - JWT_SECRET=${JWT_SECRET}
-      - DEVICE_API_KEY=${DEVICE_API_KEY}
-      - DOMAIN=iotpilotserver.test
-      - DOMAIN_TUNEL=dashboarddev.iotpilot.app
-      - APP_URL=${APP_URL:-https://dashboarddev.iotpilot.app}
-      - TAILSCALE_DOMAIN=${NEXT_PUBLIC_TAILSCALE_DOMAIN}
-      # Clear OrbStack's proxy — frontend only talks to internal Docker services
-      # undici (Next.js built-in fetch) doesn't honor NO_PROXY, so clear all proxy vars
-      - HTTP_PROXY=
-      - HTTPS_PROXY=
-      - http_proxy=
-      - https_proxy=
-      - ALL_PROXY=
-      - all_proxy=
-    ports:
-      - "3001:3000"
-    volumes:
-      # Source-only mounts — node_modules stay in image (pnpm symlinks)
-      - ../../apps/frontend/src:/app/apps/frontend/src
-      - ../../apps/frontend/public:/app/apps/frontend/public
-      - ../../apps/frontend/next.config.cjs:/app/apps/frontend/next.config.cjs
-      - ../../apps/frontend/tsconfig.json:/app/apps/frontend/tsconfig.json
-      - ../../apps/frontend/vitest.config.ts:/app/apps/frontend/vitest.config.ts
-      - ../../apps/frontend/tailwind.config.cjs:/app/apps/frontend/tailwind.config.cjs
-      - ../../apps/frontend/package.json:/app/apps/frontend/package.json
-      - ../../apps/frontend/.eslintrc.json:/app/apps/frontend/.eslintrc.json
-      - ../../packages/core/src:/app/packages/core/src
-      - ../../packages/core/package.json:/app/packages/core/package.json
-      - ../../apps/backend/prisma:/app/apps/backend/prisma
-      - ../../data:/app/data
-      - ../../logs:/app/logs
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      influxdb:
-        condition: service_healthy
-      grafana:
-        condition: service_healthy
-      loki:
-        condition: service_healthy
-    restart: unless-stopped
-    networks:
-      - iotpilot-network
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.services.iotpilot-app.loadbalancer.server.port=3000"
-      # Local development - simple routing
-      - "traefik.http.routers.iotpilot-app-local.rule=Host(`iotpilotserver.test`)"
-      - "traefik.http.routers.iotpilot-app-local.entrypoints=websecure"
-      - "traefik.http.routers.iotpilot-app-local.tls=true"
-      - "traefik.http.routers.iotpilot-app-local.priority=100"
-      # CloudFlare tunnel - main domain
-      - "traefik.http.routers.iotpilot-app-cf.rule=Host(`dashboarddev.iotpilot.app`)"
-      - "traefik.http.routers.iotpilot-app-cf.entrypoints=web,websecure"
-      - "traefik.http.routers.iotpilot-app-cf.priority=100"
+  # Legacy Next.js app — REMOVED (fe-cutover complete; apps/frontend deleted).
+  # Rollback: checkout a pre-cutover commit and restore this service.
+  # iotpilot-app: ...
 
-  # Ionic + Angular dev server (frontend-ng) — runs alongside the legacy
-  # Next.js frontend on a separate port. Disabled in prod compose until fe-cutover.
+  # Ionic + Angular dev server (frontend-ng) — now the primary frontend.
+  # Accessible at:
+  #   https://iotpilotserver.test        (main hostname, cutover from legacy)
+  #   https://ng.iotpilotserver.test     (staging hostname for side-by-side QA)
+  #   https://dashboarddev.iotpilot.app  (CloudFlare tunnel)
+  #   http://localhost:4201              (direct, no Traefik)
   iotpilot-ng:
     build:
       context: ../..
@@ -106,7 +39,7 @@ services:
     container_name: iotpilot-server-ng
     environment:
       - NODE_ENV=development
-      # Backend base URL for the dev proxy (server-side; wired up in T8)
+      # Backend base URL for the dev proxy
       - NG_API_URL=${NG_API_URL:-http://iotpilot-backend:3100}
     ports:
       - "${NG_PORT:-4201}:4200"
@@ -125,6 +58,23 @@ services:
     restart: unless-stopped
     networks:
       - iotpilot-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.iotpilot-ng.loadbalancer.server.port=4200"
+      # Main hostname (cutover from legacy) — priority 100
+      - "traefik.http.routers.iotpilot-ng-local.rule=Host(`iotpilotserver.test`)"
+      - "traefik.http.routers.iotpilot-ng-local.entrypoints=websecure"
+      - "traefik.http.routers.iotpilot-ng-local.tls=true"
+      - "traefik.http.routers.iotpilot-ng-local.priority=100"
+      # Staging hostname for side-by-side QA (cert covers *.iotpilotserver.test)
+      - "traefik.http.routers.iotpilot-ng-staging.rule=Host(`ng.iotpilotserver.test`)"
+      - "traefik.http.routers.iotpilot-ng-staging.entrypoints=websecure"
+      - "traefik.http.routers.iotpilot-ng-staging.tls=true"
+      - "traefik.http.routers.iotpilot-ng-staging.priority=100"
+      # CloudFlare tunnel — main domain (cutover from legacy)
+      - "traefik.http.routers.iotpilot-ng-cf.rule=Host(`dashboarddev.iotpilot.app`)"
+      - "traefik.http.routers.iotpilot-ng-cf.entrypoints=web,websecure"
+      - "traefik.http.routers.iotpilot-ng-cf.priority=100"
 
   # Express API Backend
   iotpilot-backend:
@@ -412,7 +362,7 @@ services:
     command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
     restart: unless-stopped
     depends_on:
-      iotpilot-app:
+      iotpilot-backend:
         condition: service_healthy
     networks:
       - iotpilot-network

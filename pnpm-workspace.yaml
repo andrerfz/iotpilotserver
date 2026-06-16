@@ -1,5 +1,5 @@
 packages:
-  # apps/frontend = legacy Next.js; apps/frontend-ng = Ionic+Angular (fe-foundation)
+  # apps/frontend-ng = Ionic+Angular (primary frontend; fe-cutover complete)
   - "apps/*"
   - "packages/*"
 

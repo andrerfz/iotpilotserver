@@ -261,7 +261,7 @@ authRouter.post('/login', async (req: AuthenticatedRequest, res: Response) => {
         res.cookie('auth-token', authResult.token, {
             httpOnly: true,
             secure: isHttps,
-            sameSite: 'lax',
+            sameSite: 'strict',
             maxAge: (remember ? 7 * 24 * 60 * 60 : 24 * 60 * 60) * 1000,
             path: '/',
         });
@@ -573,7 +573,7 @@ authRouter.post('/refresh', async (req: AuthenticatedRequest, res: Response) => 
         res.cookie('auth-token', refreshResult.token, {
             httpOnly: true,
             secure: isHttps,
-            sameSite: 'lax',
+            sameSite: 'strict',
             maxAge: (remember ? 7 * 24 * 60 * 60 : 24 * 60 * 60) * 1000,
             path: '/',
         });
@@ -1064,7 +1064,7 @@ authRouter.post('/verify-2fa', async (req: AuthenticatedRequest, res: Response) 
         res.cookie('auth-token', result.token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
+            sameSite: 'strict',
             path: '/',
             maxAge,
         });

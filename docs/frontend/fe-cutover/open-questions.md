@@ -56,7 +56,7 @@ pattern change, not a gap.
 
 ---
 
-## Q3 _pending_ — CSRF protection on `POST /api/auth/refresh` before production cutover
+## Q3 _resolved_ — CSRF protection on `POST /api/auth/refresh` before production cutover
 
 **Question:** fe-core Q2 identified that the `/api/auth/refresh` endpoint is CSRF-sensitive
 because it accepts `withCredentials: true` (the `auth-token` cookie is ambient). The
