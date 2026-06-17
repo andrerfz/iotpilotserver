@@ -30,16 +30,16 @@
   }
 }
 
-.filterbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
+.filter-bar {
   margin-bottom: 12px;
 
-  &__search {
-    min-width: 200px;
-    flex: 1;
+  .filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+
+    ui-search-field { min-width: 200px; flex: 1; }
   }
 }
 

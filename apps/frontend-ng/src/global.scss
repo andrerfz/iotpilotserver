@@ -229,6 +229,14 @@ app-settings-api-keys {
   min-height: 0;
 }
 
+/* ── Filter bar — compact ion-card-content padding ──────────────────────────
+ * ion-card-content is a custom element; Angular's emulated encapsulation
+ * attribute selectors don't pierce it, so this must live in global.scss.
+ */
+.filter-bar ion-card-content {
+  padding: 8px 12px;
+}
+
 /* ── Skeleton shimmer ────────────────────────────────────────────────────────
  * Global keyframes + utility class. Any element with class="sk" gets the
  * animated shimmer. Component loading states use this directly in templates.

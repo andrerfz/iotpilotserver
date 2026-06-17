@@ -51,37 +51,40 @@
     </div>
 
     <!-- Filter bar -->
-    <div class="filterbar">
-      <ui-search-field
-        class="filterbar__search"
-        placeholder="Search alerts…"
-        [value]="search()"
-        (valueChange)="search.set($event)">
-      </ui-search-field>
-      <ui-device-picker
-        label="Device"
-        [devices]="devicePickerItems()"
-        [value]="deviceFilter()"
-        (valueChange)="deviceFilter.set($event)">
-      </ui-device-picker>
-      <ui-multi-select-picker
-        label="Severity"
-        [options]="severityOptions"
-        [value]="severityFilter()"
-        (valueChange)="severityFilter.set($event)">
-      </ui-multi-select-picker>
-      <ui-multi-select-picker
-        label="State"
-        [options]="stateOptions"
-        [value]="stateFilter()"
-        (valueChange)="stateFilter.set($event)">
-      </ui-multi-select-picker>
-      <ui-date-range-picker
-        label="Period"
-        [value]="period()"
-        (valueChange)="onPeriodChange($event)">
-      </ui-date-range-picker>
-    </div>
+    <ion-card class="filter-bar">
+      <ion-card-content>
+        <div class="filter-row">
+          <ui-search-field
+            placeholder="Search alerts…"
+            [value]="search()"
+            (valueChange)="search.set($event)">
+          </ui-search-field>
+          <ui-device-picker
+            label="Device"
+            [devices]="devicePickerItems()"
+            [value]="deviceFilter()"
+            (valueChange)="deviceFilter.set($event)">
+          </ui-device-picker>
+          <ui-multi-select-picker
+            label="Severity"
+            [options]="severityOptions"
+            [value]="severityFilter()"
+            (valueChange)="severityFilter.set($event)">
+          </ui-multi-select-picker>
+          <ui-multi-select-picker
+            label="State"
+            [options]="stateOptions"
+            [value]="stateFilter()"
+            (valueChange)="stateFilter.set($event)">
+          </ui-multi-select-picker>
+          <ui-date-range-picker
+            label="Period"
+            [value]="period()"
+            (valueChange)="onPeriodChange($event)">
+          </ui-date-range-picker>
+        </div>
+      </ion-card-content>
+    </ion-card>
 
     <!-- Bulk action bar -->
     @if (selectedCount() > 0) {
@@ -111,17 +114,13 @@
         description="Try adjusting the severity, state or period filters.">
       </ui-empty-state>
     } @else {
-      <ion-card>
-        <ion-card-content>
-          <ui-data-table
-            [columns]="$any(columns())"
-            [rows]="$any(filteredAlerts())"
-            [pageSize]="10"
-            [selectable]="true"
-            (selectionChange)="onSelectionChange($any($event))">
-          </ui-data-table>
-        </ion-card-content>
-      </ion-card>
+      <ui-data-table
+        [columns]="$any(columns())"
+        [rows]="$any(filteredAlerts())"
+        [pageSize]="10"
+        [selectable]="true"
+        (selectionChange)="onSelectionChange($any($event))">
+      </ui-data-table>
     }
 
     <!-- Alert trend chart -->

@@ -1,29 +1,28 @@
 .metrics {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  margin-bottom: 24px;
+  gap: 12px;
+  margin-bottom: 16px;
 
   @media (max-width: 900px) { grid-template-columns: repeat(2, 1fr); }
-  @media (max-width: 520px) { grid-template-columns: 1fr; }
+  @media (max-width: 520px) { grid-template-columns: repeat(2, 1fr); }
 }
 
-.filterbar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
+.metric-skeleton {
+  height: 88px;
+  border-radius: var(--r-lg);
+}
 
-  &__search {
-    flex: 1;
-    min-width: 220px;
-  }
+.filter-bar {
+  margin-bottom: 12px;
 
-  &__pickers {
+  .filter-row {
     display: flex;
+    align-items: center;
     gap: 8px;
-    flex-wrap: wrap;
+
+    ui-search-field { flex: 1; min-width: 160px; }
+    ion-button { flex-shrink: 0; margin: 0; }
   }
 }
 
@@ -31,10 +30,10 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 8px 12px;
+  padding: 7px 12px;
   background: var(--primary-weak);
-  border: 1px solid var(--primary);
-  border-radius: 8px;
+  border: 1px solid var(--primary-line);
+  border-radius: var(--r-lg);
   margin-bottom: 12px;
 
   &__label {
@@ -45,6 +44,61 @@
   }
 }
 
+/* Desktop: data table; Mobile: card list */
+.devices-table {
+  display: block;
+  @media (max-width: 767px) { display: none; }
+}
+
+.devices-list {
+  display: none;
+  flex-direction: column;
+  gap: 1px;
+  background: var(--ui-border);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+
+  @media (max-width: 767px) { display: flex; }
+}
+
+.device-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--surface);
+  cursor: pointer;
+  transition: background 0.1s;
+
+  &:hover, &:focus-visible { background: var(--surface-2); }
+  &:focus-visible { outline: none; }
+
+  &__info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__name {
+    font-size: 13px;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__sub {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+/* Desktop table cell helpers */
 .device-cell {
   display: flex;
   align-items: center;
@@ -52,5 +106,5 @@
 }
 
 .td-strong { font-size: 13px; font-weight: 600; }
-.td-mono   { font-family: var(--ion-font-family-mono, monospace); font-size: 11px; }
-.dim       { color: var(--ion-color-medium); }
+.td-mono   { font-family: var(--font-mono, monospace); font-size: 11px; }
+.dim       { color: var(--text-muted); }
