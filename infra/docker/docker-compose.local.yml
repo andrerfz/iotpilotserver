@@ -343,6 +343,22 @@ services:
     networks:
       - iotpilot-network
 
+  # ── Fake IoT device — SSH target for local dev/testing ────────────────────
+  # Alpine container with sshd. Acts as a stand-in for a real Raspberry Pi.
+  # IP: 172.28.100.10 (static). SSH: pi / raspberry, port 22 (internal) / 2222 (host).
+  # Usage: make fake-device-up && make fake-device-register EMAIL=… PASSWORD=…
+  iotpilot-fake-device:
+    build:
+      context: ../..
+      dockerfile: infra/docker/fake-device/Dockerfile
+    container_name: iotpilot-fake-device
+    hostname: fake-pi-local
+    ports:
+      - "2222:22"
+    networks:
+      - iotpilot-network
+    restart: unless-stopped
+
   # Mailpit - Email testing for local development
   mailpit:
     image: axllent/mailpit:latest

@@ -16,6 +16,7 @@
 .PHONY: queue-status queue-failed queue-retry queue-clean queue-drain queue-dashboard
 .PHONY: ssh prod-logs prod-deploy prod-rollback prod-restart prod-status prod-migrate
 .PHONY: ng-dev ng-lint ng-test ng-type-check ng-build ng-image ng-logs ng-api-generate ng-api-check ng-parity ng-cap-sync ng-cap-build-ios ng-cap-build-android _ng-running
+.PHONY: fake-device-up fake-device-down fake-device-register fake-device-heartbeat fake-device-ssh fake-device-logs
 
 # Variables - Using .env for both production and local
 COMPOSE_FILE = infra/docker/docker-compose.yml --env-file .env
@@ -107,6 +108,14 @@ help:
 	@echo "  ng-cap-sync          - Build frontend-ng then sync web assets to native projects"
 	@echo "  ng-cap-build-ios     - Build signed iOS .ipa (macOS + Xcode required)"
 	@echo "  ng-cap-build-android - Build signed Android .aab (JDK 17 required)"
+	@echo ""
+	@echo "🖥️  Fake device (local IoT emulator — Alpine + sshd, IP 172.28.100.10):"
+	@echo "  fake-device-up       - Build and start the fake device container"
+	@echo "  fake-device-down     - Stop the fake device container"
+	@echo "  fake-device-logs     - Follow fake device sshd logs"
+	@echo "  fake-device-register - Register device in platform (EMAIL= PASSWORD= required)"
+	@echo "  fake-device-heartbeat- Send a simulated heartbeat (DEVICE_ID= API_KEY= required)"
+	@echo "  fake-device-ssh      - Open an SSH session to the fake device from host"
 	@echo ""
 	@echo "🏭 Production:"
 	@echo "  install              - Initial installation and setup"
@@ -707,6 +716,60 @@ ng-cap-build-android:
 	@cd apps/frontend-ng && npm run build && npx cap sync
 	@cd apps/frontend-ng/android && ./gradlew bundleRelease
 	@echo "✅ Android .aab at apps/frontend-ng/android/app/build/outputs/bundle/release/"
+
+# =============================================================================
+# FAKE DEVICE — local IoT device emulator (Alpine + sshd)
+# =============================================================================
+# IP: 172.28.100.10  SSH: pi / raspberry  port 22 (internal) / 2222 (host)
+# Workflow:
+#   1. make fake-device-up
+#   2. make fake-device-register EMAIL=you@example.com PASSWORD=secret
+#   3. Open the UI — device appears as OFFLINE until a heartbeat arrives
+#   4. make fake-device-heartbeat DEVICE_ID=<id from step 2> API_KEY=<your-api-key>
+
+FAKE_DEVICE_ID   = fake-pi-local-001
+LOCAL_COMPOSE    = infra/docker/docker-compose.local.yml --env-file .env
+BACKEND_LOCAL    = http://localhost:3102
+
+fake-device-up:
+	@echo "🖥️  Starting fake device container..."
+	@docker compose -f $(LOCAL_COMPOSE) up -d --build iotpilot-fake-device
+	@echo "✅ Fake device running — SSH: ssh -p 2222 pi@localhost  (pass: raspberry)"
+
+fake-device-down:
+	@docker compose -f $(LOCAL_COMPOSE) stop iotpilot-fake-device
+
+fake-device-logs:
+	@docker logs -f iotpilot-fake-device
+
+fake-device-register:
+	@test -n "$(EMAIL)" || (echo "❌  Usage: make fake-device-register EMAIL=you@example.com PASSWORD=secret" && exit 1)
+	@test -n "$(PASSWORD)" || (echo "❌  Usage: make fake-device-register EMAIL=you@example.com PASSWORD=secret" && exit 1)
+	@bash scripts/fake-device-register.sh "$(EMAIL)" "$(PASSWORD)" "$(BACKEND_LOCAL)"
+
+fake-device-heartbeat:
+	@test -n "$(DEVICE_ID)"  || (echo "❌  Usage: make fake-device-heartbeat DEVICE_ID=<id> API_KEY=<key>" && exit 1)
+	@test -n "$(API_KEY)"    || (echo "❌  Usage: make fake-device-heartbeat DEVICE_ID=<id> API_KEY=<key>" && exit 1)
+	@curl -sf -X POST $(BACKEND_LOCAL)/api/iot/heartbeat \
+	  -H "X-API-Key: $(API_KEY)" \
+	  -H "Content-Type: application/json" \
+	  -d '{ \
+	    "device_id":          "$(DEVICE_ID)", \
+	    "hostname":           "fake-pi-local", \
+	    "cpu_usage":          $(shell echo "scale=1; $$(($${RANDOM} % 40 + 5)).0" | bc), \
+	    "memory_usage_percent": $(shell echo "scale=1; $$(($${RANDOM} % 50 + 20)).0" | bc), \
+	    "disk_usage_percent": $(shell echo "scale=1; $$(($${RANDOM} % 30 + 10)).0" | bc), \
+	    "cpu_temperature":    $(shell echo "scale=1; $$(($${RANDOM} % 20 + 40)).0" | bc), \
+	    "uptime":             "3 days, 4:12", \
+	    "load_average":       "0.42 0.38 0.31", \
+	    "ip_address":         "$(shell docker inspect iotpilot-fake-device --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' 2>/dev/null | head -1)", \
+	    "agent_version":      "1.0.0-fake", \
+	    "app_status":         "RUNNING" \
+	  }' && echo "✅ Heartbeat sent" || echo "❌ Heartbeat failed"
+
+fake-device-ssh:
+	@echo "🔑 SSH into fake device (pass: raspberry)..."
+	@ssh -p 2222 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null pi@localhost
 
 openapi-check:
 	@echo "🔍 Checking OpenAPI spec endpoint coverage..."
