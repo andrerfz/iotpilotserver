@@ -34,9 +34,9 @@ export class AdminUsersService {
     this._loading.set(true);
     this._error.set(null);
     try {
-      const res = await this.api.invoke(listAdminUsers, status ? { status } : {});
-      const body = res as unknown as { data?: AdminUser[] };
-      this._users.set(body.data ?? []);
+      const raw = await this.api.invoke(listAdminUsers, status ? { status } : {}) as unknown;
+      const parsed = (typeof raw === 'string' ? JSON.parse(raw) : raw) as { data?: AdminUser[] };
+      this._users.set(parsed.data ?? []);
     } catch (e) {
       this._error.set(e instanceof ApiError ? e : new ApiError(0, 'UNKNOWN', String(e)));
     } finally {

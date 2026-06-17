@@ -43,11 +43,14 @@ export class AdminDevicesService {
     this._loading.set(true);
     this._error.set(null);
     try {
-      const res = await this.api.invoke(listAdminDevices, status ? { status } : {});
-      const body = res as unknown as { data?: AdminDevice[]; meta?: { stats?: AdminDeviceStats } };
-      const devices = body.data ?? [];
+      // The generated listAdminDevices fn has responseType:'text' / void return type
+      // because the response body wasn't declared in the OpenAPI spec. Angular HTTP
+      // returns the body as a raw JSON string — parse it and unwrap the envelope.
+      const raw = await this.api.invoke(listAdminDevices, status ? { status } : {}) as unknown;
+      const parsed = (typeof raw === 'string' ? JSON.parse(raw) : raw) as { data?: { devices?: AdminDevice[] } };
+      const devices = parsed.data?.devices ?? [];
       this._devices.set(devices);
-      this._stats.set(body.meta?.stats ?? this.deriveStats(devices));
+      this._stats.set(this.deriveStats(devices));
     } catch (e) {
       this._error.set(e instanceof ApiError ? e : new ApiError(0, 'UNKNOWN', String(e)));
     } finally {

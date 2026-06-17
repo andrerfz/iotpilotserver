@@ -256,13 +256,13 @@ export class BottomNavComponent {
     }
     this.loadingTenants.set(true);
     try {
-      const res = await this.api.invoke(listAdminCustomers, {
+      const raw = await this.api.invoke(listAdminCustomers, {
         limit: 50,
         page: this.tenantsPage,
         search: this.tenantSearch() || undefined,
-      });
-      const body = res as unknown as { data?: CustomerSummary[]; pagination?: { total: number } };
-      const items: CustomerSummary[] = body.data ?? (Array.isArray(res) ? (res as CustomerSummary[]) : []);
+      }) as unknown;
+      const body = (typeof raw === 'string' ? JSON.parse(raw) : raw) as { data?: CustomerSummary[]; pagination?: { total: number } };
+      const items: CustomerSummary[] = body.data ?? [];
       const total = body.pagination?.total ?? items.length;
       if (this.tenantsPage === 1) {
         this.tenants.set(items);
