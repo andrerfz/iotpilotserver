@@ -128,3 +128,15 @@ Index of the binding ones:
 - API client: **generated** from `docs/openapi.yml` (kept in sync by `make route-check`) → [fe-core/open-questions.md](fe-core/open-questions.md)
 - Charts: ECharts via `ngx-echarts` → fe-dashboard (deepen)
 - Tailwind: kept, alongside Ionic CSS variables → [fe-foundation/open-questions.md](fe-foundation/open-questions.md)
+
+## Backlog
+
+Tasks scoped but not yet assigned to a module sprint.
+
+| # | Task | Module | Notes |
+|---|---|---|---|
+| 1 | **Export xlsx/pdf** | fe-dashboard / fe-admin | `onExportSelected()` in `devices.page.ts` is an empty stub. Admin-logs has CSV only. |
+| 2 | **Production cutover** | fe-cutover | SSH to prod: `git pull && docker compose pull && up -d`. Blocked on deployment decision. |
+| 3 | **Dependency upgrades** | fe-foundation | `xterm` → `@xterm/xterm`, `eslint` v8 → v9 flat config, `rimraf` v3 → v5, `glob` v7 → v10. Separate PR. |
+| 4 | **Zoneless change detection** | fe-foundation | Optional: `provideExperimentalZonelessChangeDetection`. Non-blocking. |
+| 5 | **macOS Capacitor app + BLE device claiming** | fe-mobile | Add `ng-cap-build-macos` make target. Use `@capacitor-community/bluetooth-le` to scan for C3/Heltec sensors in setup mode — replaces manual Device ID entry. Requires firmware changes on both sensor types. |
