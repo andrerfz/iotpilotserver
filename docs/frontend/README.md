@@ -135,8 +135,9 @@ Tasks scoped but not yet assigned to a module sprint.
 
 | # | Task | Module | Notes |
 |---|---|---|---|
-| 1 | **Export xlsx/pdf** | fe-dashboard / fe-admin | `onExportSelected()` in `devices.page.ts` is an empty stub. Admin-logs has CSV only. |
-| 2 | **Production cutover** | fe-cutover | SSH to prod: `git pull && docker compose pull && up -d`. Blocked on deployment decision. |
-| 3 | **Dependency upgrades** | fe-foundation | `xterm` → `@xterm/xterm`, `eslint` v8 → v9 flat config, `rimraf` v3 → v5, `glob` v7 → v10. Separate PR. |
-| 4 | **Zoneless change detection** | fe-foundation | Optional: `provideExperimentalZonelessChangeDetection`. Non-blocking. |
-| 5 | **macOS Capacitor app + BLE device claiming** | fe-mobile | Add `ng-cap-build-macos` make target. Use `@capacitor-community/bluetooth-le` to scan for C3/Heltec sensors in setup mode — replaces manual Device ID entry. Requires firmware changes on both sensor types. |
+| 1 | **Settings → API Keys page** | fe-settings | Lista + crear + borrar API keys. Backend: `GET/POST/DELETE /api/auth/api-keys`. Necesario para que el usuario pueda obtener su key sin acceder a la DB. |
+| 2 | **Export xlsx/pdf** | fe-dashboard / fe-admin | `onExportSelected()` in `devices.page.ts` is an empty stub. Admin-logs has CSV only. |
+| 3 | **Production cutover** | fe-cutover | SSH to prod: `git pull && docker compose pull && up -d`. Blocked on deployment decision. |
+| 4 | **Dependency upgrades** | fe-foundation | `xterm` → `@xterm/xterm`, `eslint` v8 → v9 flat config, `rimraf` v3 → v5, `glob` v7 → v10. Separate PR. |
+| 5 | **Zoneless change detection** | fe-foundation | Optional: `provideExperimentalZonelessChangeDetection`. Non-blocking. |
+| 6 | **macOS Capacitor app + BLE device claiming** | fe-mobile | Add `ng-cap-build-macos` make target. Use `@capacitor-community/bluetooth-le` to scan for C3/Heltec sensors in setup mode — replaces manual Device ID entry. Requires firmware changes on both sensor types. |
