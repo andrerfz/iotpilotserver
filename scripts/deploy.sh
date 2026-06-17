@@ -105,7 +105,7 @@ HEALTHY=false
 for i in $(seq 1 "$MAX_WAIT"); do
   sleep 10
   # Check health via docker exec — port not published on host in production
-  if docker exec iotpilot-app curl -sf http://localhost:3000/api/health >/dev/null 2>&1; then
+  if docker exec iotpilot-backend curl -sf http://localhost:3100/api/health >/dev/null 2>&1; then
     HEALTHY=true
     break
   fi
