@@ -64,7 +64,13 @@ export class PrismaApiKeyRepository implements ApiKeyRepository {
             orderBy: { createdAt: 'desc' }
         });
 
-        return apiKeys.map((apiKey: any) => this.apiKeyMapper.toDomain(apiKey));
+        return apiKeys.flatMap((apiKey: any) => {
+            try {
+                return [this.apiKeyMapper.toDomain(apiKey)];
+            } catch {
+                return [];
+            }
+        });
     }
 
     async findAll(tenantContext?: TenantContext): Promise<ApiKey[]> {
@@ -85,7 +91,13 @@ export class PrismaApiKeyRepository implements ApiKeyRepository {
             orderBy: { createdAt: 'desc' }
         });
 
-        return apiKeys.map((apiKey: any) => this.apiKeyMapper.toDomain(apiKey));
+        return apiKeys.flatMap((apiKey: any) => {
+            try {
+                return [this.apiKeyMapper.toDomain(apiKey)];
+            } catch {
+                return [];
+            }
+        });
     }
 
     async save(apiKey: ApiKey, tenantContext?: TenantContext): Promise<void> {

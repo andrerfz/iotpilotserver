@@ -1,6 +1,7 @@
 /// <reference types="vitest" />
 import angular from '@analogjs/vite-plugin-angular';
 import { defineConfig } from 'vite';
+import { resolve } from 'path';
 
 // Vitest via @analogjs/vite-plugin-angular (fe-foundation Q4). jsdom + Testing
 // Library Angular; 15s timeout to match the repo's Vitest convention.

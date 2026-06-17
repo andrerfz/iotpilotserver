@@ -32,4 +32,10 @@ export const SETTINGS_ROUTES: Routes = [
       import('./pages/system/settings-system.page').then((m) => m.SettingsSystemPage),
     data: { breadcrumb: ['Administer', 'Settings', 'System'] },
   },
+  {
+    path: 'api-keys',
+    loadComponent: () =>
+      import('./pages/api-keys/settings-api-keys.page').then((m) => m.SettingsApiKeysPage),
+    data: { breadcrumb: ['Administer', 'Settings', 'API Keys'] },
+  },
 ];

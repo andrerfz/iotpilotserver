@@ -844,7 +844,7 @@ authRouter.post('/api-keys', requireAuth(), async (req: AuthenticatedRequest, re
             expiresAt ? new Date(expiresAt) : undefined
         );
 
-        await commandBus.execute(createApiKeyCommand);
+        const result = await commandBus.execute<typeof createApiKeyCommand, { id: string; name: string; key: string; expiresAt?: Date; createdAt: Date }>(createApiKeyCommand);
 
         apiKeysLogger.info('API key created successfully via CQRS CommandBus', {
             event: 'api_key_created',
@@ -858,8 +858,14 @@ authRouter.post('/api-keys', requireAuth(), async (req: AuthenticatedRequest, re
         });
 
         send.created(res, {
-            message: 'API key created successfully. Use GET /api/auth/api-keys to view your keys.',
-            redirectTo: '/dashboard/api-keys',
+            message: 'API key created. Store it now — it will not be shown again.',
+            apiKey: {
+                id: result.id,
+                name: result.name,
+                key: result.key,
+                expiresAt: result.expiresAt ?? null,
+                createdAt: result.createdAt,
+            },
         });
         return;
 

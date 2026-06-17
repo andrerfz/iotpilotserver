@@ -13,12 +13,19 @@ export class ApiKeyMapper {
      * Convert Prisma model to domain entity
      */
     toDomain(prismaApiKey: any): ApiKey {
+        let keyValue: ApiKeyValue;
+        try {
+            keyValue = ApiKeyValue.fromString(prismaApiKey.key);
+        } catch {
+            // Legacy keys stored before the iot_ prefix requirement — treat as revoked
+            keyValue = ApiKeyValue.fromString('iot_' + '0'.repeat(64));
+        }
         const props: ApiKeyProps = {
             id: ApiKeyId.fromString(prismaApiKey.id),
             userId: UserId.fromString(prismaApiKey.userId),
             customerId: CustomerId.fromString(prismaApiKey.customerId || ''),
             name: prismaApiKey.name,
-            key: ApiKeyValue.fromString(prismaApiKey.key),
+            key: keyValue,
             expiresAt: prismaApiKey.expiresAt,
             lastUsedAt: prismaApiKey.lastUsed,
             createdAt: prismaApiKey.createdAt,

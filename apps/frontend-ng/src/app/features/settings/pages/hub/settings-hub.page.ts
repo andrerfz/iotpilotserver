@@ -14,5 +14,6 @@ export class SettingsHubPage {
     { label: 'Notifications', path: 'notifications' },
     { label: 'Security', path: 'security' },
     { label: 'System', path: 'system' },
+    { label: 'API Keys', path: 'api-keys' },
   ] as const;
 }
