@@ -94,7 +94,8 @@ ENV NODE_PATH="/app/node_modules"
 # COPY --from would dereference, breaking webpack resolution of transitive deps.
 COPY --from=deps /app/node_modules                    ./node_modules
 COPY --from=deps /tmp/frontend-ng-nm.tar.gz           /tmp/frontend-ng-nm.tar.gz
-RUN tar -xzf /tmp/frontend-ng-nm.tar.gz -C /app/apps/frontend-ng \
+RUN mkdir -p /app/apps/frontend-ng \
+    && tar -xzf /tmp/frontend-ng-nm.tar.gz -C /app/apps/frontend-ng \
     && rm /tmp/frontend-ng-nm.tar.gz
 
 # Static workspace + app config (source is volume-mounted at runtime)
@@ -121,6 +122,28 @@ EXPOSE 4200
 CMD ["ng", "serve", "--host", "0.0.0.0", "--port", "4200", "--poll", "2000", "--disable-host-check"]
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Stage 3b: development-ng-static — ng build --watch + nginx static server
+#
+# Replaces the ng serve HMR dev server with a build-watch loop + nginx.
+# No HMR WebSocket — eliminates the reload loop when accessed through a
+# Cloudflare tunnel or any reverse proxy that drops idle WebSocket connections.
+# The browser must be refreshed manually after each successful build.
+# ─────────────────────────────────────────────────────────────────────────────
+FROM development-ng AS development-ng-static
+
+RUN apk add --no-cache nginx gettext
+
+COPY infra/nginx/frontend-ng-dev.conf.template /etc/nginx/templates/frontend-ng-dev.conf.template
+COPY infra/docker/ng-dev-static.sh             /usr/local/bin/ng-dev-static.sh
+RUN chmod +x /usr/local/bin/ng-dev-static.sh
+
+# First build takes ~30s; start-period gives it time before health checks kick in
+HEALTHCHECK --interval=15s --timeout=5s --start-period=120s --retries=10 \
+  CMD curl -sf http://localhost:4200/ | grep -q '<' || exit 1
+
+CMD ["/usr/local/bin/ng-dev-static.sh"]
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Stage 4: builder-ng — Angular production build (outputs to www/)
 # ─────────────────────────────────────────────────────────────────────────────
 FROM node:22-alpine AS builder-ng
@@ -133,7 +156,8 @@ ENV NODE_PATH="/app/node_modules"
 
 COPY --from=deps /app/node_modules                    ./node_modules
 COPY --from=deps /tmp/frontend-ng-nm.tar.gz           /tmp/frontend-ng-nm.tar.gz
-RUN tar -xzf /tmp/frontend-ng-nm.tar.gz -C /app/apps/frontend-ng \
+RUN mkdir -p /app/apps/frontend-ng \
+    && tar -xzf /tmp/frontend-ng-nm.tar.gz -C /app/apps/frontend-ng \
     && rm /tmp/frontend-ng-nm.tar.gz
 
 COPY pnpm-workspace.yaml   ./

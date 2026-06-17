@@ -33,7 +33,7 @@ services:
     build:
       context: ../..
       dockerfile: ./infra/docker/Dockerfile
-      target: development-ng
+      target: development-ng-static
       args:
         - NODE_ENV=development
     container_name: iotpilot-server-ng
@@ -55,6 +55,8 @@ services:
       - ../../apps/frontend-ng:/app/apps/frontend-ng
       - /app/apps/frontend-ng/node_modules
       - /app/apps/frontend-ng/.angular
+      #  - www: keep build output container-local (avoids polluting the host tree)
+      - /app/apps/frontend-ng/www
     restart: unless-stopped
     networks:
       - iotpilot-network
