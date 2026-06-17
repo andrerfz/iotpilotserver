@@ -97,6 +97,7 @@ services:
       - INFLUXDB_TOKEN=${INFLUXDB_TOKEN}
       - JWT_SECRET=${JWT_SECRET}
       - DEVICE_API_KEY=${DEVICE_API_KEY}
+      - CREDENTIAL_ENCRYPTION_KEY=${CREDENTIAL_ENCRYPTION_KEY}
       - DOMAIN=iotpilotserver.test
       - DOMAIN_TUNEL=dashboarddev.iotpilot.app
       - APP_URL=https://dashboarddev.iotpilot.app

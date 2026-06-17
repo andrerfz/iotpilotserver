@@ -34,21 +34,26 @@ header "Login"
 TOKEN=$(curl -sf -X POST "$BACKEND/api/auth/login" \
   -H "Content-Type: application/json" \
   -d "{\"email\":\"$EMAIL\",\"password\":\"$PASSWORD\"}" \
-  | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('token',''))" 2>/dev/null)
+  | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('data',d).get('token',''))" 2>/dev/null)
 [ -n "$TOKEN" ] || error "Login failed — check EMAIL/PASSWORD"
 info "Logged in ✓"
 
-# 2. Check if already registered
-header "Check for existing device"
-EXISTING=$(curl -sf "$BACKEND/api/devices?search=$FAKE_ID" \
-  -H "Authorization: Bearer $TOKEN" \
-  | python3 -c "
+# Helper: extract internal id from device list
+_find_device() {
+  python3 -c "
 import sys,json
 d=json.load(sys.stdin)
 items=d.get('data',d) if isinstance(d,dict) else d
-matches=[x for x in (items if isinstance(items,list) else []) if x.get('deviceId')=='$FAKE_ID']
+if isinstance(items,dict): items=items.get('data',[])
+matches=[x for x in (items if isinstance(items,list) else []) if x.get('hostname')=='$FAKE_HOST']
 print(matches[0].get('id','') if matches else '')
-" 2>/dev/null)
+"
+}
+
+# 2. Check if already registered (match by hostname)
+header "Check for existing device"
+EXISTING=$(curl -s "$BACKEND/api/devices" \
+  -H "Authorization: Bearer $TOKEN" | _find_device 2>/dev/null)
 
 if [ -n "$EXISTING" ]; then
   info "Device already registered (id=$EXISTING) — updating SSH credentials"
@@ -67,8 +72,9 @@ else
       \"ipAddress\": \"$FAKE_IP\",
       \"location\": \"local-dev\"
     }")
-  DEVICE_ID=$(echo "$RESULT" | python3 -c \
-    "import sys,json; d=json.load(sys.stdin); print(d.get('deviceId',''))" 2>/dev/null)
+  # Registration assigns an internal UUID — fetch it from the device list
+  DEVICE_ID=$(curl -s "$BACKEND/api/devices" \
+    -H "Authorization: Bearer $TOKEN" | _find_device 2>/dev/null)
   [ -n "$DEVICE_ID" ] || error "Registration failed: $RESULT"
   info "Registered ✓  id=$DEVICE_ID"
 fi
