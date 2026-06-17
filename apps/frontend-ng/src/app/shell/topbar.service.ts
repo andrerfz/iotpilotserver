@@ -1,7 +1,4 @@
-import { Injectable, signal, inject } from '@angular/core';
-import { Router, NavigationStart } from '@angular/router';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { filter } from 'rxjs/operators';
+import { Injectable, signal } from '@angular/core';
 
 export interface TopbarAction {
   icon: string;
@@ -12,15 +9,6 @@ export interface TopbarAction {
 export class TopbarService {
   readonly title = signal<string>('');
   readonly action = signal<TopbarAction | null>(null);
-
-  constructor() {
-    inject(Router).events
-      .pipe(
-        filter(e => e instanceof NavigationStart),
-        takeUntilDestroyed(),
-      )
-      .subscribe(() => this.clear());
-  }
 
   set(title: string, action?: TopbarAction | null): void {
     this.title.set(title);

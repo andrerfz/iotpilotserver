@@ -7,7 +7,6 @@ import {
   provideRouter,
   RouteReuseStrategy,
   withPreloading,
-  withRouterConfig,
 } from '@angular/router';
 import {
   IonicRouteStrategy,
@@ -30,7 +29,7 @@ bootstrapApplication(AppComponent, {
   providers: [
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
     provideIonicAngular(),
-    provideRouter(routes, withPreloading(PreloadAllModules), withRouterConfig({ onSameUrlNavigation: 'reload' })),
+    provideRouter(routes, withPreloading(PreloadAllModules)),
     provideHttpClient(withInterceptors([authInterceptor])),
     provideApi(),
     // On native (Capacitor) platforms use SecureStorage for the session token;

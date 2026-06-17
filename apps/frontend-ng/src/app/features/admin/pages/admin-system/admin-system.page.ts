@@ -1,5 +1,5 @@
 import {
-  ChangeDetectionStrategy, Component, inject, OnDestroy, OnInit,
+  ChangeDetectionStrategy, Component, inject, OnDestroy,
 } from '@angular/core';
 import { addIcons } from 'ionicons';
 import { reloadOutline, serverOutline, layersOutline, albumsOutline } from 'ionicons/icons';
@@ -8,6 +8,7 @@ import {
   IonButton, IonIcon, IonProgressBar, IonBadge, IonChip,
   IonList, IonItem, IonLabel, IonSkeletonText,
   EmptyStateComponent,
+  ViewWillEnter,
 } from '@ng/shared/ui';
 import { AdminSystemService } from '../../services/admin-system.service';
 import { TopbarService } from '../../../../shell/topbar.service';
@@ -29,11 +30,11 @@ addIcons({ reloadOutline, serverOutline, layersOutline, albumsOutline });
     AdminTabsComponent,
   ],
 })
-export class AdminSystemPage implements OnInit, OnDestroy {
+export class AdminSystemPage implements OnDestroy, ViewWillEnter {
   protected readonly svc = inject(AdminSystemService);
   private readonly topbar = inject(TopbarService);
 
-  ngOnInit(): void {
+  ionViewWillEnter(): void {
     this.topbar.set('System');
     void this.svc.load();
     this.svc.startAutoRefresh(30_000);

@@ -2,7 +2,6 @@ import {
   AfterViewInit,
   ChangeDetectionStrategy,
   Component,
-  OnInit,
   TemplateRef,
   ViewChild,
   computed,
@@ -106,12 +105,11 @@ function presetToTimeRange(preset: string): { startTime?: string; endTime?: stri
     IonRefresher, IonRefresherContent,
   ],
 })
-export class MonitoringPage implements OnInit, AfterViewInit, ViewWillEnter {
+export class MonitoringPage implements AfterViewInit, ViewWillEnter {
   private readonly dashService = inject(DashboardService);
   private readonly router = inject(Router);
   private readonly topbar = inject(TopbarService);
   private readonly tenantCtx = inject(TenantContextService);
-
   readonly alertsLoading = this.dashService.alerts.loading;
   readonly alertsError = this.dashService.alerts.error;
   readonly trendLoading = this.dashService.alertsTrend.loading;
@@ -194,11 +192,8 @@ export class MonitoringPage implements OnInit, AfterViewInit, ViewWillEnter {
         .subscribe(() => void this.loadData());
   }
 
-  ngOnInit(): void {
-    this.topbar.set('Monitoring');
-  }
-
   ionViewWillEnter(): void {
+    this.topbar.set('Monitoring');
     void this.loadData();
   }
 

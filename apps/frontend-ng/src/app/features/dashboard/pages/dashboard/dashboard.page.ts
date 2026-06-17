@@ -2,7 +2,6 @@ import {
   AfterViewInit,
   ChangeDetectionStrategy,
   Component,
-  OnInit,
   TemplateRef,
   ViewChild,
   computed,
@@ -31,7 +30,6 @@ import {
   DataTableComponent,
   DevicePickerComponent,
   EmptyStateComponent,
-  IonButton,
   IonCard,
   IonContent,
   IonIcon,
@@ -81,7 +79,6 @@ const STATUS_OPTIONS: PickerOption[] = [
   imports: [
     NgxEchartsDirective,
     IonContent,
-    IonButton,
     IonIcon,
     IonCard,
     IonSkeletonText,
@@ -97,7 +94,7 @@ const STATUS_OPTIONS: PickerOption[] = [
     IonRefresher, IonRefresherContent,
   ],
 })
-export class DashboardPage implements OnInit, AfterViewInit, ViewWillEnter {
+export class DashboardPage implements AfterViewInit, ViewWillEnter {
   private readonly dashService = inject(DashboardService);
   private readonly alertsStream = inject(AlertsStream);
   private readonly socketService = inject(SocketService);
@@ -208,11 +205,8 @@ export class DashboardPage implements OnInit, AfterViewInit, ViewWillEnter {
         .subscribe(() => void this.loadData());
   }
 
-  ngOnInit(): void {
-    this.topbar.set('Dashboard', { icon: 'add-outline', handler: () => this.onRegisterDevice() });
-  }
-
   ionViewWillEnter(): void {
+    this.topbar.set('Dashboard', { icon: 'add-outline', handler: () => this.onRegisterDevice() });
     void this.loadData();
   }
 

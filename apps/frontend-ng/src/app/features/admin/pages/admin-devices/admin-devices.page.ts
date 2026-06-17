@@ -1,6 +1,6 @@
 import {
   AfterViewInit, ChangeDetectionStrategy, Component,
-  computed, DestroyRef, inject, OnInit, signal, TemplateRef, ViewChild,
+  computed, inject, signal, TemplateRef, ViewChild,
 } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { skip } from 'rxjs';
@@ -45,12 +45,11 @@ addIcons({ refreshOutline, eyeOutline, reloadOutline, hardwareChipOutline, check
     IonRefresher, IonRefresherContent,
   ],
 })
-export class AdminDevicesPage implements OnInit, AfterViewInit, ViewWillEnter {
+export class AdminDevicesPage implements AfterViewInit, ViewWillEnter {
   protected readonly svc = inject(AdminDevicesService);
   private readonly alertCtrl = inject(AlertController);
   private readonly topbar = inject(TopbarService);
   private readonly tenantCtx = inject(TenantContextService);
-  private readonly destroy = inject(DestroyRef);
 
   protected statusFilter = '';
   protected readonly searchQuery = signal('');
@@ -86,11 +85,8 @@ export class AdminDevicesPage implements OnInit, AfterViewInit, ViewWillEnter {
       .subscribe(() => void this.svc.load());
   }
 
-  ngOnInit(): void {
-    this.topbar.set('Devices');
-  }
-
   ionViewWillEnter(): void {
+    this.topbar.set('Devices');
     void this.svc.load();
   }
 

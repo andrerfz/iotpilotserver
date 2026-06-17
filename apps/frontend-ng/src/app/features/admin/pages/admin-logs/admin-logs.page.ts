@@ -1,6 +1,6 @@
 import {
   ChangeDetectionStrategy, Component, computed, DestroyRef,
-  inject, OnInit, signal,
+  inject, signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
@@ -11,6 +11,7 @@ import {
   IonContent, IonCard, IonCardContent, IonButton, IonIcon, IonBadge, IonSkeletonText,
   EmptyStateComponent,
   UiSearchFieldComponent, UiSelectComponent,
+  ViewWillEnter,
 } from '@ng/shared/ui';
 import type { SelectOption } from '@ng/shared/ui';
 import { AdminLogsService, AdminLogEntry } from '../../services/admin-logs.service';
@@ -37,7 +38,7 @@ const LEVEL_COLOR: Record<string, string> = {
     AdminTabsComponent,
   ],
 })
-export class AdminLogsPage implements OnInit {
+export class AdminLogsPage implements ViewWillEnter {
   protected readonly svc = inject(AdminLogsService);
   private readonly topbar = inject(TopbarService);
   private readonly destroyRef = inject(DestroyRef);
@@ -85,7 +86,7 @@ export class AdminLogsPage implements OnInit {
     });
   }
 
-  ngOnInit(): void {
+  ionViewWillEnter(): void {
     this.topbar.set('Logs');
     void this.load();
   }

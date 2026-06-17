@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { skip } from 'rxjs';
 import { RouterLink } from '@angular/router';
@@ -35,11 +35,10 @@ addIcons({ hardwareChipOutline, peopleOutline, documentTextOutline, serverOutlin
     IonRefresher, IonRefresherContent,
   ],
 })
-export class AdminOverviewPage implements OnInit, ViewWillEnter {
+export class AdminOverviewPage implements ViewWillEnter {
   protected readonly svc = inject(AdminStatsService);
   private readonly topbar = inject(TopbarService);
   private readonly tenantCtx = inject(TenantContextService);
-  private readonly destroy = inject(DestroyRef);
 
   constructor() {
     toObservable(this.tenantCtx.customer)
@@ -47,11 +46,8 @@ export class AdminOverviewPage implements OnInit, ViewWillEnter {
       .subscribe(() => void this.svc.load());
   }
 
-  ngOnInit(): void {
-    this.topbar.set('Admin');
-  }
-
   ionViewWillEnter(): void {
+    this.topbar.set('Admin');
     void this.svc.load();
   }
 

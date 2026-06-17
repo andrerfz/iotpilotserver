@@ -2,8 +2,6 @@ import {
   AfterViewInit,
   ChangeDetectionStrategy,
   Component,
-  DestroyRef,
-  OnInit,
   TemplateRef,
   ViewChild,
   computed,
@@ -97,14 +95,12 @@ const STATUS_OPTIONS: PickerOption[] = [
     IonRefresher, IonRefresherContent,
   ],
 })
-export class DevicesPage implements OnInit, AfterViewInit, ViewWillEnter {
+export class DevicesPage implements AfterViewInit, ViewWillEnter {
   private readonly dashService = inject(DashboardService);
   private readonly socketService = inject(SocketService);
   private readonly router = inject(Router);
   private readonly topbar = inject(TopbarService);
   private readonly tenantCtx = inject(TenantContextService);
-  private readonly destroy = inject(DestroyRef);
-
   readonly devicesLoading = this.dashService.devices.loading;
   readonly devicesError = this.dashService.devices.error;
 
@@ -176,11 +172,8 @@ export class DevicesPage implements OnInit, AfterViewInit, ViewWillEnter {
         .subscribe(() => void this.dashService.devices.load({ limit: 50 }));
   }
 
-  ngOnInit(): void {
-    this.topbar.set('Devices', { icon: 'add-outline', handler: () => this.onRegisterDevice() });
-  }
-
   ionViewWillEnter(): void {
+    this.topbar.set('Devices', { icon: 'add-outline', handler: () => this.onRegisterDevice() });
     void this.dashService.devices.load({ limit: 50 });
   }
 
