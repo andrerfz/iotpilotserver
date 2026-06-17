@@ -74,10 +74,13 @@ adminRouter.get('/devices', requireAuth('SUPERADMIN'), async (req: Authenticated
           publicId: true,
           deviceId: true,
           name: true,
+          hostname: true,
+          deviceType: true,
           status: true,
           customerId: true,
           macAddress: true,
           ipAddress: true,
+          lastSeen: true,
           registeredAt: true,
         },
         orderBy: { registeredAt: 'desc' },
@@ -90,11 +93,14 @@ adminRouter.get('/devices', requireAuth('SUPERADMIN'), async (req: Authenticated
     const devices = rawDevices.map(d => ({
       id: d.publicId || d.id,
       deviceId: d.deviceId,
-      name: d.name,
+      hostname: d.hostname || d.name || d.deviceId,
+      name: d.name || d.hostname || d.deviceId,
+      deviceType: d.deviceType,
       status: d.status,
       customerId: d.customerId,
       macAddress: d.macAddress,
       ipAddress: d.ipAddress,
+      lastSeen: d.lastSeen,
       registeredAt: d.registeredAt,
     }));
 
@@ -622,7 +628,7 @@ adminRouter.get('/customers', requireAuth('SUPERADMIN'), async (req: Authenticat
     if (search) {
       where.OR = [
         { name: { contains: search, mode: 'insensitive' } },
-        { contactEmail: { contains: search, mode: 'insensitive' } },
+        { slug: { contains: search, mode: 'insensitive' } },
       ];
     }
 
