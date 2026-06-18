@@ -1,4 +1,5 @@
 import {
+  AfterViewInit,
   ChangeDetectionStrategy,
   Component,
   computed,
@@ -6,9 +7,10 @@ import {
   inject,
   OnInit,
   signal,
+  TemplateRef,
+  ViewChild,
 } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { DatePipe } from '@angular/common';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { addIcons } from 'ionicons';
@@ -16,18 +18,23 @@ import { addOutline, closeOutline, copyOutline, checkmarkOutline, trashOutline }
 import { TopbarService } from '@ng/shell/topbar.service';
 import {
   IonButton,
+  IonButtons,
   IonCard,
   IonCardContent,
-  IonCardHeader,
-  IonCardTitle,
   IonContent,
+  IonHeader,
   IonIcon,
-  IonInput,
-  IonItem,
-  IonLabel,
-  IonList,
+  IonModal,
   IonSpinner,
+  IonTitle,
+  IonToolbar,
+  DataTableComponent,
+  EmptyStateComponent,
+  StatusBadgeComponent,
+  UiInputComponent,
+  UiSearchFieldComponent,
 } from '@ng/shared/ui';
+import type { ColumnDef } from '@ng/shared/ui';
 import { ApiConfiguration } from '@ng/core/api/generated/api-configuration';
 
 addIcons({ addOutline, closeOutline, copyOutline, checkmarkOutline, trashOutline });
@@ -56,23 +63,26 @@ interface CreatedKey {
   styleUrls: ['settings-api-keys.page.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    FormsModule,
-    DatePipe,
+    ReactiveFormsModule,
     IonContent,
     IonCard,
     IonCardContent,
-    IonCardHeader,
-    IonCardTitle,
     IonButton,
-    IonSpinner,
-    IonItem,
-    IonLabel,
-    IonList,
+    IonButtons,
+    IonHeader,
     IonIcon,
-    IonInput,
+    IonModal,
+    IonSpinner,
+    IonTitle,
+    IonToolbar,
+    DataTableComponent,
+    EmptyStateComponent,
+    StatusBadgeComponent,
+    UiInputComponent,
+    UiSearchFieldComponent,
   ],
 })
-export class SettingsApiKeysPage implements OnInit {
+export class SettingsApiKeysPage implements OnInit, AfterViewInit {
   private readonly http = inject(HttpClient);
   private readonly apiConfig = inject(ApiConfiguration);
   private readonly topbar = inject(TopbarService);
@@ -82,25 +92,51 @@ export class SettingsApiKeysPage implements OnInit {
   readonly keys = signal<ApiKey[]>([]);
   readonly listError = signal('');
 
-  readonly newKeyName = signal('');
+  readonly nameCtrl = new FormControl('', { nonNullable: true });
   readonly isCreating = signal(false);
   readonly createError = signal('');
   readonly justCreated = signal<CreatedKey | null>(null);
   readonly copiedKey = signal(false);
+  readonly showCreateModal = signal(false);
 
   readonly deletingId = signal<string | null>(null);
   readonly deleteError = signal('');
 
-  readonly canCreate = computed(() => this.newKeyName().trim().length > 0 && !this.isCreating());
+  readonly searchQuery = signal('');
+
+  readonly canCreate = computed(() => this.nameCtrl.value.trim().length > 0 && !this.isCreating());
+
+  readonly cols = signal<ColumnDef<ApiKey>[]>([]);
+
+  @ViewChild('maskedKeyCell') private maskedKeyCellTpl!: TemplateRef<{ $implicit: ApiKey }>;
+  @ViewChild('statusCell')    private statusCellTpl!: TemplateRef<{ $implicit: ApiKey }>;
+  @ViewChild('actionsCell')   private actionsCellTpl!: TemplateRef<{ $implicit: ApiKey }>;
+
+  readonly filteredKeys = computed(() => {
+    const q = this.searchQuery().toLowerCase();
+    if (!q) return this.keys();
+    return this.keys().filter(k => k.name.toLowerCase().includes(q));
+  });
 
   private get baseUrl(): string {
     return this.apiConfig.rootUrl;
   }
 
   ngOnInit(): void {
-    this.topbar.set('API Keys');
+    this.topbar.set('API Keys', { icon: 'add-outline', handler: () => this.openCreateModal() });
     this.destroy.onDestroy(() => this.topbar.clear());
     void this.loadKeys();
+  }
+
+  ngAfterViewInit(): void {
+    this.cols.set([
+      { key: 'name',       label: 'Name',     sortable: true },
+      { key: 'maskedKey',  label: 'Key',      cellTemplate: this.maskedKeyCellTpl },
+      { key: 'createdAt',  label: 'Created',  sortable: true },
+      { key: 'lastUsedAt', label: 'Last used' },
+      { key: 'isActive',   label: 'Status',   cellTemplate: this.statusCellTpl },
+      { key: 'actions',    label: '',         cellTemplate: this.actionsCellTpl },
+    ]);
   }
 
   async loadKeys(): Promise<void> {
@@ -118,8 +154,18 @@ export class SettingsApiKeysPage implements OnInit {
     }
   }
 
+  openCreateModal(): void {
+    this.nameCtrl.reset('');
+    this.createError.set('');
+    this.showCreateModal.set(true);
+  }
+
+  onModalDismiss(): void {
+    this.showCreateModal.set(false);
+  }
+
   async onCreate(): Promise<void> {
-    const name = this.newKeyName().trim();
+    const name = this.nameCtrl.value.trim();
     if (!name) return;
     this.isCreating.set(true);
     this.createError.set('');
@@ -132,7 +178,7 @@ export class SettingsApiKeysPage implements OnInit {
         )
       );
       this.justCreated.set(res.data.apiKey);
-      this.newKeyName.set('');
+      this.showCreateModal.set(false);
       await this.loadKeys();
     } catch (err) {
       this.createError.set(err instanceof Error ? err.message : 'Failed to create API key');
