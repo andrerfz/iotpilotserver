@@ -1,25 +1,27 @@
 <ion-content class="ion-padding">
   <!-- New key banner (shown once after creation) -->
   @if (justCreated(); as created) {
-    <div class="apikey-banner">
-      <div class="apikey-banner__head">
-        <span class="apikey-banner__title">API key created — copy it now</span>
-        <ion-button fill="clear" size="small" (click)="dismissCreated()">
-          <ion-icon slot="icon-only" name="close-outline" />
-        </ion-button>
-      </div>
-      <p class="apikey-banner__warning">This key will not be shown again.</p>
-      <div class="apikey-banner__key">
-        <code>{{ created.key }}</code>
-        <ion-button fill="clear" size="small" (click)="copyKey(created.key)">
-          <ion-icon slot="icon-only" [name]="copiedKey() ? 'checkmark-outline' : 'copy-outline'" />
-        </ion-button>
-      </div>
-    </div>
+    <ion-card class="apikey-banner">
+      <ion-card-content>
+        <div class="apikey-banner__head">
+          <span class="apikey-banner__title">API key created — copy it now</span>
+          <ion-button fill="clear" size="small" (click)="dismissCreated()">
+            <ion-icon slot="icon-only" name="close-outline" />
+          </ion-button>
+        </div>
+        <p class="apikey-banner__warning">This key will not be shown again.</p>
+        <div class="apikey-banner__key">
+          <code>{{ created.key }}</code>
+          <ion-button fill="clear" size="small" (click)="copyKey(created.key)">
+            <ion-icon slot="icon-only" [name]="copiedKey() ? 'checkmark-outline' : 'copy-outline'" />
+          </ion-button>
+        </div>
+      </ion-card-content>
+    </ion-card>
   }
 
   <!-- Card 1: Create new key -->
-  <ion-card class="apikey-card">
+  <ion-card class="apikey-create-card">
     <ion-card-header>
       <ion-card-title>Create API Key</ion-card-title>
     </ion-card-header>
@@ -28,9 +30,9 @@
         API keys allow devices and integrations to authenticate with the platform.
         Each key is shown once on creation — store it securely.
       </p>
-      <div class="apikey-create-row">
+      <div class="create-row">
         <ion-input
-          class="apikey-create-row__input"
+          class="create-row__input"
           placeholder="Key name (e.g. Sensor Room A)"
           [value]="newKeyName()"
           (ionInput)="newKeyName.set($any($event).detail.value ?? '')"
@@ -59,36 +61,43 @@
   </ion-card>
 
   <!-- Card 2: Key list -->
-  <ion-card class="apikey-card">
+  <ion-card>
     <ion-card-header>
       <ion-card-title>Your API Keys</ion-card-title>
     </ion-card-header>
-    <ion-card-content>
-      @if (isLoading()) {
+    @if (isLoading()) {
+      <ion-card-content>
         <div class="apikey-loading">
           <ion-spinner name="crescent" />
         </div>
-      } @else if (listError()) {
+      </ion-card-content>
+    } @else if (listError()) {
+      <ion-card-content>
         <p class="apikey-msg apikey-msg--error">{{ listError() }}</p>
-      } @else if (keys().length === 0) {
+      </ion-card-content>
+    } @else if (keys().length === 0) {
+      <ion-card-content>
         <p class="apikey-empty">No API keys yet. Create one above.</p>
-      } @else {
+      </ion-card-content>
+    } @else {
+      <ion-list lines="full">
         @for (key of keys(); track key.id) {
-          <div class="apikey-row" [class.apikey-row--inactive]="!key.isActive">
-            <div class="apikey-row__info">
-              <span class="apikey-row__name">{{ key.name }}</span>
-              <span class="apikey-row__masked">{{ key.maskedKey }}</span>
-              <span class="apikey-row__meta">
+          <ion-item [class.item--inactive]="!key.isActive">
+            <ion-label>
+              <h3>{{ key.name }}</h3>
+              <p class="apikey-masked">{{ key.maskedKey }}</p>
+              <p class="apikey-meta">
                 Created {{ key.createdAt | date:'mediumDate' }}
                 @if (key.lastUsedAt) {
                   · Last used {{ key.lastUsedAt | date:'mediumDate' }}
                 }
                 @if (!key.isActive) {
-                  · <span class="apikey-row__expired">Expired</span>
+                  · <span class="apikey-expired">Expired</span>
                 }
-              </span>
-            </div>
+              </p>
+            </ion-label>
             <ion-button
+              slot="end"
               fill="clear"
               color="danger"
               size="small"
@@ -101,12 +110,14 @@
                 <ion-icon slot="icon-only" name="trash-outline" />
               }
             </ion-button>
-          </div>
+          </ion-item>
         }
-      }
-      @if (deleteError()) {
+      </ion-list>
+    }
+    @if (deleteError()) {
+      <ion-card-content>
         <p class="apikey-msg apikey-msg--error">{{ deleteError() }}</p>
-      }
-    </ion-card-content>
+      </ion-card-content>
+    }
   </ion-card>
 </ion-content>

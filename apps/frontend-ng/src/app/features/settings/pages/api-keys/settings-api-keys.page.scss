@@ -1,4 +1,4 @@
-.apikey-card {
+.apikey-create-card {
   margin-bottom: 16px;
 }
 
@@ -8,7 +8,7 @@
   margin: 0 0 16px;
 }
 
-.apikey-create-row {
+.create-row {
   display: flex;
   gap: 8px;
   align-items: center;
@@ -19,10 +19,7 @@
 }
 
 .apikey-banner {
-  background: var(--surface);
-  border: 1px solid var(--primary-line);
-  border-radius: 8px;
-  padding: 12px 16px;
+  border-color: var(--primary-line);
   margin-bottom: 16px;
 
   &__head {
@@ -49,13 +46,13 @@
     align-items: center;
     gap: 8px;
     background: var(--surface-2);
-    border-radius: 6px;
+    border-radius: var(--r-sm);
     padding: 8px 10px;
     overflow: hidden;
 
     code {
       flex: 1;
-      font-family: monospace;
+      font-family: var(--font-mono);
       font-size: 12px;
       color: var(--text);
       word-break: break-all;
@@ -78,52 +75,22 @@
   padding: 20px 0;
 }
 
-.apikey-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 12px;
-  border-radius: 8px;
-  border: 1px solid var(--ui-border);
-  margin-bottom: 8px;
+.item--inactive {
+  opacity: 0.6;
+}
 
-  &--inactive {
-    opacity: 0.6;
-  }
+.apikey-masked {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
 
-  &__info {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 0;
-    flex: 1;
-    overflow: hidden;
-  }
+.apikey-meta {
+  font-size: 11px;
+  margin-top: 2px;
+}
 
-  &__name {
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--text);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  &__masked {
-    font-size: 12px;
-    font-family: monospace;
-    color: var(--text-muted);
-  }
-
-  &__meta {
-    font-size: 11px;
-    color: var(--text-dim);
-    margin-top: 2px;
-  }
-
-  &__expired {
-    color: var(--ion-color-danger);
-  }
+.apikey-expired {
+  color: var(--ion-color-danger);
 }
 
 .apikey-msg {

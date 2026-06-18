@@ -145,27 +145,32 @@
       </ion-card-header>
 
       @if (showSessions()) {
-        <ion-card-content>
-          @if (isLoadingSessions()) {
+        @if (isLoadingSessions()) {
+          <ion-card-content>
             <div class="sec-loading sec-loading--sm">
               <ion-spinner name="crescent" />
             </div>
-          } @else if (sessions().length === 0) {
+          </ion-card-content>
+        } @else if (sessions().length === 0) {
+          <ion-card-content>
             <p class="sec-empty">No active sessions found</p>
-          } @else {
+          </ion-card-content>
+        } @else {
+          <ion-list lines="full">
             @for (s of sessions(); track s.id) {
-              <div class="sec-session-item">
-                <div class="sec-session-item__info">
-                  <span class="sec-session-item__id">{{ s.id?.slice(0, 12) }}…</span>
-                  @if (s.isCurrent) {
-                    <span class="sec-session-item__current">Current</span>
-                  }
-                  <p class="sec-session-item__dates">
-                    Started {{ s.createdAt | date:'short' }} · Expires {{ s.expiresAt | date:'short' }}
-                  </p>
-                </div>
+              <ion-item>
+                <ion-label>
+                  <h3>
+                    <span class="sec-session__id">{{ s.id?.slice(0, 12) }}…</span>
+                    @if (s.isCurrent) {
+                      <span class="sec-session__current">Current</span>
+                    }
+                  </h3>
+                  <p>Started {{ s.createdAt | date:'short' }} · Expires {{ s.expiresAt | date:'short' }}</p>
+                </ion-label>
                 @if (!s.isCurrent) {
                   <ion-button
+                    slot="end"
                     fill="clear"
                     color="danger"
                     size="small"
@@ -178,10 +183,11 @@
                     Revoke
                   </ion-button>
                 }
-              </div>
+              </ion-item>
             }
-
-            @if (sessions().length > 1) {
+          </ion-list>
+          @if (sessions().length > 1) {
+            <ion-card-content>
               <div class="settings-actions">
                 <ion-button
                   fill="outline"
@@ -196,16 +202,19 @@
                   Revoke all other sessions ({{ sessions().length - 1 }})
                 </ion-button>
               </div>
-            }
+            </ion-card-content>
           }
-
-          @if (sessionError()) {
+        }
+        @if (sessionError()) {
+          <ion-card-content>
             <p class="sec-msg sec-msg--error">{{ sessionError() }}</p>
-          }
-          @if (sessionMessage()) {
+          </ion-card-content>
+        }
+        @if (sessionMessage()) {
+          <ion-card-content>
             <p class="sec-msg sec-msg--success">{{ sessionMessage() }}</p>
-          }
-        </ion-card-content>
+          </ion-card-content>
+        }
       }
     </ion-card>
 
@@ -214,31 +223,31 @@
       <ion-card-header>
         <ion-card-title>Security Recommendations</ion-card-title>
       </ion-card-header>
-      <ion-card-content>
-        <div class="sec-rec-item">
-          <p class="sec-rec-item__title">Use a strong, unique password</p>
-          <p class="sec-rec-item__desc">
-            Ensure your password is at least 12 characters long and includes a mix of letters, numbers, and symbols.
-          </p>
-        </div>
-
-        <div class="sec-rec-item" [class.sec-rec-item--warn]="!securityForm.controls.twoFactorAuth.value">
-          <p class="sec-rec-item__title">Enable two-factor authentication</p>
-          <p class="sec-rec-item__desc">
-            Add an extra layer of security by requiring a second verification step when logging in.
-          </p>
-        </div>
-
-        <div class="sec-rec-item" [class.sec-rec-item--warn]="!sessionsLoaded() || sessions().length > 1">
-          <p class="sec-rec-item__title">Review active sessions</p>
-          <p class="sec-rec-item__desc">
-            Regularly check and terminate any suspicious sessions.
-            @if (sessionsLoaded() && sessions().length > 1) {
-              You have {{ sessions().length }} active sessions.
-            }
-          </p>
-        </div>
-      </ion-card-content>
+      <ion-list lines="full">
+        <ion-item lines="full">
+          <ion-label>
+            <h3>Use a strong, unique password</h3>
+            <p>Ensure your password is at least 12 characters long and includes a mix of letters, numbers, and symbols.</p>
+          </ion-label>
+        </ion-item>
+        <ion-item lines="full" [class.sec-rec--warn]="!securityForm.controls.twoFactorAuth.value">
+          <ion-label>
+            <h3>Enable two-factor authentication</h3>
+            <p>Add an extra layer of security by requiring a second verification step when logging in.</p>
+          </ion-label>
+        </ion-item>
+        <ion-item lines="none" [class.sec-rec--warn]="!sessionsLoaded() || sessions().length > 1">
+          <ion-label>
+            <h3>Review active sessions</h3>
+            <p>
+              Regularly check and terminate any suspicious sessions.
+              @if (sessionsLoaded() && sessions().length > 1) {
+                You have {{ sessions().length }} active sessions.
+              }
+            </p>
+          </ion-label>
+        </ion-item>
+      </ion-list>
     </ion-card>
   }
 </ion-content>

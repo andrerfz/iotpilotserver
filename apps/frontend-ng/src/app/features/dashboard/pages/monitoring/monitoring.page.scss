@@ -8,15 +8,14 @@
   &__title {
     font-size: 22px;
     font-weight: 700;
-    color: var(--ion-text-color);
+    color: var(--text);
   }
 
   &__sub {
     font-size: 13px;
-    color: var(--ion-color-medium);
+    color: var(--text-muted);
     margin-top: 2px;
   }
-
 }
 
 .metrics {
@@ -47,15 +46,15 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: var(--ion-color-light);
-  border-radius: 8px;
+  background: var(--surface-2);
+  border-radius: var(--r-sm);
   padding: 8px 12px;
   margin-bottom: 12px;
 
   &__count {
     font-size: 13px;
     font-weight: 600;
-    color: var(--ion-text-color);
+    color: var(--text);
     flex: 1;
   }
 }
@@ -63,7 +62,7 @@
 .section-head {
   font-size: 14px;
   font-weight: 600;
-  color: var(--ion-color-medium);
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin: 20px 0 8px;
@@ -93,7 +92,7 @@
   &--critical { background: var(--ion-color-danger); }
   &--error    { background: var(--ion-color-warning); }
   &--warning  { background: var(--ion-color-warning-shade); }
-  &--info     { background: var(--ion-color-medium); }
+  &--info     { background: var(--text-dim); }
 }
 
 .device-cell {
@@ -107,7 +106,7 @@
 }
 
 .dim {
-  color: var(--ion-color-medium);
+  color: var(--text-muted);
   font-size: 13px;
   text-align: center;
   padding: 24px 0;

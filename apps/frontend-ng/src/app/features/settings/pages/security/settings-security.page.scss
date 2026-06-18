@@ -35,7 +35,7 @@
 
   &__label-min {
     font-size: 13px;
-    color: var(--ion-color-medium);
+    color: var(--text-muted);
     min-width: 60px;
   }
 
@@ -43,8 +43,8 @@
     max-width: 80px;
     --padding-start: 8px;
     --padding-end: 8px;
-    border: 1px solid var(--ion-color-light-shade);
-    border-radius: 6px;
+    border: 1px solid var(--ui-border);
+    border-radius: var(--r-sm);
     font-size: 14px;
   }
 }
@@ -69,7 +69,6 @@
   }
 }
 
-
 .sec-sessions-header {
   display: flex;
   align-items: center;
@@ -78,78 +77,35 @@
 
 .sec-sessions-desc {
   font-size: 13px;
-  color: var(--ion-color-medium);
+  color: var(--text-muted);
   margin: 4px 0 0;
 }
 
-.sec-session-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 12px;
-  border-radius: 8px;
-  border: 1px solid var(--ion-color-light-shade);
-  margin-bottom: 8px;
+.sec-session__id {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-muted);
+}
 
-  &__info {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 0;
-  }
-
-  &__id {
-    font-size: 12px;
-    font-family: monospace;
-    color: var(--ion-color-medium);
-  }
-
-  &__current {
-    display: inline-block;
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--ion-color-primary);
-    background: var(--ion-color-primary-tint);
-    padding: 1px 8px;
-    border-radius: 20px;
-    width: fit-content;
-  }
-
-  &__dates {
-    font-size: 11px;
-    color: var(--ion-color-medium);
-    margin: 2px 0 0;
-  }
+.sec-session__current {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--primary);
+  background: var(--primary-weak);
+  padding: 1px 8px;
+  border-radius: 20px;
+  margin-left: 6px;
+  vertical-align: middle;
 }
 
 .sec-empty {
   text-align: center;
   font-size: 13px;
-  color: var(--ion-color-medium);
+  color: var(--text-muted);
   padding: 16px 0;
 }
 
-.sec-rec-item {
-  padding: 12px 0;
-  border-bottom: 1px solid var(--ion-color-light-shade);
-
-  &:last-child {
-    border-bottom: none;
-  }
-
-  &--warn &__title {
-    color: var(--ion-color-warning);
-  }
-
-  &__title {
-    font-size: 14px;
-    font-weight: 500;
-    margin: 0 0 4px;
-  }
-
-  &__desc {
-    font-size: 12px;
-    color: var(--ion-color-medium);
-    margin: 0;
-  }
+.sec-rec--warn ion-label h3 {
+  color: var(--ion-color-warning);
 }

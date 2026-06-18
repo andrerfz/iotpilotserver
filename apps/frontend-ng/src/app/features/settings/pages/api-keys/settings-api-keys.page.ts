@@ -25,7 +25,7 @@ import {
   IonInput,
   IonItem,
   IonLabel,
-  IonNote,
+  IonList,
   IonSpinner,
 } from '@ng/shared/ui';
 import { ApiConfiguration } from '@ng/core/api/generated/api-configuration';
@@ -67,7 +67,7 @@ interface CreatedKey {
     IonSpinner,
     IonItem,
     IonLabel,
-    IonNote,
+    IonList,
     IonIcon,
     IonInput,
   ],
