@@ -1,26 +1,42 @@
 import { render } from '@testing-library/angular';
 import { describe, it, expect } from 'vitest';
+import { provideHttpClient } from '@angular/common/http';
 import { AppLogoComponent } from '../brand/app-logo.component';
 import { NetworkStatusComponent } from './network-status.component';
 import { MaintenanceBannerComponent } from './maintenance-banner.component';
+import { ApiConfiguration } from '@ng/core/api/generated/api-configuration';
+
+const LOGO_PROVIDERS = [
+  provideHttpClient(),
+  { provide: ApiConfiguration, useValue: { rootUrl: '/api' } },
+];
 
 describe('AppLogoComponent', () => {
-  it('renders the brand mark and wordmark', async () => {
-    const { container } = await render(AppLogoComponent);
+  it('renders the brand mark', async () => {
+    const { container } = await render(AppLogoComponent, { providers: LOGO_PROVIDERS });
     expect(container.querySelector('.brand-mark')).toBeTruthy();
-    expect(container.querySelector('.brand-name')?.textContent?.trim()).toBe('IoT Pilot');
+  });
+
+  it('renders the subtitle by default', async () => {
+    const { container } = await render(AppLogoComponent, { providers: LOGO_PROVIDERS });
     expect(container.querySelector('.brand-sub')?.textContent?.trim()).toBe('ops console');
   });
 
-  it('hides the wordmark when showText is false', async () => {
-    const { container } = await render(AppLogoComponent, { inputs: { showText: false } });
+  it('hides the subtitle when showText is false', async () => {
+    const { container } = await render(AppLogoComponent, {
+      inputs: { showText: false },
+      providers: LOGO_PROVIDERS,
+    });
     expect(container.querySelector('.brand-mark')).toBeTruthy();
-    expect(container.querySelector('.brand-name')).toBeFalsy();
+    expect(container.querySelector('.brand-sub')).toBeFalsy();
   });
 
-  it('accepts a custom name', async () => {
-    const { container } = await render(AppLogoComponent, { inputs: { name: 'Acme', sub: 'console' } });
-    expect(container.querySelector('.brand-name')?.textContent?.trim()).toBe('Acme');
+  it('accepts a custom subtitle', async () => {
+    const { container } = await render(AppLogoComponent, {
+      inputs: { sub: 'custom sub' },
+      providers: LOGO_PROVIDERS,
+    });
+    expect(container.querySelector('.brand-sub')?.textContent?.trim()).toBe('custom sub');
   });
 });
 

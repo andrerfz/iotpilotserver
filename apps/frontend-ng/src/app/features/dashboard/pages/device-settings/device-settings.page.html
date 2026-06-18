@@ -270,6 +270,42 @@
       }
     </ion-button>
 
+    <!-- DANGER ZONE -->
+    <ion-card class="danger-zone">
+      <ion-card-header>
+        <ion-card-title>Danger Zone</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        @if (!deleteConfirm()) {
+          <div class="danger-row">
+            <div class="danger-row__text">
+              <strong>Delete this device</strong>
+              <p>Permanently removes the device and all its data. This action cannot be undone.</p>
+            </div>
+            <ion-button fill="outline" color="danger" size="small" (click)="onDeleteClick()">
+              <ion-icon slot="start" name="trash-outline"></ion-icon>
+              Delete
+            </ion-button>
+          </div>
+        } @else {
+          <div class="danger-confirm">
+            <p>Are you sure? This will permanently delete <strong>{{ device.data()?.name }}</strong> and all associated data.</p>
+            <div class="danger-confirm__actions">
+              <ion-button fill="outline" color="medium" size="small" [disabled]="deleting()" (click)="onDeleteCancel()">Cancel</ion-button>
+              <ion-button fill="solid" color="danger" size="small" [disabled]="deleting()" (click)="onDeleteConfirm()">
+                @if (deleting()) {
+                  <ion-spinner slot="start" name="crescent" style="width:14px;height:14px;"></ion-spinner>
+                  Deleting…
+                } @else {
+                  Confirm Delete
+                }
+              </ion-button>
+            </div>
+          </div>
+        }
+      </ion-card-content>
+    </ion-card>
+
   }
 
 </ion-content>

@@ -30,7 +30,7 @@ async function setup(api = makeApi()) {
 }
 
 describe('SettingsProfilePage', () => {
-  it('patches both forms from GET response', async () => {
+  it('patches form from GET response', async () => {
     const { fixture, findByDisplayValue } = await setup();
     await fixture.whenStable();
 
@@ -47,7 +47,7 @@ describe('SettingsProfilePage', () => {
     expect(await findByText('testuser')).toBeTruthy();
   });
 
-  it('onSavePersonal sends merged payload including display prefs', async () => {
+  it('onSave sends merged payload', async () => {
     let callCount = 0;
     const api = {
       invoke: vi.fn().mockImplementation(() => {
@@ -59,41 +59,18 @@ describe('SettingsProfilePage', () => {
     await fixture.whenStable();
 
     const comp = fixture.componentInstance;
-    comp.personalForm.patchValue({ firstName: 'Updated' });
-    comp.personalForm.markAsDirty();
-    await comp.onSavePersonal();
+    comp.form.patchValue({ firstName: 'Updated', language: 'es' });
+    comp.form.markAsDirty();
+    await comp.onSave();
 
     const lastCall = api.invoke.mock.calls.at(-1) as [unknown, { body: ProfileSettingsResponse }];
     const body = lastCall[1].body;
     expect(body.firstName).toBe('Updated');
-    expect(body.language).toBe('en');
-    expect(body.timezone).toBe('UTC');
-  });
-
-  it('onSaveDisplay sends merged payload including personal values', async () => {
-    let callCount = 0;
-    const api = {
-      invoke: vi.fn().mockImplementation(() => {
-        callCount++;
-        return callCount === 1 ? Promise.resolve(MOCK_PROFILE) : Promise.resolve(undefined);
-      }),
-    };
-    const { fixture } = await setup(api);
-    await fixture.whenStable();
-
-    const comp = fixture.componentInstance;
-    comp.displayForm.patchValue({ language: 'es' });
-    comp.displayForm.markAsDirty();
-    await comp.onSaveDisplay();
-
-    const lastCall = api.invoke.mock.calls.at(-1) as [unknown, { body: ProfileSettingsResponse }];
-    const body = lastCall[1].body;
     expect(body.language).toBe('es');
-    expect(body.firstName).toBe('Ada');
     expect(body.lastName).toBe('Lovelace');
   });
 
-  it('shows inline success after personal save', async () => {
+  it('shows inline success after save', async () => {
     let callCount = 0;
     const api = {
       invoke: vi.fn().mockImplementation(() => {
@@ -105,33 +82,14 @@ describe('SettingsProfilePage', () => {
     await fixture.whenStable();
 
     const comp = fixture.componentInstance;
-    comp.personalForm.markAsDirty();
-    await comp.onSavePersonal();
+    comp.form.markAsDirty();
+    await comp.onSave();
     fixture.detectChanges();
 
-    expect(await findByText('Personal information saved')).toBeTruthy();
+    expect(await findByText('Changes saved')).toBeTruthy();
   });
 
-  it('shows inline success after display save', async () => {
-    let callCount = 0;
-    const api = {
-      invoke: vi.fn().mockImplementation(() => {
-        callCount++;
-        return callCount === 1 ? Promise.resolve(MOCK_PROFILE) : Promise.resolve(undefined);
-      }),
-    };
-    const { fixture, findByText } = await setup(api);
-    await fixture.whenStable();
-
-    const comp = fixture.componentInstance;
-    comp.displayForm.markAsDirty();
-    await comp.onSaveDisplay();
-    fixture.detectChanges();
-
-    expect(await findByText('Display preferences saved')).toBeTruthy();
-  });
-
-  it('shows inline error when personal save fails', async () => {
+  it('shows inline error when save fails', async () => {
     let callCount = 0;
     const api = {
       invoke: vi.fn().mockImplementation(() => {
@@ -145,8 +103,8 @@ describe('SettingsProfilePage', () => {
     await fixture.whenStable();
 
     const comp = fixture.componentInstance;
-    comp.personalForm.markAsDirty();
-    await comp.onSavePersonal();
+    comp.form.markAsDirty();
+    await comp.onSave();
     fixture.detectChanges();
 
     expect(await findByText('Network error')).toBeTruthy();

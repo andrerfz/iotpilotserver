@@ -41,13 +41,20 @@ export class NodeSSHConnectorService implements SSHConnector {
     // @ts-ignore - Runtime dependency only
     const {NodeSSH: NodeSSHClass} = eval('require')('node-ssh');
     const ssh = new NodeSSHClass();
-    await ssh.connect({
+
+    const connectConfig: Record<string, any> = {
       host,
       port: creds.port ?? 22,
       username: creds.username,
-      privateKey: creds.privateKey,
-      passphrase: creds.passphrase
-    } as any);
+    };
+    if (creds.password) {
+      connectConfig['password'] = creds.password;
+    } else if (creds.privateKey && creds.privateKey !== 'password-based-auth') {
+      connectConfig['privateKey'] = creds.privateKey;
+      if (creds.passphrase) connectConfig['passphrase'] = creds.passphrase;
+    }
+
+    await ssh.connect(connectConfig as any);
 
     const sessionId = randomUUID();
     this.sessions.set(sessionId, { ssh, deviceId: deviceId.getValue() });

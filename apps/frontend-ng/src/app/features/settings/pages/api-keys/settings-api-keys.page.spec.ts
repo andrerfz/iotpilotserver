@@ -61,7 +61,7 @@ describe('SettingsApiKeysPage', () => {
     await fixture.whenStable();
 
     const comp = fixture.componentInstance;
-    comp.newKeyName.set('My Key');
+    comp.nameCtrl.setValue('My Key');
     // Start create but don't await — let the test drive the HTTP interactions
     const createPromise = comp.onCreate();
     fixture.detectChanges();

@@ -11,6 +11,8 @@ export interface NavItem {
   exact?: boolean;
   /** Visible only to ADMIN and SUPERADMIN roles. */
   adminOnly?: boolean;
+  /** Visible only to SUPERADMIN role. */
+  superAdminOnly?: boolean;
   /** Sub-items always rendered indented below this item. */
   children?: NavItem[];
 }
@@ -29,7 +31,7 @@ export const NAV: NavGroup[] = [
       { label: 'Dashboard', path: 'dashboard', icon: 'grid-outline' },
       { label: 'Devices', path: 'devices', icon: 'hardware-chip-outline' },
       { label: 'Monitoring', path: 'monitoring', icon: 'notifications-outline' },
-      { label: 'Logs', path: 'logs', icon: 'document-text-outline' },
+      { label: 'Logs', path: 'logs', icon: 'document-text-outline', adminOnly: true },
     ],
   },
   {
@@ -38,7 +40,7 @@ export const NAV: NavGroup[] = [
       {
         label: 'Overview', path: 'admin', icon: 'stats-chart-outline', exact: true, adminOnly: true,
         children: [
-          { label: 'Devices', path: 'admin/devices', icon: 'hardware-chip-outline', adminOnly: true },
+          { label: 'Devices', path: 'admin/devices', icon: 'hardware-chip-outline', adminOnly: true, superAdminOnly: true },
           { label: 'Users',   path: 'admin/users',   icon: 'people-outline', adminOnly: true },
           { label: 'Logs',    path: 'admin/logs',    icon: 'document-text-outline', adminOnly: true },
           { label: 'System',  path: 'admin/system',  icon: 'server-outline', adminOnly: true },

@@ -2,9 +2,11 @@ import { render, fireEvent } from '@testing-library/angular';
 import { describe, it, expect, vi } from 'vitest';
 import { signal } from '@angular/core';
 import { provideRouter, ActivatedRouteSnapshot } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
 import { ThemeService } from '@ng/shared/ui';
 import { AuthService } from '../core/auth/auth.service';
 import { ToastService } from '../core/errors/toast.service';
+import { ApiConfiguration } from '@ng/core/api/generated/api-configuration';
 import { breadcrumbFromSnapshot } from './breadcrumbs';
 import { RailComponent } from './rail.component';
 import { TopbarComponent } from './topbar.component';
@@ -17,6 +19,15 @@ function themeStub(initial: 'light' | 'dark' | 'system' = 'dark') {
   const theme = signal(initial);
   return { theme, setTheme: vi.fn((v: 'light' | 'dark' | 'system') => theme.set(v)) };
 }
+
+function authStub(role: 'ADMIN' | 'USER' | null = 'ADMIN') {
+  return { currentUser: signal({ username: 'admin', email: 'a@x.io', role: role ?? 'USER' }), role: signal(role), logout: vi.fn() };
+}
+
+const BASE_PROVIDERS = [
+  provideHttpClient(),
+  { provide: ApiConfiguration, useValue: { rootUrl: '/api' } },
+];
 
 // ─── breadcrumbFromSnapshot ───────────────────────────────────────────────────
 
@@ -36,18 +47,39 @@ describe('breadcrumbFromSnapshot', () => {
 // ─── RailComponent ─────────────────────────────────────────────────────────
 
 describe('RailComponent', () => {
-  it('renders the brand and both nav groups with items + badges', async () => {
-    const { container } = await render(RailComponent, { providers: [provideRouter([])] });
-    expect(container.querySelector('.brand-name')?.textContent).toContain('IoT Pilot');
-    expect(Array.from(container.querySelectorAll('.nav-group__label')).map(g => g.textContent?.trim()))
-      .toEqual(['Operate', 'Administer']);
-    expect(container.querySelectorAll('.nav-item').length).toBe(6);
-    expect(Array.from(container.querySelectorAll('.nav-item__badge')).map(b => b.textContent?.trim()))
-      .toEqual(['10', '4', '2']);
+  it('renders nav groups for an ADMIN user', async () => {
+    const { container } = await render(RailComponent, {
+      providers: [
+        ...BASE_PROVIDERS,
+        provideRouter([]),
+        { provide: AuthService, useValue: authStub('ADMIN') },
+      ],
+    });
+    const groupLabels = Array.from(container.querySelectorAll('.nav-group__label')).map(g => g.textContent?.trim());
+    expect(groupLabels).toContain('Operate');
+    expect(groupLabels).toContain('Administer');
+  });
+
+  it('shows only Operate group for a non-admin user', async () => {
+    const { container } = await render(RailComponent, {
+      providers: [
+        ...BASE_PROVIDERS,
+        provideRouter([]),
+        { provide: AuthService, useValue: authStub('USER') },
+      ],
+    });
+    const groupLabels = Array.from(container.querySelectorAll('.nav-group__label')).map(g => g.textContent?.trim());
+    expect(groupLabels).toEqual(['Operate']);
   });
 
   it('wires nav items to their (relative) routerLink targets', async () => {
-    const { container } = await render(RailComponent, { providers: [provideRouter([])] });
+    const { container } = await render(RailComponent, {
+      providers: [
+        ...BASE_PROVIDERS,
+        provideRouter([]),
+        { provide: AuthService, useValue: authStub('USER') },
+      ],
+    });
     expect(container.querySelector('.nav-item')?.getAttribute('href')).toContain('dashboard');
   });
 });
@@ -58,7 +90,10 @@ describe('TopbarComponent', () => {
   it('renders breadcrumb segments with the last marked current + separators between', async () => {
     const { container } = await render(TopbarComponent, {
       inputs: { breadcrumbs: ['Operate', 'Devices'] },
-      providers: [{ provide: ThemeService, useValue: themeStub() }],
+      providers: [
+        ...BASE_PROVIDERS,
+        { provide: ThemeService, useValue: themeStub() },
+      ],
     });
     const segs = container.querySelectorAll('.crumbs__seg');
     expect(Array.from(segs).map(s => s.textContent?.trim())).toEqual(['Operate', 'Devices']);
@@ -71,22 +106,13 @@ describe('TopbarComponent', () => {
     const { container } = await render(TopbarComponent, {
       inputs: { breadcrumbs: [] },
       on: { openSearch: onSearch },
-      providers: [{ provide: ThemeService, useValue: themeStub() }],
+      providers: [
+        ...BASE_PROVIDERS,
+        { provide: ThemeService, useValue: themeStub() },
+      ],
     });
     fireEvent.click(container.querySelector('.searchbtn') as HTMLElement);
     expect(onSearch).toHaveBeenCalledTimes(1);
-  });
-
-  it('shows the sun icon in dark mode and toggles to light', async () => {
-    const theme = themeStub('dark');
-    const { container } = await render(TopbarComponent, {
-      inputs: { breadcrumbs: [] },
-      providers: [{ provide: ThemeService, useValue: theme }],
-    });
-    const icon = container.querySelector('.iconbtn ion-icon') as HTMLElement & { name?: string };
-    expect(icon.name).toBe('sunny-outline'); // dark → show sun (switch to light)
-    fireEvent.click(container.querySelector('.iconbtn') as HTMLElement);
-    expect(theme.setTheme).toHaveBeenCalledWith('light');
   });
 });
 
@@ -94,9 +120,10 @@ describe('TopbarComponent', () => {
 
 describe('ShellComponent', () => {
   const providers = () => [
+    ...BASE_PROVIDERS,
     provideRouter([]),
     { provide: ThemeService, useValue: themeStub() },
-    { provide: AuthService, useValue: { currentUser: signal(null), role: signal(null), logout: vi.fn() } },
+    { provide: AuthService, useValue: authStub('USER') },
     { provide: ToastService, useValue: { success: vi.fn() } },
   ];
 

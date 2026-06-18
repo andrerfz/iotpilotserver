@@ -81,7 +81,7 @@ describe('DeviceOverviewPage', () => {
         imports: [RouterTestingModule],
         providers: buildProviders({ device }),
       });
-      expect(container.querySelector('ion-skeleton-text')).toBeTruthy();
+      expect(container.querySelector('.sk')).toBeTruthy();
     });
   });
 

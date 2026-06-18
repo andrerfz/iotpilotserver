@@ -1,8 +1,10 @@
 import { render } from '@testing-library/angular';
 import { describe, it, expect, vi } from 'vitest';
 import { provideRouter, Router } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
 import { AuthService } from '@ng/core/auth/auth.service';
 import { ToastService } from '@ng/core/errors/toast.service';
+import { ApiConfiguration } from '@ng/core/api/generated/api-configuration';
 import { User } from '@ng/core/api/generated/models/user';
 import { LoginPage } from './login.page';
 
@@ -23,6 +25,8 @@ async function setup(
   return render(LoginPage, {
     providers: [
       provideRouter([]),
+      provideHttpClient(),
+      { provide: ApiConfiguration, useValue: { rootUrl: '/api' } },
       { provide: AuthService, useValue: { login: loginFn, verifyTwoFactor: verifyFn } },
       { provide: ToastService, useValue: fakeToast },
     ],

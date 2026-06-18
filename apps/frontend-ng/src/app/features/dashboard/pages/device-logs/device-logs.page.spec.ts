@@ -72,9 +72,9 @@ describe('DeviceLogsPage', () => {
     });
 
     it('shows filter bar and action buttons', async () => {
-      await renderPage();
-      expect(screen.getByText(/Auto-refresh/i)).toBeTruthy();
-      expect(screen.getByText('Refresh')).toBeTruthy();
+      const { container } = await renderPage();
+      expect(container.querySelector('[title="Auto-refresh"]')).toBeTruthy();
+      expect(container.querySelector('[title="Refresh now"]')).toBeTruthy();
     });
   });
 
@@ -144,25 +144,15 @@ describe('DeviceLogsPage', () => {
       expect(logs.load).toHaveBeenCalledWith(expect.objectContaining({ search: 'kernel' }));
     });
 
-    it('onSourceChange calls load with source param', async () => {
-      const logs = makeSurface<DeviceLogEntry[]>(MOCK_LOGS);
-      const { fixture } = await renderPage(logs);
-      logs.load.mockClear();
-      fixture.componentInstance.onSourceChange('agent');
-      expect(logs.load).toHaveBeenCalledWith(expect.objectContaining({ source: 'agent' }));
-    });
-
     it('onClearFilters resets all signals', async () => {
       const logs = makeSurface<DeviceLogEntry[]>(MOCK_LOGS);
       const { fixture } = await renderPage(logs);
       const comp = fixture.componentInstance;
       comp.levelFilter.set('ERROR');
       comp.search.set('kernel');
-      comp.sourceFilter.set('agent');
       comp.onClearFilters();
       expect(comp.levelFilter()).toBe('ALL');
       expect(comp.search()).toBe('');
-      expect(comp.sourceFilter()).toBe('');
     });
 
     it('hasFilters is false by default', async () => {
@@ -182,11 +172,6 @@ describe('DeviceLogsPage', () => {
       expect(fixture.componentInstance.hasFilters()).toBe(true);
     });
 
-    it('hasFilters is true when source is set', async () => {
-      const { fixture } = await renderPage();
-      fixture.componentInstance.sourceFilter.set('kernel');
-      expect(fixture.componentInstance.hasFilters()).toBe(true);
-    });
   });
 
   describe('auto-refresh', () => {

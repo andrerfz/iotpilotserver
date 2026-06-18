@@ -118,15 +118,17 @@ export class PrismaDeviceRepository implements DeviceRepository {
       const secret: Record<string, string> = {};
       const encryptedKey = encryptIfPresent(creds.privateKey);
       const encryptedPassphrase = encryptIfPresent(creds.passphrase);
+      const encryptedPassword = encryptIfPresent(creds.password);
       if (encryptedKey) secret.privateKey = encryptedKey;
       if (encryptedPassphrase) secret.passphrase = encryptedPassphrase;
+      if (encryptedPassword) secret.password = encryptedPassword;
 
       updateData.capabilities = {
         ...existingCapabilities,
         ssh: {
           username: creds.username,
           port: creds.port || 22,
-          authMethod: creds.privateKey ? 'key' : 'password',
+          authMethod: creds.privateKey && creds.privateKey !== 'password-based-auth' ? 'key' : 'password',
           ...(Object.keys(secret).length > 0 ? { secret } : {}),
         }
       };

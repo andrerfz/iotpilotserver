@@ -45,8 +45,10 @@ export const SHELL_CHILDREN: Routes = [
   },
   {
     path: 'logs',
-    loadComponent: () => import('./placeholder.page').then(m => m.PlaceholderPage),
-    data: { breadcrumb: ['Operate', 'Logs'], title: 'Logs', sub: 'Device & system logs' },
+    canActivate: [roleGuard('ADMIN')],
+    loadComponent: () =>
+      import('../features/dashboard/pages/logs/logs.page').then(m => m.LogsPage),
+    data: { breadcrumb: ['Operate', 'Logs'] },
   },
   {
     path: 'admin',

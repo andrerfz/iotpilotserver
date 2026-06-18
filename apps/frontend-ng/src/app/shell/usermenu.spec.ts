@@ -2,14 +2,23 @@ import { render, fireEvent } from '@testing-library/angular';
 import { describe, it, expect, vi } from 'vitest';
 import { signal } from '@angular/core';
 import { provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
 import { ThemeService } from '@ng/shared/ui';
 import { AuthService } from '../core/auth/auth.service';
 import { ToastService } from '../core/errors/toast.service';
+import { ApiConfiguration } from '@ng/core/api/generated/api-configuration';
+import { AdminStatsService } from '@ng/features/admin/services/admin-stats.service';
+import { TenantContextService } from '@ng/core/auth/tenant-context.service';
 import { HOST_IS_LOCAL } from './host';
 import { UserMenuComponent } from './user-menu.component';
 import { TenantMenuComponent } from './tenant-menu.component';
 
 type Role = 'USER' | 'ADMIN' | 'SUPERADMIN' | 'READONLY';
+
+const BASE_PROVIDERS = [
+  provideHttpClient(),
+  { provide: ApiConfiguration, useValue: { rootUrl: '/api' } },
+];
 
 function authStub(role: Role) {
   return {
@@ -19,9 +28,27 @@ function authStub(role: Role) {
   };
 }
 
+function statsStub(data: { deviceCount?: number; userCount?: number } | null = null) {
+  return {
+    data: signal(data),
+    loading: signal(false),
+    load: vi.fn().mockResolvedValue(null),
+  };
+}
+
+function tenantCtxStub() {
+  return {
+    customer: signal(null),
+    isActive: signal(false),
+    set: vi.fn(),
+    clear: vi.fn(),
+  };
+}
+
 async function openMenu(role: Role, hostIsLocal: boolean) {
   const view = await render(UserMenuComponent, {
     providers: [
+      ...BASE_PROVIDERS,
       provideRouter([]),
       { provide: AuthService, useValue: authStub(role) },
       { provide: ThemeService, useValue: { theme: signal('dark'), setTheme: vi.fn() } },
@@ -82,29 +109,43 @@ describe('UserMenuComponent — role × host matrix', () => {
   });
 });
 
-// ─── TenantMenu (display-only v1) ─────────────────────────────────────────────
+// ─── TenantMenu ───────────────────────────────────────────────────────────────
 
 describe('TenantMenuComponent', () => {
-  it('renders the tenant name and plan · region', async () => {
-    const { container } = await render(TenantMenuComponent, {
-      inputs: { name: 'Globex', region: 'US-East', plan: 'Enterprise' },
-      providers: [provideRouter([])],
+  async function renderTenant(role: Role = 'USER', stats = statsStub()) {
+    return render(TenantMenuComponent, {
+      providers: [
+        ...BASE_PROVIDERS,
+        provideRouter([]),
+        { provide: AuthService, useValue: authStub(role) },
+        { provide: AdminStatsService, useValue: stats },
+        { provide: TenantContextService, useValue: tenantCtxStub() },
+      ],
     });
-    expect(container.querySelector('.tenant__name')?.textContent?.trim()).toBe('Globex');
-    const meta = container.querySelector('.tenant__meta')?.textContent ?? '';
-    expect(meta).toContain('Enterprise');
-    expect(meta).toContain('US-East');
+  }
+
+  it('renders the tenant button with the username as display name', async () => {
+    const { container } = await renderTenant('USER');
+    expect(container.querySelector('.tenant__name')?.textContent?.trim()).toBe('Ada');
   });
 
-  it('opens a popover with stats and tenant nav', async () => {
-    const { container } = await render(TenantMenuComponent, {
-      inputs: { name: 'Globex', deviceCount: 12, userCount: 3 },
-      providers: [provideRouter([])],
-    });
+  it('opens a menu when the tenant button is clicked', async () => {
+    const { container } = await renderTenant('USER');
     expect(container.querySelector('.menu')).toBeFalsy();
     fireEvent.click(container.querySelector('.tenant') as HTMLElement);
     expect(container.querySelector('.menu')).toBeTruthy();
+  });
+
+  it('menu contains Manage users link', async () => {
+    const { container } = await renderTenant('USER');
+    fireEvent.click(container.querySelector('.tenant') as HTMLElement);
     expect(container.textContent).toContain('Manage users');
+  });
+
+  it('shows device count from stats service when menu is open', async () => {
+    const stats = statsStub({ deviceCount: 12, userCount: 3 });
+    const { container } = await renderTenant('USER', stats);
+    fireEvent.click(container.querySelector('.tenant') as HTMLElement);
     expect(container.textContent).toContain('12');
   });
 });

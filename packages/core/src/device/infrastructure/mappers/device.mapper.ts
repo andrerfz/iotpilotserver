@@ -65,12 +65,14 @@ export class DeviceMapper {
         let privateKey = 'password-based-auth'; // legacy / no-secret fallback
         let passphrase: string | undefined = undefined;
 
+        let password: string | undefined = undefined;
         const enc = caps.ssh.secret;
-        if (enc && (enc.privateKey || enc.passphrase)) {
+        if (enc && (enc.privateKey || enc.passphrase || enc.password)) {
           try {
             const cipher = getSecretCipher();
             if (enc.privateKey) privateKey = cipher.decrypt(enc.privateKey);
             if (enc.passphrase) passphrase = cipher.decrypt(enc.passphrase);
+            if (enc.password) password = cipher.decrypt(enc.password);
           } catch (error) {
             // Never crash a device read on a bad key / corrupt ciphertext;
             // fall back so SSH simply fails to connect rather than leaking.
@@ -84,7 +86,8 @@ export class DeviceMapper {
           username: caps.ssh.username || 'pi',
           port: caps.ssh.port || 22,
           privateKey,
-          passphrase
+          passphrase,
+          ...(password ? { password } : {})
         };
       }
     }

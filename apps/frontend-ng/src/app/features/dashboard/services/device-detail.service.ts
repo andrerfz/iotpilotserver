@@ -1,6 +1,8 @@
 import { inject, Injectable, signal, Signal } from '@angular/core';
 import { Api } from '@ng/core/api/generated/api';
 import { getDevice } from '@ng/core/api/generated/fn/devices/get-device';
+import { deleteDevice } from '@ng/core/api/generated/fn/devices/delete-device';
+import { deleteDeviceAlert as deleteDeviceAlertFn } from '@ng/core/api/generated/fn/devices/delete-device-alert';
 import { listDeviceAlerts } from '@ng/core/api/generated/fn/devices/list-device-alerts';
 import { listDeviceCommands } from '@ng/core/api/generated/fn/devices/list-device-commands';
 import { getDeviceLogs } from '@ng/core/api/generated/fn/devices/get-device-logs';
@@ -214,5 +216,13 @@ export class DeviceDetailService {
     const result = res as { apiKey?: string; deviceId?: string; rotatedAt?: string };
     if (!result.apiKey) throw new Error('No API key returned');
     return { apiKey: result.apiKey, deviceId: result.deviceId ?? id, rotatedAt: result.rotatedAt ?? '' };
+  }
+
+  async deleteDevice(id: string): Promise<void> {
+    await this.api.invoke(deleteDevice, { id });
+  }
+
+  async deleteAlert(deviceId: string, alertId: string): Promise<void> {
+    await this.api.invoke(deleteDeviceAlertFn, { id: deviceId, alertId });
   }
 }

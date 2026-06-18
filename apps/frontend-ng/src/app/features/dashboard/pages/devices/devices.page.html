@@ -140,3 +140,22 @@
 </ng-template>
 
 <app-register-device-sheet (deviceClaimed)="onDeviceClaimed()"></app-register-device-sheet>
+
+<ui-bottom-sheet #exportSheet title="Export devices">
+  <div class="opt-list">
+    <button class="opt-row" (click)="onExportXlsx(); exportSheet.close()">
+      <ion-icon name="document-outline"></ion-icon>
+      <div class="opt-row__body">
+        <div class="opt-row__label">Export XLSX</div>
+        <div class="opt-row__sub">Excel spreadsheet</div>
+      </div>
+    </button>
+    <button class="opt-row" (click)="onExportCsv(); exportSheet.close()">
+      <ion-icon name="code-outline"></ion-icon>
+      <div class="opt-row__body">
+        <div class="opt-row__label">Export CSV</div>
+        <div class="opt-row__sub">Comma-separated values</div>
+      </div>
+    </button>
+  </div>
+</ui-bottom-sheet>

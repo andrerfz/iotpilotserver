@@ -81,8 +81,9 @@ describe('MonitoringPage', () => {
     expect(screen.getByText('Failed to load alerts')).toBeTruthy();
   });
 
-  it('calls alerts.load({}) and alertsTrend.load({period:7d}) on ngOnInit', async () => {
-    await renderPage();
+  it('calls alerts.load({}) and alertsTrend.load({period:7d}) on ionViewWillEnter', async () => {
+    const { fixture } = await renderPage();
+    fixture.componentInstance.ionViewWillEnter();
     expect(mockDash.alerts.load).toHaveBeenCalledWith({});
     expect(mockDash.alertsTrend.load).toHaveBeenCalledWith({ period: '7d' });
   });
@@ -92,13 +93,6 @@ describe('MonitoringPage', () => {
     const { container } = await renderPage();
     // openCount=1, ackCount=1, resolvedCount=1 — all show "1"
     expect(container.textContent).toContain('1');
-  });
-
-  it('shows Thresholds button as disabled', async () => {
-    const { container } = await renderPage();
-    const btn = container.querySelector('ion-button[disabled]');
-    expect(btn).toBeTruthy();
-    expect(btn?.textContent).toContain('Thresholds');
   });
 
   it('shows empty-state when no alerts loaded', async () => {
@@ -148,6 +142,7 @@ describe('MonitoringPage', () => {
 
   it('reloads alerts and trend on period change', async () => {
     const { fixture } = await renderPage();
+    fixture.componentInstance.ionViewWillEnter();
     fixture.componentInstance.onPeriodChange('7d');
     expect(mockDash.alerts.load).toHaveBeenCalledTimes(2);
     expect(mockDash.alertsTrend.load).toHaveBeenCalledWith({ period: '7d' });

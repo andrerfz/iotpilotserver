@@ -747,6 +747,22 @@ show_final_info() {
     echo ""
 }
 
+# Install OS-agnostic command wrappers so the platform can send generic
+# commands (update, reboot, shutdown, restart) regardless of the distro.
+install_command_wrappers() {
+    header "Installing command wrappers..."
+    local script_url="https://raw.githubusercontent.com/andrerfz/iotpilotserver/main/scripts/install-command-wrappers.sh"
+    local tmp="/tmp/install-command-wrappers.sh"
+    if curl -sSL "$script_url" -o "$tmp" 2>/dev/null; then
+        chmod +x "$tmp"
+        bash "$tmp"
+        rm -f "$tmp"
+        info "Command wrappers installed"
+    else
+        warn "Could not download command wrappers script — skipping"
+    fi
+}
+
 # Main installation function
 main() {
     echo ""
@@ -767,6 +783,7 @@ main() {
     install_telegraf
     install_promtail
     create_device_agent
+    install_command_wrappers
     register_device
     show_final_info
 }

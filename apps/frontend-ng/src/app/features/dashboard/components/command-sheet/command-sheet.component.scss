@@ -81,8 +81,7 @@
     overflow-y: auto;
 
     &--error {
-      background: var(--ion-color-danger-tint);
-      color: var(--ion-color-danger-shade);
+      border-left: 3px solid var(--ion-color-danger);
     }
   }
 }

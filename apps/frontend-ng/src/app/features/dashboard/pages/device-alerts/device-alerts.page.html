@@ -102,8 +102,8 @@
         <span class="mono dim">{{ formatAge(row.createdAt) }}</span>
       </ng-template>
       <ng-template #actionsCell let-row>
-        @if (!row.resolved) {
-          <div class="row-actions">
+        <div class="row-actions">
+          @if (!row.resolved) {
             @if (!row.acknowledgedAt) {
               <ion-button
                 fill="clear" color="warning" size="small"
@@ -118,8 +118,14 @@
               (click)="$event.stopPropagation(); onResolve(row)">
               Resolve
             </ion-button>
-          </div>
-        }
+          }
+          <ion-button
+            fill="clear" color="danger" size="small"
+            [disabled]="actionLoading() === row.id"
+            (click)="$event.stopPropagation(); onDeleteAlert(row)">
+            <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+          </ion-button>
+        </div>
       </ng-template>
 
       <!-- Loading skeleton -->

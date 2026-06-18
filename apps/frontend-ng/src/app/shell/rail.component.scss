@@ -69,6 +69,7 @@
 }
 
 .rail__foot { border-top: 1px solid var(--ui-border); padding: 16px 12px; }
+.rail__foot--plain { border-top: none; }
 
 @media (max-width: 1079px) {
   .rail__brand {

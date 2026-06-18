@@ -17,6 +17,8 @@ import { addIcons } from 'ionicons';
 import {
   addOutline,
   downloadOutline,
+  documentOutline,
+  codeOutline,
   hardwareChipOutline,
   wifiOutline,
   alertCircleOutline,
@@ -25,6 +27,7 @@ import {
 } from 'ionicons/icons';
 
 import {
+  BottomSheetComponent,
   DataTableComponent,
   DevicePickerComponent,
   EmptyStateComponent,
@@ -50,10 +53,13 @@ import { applyDeviceFilters } from '../../filters/device-filters';
 import { RegisterDeviceSheetComponent } from '../../components/register-device-sheet/register-device-sheet.component';
 import { TopbarService } from '../../../../shell/topbar.service';
 import { TenantContextService } from '@ng/core/auth/tenant-context.service';
+import { DeviceExportService } from '../../services/device-export.service';
 
 addIcons({
   addOutline,
   downloadOutline,
+  documentOutline,
+  codeOutline,
   hardwareChipOutline,
   wifiOutline,
   alertCircleOutline,
@@ -90,6 +96,7 @@ const STATUS_OPTIONS: PickerOption[] = [
     DevicePickerComponent,
     MultiSelectPickerComponent,
     RegisterDeviceSheetComponent,
+    BottomSheetComponent,
     IonRefresher, IonRefresherContent,
   ],
 })
@@ -99,6 +106,9 @@ export class DevicesPage implements AfterViewInit, ViewWillEnter {
   private readonly router = inject(Router);
   private readonly topbar = inject(TopbarService);
   private readonly tenantCtx = inject(TenantContextService);
+  private readonly exportService = inject(DeviceExportService);
+
+  private readonly exportSheet = viewChild<BottomSheetComponent>('exportSheet');
   readonly devicesLoading = this.dashService.devices.loading;
   readonly devicesError = this.dashService.devices.error;
 
@@ -201,7 +211,15 @@ export class DevicesPage implements AfterViewInit, ViewWillEnter {
   }
 
   onExportSelected(): void {
-    // Placeholder — bulk export not yet implemented
+    this.exportSheet()?.open();
+  }
+
+  onExportXlsx(): void {
+    void this.exportService.exportXlsx(this.selectedDevices(), 'devices');
+  }
+
+  onExportCsv(): void {
+    this.exportService.exportCsv(this.selectedDevices(), 'devices');
   }
 
   onRegisterDevice(): void {

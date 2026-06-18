@@ -8,10 +8,10 @@ import {
   signal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { TopbarService } from '@ng/shell/topbar.service';
 import { addIcons } from 'ionicons';
-import { copyOutline, eyeOffOutline, eyeOutline, refreshOutline } from 'ionicons/icons';
+import { copyOutline, eyeOffOutline, eyeOutline, refreshOutline, trashOutline } from 'ionicons/icons';
 import {
   IonContent,
   IonCard,
@@ -36,7 +36,7 @@ import type { DeviceSettings } from '../../services/device-detail.service';
 import { DeviceDetailService } from '../../services/device-detail.service';
 import { isSensorDevice, hasSSH } from '../../device-capabilities';
 
-addIcons({ copyOutline, eyeOffOutline, eyeOutline, refreshOutline });
+addIcons({ copyOutline, eyeOffOutline, eyeOutline, refreshOutline, trashOutline });
 
 const UPDATE_CHANNELS: SelectOption[] = [
   { value: 'stable', label: 'Stable' },
@@ -73,6 +73,7 @@ const UPDATE_CHANNELS: SelectOption[] = [
 })
 export class DeviceSettingsPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly topbar = inject(TopbarService);
   private readonly svc = inject(DeviceDetailService);
 
@@ -86,6 +87,8 @@ export class DeviceSettingsPage implements OnInit {
   readonly rotating = signal(false);
   readonly newKey = signal<string | null>(null);
   readonly keyVisible = signal(false);
+  readonly deleting = signal(false);
+  readonly deleteConfirm = signal(false);
 
   readonly updateChannels = UPDATE_CHANNELS;
   readonly isSensor = computed(() => isSensorDevice(this.device.data()?.deviceType));
@@ -169,5 +172,26 @@ export class DeviceSettingsPage implements OnInit {
     const key = this.newKey();
     if (!key) return '';
     return this.keyVisible() ? key : `${key.slice(0, 8)}••••••••••••••••`;
+  }
+
+  onDeleteClick(): void {
+    this.deleteConfirm.set(true);
+  }
+
+  onDeleteCancel(): void {
+    this.deleteConfirm.set(false);
+  }
+
+  async onDeleteConfirm(): Promise<void> {
+    this.deleting.set(true);
+    try {
+      await this.svc.deleteDevice(this.deviceId());
+      void this.router.navigate(['/app/devices']);
+    } catch (e) {
+      this.saveError.set(e instanceof Error ? e.message : 'Delete failed');
+      this.deleteConfirm.set(false);
+    } finally {
+      this.deleting.set(false);
+    }
   }
 }

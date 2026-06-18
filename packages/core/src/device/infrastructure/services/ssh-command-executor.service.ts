@@ -88,11 +88,20 @@ export class SSHCommandExecutorService implements CommandExecutor {
     const deviceName = device.hostname || device.name.getValue();
     this.logger.info(`Executing command via SSH on device ${deviceName} (${host}): ${command.command} ${command.arguments || ''}`);
 
-    // Create SSH connection config for this specific device
-    const config = {
+    // Create SSH connection config for this specific device, preferring stored credentials
+    const creds = device.sshCredentials;
+    const config: Record<string, any> = {
       ...this.sshConfig,
-      host
+      host,
+      port: creds?.port ?? this.sshConfig.port,
+      username: creds?.username ?? this.sshConfig.username,
     };
+    if (creds?.password) {
+      config['password'] = creds.password;
+    } else if (creds?.privateKey && creds.privateKey !== 'password-based-auth') {
+      config['privateKey'] = creds.privateKey;
+      if (creds.passphrase) config['passphrase'] = creds.passphrase;
+    }
 
     return new Promise((resolve) => {
       // Create a new SSH client

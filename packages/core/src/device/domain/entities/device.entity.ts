@@ -19,6 +19,7 @@ export interface SSHCredentials {
   port?: number;
   privateKey: string;
   passphrase?: string;
+  password?: string;
 }
 
 export class DeviceEntity extends TenantScopedEntity<DeviceId> {

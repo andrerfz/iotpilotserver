@@ -64,7 +64,7 @@ addIcons({
         }
       </div>
 
-      <div class="rail__foot">
+      <div class="rail__foot" [class.rail__foot--plain]="!isSuperAdmin()">
         <ng-content select="[tenant]"></ng-content>
       </div>
     </div>
@@ -74,15 +74,20 @@ addIcons({
 export class RailComponent {
   private readonly auth = inject(AuthService);
 
+  protected readonly isSuperAdmin = computed(() => hasRole(this.auth.role(), 'SUPERADMIN'));
+
   protected readonly visibleNav = computed(() => {
     const isAdmin = hasRole(this.auth.role(), 'ADMIN');
+    const isSuperAdmin = hasRole(this.auth.role(), 'SUPERADMIN');
     return NAV.map(g => ({
       ...g,
       items: g.items
-        .filter(it => !it.adminOnly || isAdmin)
+        .filter(it => (!it.adminOnly || isAdmin) && (!it.superAdminOnly || isSuperAdmin))
         .map(it => ({
           ...it,
-          children: it.children?.filter(c => !c.adminOnly || isAdmin),
+          children: it.children?.filter(c =>
+            (!c.adminOnly || isAdmin) && (!c.superAdminOnly || isSuperAdmin)
+          ),
         })),
     })).filter(g => g.items.length > 0);
   });

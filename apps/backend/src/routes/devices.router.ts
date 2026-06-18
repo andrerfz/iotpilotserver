@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express';
+import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
 import * as crypto from 'crypto';
 import { createId } from '@paralleldrive/cuid2';
@@ -1465,7 +1466,7 @@ devicesRouter.get('/:id/commands', requireAuth(), async (req: AuthenticatedReque
             updatedAt: c.updatedAt,
         }));
 
-        send.ok(res, { commands: formattedCommands });
+        send.ok(res, formattedCommands);
     } catch (err) {
         commandLogger.error('Failed to fetch device commands:', {
             error: err instanceof Error ? err.message : String(err),
@@ -1479,7 +1480,17 @@ devicesRouter.get('/:id/commands', requireAuth(), async (req: AuthenticatedReque
 // POST /devices/:id/commands - Issue a new command to a device
 // ---------------------------------------------------------------------------
 
-devicesRouter.post('/:id/commands', requireAuth('ADMIN'), async (req: AuthenticatedRequest, res: Response) => {
+// Tight rate limit per user: max 10 commands/minute regardless of device
+const commandRateLimit = rateLimit({
+    windowMs: 60 * 1000,
+    max: 10,
+    keyGenerator: (req) => (req as AuthenticatedRequest).user?.id ?? req.ip ?? 'anon',
+    message: { error: 'Too many commands issued. Wait before sending more.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+devicesRouter.post('/:id/commands', requireAuth('ADMIN'), commandRateLimit, async (req: AuthenticatedRequest, res: Response) => {
     const publicId = req.params.id;
     const id = await resolveDevicePublicId(publicId);
     if (!id) {
@@ -1507,6 +1518,12 @@ devicesRouter.post('/:id/commands', requireAuth('ADMIN'), async (req: Authentica
 
         const { command: commandInput, arguments: commandArgs } = validationResult.data;
         const commandType = commandInput.toUpperCase() as keyof typeof SUPPORTED_COMMANDS;
+
+        // CUSTOM command allows free-text arguments — restrict to SUPERADMIN
+        if (commandType === 'CUSTOM' && req.user?.role !== 'SUPERADMIN') {
+            send.forbidden(res, 'CUSTOM commands require SUPERADMIN role');
+            return;
+        }
 
         const device = await tenantPrisma.client.device.findUnique({ where: { id } });
 

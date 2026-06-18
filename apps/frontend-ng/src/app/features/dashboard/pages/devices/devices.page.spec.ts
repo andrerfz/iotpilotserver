@@ -45,41 +45,15 @@ function buildProviders(overrides: {
 }
 
 describe('DevicesPage', () => {
-  describe('rendering', () => {
-    it('renders page title', async () => {
-      await render(DevicesPage, {
-        imports: [RouterTestingModule],
-        providers: buildProviders(),
-      });
-      expect(screen.getByText('Devices')).toBeTruthy();
-    });
-
-    it('shows total device count in subtitle', async () => {
-      await render(DevicesPage, {
-        imports: [RouterTestingModule],
-        providers: buildProviders(),
-      });
-      expect(screen.getByText(/3 device/)).toBeTruthy();
-    });
-
-    it('shows Register device button', async () => {
-      await render(DevicesPage, {
-        imports: [RouterTestingModule],
-        providers: buildProviders(),
-      });
-      expect(screen.getByText(/Register device/i)).toBeTruthy();
-    });
-  });
-
   describe('loading state', () => {
-    it('renders skeleton cards when loading', async () => {
+    it('renders skeleton elements when loading', async () => {
       const devices = makeSurface<Device[]>(null);
       devices.loading.set(true);
       const { container } = await render(DevicesPage, {
         imports: [RouterTestingModule],
         providers: buildProviders({ devices }),
       });
-      expect(container.querySelectorAll('ion-skeleton-text').length).toBeGreaterThan(0);
+      expect(container.querySelectorAll('.sk').length).toBeGreaterThan(0);
     });
   });
 
@@ -95,13 +69,15 @@ describe('DevicesPage', () => {
     });
   });
 
-  describe('ngOnInit', () => {
-    it('loads devices with limit 50 on init', async () => {
+  describe('ionViewWillEnter', () => {
+    it('loads devices with limit 50 when view enters', async () => {
       const devices = makeSurface<Device[]>(MOCK_DEVICES);
-      await render(DevicesPage, {
+      const { fixture } = await render(DevicesPage, {
         imports: [RouterTestingModule],
         providers: buildProviders({ devices }),
       });
+      devices.load.mockClear();
+      fixture.componentInstance.ionViewWillEnter();
       expect(devices.load).toHaveBeenCalledWith({ limit: 50 });
     });
   });

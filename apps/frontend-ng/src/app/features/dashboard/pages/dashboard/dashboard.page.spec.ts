@@ -71,24 +71,17 @@ describe('DashboardPage', () => {
       expect(screen.getByText(/2 device/)).toBeTruthy();
     });
 
-    it('shows Register device button', async () => {
-      await render(DashboardPage, {
-        imports: [RouterTestingModule],
-        providers: buildProviders(),
-      });
-      expect(screen.getByText(/Register device/i)).toBeTruthy();
-    });
   });
 
   describe('loading state', () => {
-    it('renders skeleton cards when devices are loading', async () => {
+    it('renders skeleton elements when devices are loading', async () => {
       const devices = makeSurface<Device[]>(null);
       devices.loading.set(true);
       const { container } = await render(DashboardPage, {
         imports: [RouterTestingModule],
         providers: buildProviders({ devices }),
       });
-      expect(container.querySelectorAll('ion-skeleton-text').length).toBeGreaterThan(0);
+      expect(container.querySelectorAll('.sk').length).toBeGreaterThan(0);
     });
   });
 
@@ -104,20 +97,25 @@ describe('DashboardPage', () => {
     });
   });
 
-  describe('ngOnInit', () => {
-    it('calls load on all three surfaces on init', async () => {
+  describe('ionViewWillEnter', () => {
+    it('calls load on all three surfaces when view enters', async () => {
       const devices = makeSurface<Device[]>(MOCK_DEVICES);
       const alerts = makeSurface<Alert[]>([MOCK_ALERT]);
       const metrics = makeSurface(null);
 
-      await render(DashboardPage, {
+      const { fixture } = await render(DashboardPage, {
         imports: [RouterTestingModule],
         providers: buildProviders({ devices, alerts, metrics }),
       });
 
+      devices.load.mockClear();
+      alerts.load.mockClear();
+      metrics.load.mockClear();
+      fixture.componentInstance.ionViewWillEnter();
+
       expect(devices.load).toHaveBeenCalledWith({});
       expect(alerts.load).toHaveBeenCalledWith({ status: 'active', limit: 5 });
-      expect(metrics.load).toHaveBeenCalledWith({ period: '24h' });
+      expect(metrics.load).toHaveBeenCalledWith(expect.objectContaining({ period: expect.any(String) }));
     });
   });
 

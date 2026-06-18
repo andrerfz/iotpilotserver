@@ -1,8 +1,10 @@
 import { render } from '@testing-library/angular';
 import { describe, it, expect, vi } from 'vitest';
 import { provideRouter, Router } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
 import { Api } from '@ng/core/api/generated/api';
 import { ApiError } from '@ng/core/errors/api-error';
+import { ApiConfiguration } from '@ng/core/api/generated/api-configuration';
 import { ToastService } from '@ng/core/errors/toast.service';
 import { RegisterPage } from './register.page';
 
@@ -16,6 +18,8 @@ async function setup(invokeFn: ReturnType<typeof vi.fn>) {
   return render(RegisterPage, {
     providers: [
       provideRouter([]),
+      provideHttpClient(),
+      { provide: ApiConfiguration, useValue: { rootUrl: '/api' } },
       { provide: Api, useValue: makeApi(invokeFn) },
       { provide: ToastService, useValue: fakeToast },
     ],

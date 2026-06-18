@@ -37,8 +37,8 @@ export class UpdateDeviceCommand extends TenantAwareCommand {
     // Convert string parameters to value objects where needed
     const deviceName = hostname ? DeviceName.create(hostname) : undefined;
     const ipAddr = ipAddress ? IpAddress.fromString(ipAddress) : undefined;
-    const sshCreds = sshUsername && sshPassword ?
-      { username: sshUsername, password: sshPassword, port: sshPort || 22 } as any :
+    const sshCreds = sshUsername ?
+      { username: sshUsername, password: sshPassword || undefined, privateKey: 'password-based-auth', port: sshPort || 22 } :
       undefined;
 
     return new UpdateDeviceCommand(

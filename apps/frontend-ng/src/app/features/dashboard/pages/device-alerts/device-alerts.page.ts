@@ -16,7 +16,7 @@ import { TopbarService } from '@ng/shell/topbar.service';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { filter } from 'rxjs';
 import { addIcons } from 'ionicons';
-import { refreshOutline, settingsOutline } from 'ionicons/icons';
+import { refreshOutline, settingsOutline, trashOutline } from 'ionicons/icons';
 import {
   IonButton,
   IonCard,
@@ -42,7 +42,7 @@ import { DashboardService } from '../../services/dashboard.service';
 import { ToastService } from '@ng/core/errors/toast.service';
 import { ThresholdConfigSheetComponent } from '../../components/threshold-config-sheet/threshold-config-sheet.component';
 
-addIcons({ refreshOutline, settingsOutline });
+addIcons({ refreshOutline, settingsOutline, trashOutline });
 
 type AlertState = 'OPEN' | 'ACK' | 'RESOLVED';
 
@@ -223,6 +223,20 @@ export class DeviceAlertsPage implements OnInit, AfterViewInit {
       void this.toast.success('Alert resolved');
     } catch (e) {
       void this.toast.error(e instanceof Error ? e.message : 'Failed to resolve alert');
+    } finally {
+      this.actionLoading.set(null);
+    }
+  }
+
+  async onDeleteAlert(alert: Alert): Promise<void> {
+    if (!alert.id || this.actionLoading() === alert.id) return;
+    this.actionLoading.set(alert.id);
+    try {
+      await this.svc.deleteAlert(this.deviceId(), alert.id);
+      this.localAlerts.update(list => list.filter(a => a.id !== alert.id));
+      void this.toast.success('Alert deleted');
+    } catch (e) {
+      void this.toast.error(e instanceof Error ? e.message : 'Failed to delete alert');
     } finally {
       this.actionLoading.set(null);
     }
