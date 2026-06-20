@@ -9,6 +9,8 @@ import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import winston from 'winston';
 import { createApiRouter } from './routes/index';
+import { RedisConnectionFactory } from '@iotpilot/core/shared/infrastructure/redis/redis-connection.factory';
+import { RateLimitRedisStore } from '@iotpilot/core/shared/infrastructure/redis/rate-limit-redis-store';
 
 const port = parseInt(process.env.PORT || '3100', 10);
 const hostname = process.env.HOSTNAME || 'localhost';
@@ -129,15 +131,35 @@ app.get('/api/schedule', async (req, res) => {
   }
 });
 
-// Rate limiting (skip for Tailscale users)
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: process.env.NODE_ENV === 'production' ? 100 : 1000,
-  message: { error: 'Too many requests from this IP, please try again later.' },
-  standardHeaders: true,
-  legacyHeaders: false,
-  skip: (req) => !!(req as any).tailscale?.user,
-});
+// Rate limiting — backed by Redis so limits survive restarts and work across replicas
+const RATE_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+function buildRateLimiter() {
+  try {
+    const redis = RedisConnectionFactory.getInstance().getGeneralConnection();
+    const store = new RateLimitRedisStore(redis, RATE_WINDOW_MS);
+    return rateLimit({
+      windowMs: RATE_WINDOW_MS,
+      max: process.env.NODE_ENV === 'production' ? 100 : 1000,
+      message: { error: 'Too many requests from this IP, please try again later.' },
+      standardHeaders: true,
+      legacyHeaders: false,
+      store,
+      skip: (req) => !!(req as any).tailscale?.user,
+    });
+  } catch (err) {
+    // Fallback to in-memory if Redis is unavailable at boot
+    console.warn('[RateLimit] Redis store unavailable, falling back to in-memory store:', (err as Error).message);
+    return rateLimit({
+      windowMs: RATE_WINDOW_MS,
+      max: process.env.NODE_ENV === 'production' ? 100 : 1000,
+      message: { error: 'Too many requests from this IP, please try again later.' },
+      standardHeaders: true,
+      legacyHeaders: false,
+      skip: (req) => !!(req as any).tailscale?.user,
+    });
+  }
+}
+const apiLimiter = buildRateLimiter();
 
 app.use('/api/', (req, res, next) => {
   if (req.path.startsWith('/auth/')) return next();

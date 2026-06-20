@@ -111,6 +111,8 @@ export class DeviceServiceProvider implements BoundedContextProvider {
     const {ProvisionDeviceHandler} = require('@iotpilot/core/device/application/commands/provision-device/provision-device.handler');
     const {MarkStaleDevicesOfflineCommand} = require('@iotpilot/core/device/application/commands/mark-stale-devices-offline/mark-stale-devices-offline.command');
     const {MarkStaleDevicesOfflineHandler} = require('@iotpilot/core/device/application/commands/mark-stale-devices-offline/mark-stale-devices-offline.handler');
+    const {RequestFirmwareUpdateCommand} = require('@iotpilot/core/device/application/commands/request-firmware-update/request-firmware-update.command');
+    const {RequestFirmwareUpdateHandler} = require('@iotpilot/core/device/application/commands/request-firmware-update/request-firmware-update.handler');
     const {GetDeviceCommandQuery} = require('@iotpilot/core/device/application/queries/get-device-command/get-device-command.query');
     const {GetDeviceCommandHandler} = require('@iotpilot/core/device/application/queries/get-device-command/get-device-command.handler');
     const {GetSystemHealthQuery} = require('@iotpilot/core/shared/application/queries/get-system-health/get-system-health.query');
@@ -146,6 +148,7 @@ export class DeviceServiceProvider implements BoundedContextProvider {
     commandBus.register(ClaimDeviceCommand, new ClaimDeviceHandler(prisma));
     commandBus.register(ProvisionDeviceCommand, new ProvisionDeviceHandler(prisma));
     commandBus.register(MarkStaleDevicesOfflineCommand, new MarkStaleDevicesOfflineHandler(prisma));
+    commandBus.register(RequestFirmwareUpdateCommand, new RequestFirmwareUpdateHandler(prisma));
 
     // SSH — server-side only to avoid bundling ssh2 in client
     if (typeof (globalThis as any).window === 'undefined') {

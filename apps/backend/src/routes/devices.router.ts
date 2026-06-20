@@ -18,6 +18,8 @@ import { ProvisionDeviceCommand } from '@iotpilot/core/device/application/comman
 import { ProvisionDeviceResult } from '@iotpilot/core/device/application/commands/provision-device/provision-device.handler';
 import { ClaimDeviceCommand } from '@iotpilot/core/device/application/commands/claim-device/claim-device.command';
 import { ClaimDeviceResult } from '@iotpilot/core/device/application/commands/claim-device/claim-device.handler';
+import { RequestFirmwareUpdateCommand } from '@iotpilot/core/device/application/commands/request-firmware-update/request-firmware-update.command';
+import { RequestFirmwareUpdateResult } from '@iotpilot/core/device/application/commands/request-firmware-update/request-firmware-update.handler';
 import { GetDeviceQuery } from '@iotpilot/core/device/application/queries/get-device/get-device.query';
 import { GetDeviceStatusQuery } from '@iotpilot/core/device/application/queries/get-device-status/get-device-status.query';
 import { GetDeviceCommandQuery } from '@iotpilot/core/device/application/queries/get-device-command/get-device-command.query';
@@ -958,6 +960,8 @@ devicesRouter.get('/:id', requireAuth(), async (req: AuthenticatedRequest, res: 
             loadAverage: device.metrics?.loadAverage || device.loadAverage || null,
             appStatus: device.status?.getValue ? device.status.getValue() : device.status,
             agentVersion: device.agentVersion?.getValue ? device.agentVersion.getValue() : device.agentVersion,
+            firmwareVersion: device.firmwareVersion || null,
+            targetFirmwareVersion: device.targetFirmwareVersion || null,
             registeredAt: device.createdAt || device.registeredAt,
             updatedAt: device.updatedAt,
             user: device.ownerId ? {
@@ -2198,6 +2202,38 @@ devicesRouter.post('/:id/rotate-key', requireAuth('ADMIN'), async (req: Authenti
             deviceId: device.deviceId,
             rotatedAt: new Date().toISOString(),
         });
+    } catch (err) {
+        send.fromError(res, err);
+    }
+});
+
+/**
+ * POST /api/devices/:id/request-ota
+ *
+ * Request an OTA firmware update for a device. Sets targetFirmwareVersion on the device
+ * record; the device will receive the directive on its next heartbeat or sensor report.
+ * ADMIN / SUPERADMIN only.
+ */
+devicesRouter.post('/:id/request-ota', requireAuth('ADMIN'), async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { targetVersion } = req.body;
+
+        if (!targetVersion || typeof targetVersion !== 'string' || !targetVersion.trim()) {
+            send.badRequest(res, 'targetVersion is required');
+            return;
+        }
+
+        const tenantContext = req.user.customerId
+            ? TenantContextImpl.create(CustomerId.create(req.user.customerId))
+            : TenantContextImpl.createSuperAdmin();
+
+        const commandBus = ServiceContainer.getInstance().getCommandBus();
+        const result = await commandBus.execute<RequestFirmwareUpdateCommand, RequestFirmwareUpdateResult>(
+            new RequestFirmwareUpdateCommand(tenantContext, id, targetVersion.trim()),
+        );
+
+        send.ok(res, result);
     } catch (err) {
         send.fromError(res, err);
     }

@@ -37,8 +37,16 @@ export class SshTerminalComponent {
     this.output.update(lines => [...lines, `$ ${cmd}`]);
     try {
       const result = await this.svc.executeSSH(this.deviceId(), cmd);
-      const out = result.output?.trim() || '(no output)';
-      this.output.update(lines => [...lines, out]);
+      if (result.error === 'HOST_KEY_MISMATCH') {
+        this.output.update(lines => [
+          ...lines,
+          '⚠ Host key mismatch — the device SSH key has changed (possible OS reinstall or MITM).',
+          '  Update or clear the SSH credentials for this device in Settings → Credentials to re-establish trust.',
+        ]);
+      } else {
+        const out = result.output?.trim() || '(no output)';
+        this.output.update(lines => [...lines, out]);
+      }
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Command failed';
       this.output.update(lines => [...lines, `Error: ${msg}`]);

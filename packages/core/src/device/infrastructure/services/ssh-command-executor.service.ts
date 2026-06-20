@@ -108,6 +108,7 @@ export class SSHCommandExecutorService implements CommandExecutor {
     const deviceId = device.getId().getValue();
     const storedHostKey = creds?.sshHostKey;
     let fingerprintSeen: string | null = null;
+    let hostKeyMismatch = false;
 
     return new Promise((resolve) => {
       // Create a new SSH client
@@ -115,6 +116,15 @@ export class SSHCommandExecutorService implements CommandExecutor {
 
       // Handle connection errors
       conn.on('error', (err: Error) => {
+        if (hostKeyMismatch) {
+          this.logger.error(`SSH host key mismatch for device ${deviceId} at ${host}`, { host, deviceId });
+          resolve({
+            status: CommandStatus.FAILED,
+            error: 'HOST_KEY_MISMATCH',
+            exitCode: 1,
+          });
+          return;
+        }
         this.logger.error(`SSH connection error to ${host}`, { host, error: err.message }, err);
         resolve({
           status: CommandStatus.FAILED,
@@ -194,11 +204,7 @@ export class SSHCommandExecutorService implements CommandExecutor {
             return true; // first connect: trust and record
           }
           if (fp !== storedHostKey) {
-            this.logger.error(
-              `SSH host key mismatch for device ${deviceId} at ${host} — possible MITM or OS reinstall. ` +
-              `Update SSH credentials in the platform to re-establish trust.`,
-              { host, deviceId },
-            );
+            hostKeyMismatch = true;
             return false;
           }
           return true;

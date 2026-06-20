@@ -10,10 +10,15 @@ import {CustomerId} from '@iotpilot/core/shared/domain/value-objects/customer-id
 
 type PrismaClient = ReturnType<PrismaService['getClient']>;
 
+export interface FirmwareDirective {
+    targetVersion: string;
+}
+
 export interface HeartbeatResult {
     deviceId: string;
     status: string;
     lastSeen: Date;
+    firmware?: FirmwareDirective;
 }
 
 export class ProcessHeartbeatHandler implements CommandHandler<ProcessHeartbeatCommand, HeartbeatResult> {
@@ -65,10 +70,17 @@ export class ProcessHeartbeatHandler implements CommandHandler<ProcessHeartbeatC
                 diskTotal: data.diskTotal,
                 appStatus: data.appStatus || 'UNKNOWN',
                 agentVersion: data.agentVersion,
+                firmwareVersion: (data as any).firmwareVersion ?? undefined,
                 lastBoot: data.lastBoot ? new Date(data.lastBoot) : null,
                 ipAddress: data.ipAddress,
                 tailscaleIp: data.tailscaleIp,
                 updatedAt: new Date()
+            },
+            select: {
+                id: true,
+                status: true,
+                lastSeen: true,
+                targetFirmwareVersion: true,
             }
         });
 
@@ -104,11 +116,17 @@ export class ProcessHeartbeatHandler implements CommandHandler<ProcessHeartbeatC
             }
         }
 
-        return {
+        const result: HeartbeatResult = {
             deviceId: updatedDevice.id,
             status: updatedDevice.status,
-            lastSeen: updatedDevice.lastSeen || new Date()
+            lastSeen: updatedDevice.lastSeen || new Date(),
         };
+
+        if (updatedDevice.targetFirmwareVersion) {
+            result.firmware = { targetVersion: updatedDevice.targetFirmwareVersion };
+        }
+
+        return result;
     }
 
     private async storeMetrics(deviceId: string, data: HeartbeatData): Promise<void> {

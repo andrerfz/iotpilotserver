@@ -381,6 +381,10 @@ model Device {
   appStatus    AppStatus @default(UNKNOWN)
   agentVersion String?
 
+  // Firmware versioning (fw-integration layer)
+  firmwareVersion       String? // Current firmware reported by device via heartbeat
+  targetFirmwareVersion String? // Desired version set by admin to trigger OTA pull
+
   // Ownership
   userId String?
 

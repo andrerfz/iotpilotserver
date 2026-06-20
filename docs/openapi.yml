@@ -1777,6 +1777,49 @@ paths:
                     type: string
                     format: date-time
 
+  /devices/{id}/request-ota:
+    post:
+      operationId: requestDeviceOta
+      tags: [devices]
+      summary: Request OTA firmware update (ADMIN)
+      description: >
+        Sets `targetFirmwareVersion` on the device. The device receives the firmware
+        directive on its next heartbeat or sensor report (`response.firmware.targetVersion`).
+        The device is responsible for pulling the binary and self-flashing.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [targetVersion]
+              properties:
+                targetVersion:
+                  type: string
+                  description: Target firmware version string (e.g. "1.2.0")
+      responses:
+        '200':
+          description: OTA request accepted — device will receive directive on next check-in
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deviceId:
+                    type: string
+                  targetFirmwareVersion:
+                    type: string
+        '400':
+          description: targetVersion missing or invalid
+        '404':
+          description: Device not found
+
   # ────────────── MONITORING ──────────────────────────────────────────────────
 
   /monitoring/alerts:

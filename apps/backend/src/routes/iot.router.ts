@@ -503,21 +503,26 @@ iotRouter.post('/temperature', async (req: Request, res: Response) => {
             battery: data.batteryLevel,
         });
 
-        // Look up device config to return updated interval to the device
+        // Look up device config + OTA directive to return to device
         const prisma = ServiceContainer.getInstance().getPrismaClient().getClient();
         const device = await prisma.device.findFirst({
             where: { deviceId: data.deviceId },
-            select: { capabilities: true }
+            select: { capabilities: true, targetFirmwareVersion: true }
         });
         const caps = (device?.capabilities as any) ?? {};
         const reportingInterval = caps.reportingInterval ?? 1800;
         const deepSleepEnabled  = caps.deepSleepEnabled  ?? true;
 
-        send.ok(res, {
+        const responseBody: Record<string, unknown> = {
             success: true,
             deviceId: data.deviceId,
-            config: { reportingInterval, deepSleepEnabled }
-        });
+            config: { reportingInterval, deepSleepEnabled },
+        };
+        if (device?.targetFirmwareVersion) {
+            responseBody.firmware = { targetVersion: device.targetFirmwareVersion };
+        }
+
+        send.ok(res, responseBody);
     } catch (err) {
         logger.error('Failed to record sensor reading', err instanceof Error ? err : undefined);
         send.fromError(res, err);

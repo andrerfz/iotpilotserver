@@ -34,13 +34,13 @@ Planned features not yet started.
 
 | # | Feature | Scope | Notes |
 |---|---|---|---|
-| 6 | **BLE auto-claim — C3 / Heltec** | `apps/backend` + device BC | macOS `.app` (Capacitor + `@capacitor-community/bluetooth-le`) scans for ESP32-C3 and Heltec temperature sensors in provisioning mode and calls `POST /api/devices/claim` automatically, bypassing manual claim flow. Requires firmware advertisement UUID on both device types. See [docs/frontend/README.md](../frontend/README.md) backlog #6. |
-| 7 | **Firmware OTA** | device BC | Structure exists under `docs/firmware-ota/` but no backend endpoint or domain command implemented yet. |
+| 6 | ~~**BLE auto-claim — C3 / Heltec backend**~~ | device BC | ✅ Already implemented — `POST /api/devices/claim` with `ClaimDeviceCommand` fully wired. Frontend Capacitor macOS app is tracked in [docs/frontend/README.md](../frontend/README.md) backlog #6. |
+| 7 | ~~**Firmware OTA — fw-integration layer**~~ | device BC | ✅ Done — `firmwareVersion` + `targetFirmwareVersion` columns added to Device (migration 017). `RequestFirmwareUpdateCommand` + handler registered. `POST /api/devices/:id/request-ota` (ADMIN). Heartbeat + sensor-reading responses include `firmware.targetVersion` directive when target is set. |
 
 ## Technical Debt
 
 | # | Item | Detail |
 |---|---|---|
-| 8 | **SSH TOFU — UI feedback** | When a host key mismatch is detected (possible MITM or OS reinstall), the SSH connection silently fails with a generic error. The frontend should surface a dedicated "Host key changed — update SSH credentials to re-trust" message. |
-| 9 | **Command rate limit store** | `express-rate-limit` with in-memory store — resets on restart and does not work across multiple backend replicas. Swap to Redis store (`rate-limit-redis`) for production multi-instance. |
-| 10 | **Prisma hot-reload in Docker** | `prisma/` is not bind-mounted in `docker-compose.local.yml` — schema changes require a container rebuild or manual `prisma generate && docker cp`. |
+| 8 | ~~**SSH TOFU — UI feedback**~~ | ✅ Done — executor sets `hostKeyMismatch` flag; returns `error: 'HOST_KEY_MISMATCH'` sentinel. SSH terminal component detects it and shows a specific message: "Host key mismatch — update credentials to re-establish trust." |
+| 9 | ~~**Rate limit Redis store**~~ | ✅ Done — `RateLimitRedisStore` adapter (ioredis, INCR+EXPIRE NX, no new package). `server.ts` wires Redis store with in-memory fallback if Redis is unreachable at boot. |
+| 10 | ~~**Prisma hot-reload in Docker**~~ | ✅ Already resolved — `prisma/` IS bind-mounted (`docker-compose.local.yml` line 108) and `start.sh` runs `prisma generate` on every start. Backlog entry was stale. |
