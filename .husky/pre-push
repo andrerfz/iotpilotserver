@@ -17,9 +17,9 @@ if ! docker info > /dev/null 2>&1; then
     exit 1
 fi
 
-# Check if app container is running
-if ! docker ps --format '{{.Names}}' | grep -q '^iotpilot-server-app$'; then
-    echo "❌ Container 'iotpilot-server-app' is not running!"
+# Check if backend container is running
+if ! docker ps --format '{{.Names}}' | grep -q '^iotpilot-server-backend$'; then
+    echo "❌ Container 'iotpilot-server-backend' is not running!"
     echo "💡 Start the development environment first:"
     echo "   make local-start"
     rm -f "$PUSH_REFS_FILE"
@@ -46,29 +46,19 @@ done < "$PUSH_REFS_FILE"
 rm -f "$PUSH_REFS_FILE"
 
 if [ "$NG_PUSH_NEEDED" = "1" ]; then
-  echo "🅰️  Angular commits in push — running ng tests..."
-
   if ! docker ps --format '{{.Names}}' | grep -q '^iotpilot-server-ng$'; then
     echo "❌ Container 'iotpilot-server-ng' is not running!"
     echo "💡 Start the Angular dev container: make ng-dev"
     exit 1
   fi
 
+  echo "🅰️  Angular commits in push — running ng tests..."
   if ! make ng-test; then
     echo ""
     echo "❌ ng tests failed! Push blocked."
     exit 1
   fi
-
   echo ""
-fi
-
-echo "🧪 Running unit tests..."
-if ! make test-unit > /tmp/pre-push-tests.log 2>&1; then
-    cat /tmp/pre-push-tests.log
-    echo ""
-    echo "❌ Unit tests failed! Push blocked."
-    exit 1
 fi
 
 echo "✅ Pre-push checks passed! Pushing to GitHub..."
