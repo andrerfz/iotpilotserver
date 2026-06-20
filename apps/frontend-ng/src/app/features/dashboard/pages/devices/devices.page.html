@@ -157,5 +157,12 @@
         <div class="opt-row__sub">Comma-separated values</div>
       </div>
     </button>
+    <button class="opt-row" (click)="onExportPdf(); exportSheet.close()">
+      <ion-icon name="document-text-outline"></ion-icon>
+      <div class="opt-row__body">
+        <div class="opt-row__label">Export PDF</div>
+        <div class="opt-row__sub">Printable document</div>
+      </div>
+    </button>
   </div>
 </ui-bottom-sheet>

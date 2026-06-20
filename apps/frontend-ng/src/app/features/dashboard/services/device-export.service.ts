@@ -37,6 +37,26 @@ export class DeviceExportService {
     writeFile(wb, `${filename}.xlsx`);
   }
 
+  async exportPdf(devices: Device[], filename = 'devices'): Promise<void> {
+    const { jsPDF } = await import('jspdf');
+    const autoTable = (await import('jspdf-autotable')).default;
+    const rows = toRows(devices);
+    if (!rows.length) return;
+    const headers = Object.keys(rows[0]);
+    const body = rows.map(r => headers.map(h => String(r[h] ?? '')));
+    const doc = new jsPDF({ orientation: 'landscape' });
+    doc.setFontSize(14);
+    doc.text('Devices', 14, 15);
+    autoTable(doc, {
+      head: [headers],
+      body,
+      startY: 22,
+      styles: { fontSize: 8, cellPadding: 2 },
+      headStyles: { fillColor: [41, 128, 185] },
+    });
+    doc.save(`${filename}.pdf`);
+  }
+
   exportCsv(devices: Device[], filename = 'devices'): void {
     const rows = toRows(devices);
     if (!rows.length) return;

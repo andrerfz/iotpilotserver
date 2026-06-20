@@ -222,6 +222,10 @@ export class DevicesPage implements AfterViewInit, ViewWillEnter {
     this.exportService.exportCsv(this.selectedDevices(), 'devices');
   }
 
+  onExportPdf(): void {
+    void this.exportService.exportPdf(this.selectedDevices(), 'devices');
+  }
+
   onRegisterDevice(): void {
     this.registerSheet()?.open();
   }

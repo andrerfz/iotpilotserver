@@ -1,16 +1,17 @@
 import {
   ChangeDetectionStrategy, Component, computed, DestroyRef,
-  inject, signal,
+  inject, signal, viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { addIcons } from 'ionicons';
-import { downloadOutline, reloadOutline } from 'ionicons/icons';
+import { downloadOutline, reloadOutline, documentOutline, codeOutline, documentTextOutline } from 'ionicons/icons';
 import {
   IonContent, IonCard, IonCardContent, IonButton, IonIcon, IonBadge, IonSkeletonText,
   EmptyStateComponent,
   UiSearchFieldComponent, UiSelectComponent,
+  BottomSheetComponent,
   ViewWillEnter,
 } from '@ng/shared/ui';
 import type { SelectOption } from '@ng/shared/ui';
@@ -18,11 +19,21 @@ import { AdminLogsService, AdminLogEntry } from '../../services/admin-logs.servi
 import { TopbarService } from '../../../../shell/topbar.service';
 import { AdminTabsComponent } from '../../components/admin-tabs.component';
 
-addIcons({ downloadOutline, reloadOutline });
+addIcons({ downloadOutline, reloadOutline, documentOutline, codeOutline, documentTextOutline });
 
 const LEVEL_COLOR: Record<string, string> = {
   DEBUG: 'medium', INFO: 'primary', WARN: 'warning', ERROR: 'danger', FATAL: 'tertiary',
 };
+
+function toLogRows(logs: AdminLogEntry[]): Record<string, string>[] {
+  return logs.map(l => ({
+    'Timestamp': new Date(l.timestamp).toISOString(),
+    'Level': l.level,
+    'Device': l.device?.hostname ?? 'Unknown',
+    'Source': l.source ?? 'system',
+    'Message': l.message,
+  }));
+}
 
 @Component({
   selector: 'app-admin-logs',
@@ -35,6 +46,7 @@ const LEVEL_COLOR: Record<string, string> = {
     IonContent, IonCard, IonCardContent, IonButton, IonIcon, IonBadge, IonSkeletonText,
     EmptyStateComponent,
     UiSearchFieldComponent, UiSelectComponent,
+    BottomSheetComponent,
     AdminTabsComponent,
   ],
 })
@@ -42,6 +54,8 @@ export class AdminLogsPage implements ViewWillEnter {
   protected readonly svc = inject(AdminLogsService);
   private readonly topbar = inject(TopbarService);
   private readonly destroyRef = inject(DestroyRef);
+
+  private readonly exportSheet = viewChild<BottomSheetComponent>('exportSheet');
 
   protected levelFilter   = '';
   protected deviceFilter  = '';
@@ -115,18 +129,29 @@ export class AdminLogsPage implements ViewWillEnter {
     return new Date(ts).toLocaleString();
   }
 
+  protected onExportOpen(): void {
+    this.exportSheet()?.open();
+  }
+
+  protected async exportXlsx(): Promise<void> {
+    const logs = this.svc.logs();
+    if (!logs.length) return;
+    const { utils, writeFile } = await import('xlsx');
+    const ws = utils.json_to_sheet(toLogRows(logs));
+    const wb = utils.book_new();
+    utils.book_append_sheet(wb, ws, 'Logs');
+    writeFile(wb, `logs_export_${new Date().toISOString().slice(0, 10)}.xlsx`);
+  }
+
   protected exportCsv(): void {
     const logs = this.svc.logs();
     if (!logs.length) return;
-    const header = 'Timestamp,Level,Device,Source,Message';
-    const rows = logs.map((l: AdminLogEntry) => [
-      new Date(l.timestamp).toISOString(),
-      l.level,
-      l.device?.hostname ?? 'Unknown',
-      l.source ?? 'system',
-      `"${l.message.replace(/"/g, '""')}"`,
-    ].join(','));
-    const csv = [header, ...rows].join('\n');
+    const rows = toLogRows(logs);
+    const headers = Object.keys(rows[0]);
+    const csv = [
+      headers.join(','),
+      ...rows.map(r => headers.map(h => JSON.stringify(r[h] ?? '')).join(',')),
+    ].join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a');
@@ -134,6 +159,28 @@ export class AdminLogsPage implements ViewWillEnter {
     a.download = `logs_export_${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
+  }
+
+  protected async exportPdf(): Promise<void> {
+    const logs = this.svc.logs();
+    if (!logs.length) return;
+    const { jsPDF } = await import('jspdf');
+    const autoTable = (await import('jspdf-autotable')).default;
+    const rows = toLogRows(logs);
+    const headers = Object.keys(rows[0]);
+    const body = rows.map(r => headers.map(h => r[h] ?? ''));
+    const doc = new jsPDF({ orientation: 'landscape' });
+    doc.setFontSize(14);
+    doc.text('System Logs', 14, 15);
+    autoTable(doc, {
+      head: [headers],
+      body,
+      startY: 22,
+      styles: { fontSize: 7, cellPadding: 2 },
+      headStyles: { fillColor: [41, 128, 185] },
+      columnStyles: { 4: { cellWidth: 'auto' } },
+    });
+    doc.save(`logs_export_${new Date().toISOString().slice(0, 10)}.pdf`);
   }
 
   private load(): Promise<void> {

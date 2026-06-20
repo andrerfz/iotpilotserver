@@ -18,7 +18,7 @@
           <ion-button fill="outline" color="medium" size="small" (click)="svc.reload()" [disabled]="svc.loading()">
             <ion-icon slot="icon-only" name="reload-outline"></ion-icon>
           </ion-button>
-          <ion-button fill="outline" size="small" (click)="exportCsv()" [disabled]="!svc.logs().length">
+          <ion-button fill="outline" size="small" (click)="onExportOpen()" [disabled]="!svc.logs().length">
             <ion-icon slot="start" name="download-outline"></ion-icon>
             Export
           </ion-button>
@@ -92,5 +92,32 @@
       }
     </ion-card>
   }
+
+
+<ui-bottom-sheet #exportSheet title="Export logs">
+  <div class="opt-list">
+    <button class="opt-row" (click)="exportXlsx(); exportSheet.close()">
+      <ion-icon name="document-outline"></ion-icon>
+      <div class="opt-row__body">
+        <div class="opt-row__label">Export XLSX</div>
+        <div class="opt-row__sub">Excel spreadsheet</div>
+      </div>
+    </button>
+    <button class="opt-row" (click)="exportCsv(); exportSheet.close()">
+      <ion-icon name="code-outline"></ion-icon>
+      <div class="opt-row__body">
+        <div class="opt-row__label">Export CSV</div>
+        <div class="opt-row__sub">Comma-separated values</div>
+      </div>
+    </button>
+    <button class="opt-row" (click)="exportPdf(); exportSheet.close()">
+      <ion-icon name="document-text-outline"></ion-icon>
+      <div class="opt-row__body">
+        <div class="opt-row__label">Export PDF</div>
+        <div class="opt-row__sub">Printable document</div>
+      </div>
+    </button>
+  </div>
+</ui-bottom-sheet>
 
 </ion-content>
