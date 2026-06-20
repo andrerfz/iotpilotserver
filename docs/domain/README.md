@@ -23,7 +23,7 @@ Known gaps where the backend returns stubs or no-ops. Ordered by user impact.
 | # | Area | Detail | Blocked on |
 |---|---|---|---|
 | 1 | ~~**InfluxDB metrics**~~ | ✅ Done — `InfluxDBMetricsRepository` wired when env vars present, Noop fallback with warning. `GetSystemMetricsHandler` returns `{metrics, summary, availableMetrics, lastUpdated}`. | — |
-| 2 | **Loki log aggregation** | `GET /api/devices/:id/logs` and admin logs call Loki HTTP API but fall back to empty on connection error. No structured log shipping from the device agent yet. | Loki endpoint + device-agent log shipper |
+| 2 | ~~**Log shipping**~~ | ✅ Done — `POST /iot/logs` endpoint (API key auth, batch up to 100 entries → DeviceLog). Agent scripts ship new log lines after each successful heartbeat (offset-tracked). | — |
 | 3 | **Email notifications** | User approval/rejection flow logs the action but never sends email. `EmailChannelDispatcher` is wired but `SMTP_*` env vars are not configured in prod. | SMTP credentials in prod `.env` |
 | 4 | **Customer management UI + API** | No CRUD for tenants/customers in the admin panel. `POST /api/admin/customers` and related routes are missing. Only SUPERADMIN creates customers today (via DB seed or direct SQL). | — |
 | 5 | **Envelope typing in OpenAPI** | Every response is wrapped in `{ success, data, timestamp }` but the spec types bare payloads. Frontend unwraps `.data` manually on ~40 surfaces. Formal modeling would make the contract type-safe. | Decision on whether to model in spec or add a client-side interceptor |

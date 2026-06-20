@@ -13,6 +13,8 @@ import { ServiceContainer } from '@iotpilot/core/shared/infrastructure/container
 import { TenantContextImpl } from '@iotpilot/core/shared/domain/tenant-context';
 import { CustomerId } from '@iotpilot/core/shared/domain/value-objects/customer-id.vo';
 import { UpdateUserCommand } from '@iotpilot/core/user/application/commands/update-user/update-user.command';
+import type { EmailService } from '@iotpilot/core/shared/domain/interfaces/email-service.interface';
+import { AppContainer } from '@iotpilot/core/shared/infrastructure/container/app-container';
 
 export const adminRouter = Router();
 
@@ -356,6 +358,24 @@ adminRouter.post('/users/:id/approve', requireAuth('ADMIN'), async (req: Authent
       undefined, undefined, undefined, undefined, undefined,
       action === 'approve',
     ));
+
+    // Send approval/rejection email — non-blocking, failure does not affect the response
+    try {
+      const emailService = AppContainer.resolve<EmailService>('EmailService');
+      const approved = action === 'approve';
+      await emailService.send({
+        to: userToUpdate.email,
+        subject: approved ? 'Your IoT Pilot account has been approved' : 'Your IoT Pilot account request',
+        html: approved
+          ? `<p>Hello ${userToUpdate.username},</p><p>Your IoT Pilot account has been <strong>approved</strong>. You can now log in.</p>`
+          : `<p>Hello ${userToUpdate.username},</p><p>Your IoT Pilot account request has been <strong>rejected</strong>${reason ? `: ${reason}` : ''}.</p>`,
+        text: approved
+          ? `Hello ${userToUpdate.username}, your IoT Pilot account has been approved. You can now log in.`
+          : `Hello ${userToUpdate.username}, your IoT Pilot account request has been rejected${reason ? `: ${reason}` : ''}.`,
+      });
+    } catch (emailErr) {
+      console.error('Approval email failed (non-fatal):', emailErr);
+    }
 
     send.ok(res, {
       message: `User ${action === 'approve' ? 'approved' : 'rejected'} successfully`,
