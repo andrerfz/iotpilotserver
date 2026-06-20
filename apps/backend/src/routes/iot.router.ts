@@ -565,12 +565,18 @@ iotRouter.post('/logs', async (req: Request, res: Response) => {
         }
 
         const { deviceId: publicId, logs } = parsed.data;
+
+        if (!user.customerId) {
+            send.forbidden(res, 'No tenant associated with this API key');
+            return;
+        }
+
         const prismaClient = ServiceContainer.getInstance().getPrismaClient().getClient();
 
         const device = await prismaClient.device.findFirst({
             where: {
                 publicId,
-                customerId: user.customerId ?? undefined,
+                customerId: user.customerId,
                 deletedAt: null,
             },
             select: { id: true },
