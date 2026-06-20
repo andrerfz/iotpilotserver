@@ -2224,8 +2224,8 @@ devicesRouter.post('/:id/request-ota', requireAuth('ADMIN'), async (req: Authent
             return;
         }
 
-        const tenantContext = req.user.customerId
-            ? TenantContextImpl.create(CustomerId.create(req.user.customerId))
+        const tenantContext = req.user!.customerId
+            ? TenantContextImpl.create(CustomerId.create(req.user!.customerId))
             : TenantContextImpl.createSuperAdmin();
 
         const commandBus = ServiceContainer.getInstance().getCommandBus();

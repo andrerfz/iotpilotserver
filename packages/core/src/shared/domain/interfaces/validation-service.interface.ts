@@ -14,11 +14,9 @@ export interface ValidationError {
   received?: unknown;
 }
 
-export interface ValidationResult<T> {
-  success: boolean;
-  data?: T;
-  errors?: ValidationError[];
-}
+export type ValidationResult<T> =
+  | { success: true; data: T; errors?: undefined }
+  | { success: false; data?: undefined; errors: ValidationError[] };
 
 export interface Schema<T = any> {
   parse(data: unknown): T;
