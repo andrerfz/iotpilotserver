@@ -15,6 +15,9 @@ import { CustomerId } from '@iotpilot/core/shared/domain/value-objects/customer-
 import { UpdateUserCommand } from '@iotpilot/core/user/application/commands/update-user/update-user.command';
 import type { EmailService } from '@iotpilot/core/shared/domain/interfaces/email-service.interface';
 import { AppContainer } from '@iotpilot/core/shared/infrastructure/container/app-container';
+import { CreateCustomerCommand } from '@iotpilot/core/customer/application/commands/create-customer/create-customer.command';
+import { UpdateCustomerCommand } from '@iotpilot/core/customer/application/commands/update-customer/update-customer.command';
+import { DeactivateCustomerCommand } from '@iotpilot/core/customer/application/commands/deactivate-customer/deactivate-customer.command';
 
 export const adminRouter = Router();
 
@@ -664,6 +667,92 @@ adminRouter.get('/customers', requireAuth('SUPERADMIN'), async (req: Authenticat
     ]);
 
     send.ok(res, customers, { pagination: { page, limit, total } });
+  } catch (err) {
+    send.fromError(res, err);
+  }
+});
+
+/**
+ * POST /api/admin/customers
+ *
+ * Create a new tenant/customer. SUPERADMIN only.
+ */
+adminRouter.post('/customers', requireAuth('SUPERADMIN'), async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { name, description, contactEmail } = req.body;
+    if (!name || typeof name !== 'string' || !name.trim()) {
+      send.badRequest(res, 'name is required');
+      return;
+    }
+
+    const tenantContext = TenantContextImpl.createSuperAdmin();
+    const commandBus = ServiceContainer.getInstance().getCommandBus();
+    const customer = await commandBus.execute<CreateCustomerCommand, { getAggregateId(): string }>(
+      CreateCustomerCommand.create(name.trim(), tenantContext, description, contactEmail),
+    );
+
+    const created = await prisma.customer.findFirst({
+      where: { id: customer.getAggregateId() },
+      select: { id: true, name: true, slug: true, status: true, createdAt: true, updatedAt: true },
+    });
+    send.created(res, created);
+  } catch (err) {
+    send.fromError(res, err);
+  }
+});
+
+/**
+ * PATCH /api/admin/customers/:id
+ *
+ * Update customer name / description / contactEmail. SUPERADMIN only.
+ */
+adminRouter.patch('/customers/:id', requireAuth('SUPERADMIN'), async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { name, description, contactEmail } = req.body;
+
+    const existing = await prisma.customer.findFirst({ where: { id, deletedAt: null } });
+    if (!existing) {
+      send.notFound(res, 'Customer not found');
+      return;
+    }
+
+    const tenantContext = TenantContextImpl.createSuperAdmin();
+    const commandBus = ServiceContainer.getInstance().getCommandBus();
+    await commandBus.execute(
+      new UpdateCustomerCommand(tenantContext, id, name, description, contactEmail),
+    );
+
+    const updated = await prisma.customer.findFirst({
+      where: { id, deletedAt: null },
+      select: { id: true, name: true, slug: true, status: true, createdAt: true, updatedAt: true },
+    });
+    send.ok(res, updated);
+  } catch (err) {
+    send.fromError(res, err);
+  }
+});
+
+/**
+ * DELETE /api/admin/customers/:id
+ *
+ * Deactivate (soft-delete) a customer. SUPERADMIN only.
+ */
+adminRouter.delete('/customers/:id', requireAuth('SUPERADMIN'), async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const existing = await prisma.customer.findFirst({ where: { id, deletedAt: null } });
+    if (!existing) {
+      send.notFound(res, 'Customer not found');
+      return;
+    }
+
+    const tenantContext = TenantContextImpl.createSuperAdmin();
+    const commandBus = ServiceContainer.getInstance().getCommandBus();
+    await commandBus.execute(new DeactivateCustomerCommand(tenantContext, id));
+
+    send.ok(res, { id, status: 'INACTIVE' });
   } catch (err) {
     send.fromError(res, err);
   }

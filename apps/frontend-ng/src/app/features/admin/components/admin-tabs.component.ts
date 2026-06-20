@@ -4,17 +4,18 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs/operators';
 import { IonIcon } from '@ng/shared/ui';
 import { addIcons } from 'ionicons';
-import { hardwareChipOutline, peopleOutline, documentTextOutline, serverOutline } from 'ionicons/icons';
+import { hardwareChipOutline, peopleOutline, documentTextOutline, serverOutline, businessOutline } from 'ionicons/icons';
 import { AuthService } from '../../../core/auth/auth.service';
 import { hasRole } from '../../../core/auth/roles';
 
-addIcons({ hardwareChipOutline, peopleOutline, documentTextOutline, serverOutline });
+addIcons({ hardwareChipOutline, peopleOutline, documentTextOutline, serverOutline, businessOutline });
 
 const ALL_TABS = [
-  { label: 'Devices', path: '/app/admin/devices', icon: 'hardware-chip-outline', superAdminOnly: true },
-  { label: 'Users',   path: '/app/admin/users',   icon: 'people-outline' },
-  { label: 'Logs',    path: '/app/admin/logs',     icon: 'document-text-outline' },
-  { label: 'System',  path: '/app/admin/system',   icon: 'server-outline' },
+  { label: 'Devices',   path: '/app/admin/devices',   icon: 'hardware-chip-outline', superAdminOnly: true },
+  { label: 'Customers', path: '/app/admin/customers', icon: 'business-outline',      superAdminOnly: true },
+  { label: 'Users',     path: '/app/admin/users',     icon: 'people-outline' },
+  { label: 'Logs',      path: '/app/admin/logs',      icon: 'document-text-outline' },
+  { label: 'System',    path: '/app/admin/system',    icon: 'server-outline' },
 ];
 
 @Component({

@@ -18,6 +18,13 @@ export const ADMIN_ROUTES: Routes = [
     data: { breadcrumb: ['Administer', 'Devices'] },
   },
   {
+    path: 'customers',
+    canActivate: [roleGuard('SUPERADMIN')],
+    loadComponent: () =>
+      import('./pages/admin-customers/admin-customers.page').then(m => m.AdminCustomersPage),
+    data: { breadcrumb: ['Administer', 'Customers'] },
+  },
+  {
     path: 'users',
     canActivate: [roleGuard('ADMIN')],
     loadComponent: () =>

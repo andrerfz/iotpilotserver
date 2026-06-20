@@ -77,18 +77,69 @@ components:
           type: string
           nullable: true
 
-    # ── Generic ────────────────────────────────────────────────────────────────
-    SuccessResponse:
+    # ── Generic envelope ───────────────────────────────────────────────────────
+    #
+    # Every backend response is wrapped in one of these two envelopes.
+    # The `response.util.ts` helpers (send.ok, send.created, etc.) always
+    # produce: { success: boolean, data: T, timestamp: ISO-string }.
+    # Paginated list endpoints additionally include a `meta.pagination` block.
+    #
+    # These schemas are referenced in per-endpoint responses. When modeling a
+    # new endpoint, wrap its payload in ApiSuccessResponse (simple) or
+    # ApiPaginatedResponse (list + pagination) using allOf + properties override.
+    #
+    ApiSuccessResponse:
+      description: Standard success envelope for all non-paginated responses.
       type: object
+      required: [success, data, timestamp]
       properties:
         success:
           type: boolean
           example: true
         data:
-          description: Response payload (shape varies per endpoint)
+          description: Response payload — shape varies per endpoint (see allOf overrides)
         timestamp:
           type: string
           format: date-time
+
+    ApiPaginatedResponse:
+      description: >
+        Standard success envelope for paginated list responses. The `meta.pagination`
+        block is always present alongside the data array.
+      type: object
+      required: [success, data, timestamp, meta]
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          description: Paginated result items — element schema varies per endpoint
+          items: {}
+        timestamp:
+          type: string
+          format: date-time
+        meta:
+          type: object
+          required: [pagination]
+          properties:
+            pagination:
+              type: object
+              required: [page, limit, total]
+              properties:
+                page:
+                  type: integer
+                  example: 1
+                limit:
+                  type: integer
+                  example: 50
+                total:
+                  type: integer
+                  example: 127
+
+    # Kept for backwards compatibility — identical to ApiSuccessResponse
+    SuccessResponse:
+      $ref: '#/components/schemas/ApiSuccessResponse'
 
     ErrorResponse:
       type: object
@@ -2337,6 +2388,74 @@ paths:
       responses:
         '200':
           description: Customer list with pagination
+    post:
+      operationId: createAdminCustomer
+      tags: [admin]
+      summary: Create a new tenant/customer (SUPERADMIN)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                contactEmail:
+                  type: string
+                  format: email
+      responses:
+        '201':
+          description: Created customer
+
+  /admin/customers/{id}:
+    patch:
+      operationId: updateAdminCustomer
+      tags: [admin]
+      summary: Update customer name / description / contactEmail (SUPERADMIN)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                contactEmail:
+                  type: string
+                  format: email
+      responses:
+        '200':
+          description: Updated customer
+        '404':
+          description: Customer not found
+    delete:
+      operationId: deleteAdminCustomer
+      tags: [admin]
+      summary: Deactivate (soft-delete) a customer (SUPERADMIN)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Customer deactivated
+        '404':
+          description: Customer not found
 
   # ────────────── USERS ───────────────────────────────────────────────────────
 
