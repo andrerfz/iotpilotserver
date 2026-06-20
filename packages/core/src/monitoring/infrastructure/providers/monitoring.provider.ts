@@ -6,7 +6,26 @@ import {prisma} from '@iotpilot/core/shared/infrastructure/database/prisma.servi
 import {PrismaAlertRepository} from '../repositories/prisma-alert.repository';
 import {PrismaThresholdRepository} from '../repositories/prisma-threshold.repository';
 import {NoopMonitoringMetricsRepository} from '../repositories/noop-metrics.repository';
+import {InfluxDBMetricsRepository} from '../repositories/influxdb-metrics.repository';
+import type {MetricsRepository} from '@iotpilot/core/monitoring/domain/interfaces/metrics-repository.interface';
 import type {ThresholdRepository} from '@iotpilot/core/monitoring/domain/interfaces/threshold-repository.interface';
+
+function buildMetricsRepository(tenantValidator: TenantBoundaryValidator): MetricsRepository {
+  const url = process.env.INFLUXDB_URL;
+  const token = process.env.INFLUXDB_TOKEN;
+  const org = process.env.INFLUXDB_ORG || 'iotpilot';
+  const bucket = process.env.INFLUXDB_BUCKET || 'devices';
+
+  if (url && token) {
+    const { InfluxDB } = require('@influxdata/influxdb-client');
+    const client = new InfluxDB({ url, token });
+    console.log(`[MonitoringProvider] InfluxDB metrics repository active (${url})`);
+    return new InfluxDBMetricsRepository(client, org, bucket, tenantValidator);
+  }
+
+  console.warn('[MonitoringProvider] INFLUXDB_URL/TOKEN not set — using NoopMetricsRepository');
+  return new NoopMonitoringMetricsRepository();
+}
 
 export class MonitoringServiceProvider implements BoundedContextProvider {
   getContextName(): string {
@@ -62,7 +81,7 @@ export class MonitoringServiceProvider implements BoundedContextProvider {
 
     const tenantValidator = container.resolve<TenantBoundaryValidator>('TenantBoundaryValidator');
     const alertRepo = new PrismaAlertRepository(prisma, tenantValidator);
-    const metricsRepo = new NoopMonitoringMetricsRepository();
+    const metricsRepo = buildMetricsRepository(tenantValidator);
     const thresholdRepo = new PrismaThresholdRepository(prisma, tenantValidator);
     const alertCreator = new AlertCreator();
 
