@@ -123,6 +123,8 @@ export class PrismaDeviceRepository implements DeviceRepository {
       if (encryptedPassphrase) secret.passphrase = encryptedPassphrase;
       if (encryptedPassword) secret.password = encryptedPassword;
 
+      // When credentials change, clear the stored host key so TOFU re-runs
+      // on the next connect (covers OS reinstalls that rotate the host key).
       updateData.capabilities = {
         ...existingCapabilities,
         ssh: {
@@ -130,6 +132,7 @@ export class PrismaDeviceRepository implements DeviceRepository {
           port: creds.port || 22,
           authMethod: creds.privateKey && creds.privateKey !== 'password-based-auth' ? 'key' : 'password',
           ...(Object.keys(secret).length > 0 ? { secret } : {}),
+          // hostKey intentionally omitted — cleared on every credential update
         }
       };
     }
@@ -401,12 +404,28 @@ export class PrismaDeviceRepository implements DeviceRepository {
     });
   }
 
-  // SSH credentials are now stored in the capabilities JSON field
-  // This method is kept for backward compatibility but is no longer used
-  // private async saveSshCredentials(deviceId: string, credentials: SSHCredentials): Promise<void> {
-  //   // SSH credentials are stored in Device.capabilities JSON field
-  //   // This method is deprecated
-  // }
+  // Store the SSH host key fingerprint learned during a TOFU first-connect.
+  // Called by SSH services after a successful connection to a previously-unknown host.
+  async updateSshHostKey(deviceId: string, fingerprint: string): Promise<void> {
+    const device = await this.prisma.getClient().device.findFirst({
+      where: { id: deviceId, deletedAt: null },
+      select: { capabilities: true },
+    });
+    if (!device) return;
+
+    const caps = (device.capabilities && typeof device.capabilities === 'object')
+      ? (device.capabilities as any)
+      : {};
+    const ssh = caps.ssh ?? {};
+
+    await this.prisma.getClient().device.update({
+      where: { id: deviceId },
+      data: {
+        capabilities: { ...caps, ssh: { ...ssh, hostKey: fingerprint } },
+        updatedAt: new Date(),
+      },
+    });
+  }
 
   // DeviceEntity.metrics is of type DeviceMetrics (interface), not DeviceMetrics (entity)
   // Metrics should be persisted separately via MetricsRepository as time-series data

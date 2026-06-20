@@ -1471,12 +1471,36 @@ paths:
                 arguments:
                   type: string
       responses:
-        '200':
+        '201':
           description: Command queued
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/DeviceCommand'
+        '400':
+          description: Invalid command or arguments
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: CUSTOM command requires SUPERADMIN role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Device not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many commands — max 10 per user per minute
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /devices/{id}/commands/{commandId}:
     get:

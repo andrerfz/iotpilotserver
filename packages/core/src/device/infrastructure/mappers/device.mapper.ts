@@ -87,7 +87,8 @@ export class DeviceMapper {
           port: caps.ssh.port || 22,
           privateKey,
           passphrase,
-          ...(password ? { password } : {})
+          ...(password ? { password } : {}),
+          ...(caps.ssh.hostKey ? { sshHostKey: caps.ssh.hostKey } : {}),
         };
       }
     }

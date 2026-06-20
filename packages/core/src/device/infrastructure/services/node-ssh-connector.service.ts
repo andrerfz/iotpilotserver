@@ -19,7 +19,10 @@ type ActiveSession = {
 export class NodeSSHConnectorService implements SSHConnector {
   private sessions = new Map<string, ActiveSession>();
 
-  constructor(private readonly deviceRepository: DeviceRepository) {}
+  constructor(
+    private readonly deviceRepository: DeviceRepository,
+    private readonly onNewHostKey?: (deviceId: string, fingerprint: string) => Promise<void>,
+  ) {}
 
   async connectToDevice(deviceId: DeviceId, tenantContext?: TenantContext): Promise<{ id: string }> {
     const device = await this.deviceRepository.findById(deviceId, tenantContext);
@@ -42,10 +45,27 @@ export class NodeSSHConnectorService implements SSHConnector {
     const {NodeSSH: NodeSSHClass} = eval('require')('node-ssh');
     const ssh = new NodeSSHClass();
 
+    const storedHostKey = creds.sshHostKey;
+    const deviceIdStr = deviceId.getValue();
+    let fingerprintSeen: string | null = null;
+
     const connectConfig: Record<string, any> = {
       host,
       port: creds.port ?? 22,
       username: creds.username,
+      hostHash: 'sha256',
+      hostVerifier: (hashBuf: Buffer) => {
+        const fp = hashBuf.toString('hex');
+        if (!storedHostKey) {
+          fingerprintSeen = fp;
+          return true; // first connect: trust and record
+        }
+        if (fp !== storedHostKey) {
+          // Mismatch — OS reinstall or MITM. Admin must update SSH credentials to re-trust.
+          return false;
+        }
+        return true;
+      },
     };
     if (creds.password) {
       connectConfig['password'] = creds.password;
@@ -55,6 +75,11 @@ export class NodeSSHConnectorService implements SSHConnector {
     }
 
     await ssh.connect(connectConfig as any);
+
+    // TOFU: persist fingerprint if this was a first connect
+    if (fingerprintSeen && !storedHostKey && this.onNewHostKey) {
+      void this.onNewHostKey(deviceIdStr, fingerprintSeen).catch(() => {/* non-critical */});
+    }
 
     const sessionId = randomUUID();
     this.sessions.set(sessionId, { ssh, deviceId: deviceId.getValue() });

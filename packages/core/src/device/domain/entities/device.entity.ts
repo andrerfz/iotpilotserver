@@ -20,6 +20,7 @@ export interface SSHCredentials {
   privateKey: string;
   passphrase?: string;
   password?: string;
+  sshHostKey?: string; // SHA-256 fingerprint of the device's SSH host key (TOFU)
 }
 
 export class DeviceEntity extends TenantScopedEntity<DeviceId> {

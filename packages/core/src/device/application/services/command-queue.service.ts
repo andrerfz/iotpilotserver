@@ -6,6 +6,7 @@ import {CommandStatus, DeviceCommand} from '../../domain/entities/device-command
 import {DeviceId} from '../../domain/value-objects/device-id.vo';
 import {StructuredLogger} from '@iotpilot/core/shared/infrastructure/logging/structured-logger';
 import {SSHCommandExecutorService} from '../../infrastructure/services/ssh-command-executor.service';
+import {PrismaDeviceRepository} from '../../infrastructure/repositories/prisma-device.repository';
 import {MQTTCommandExecutorService} from '../../infrastructure/services/mqtt-command-executor.service';
 // PrismaCommandStatus type - matches Prisma schema enum
 type PrismaCommandStatus = 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED' | 'TIMEOUT';
@@ -40,9 +41,13 @@ export class CommandQueueService {
         private readonly deviceRepository: DeviceRepository,
         private readonly deviceCommandRepository: DeviceCommandRepository
     ) {
-        // Initialize with default executors
+        // TOFU callback: store SSH host key fingerprint after first successful connect
+        const storeHostKey = deviceRepository instanceof PrismaDeviceRepository
+            ? (id: string, fp: string) => (deviceRepository as PrismaDeviceRepository).updateSshHostKey(id, fp)
+            : undefined;
+
         this.executors = [
-            new SSHCommandExecutorService(),
+            new SSHCommandExecutorService(undefined, storeHostKey),
             new MQTTCommandExecutorService()
         ];
     }

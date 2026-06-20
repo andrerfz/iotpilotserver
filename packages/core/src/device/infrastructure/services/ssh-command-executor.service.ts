@@ -20,16 +20,18 @@ export class SSHCommandExecutorService implements CommandExecutor {
   private readonly sshConfig: any;
   private ssh2: any = null;
   private readonly logger: StructuredLogger;
+  private readonly onNewHostKey?: (deviceId: string, fingerprint: string) => Promise<void>;
 
-  constructor(config?: any) {
+  constructor(
+    config?: any,
+    onNewHostKey?: (deviceId: string, fingerprint: string) => Promise<void>,
+  ) {
     this.logger = StructuredLogger.forService('ssh-command-executor');
-    // Default SSH configuration
+    this.onNewHostKey = onNewHostKey;
     this.sshConfig = {
       host: '',
       port: 22,
       username: 'pi',
-      // In production, you would use key-based authentication
-      // or a secure way to retrieve passwords
       password: '',
       readyTimeout: 10000,
       ...config
@@ -103,6 +105,10 @@ export class SSHCommandExecutorService implements CommandExecutor {
       if (creds.passphrase) config['passphrase'] = creds.passphrase;
     }
 
+    const deviceId = device.getId().getValue();
+    const storedHostKey = creds?.sshHostKey;
+    let fingerprintSeen: string | null = null;
+
     return new Promise((resolve) => {
       // Create a new SSH client
       const conn = new this.ssh2.Client();
@@ -130,6 +136,12 @@ export class SSHCommandExecutorService implements CommandExecutor {
 
       conn.on('ready', () => {
         clearTimeout(timeout);
+        // TOFU: persist fingerprint seen during handshake if it was new
+        if (fingerprintSeen && !storedHostKey && this.onNewHostKey) {
+          void this.onNewHostKey(deviceId, fingerprintSeen).catch((err: Error) =>
+            this.logger.error(`Failed to store SSH host key for ${deviceId}`, { error: err.message }, err),
+          );
+        }
         this.logger.debug(`SSH connection established to ${host}`, { host });
 
         // Execute the command
@@ -171,8 +183,27 @@ export class SSHCommandExecutorService implements CommandExecutor {
         });
       });
 
-      // Connect to the device
-      conn.connect(config);
+      // Connect to the device — TOFU host key verification
+      conn.connect({
+        ...config,
+        hostHash: 'sha256',
+        hostVerifier: (hashBuf: Buffer) => {
+          const fp = hashBuf.toString('hex');
+          if (!storedHostKey) {
+            fingerprintSeen = fp;
+            return true; // first connect: trust and record
+          }
+          if (fp !== storedHostKey) {
+            this.logger.error(
+              `SSH host key mismatch for device ${deviceId} at ${host} — possible MITM or OS reinstall. ` +
+              `Update SSH credentials in the platform to re-establish trust.`,
+              { host, deviceId },
+            );
+            return false;
+          }
+          return true;
+        },
+      });
     });
   }
 }

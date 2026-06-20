@@ -61,7 +61,11 @@ export class DeviceServiceProvider implements BoundedContextProvider {
         container.register('NodeSSHConnectorService', {
           useFactory: (c: DependencyContainer) => {
             const deviceRepo = c.resolve<DeviceRepository>('DeviceRepository');
-            return new NodeSSHConnectorService(deviceRepo);
+            const { PrismaDeviceRepository } = require('@iotpilot/core/device/infrastructure/repositories/prisma-device.repository');
+            const storeHostKey = deviceRepo instanceof PrismaDeviceRepository
+              ? (id: string, fp: string) => (deviceRepo as typeof PrismaDeviceRepository.prototype).updateSshHostKey(id, fp)
+              : undefined;
+            return new NodeSSHConnectorService(deviceRepo, storeHostKey);
           }
         });
       } catch (e) {
