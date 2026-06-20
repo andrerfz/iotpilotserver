@@ -136,7 +136,7 @@ Tasks scoped but not yet assigned to a module sprint.
 | # | Task | Module | Notes |
 |---|---|---|---|
 | 1 | ~~**Settings → API Keys page**~~ | fe-settings | ✅ Done — `SettingsApiKeysPage`, 3 unit tests, backend bugs fixed. |
-| 2 | **Export xlsx/pdf** | fe-dashboard / fe-admin | `onExportSelected()` in `devices.page.ts` is an empty stub. Admin-logs has CSV only. |
+| 2 | ~~**Export xlsx/pdf**~~ | fe-dashboard / fe-admin | ✅ Done — XLSX/CSV/PDF bottom sheet in devices + admin-logs. |
 | 3 | **Production cutover** | fe-cutover | SSH to prod: `git pull && docker compose pull && up -d`. Blocked on deployment decision. |
 | 4 | **Dependency upgrades** | fe-foundation | `xterm` → `@xterm/xterm`, `eslint` v8 → v9 flat config, `rimraf` v3 → v5, `glob` v7 → v10. Separate PR. |
 | 5 | **Zoneless change detection** | fe-foundation | Optional: `provideExperimentalZonelessChangeDetection`. Non-blocking. |
