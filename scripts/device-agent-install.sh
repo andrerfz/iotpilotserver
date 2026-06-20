@@ -545,6 +545,39 @@ JSON_EOF
 }
 
 # Function to report device status
+ship_logs() {
+    SERVER_URL=\$(get_server_address)
+    LOG_FILE="/var/log/iotpilot-agent.log"
+    SHIPPED_MARKER="/var/run/iotpilot-logs-shipped"
+
+    # Read lines added since last ship (track byte offset)
+    LAST_OFFSET=\$(cat "\$SHIPPED_MARKER" 2>/dev/null || echo 0)
+    CURRENT_SIZE=\$(wc -c < "\$LOG_FILE" 2>/dev/null || echo 0)
+    [ "\$CURRENT_SIZE" -le "\$LAST_OFFSET" ] && return 0
+
+    NEW_LINES=\$(tail -c +\$((LAST_OFFSET + 1)) "\$LOG_FILE" 2>/dev/null | tail -50)
+    [ -z "\$NEW_LINES" ] && return 0
+
+    # Build JSON array of log entries
+    LOG_ENTRIES="["
+    FIRST=1
+    while IFS= read -r line; do
+        [ -z "\$line" ] && continue
+        ESCAPED=\$(printf '%s' "\$line" | sed 's/\\/\\\\/g; s/"/\\\\"/g')
+        [ "\$FIRST" = "1" ] && FIRST=0 || LOG_ENTRIES="\$LOG_ENTRIES,"
+        LOG_ENTRIES="\$LOG_ENTRIES{\"level\":\"INFO\",\"message\":\"\$ESCAPED\",\"source\":\"agent\",\"timestamp\":\"\$(date -Iseconds)\"}"
+    done <<< "\$NEW_LINES"
+    LOG_ENTRIES="\$LOG_ENTRIES]"
+
+    PAYLOAD="{\"deviceId\":\"\$DEVICE_ID\",\"logs\":\$LOG_ENTRIES}"
+
+    curl -s -o /dev/null -X POST "\$SERVER_URL/iot/logs" \\
+        -H "Content-Type: application/json" \\
+        -H "X-API-Key: \$DEVICE_API_KEY" \\
+        -d "\$PAYLOAD" \\
+        --max-time 10 --connect-timeout 5 && echo "\$CURRENT_SIZE" > "\$SHIPPED_MARKER"
+}
+
 report_device_status() {
     SERVER_URL=\$(get_server_address)
     DEVICE_DATA=\$(collect_device_metrics)
@@ -561,6 +594,7 @@ report_device_status() {
 
     if [ "\$HTTP_STATUS" = "200" ] || [ "\$HTTP_STATUS" = "201" ]; then
         echo "\$(date): Successfully reported to \$SERVER_URL"
+        ship_logs
     else
         echo "\$(date): Failed to report to \$SERVER_URL (HTTP \$HTTP_STATUS)"
     fi

@@ -523,3 +523,77 @@ iotRouter.post('/temperature', async (req: Request, res: Response) => {
         send.fromError(res, err);
     }
 });
+
+// ---------------------------------------------------------------------------
+// POST /iot/logs — Device agent log shipping
+// Authenticated by API key (same as heartbeat). Accepts a batch of log entries
+// and writes them to the DeviceLog table for the admin logs UI.
+// ---------------------------------------------------------------------------
+
+const logEntrySchema = z.object({
+    level:     z.enum(['DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL']).default('INFO'),
+    message:   z.string().min(1).max(4096),
+    source:    z.string().max(128).optional(),
+    timestamp: z.string().datetime().optional(),
+});
+
+const logsSchema = z.object({
+    deviceId: z.string().min(1),
+    logs:     z.array(logEntrySchema).min(1).max(100),
+});
+
+iotRouter.post('/logs', async (req: Request, res: Response) => {
+    try {
+        const apiKey = (req.headers['x-api-key'] as string | undefined) ||
+            (req.headers['authorization'] as string | undefined)?.replace('ApiKey ', '').replace('Bearer ', '');
+
+        if (!apiKey) {
+            send.unauthorized(res, 'API key required');
+            return;
+        }
+
+        const { valid, user } = await validateApiKey(apiKey);
+        if (!valid || !user) {
+            send.unauthorized(res, 'Invalid API key');
+            return;
+        }
+
+        const parsed = logsSchema.safeParse(req.body);
+        if (!parsed.success) {
+            send.badRequest(res, 'Invalid log payload');
+            return;
+        }
+
+        const { deviceId: publicId, logs } = parsed.data;
+        const prismaClient = ServiceContainer.getInstance().getPrismaClient().getClient();
+
+        const device = await prismaClient.device.findFirst({
+            where: {
+                publicId,
+                customerId: user.customerId ?? undefined,
+                deletedAt: null,
+            },
+            select: { id: true },
+        });
+
+        if (!device) {
+            send.notFound(res, 'Device not found');
+            return;
+        }
+
+        await prismaClient.deviceLog.createMany({
+            data: logs.map(l => ({
+                deviceId:  device.id,
+                level:     l.level as any,
+                message:   l.message,
+                source:    l.source ?? 'agent',
+                timestamp: l.timestamp ? new Date(l.timestamp) : new Date(),
+            })),
+        });
+
+        send.created(res, { accepted: logs.length });
+    } catch (err) {
+        logger.error('Failed to store device logs', err instanceof Error ? err : undefined);
+        send.fromError(res, err);
+    }
+});

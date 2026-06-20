@@ -22,7 +22,7 @@ Known gaps where the backend returns stubs or no-ops. Ordered by user impact.
 
 | # | Area | Detail | Blocked on |
 |---|---|---|---|
-| 1 | **InfluxDB metrics** | `NoopMetricsRepository` is in use — all metric endpoints return `null` or empty arrays. `GetSystemMetrics` handler returns `Metric[]` but the route expects `{metrics, summary, availableMetrics}` — mismatch hidden by noop, will surface when real data flows. | InfluxDB credentials + `INFLUXDB_URL` in prod `.env` |
+| 1 | ~~**InfluxDB metrics**~~ | ✅ Done — `InfluxDBMetricsRepository` wired when env vars present, Noop fallback with warning. `GetSystemMetricsHandler` returns `{metrics, summary, availableMetrics, lastUpdated}`. | — |
 | 2 | **Loki log aggregation** | `GET /api/devices/:id/logs` and admin logs call Loki HTTP API but fall back to empty on connection error. No structured log shipping from the device agent yet. | Loki endpoint + device-agent log shipper |
 | 3 | **Email notifications** | User approval/rejection flow logs the action but never sends email. `EmailChannelDispatcher` is wired but `SMTP_*` env vars are not configured in prod. | SMTP credentials in prod `.env` |
 | 4 | **Customer management UI + API** | No CRUD for tenants/customers in the admin panel. `POST /api/admin/customers` and related routes are missing. Only SUPERADMIN creates customers today (via DB seed or direct SQL). | — |
