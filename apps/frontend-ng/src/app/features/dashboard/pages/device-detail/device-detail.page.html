@@ -92,18 +92,22 @@
         </div>
       </div>
       <div class="devhead__actions">
-        <ion-button fill="outline" color="medium" size="small"
-          [routerLink]="['/app/devices', deviceId(), 'terminal']">
-          <ion-icon slot="start" name="terminal-outline"></ion-icon>
-          SSH
-        </ion-button>
+        @if (canSSH()) {
+          <ion-button fill="outline" color="medium" size="small"
+            [routerLink]="['/app/devices', deviceId(), 'terminal']">
+            <ion-icon slot="start" name="terminal-outline"></ion-icon>
+            SSH
+          </ion-button>
+        }
         <ion-button fill="outline" color="medium" size="small" (click)="onRefresh()">
           <ion-icon slot="icon-only" name="refresh-outline"></ion-icon>
         </ion-button>
-        <ion-button fill="solid" color="primary" size="small" (click)="onRunCommand()">
-          <ion-icon slot="start" name="flash-outline"></ion-icon>
-          Run command
-        </ion-button>
+        @if (!isSensor()) {
+          <ion-button fill="solid" color="primary" size="small" (click)="onRunCommand()">
+            <ion-icon slot="start" name="flash-outline"></ion-icon>
+            Run command
+          </ion-button>
+        }
       </div>
     </div>
   }

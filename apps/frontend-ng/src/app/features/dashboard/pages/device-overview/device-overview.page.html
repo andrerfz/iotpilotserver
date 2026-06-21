@@ -7,28 +7,30 @@
     </ui-empty-state>
   }
 
-  <!-- Metric cards — show skeleton while loading, real data once available -->
+  <!-- Metric cards — filtered by device capability -->
   <div class="metrics">
-    <ui-metric-card
-      [loading]="device.loading() && !device.data()"
-      label="CPU"
-      [value]="metricVal(deviceMetrics().cpu)"
-      unit="%"
-      iconColor="var(--primary)"
-      iconBg="var(--primary-weak)"
-    >
-      <ion-icon name="hardware-chip-outline" icon></ion-icon>
-    </ui-metric-card>
-    <ui-metric-card
-      [loading]="device.loading() && !device.data()"
-      label="Memory"
-      [value]="metricVal(deviceMetrics().memory)"
-      unit="%"
-      iconColor="var(--info)"
-      iconBg="var(--info-weak)"
-    >
-      <ion-icon name="server-outline" icon></ion-icon>
-    </ui-metric-card>
+    @if (!isSensor()) {
+      <ui-metric-card
+        [loading]="device.loading() && !device.data()"
+        label="CPU"
+        [value]="metricVal(deviceMetrics().cpu)"
+        unit="%"
+        iconColor="var(--primary)"
+        iconBg="var(--primary-weak)"
+      >
+        <ion-icon name="hardware-chip-outline" icon></ion-icon>
+      </ui-metric-card>
+      <ui-metric-card
+        [loading]="device.loading() && !device.data()"
+        label="Memory"
+        [value]="metricVal(deviceMetrics().memory)"
+        unit="%"
+        iconColor="var(--info)"
+        iconBg="var(--info-weak)"
+      >
+        <ion-icon name="server-outline" icon></ion-icon>
+      </ui-metric-card>
+    }
     <ui-metric-card
       [loading]="device.loading() && !device.data()"
       label="Temperature"
@@ -39,16 +41,18 @@
     >
       <ion-icon name="thermometer-outline" icon></ion-icon>
     </ui-metric-card>
-    <ui-metric-card
-      [loading]="device.loading() && !device.data()"
-      label="Disk"
-      [value]="metricVal(deviceMetrics().disk)"
-      unit="%"
-      iconColor="var(--success)"
-      iconBg="var(--success-weak)"
-    >
-      <ion-icon name="save-outline" icon></ion-icon>
-    </ui-metric-card>
+    @if (!isSensor()) {
+      <ui-metric-card
+        [loading]="device.loading() && !device.data()"
+        label="Disk"
+        [value]="metricVal(deviceMetrics().disk)"
+        unit="%"
+        iconColor="var(--success)"
+        iconBg="var(--success-weak)"
+      >
+        <ion-icon name="save-outline" icon></ion-icon>
+      </ui-metric-card>
+    }
   </div>
 
   @if (device.data(); as d) {
@@ -61,45 +65,47 @@
       <span class="td-mono td-strong">{{ row.command }}</span>
     </ng-template>
 
-    <!-- grid-2: left = chart + commands, right = device info -->
+    <!-- grid-2: left = chart + commands (system devices only), right = device info -->
     <div class="grid-2">
-      <div class="stack">
+      @if (!isSensor()) {
+        <div class="stack">
 
-        <!-- Chart placeholder (ECharts — wired in fe-device-advanced) -->
-        <ion-card class="chart-placeholder">
-          <ion-card-content>
-            <div class="chart-placeholder__inner">
-              <ion-icon name="stats-chart-outline"></ion-icon>
-              <span>CPU &amp; Memory trends — available in the Metrics tab</span>
-            </div>
-          </ion-card-content>
-        </ion-card>
+          <!-- Chart placeholder (ECharts — wired in fe-device-advanced) -->
+          <ion-card class="chart-placeholder">
+            <ion-card-content>
+              <div class="chart-placeholder__inner">
+                <ion-icon name="stats-chart-outline"></ion-icon>
+                <span>CPU &amp; Memory trends — available in the Metrics tab</span>
+              </div>
+            </ion-card-content>
+          </ion-card>
 
-        <!-- Recent commands -->
-        <ion-card>
-          <ion-card-content>
-            <div class="card-head">
-              <h3 class="card-title">Recent commands</h3>
-              <ion-button fill="clear" size="small" (click)="openRunCommand()">
-                <ion-icon slot="start" name="add-outline"></ion-icon>
-                New
-              </ion-button>
-            </div>
-            @if (commands.loading()) {
-              <ion-skeleton-text [animated]="true" style="height: 80px; width: 100%; border-radius: 6px;"></ion-skeleton-text>
-            } @else if ((commands.data()?.length ?? 0) === 0) {
-              <ui-empty-state title="No commands yet"></ui-empty-state>
-            } @else {
-              <ui-data-table
-                [rows]="commands.data() ?? []"
-                [columns]="commandColumns()"
-                [pageSize]="5"
-              ></ui-data-table>
-            }
-          </ion-card-content>
-        </ion-card>
+          <!-- Recent commands -->
+          <ion-card>
+            <ion-card-content>
+              <div class="card-head">
+                <h3 class="card-title">Recent commands</h3>
+                <ion-button fill="clear" size="small" (click)="openRunCommand()">
+                  <ion-icon slot="start" name="add-outline"></ion-icon>
+                  New
+                </ion-button>
+              </div>
+              @if (commands.loading()) {
+                <ion-skeleton-text [animated]="true" style="height: 80px; width: 100%; border-radius: 6px;"></ion-skeleton-text>
+              } @else if ((commands.data()?.length ?? 0) === 0) {
+                <ui-empty-state title="No commands yet"></ui-empty-state>
+              } @else {
+                <ui-data-table
+                  [rows]="commands.data() ?? []"
+                  [columns]="commandColumns()"
+                  [pageSize]="5"
+                ></ui-data-table>
+              }
+            </ion-card-content>
+          </ion-card>
 
-      </div>
+        </div>
+      }
 
       <!-- Device info sidebar -->
       <ion-card class="devinfo-card">
@@ -144,8 +150,8 @@
     </div>
   }
 
-  <!-- Command sheet triggered from "New" button in commands card -->
-  @if (device.data()) {
+  <!-- Command sheet — only for devices that support commands -->
+  @if (device.data() && !isSensor()) {
     <app-command-sheet [deviceId]="device.data()!.id ?? ''"></app-command-sheet>
   }
 

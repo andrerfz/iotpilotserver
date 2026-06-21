@@ -38,6 +38,7 @@ import type { ColumnDef } from '@ng/shared/ui';
 import type { DeviceCommand } from '@ng/core/api/generated/models/device-command';
 import { DeviceDetailService } from '../../services/device-detail.service';
 import { CommandSheetComponent } from '../../components/command-sheet/command-sheet.component';
+import { isSensorDevice } from '../../device-capabilities';
 
 addIcons({ flashOutline, serverOutline, statsChartOutline, hardwareChipOutline, thermometerOutline, saveOutline, addOutline });
 
@@ -70,6 +71,7 @@ export class DeviceOverviewPage implements OnInit, AfterViewInit {
   private readonly deviceId = signal('');
   readonly device = this.svc.device;
   readonly commands = this.svc.deviceCommands;
+  readonly isSensor = computed(() => isSensorDevice(this.device.data()?.deviceType));
 
   readonly deviceMetrics = computed(() => {
     const d = this.device.data();

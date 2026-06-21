@@ -36,6 +36,7 @@ import { SocketService } from '@ng/core/realtime/socket.service';
 import { DeviceDetailService } from '../../services/device-detail.service';
 import { DeviceTabNavComponent } from '../../components/device-tab-nav/device-tab-nav.component';
 import { CommandSheetComponent } from '../../components/command-sheet/command-sheet.component';
+import { hasSSH, isSensorDevice } from '../../device-capabilities';
 
 addIcons({ refreshOutline, terminalOutline, wifiOutline, copyOutline, hardwareChipOutline, flashOutline, globeOutline, locationOutline, timeOutline, cubeOutline });
 
@@ -75,6 +76,9 @@ export class DeviceDetailPage implements OnInit {
   readonly isPendingSetup = computed(
     () => this.device.data()?.status === 'UNCLAIMED',
   );
+
+  readonly canSSH  = computed(() => hasSSH(this.device.data()?.deviceType));
+  readonly isSensor = computed(() => isSensorDevice(this.device.data()?.deviceType));
 
   readonly token = computed(() => {
     const result = this.claimResult();
