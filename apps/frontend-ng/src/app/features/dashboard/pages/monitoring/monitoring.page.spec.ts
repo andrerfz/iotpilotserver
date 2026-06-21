@@ -107,7 +107,7 @@ describe('MonitoringPage', () => {
     const page = fixture.componentInstance as MonitoringPage;
     (page as unknown as { severityFilter: ReturnType<typeof signal<string[]>> }).severityFilter.set(['INFO']);
     fixture.detectChanges();
-    expect(screen.getByText('No alerts match filters')).toBeTruthy();
+    expect(screen.getByText('Try adjusting the severity, state or period filters.')).toBeTruthy();
   });
 
   it('calls batchUpdateAlerts(acknowledge) on bulk acknowledge', async () => {

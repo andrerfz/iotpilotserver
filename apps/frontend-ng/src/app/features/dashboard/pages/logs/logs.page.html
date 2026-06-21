@@ -2,8 +2,8 @@
 
   <div class="pagehead pagehead--mobile-hidden">
     <div>
-      <div class="pagehead__title">Logs</div>
-      <div class="pagehead__sub">Device &amp; system logs</div>
+      <div class="pagehead__title">{{ 'logs.title' | translate }}</div>
+      <div class="pagehead__sub">{{ 'logs.subtitle' | translate }}</div>
     </div>
   </div>
 
@@ -11,13 +11,13 @@
   <ion-card class="filter-bar">
     <ion-card-content>
       <div class="filter-row">
-        <ui-search-field placeholder="Search logs…"
+        <ui-search-field [placeholder]="'logs.search_placeholder' | translate"
           [value]="searchQuery()" (valueChange)="onSearchInput($event)">
         </ui-search-field>
-        <ui-select placeholder="All Levels"  [options]="levelOptions"   [(ngModel)]="levelFilter"  (ngModelChange)="onFilterChange()"></ui-select>
-        <ui-select placeholder="All Devices" [options]="deviceOptions()" [(ngModel)]="deviceFilter" (ngModelChange)="onFilterChange()"></ui-select>
+        <ui-select [placeholder]="'logs.levels.all' | translate"  [options]="levelOptions"   [(ngModel)]="levelFilter"  (ngModelChange)="onFilterChange()"></ui-select>
+        <ui-select [placeholder]="'logs.filters.all_devices' | translate" [options]="deviceOptions()" [(ngModel)]="deviceFilter" (ngModelChange)="onFilterChange()"></ui-select>
         @if (hasSourceFilter()) {
-          <ui-select placeholder="All Sources" [options]="sourceOptions()" [(ngModel)]="sourceFilter" (ngModelChange)="onFilterChange()"></ui-select>
+          <ui-select [placeholder]="'logs.filters.all_sources' | translate" [options]="sourceOptions()" [(ngModel)]="sourceFilter" (ngModelChange)="onFilterChange()"></ui-select>
         }
         <div class="filter-row__actions">
           <ion-button fill="outline" color="medium" size="small" (click)="svc.reload()" [disabled]="svc.loading()">
@@ -25,7 +25,7 @@
           </ion-button>
           <ion-button fill="outline" size="small" (click)="exportCsv()" [disabled]="!svc.logs().length">
             <ion-icon slot="start" name="download-outline"></ion-icon>
-            Export
+            {{ 'logs.actions.export' | translate }}
           </ion-button>
         </div>
       </div>
@@ -34,8 +34,8 @@
 
   <!-- Table -->
   @if (svc.error() && !svc.logs().length) {
-    <ui-empty-state title="Failed to load logs" [hasAction]="true">
-      <ion-button action fill="outline" size="small" (click)="svc.reload()">Retry</ion-button>
+    <ui-empty-state [title]="'logs.failed.title' | translate" [hasAction]="true">
+      <ion-button action fill="outline" size="small" (click)="svc.reload()">{{ 'logs.failed.retry' | translate }}</ion-button>
     </ui-empty-state>
   } @else {
     <ion-card>
@@ -43,11 +43,11 @@
         <table class="logs-table">
           <thead>
             <tr>
-              <th class="col-ts">Timestamp</th>
-              <th class="col-level">Level</th>
-              <th class="col-device">Device</th>
-              <th class="col-source">Source</th>
-              <th>Message</th>
+              <th class="col-ts">{{ 'logs.table.timestamp' | translate }}</th>
+              <th class="col-level">{{ 'logs.table.level' | translate }}</th>
+              <th class="col-device">{{ 'logs.table.device' | translate }}</th>
+              <th class="col-source">{{ 'logs.table.source' | translate }}</th>
+              <th>{{ 'logs.table.message' | translate }}</th>
             </tr>
           </thead>
           <tbody>
@@ -59,7 +59,7 @@
               }
             } @else if (!svc.logs().length) {
               <tr>
-                <td colspan="5" class="logs-empty">No logs found.</td>
+                <td colspan="5" class="logs-empty">{{ 'logs.empty' | translate }}</td>
               </tr>
             } @else {
               @for (log of svc.logs(); track log.id) {
@@ -82,14 +82,14 @@
         <div class="logs-pager">
           <ion-button fill="clear" size="small"
             [disabled]="currentPage() <= 1 || svc.loading()"
-            (click)="goToPage(currentPage() - 1)">Previous</ion-button>
+            (click)="goToPage(currentPage() - 1)">{{ 'common.previous' | translate }}</ion-button>
           <span class="logs-pager__info">
-            Page {{ currentPage() }} of {{ svc.pagination().pages }}
-            &nbsp;·&nbsp; {{ svc.pagination().total }} total
+            {{ 'common.page' | translate }} {{ currentPage() }} {{ 'common.of' | translate }} {{ svc.pagination().pages }}
+            &nbsp;·&nbsp; {{ svc.pagination().total }} {{ 'common.total' | translate }}
           </span>
           <ion-button fill="clear" size="small"
             [disabled]="currentPage() >= svc.pagination().pages || svc.loading()"
-            (click)="goToPage(currentPage() + 1)">Next</ion-button>
+            (click)="goToPage(currentPage() + 1)">{{ 'common.next' | translate }}</ion-button>
         </div>
       }
     </ion-card>

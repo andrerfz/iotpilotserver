@@ -7,30 +7,30 @@
     <!-- Card 1: Account Security -->
     <ion-card class="sec-card">
       <ion-card-header>
-        <ion-card-title>Account Security</ion-card-title>
+        <ion-card-title>{{ 'settings.security.title' | translate }}</ion-card-title>
       </ion-card-header>
       <ion-card-content>
         <form [formGroup]="securityForm" (ngSubmit)="onSaveSecurity()">
           <ion-item lines="full">
             <ion-label>
-              <h3>Two-Factor Authentication</h3>
-              <p>Add an extra layer of security to your account</p>
+              <h3>{{ 'settings.security.two_fa.title' | translate }}</h3>
+              <p>{{ 'settings.security.two_fa.desc' | translate }}</p>
             </ion-label>
             <ion-toggle formControlName="twoFactorAuth" slot="end" />
           </ion-item>
 
           <ion-item lines="full">
             <ion-label>
-              <h3>Login Notifications</h3>
-              <p>Receive notifications when someone logs into your account</p>
+              <h3>{{ 'settings.security.login_notifications.title' | translate }}</h3>
+              <p>{{ 'settings.security.login_notifications.desc' | translate }}</p>
             </ion-label>
             <ion-toggle formControlName="loginNotifications" slot="end" />
           </ion-item>
 
           <div class="sec-timeout">
             <ion-label class="sec-timeout__label">
-              <h3>Session Timeout</h3>
-              <p>Automatically log out after a period of inactivity</p>
+              <h3>{{ 'settings.security.session_timeout.title' | translate }}</h3>
+              <p>{{ 'settings.security.session_timeout.desc' | translate }}</p>
             </ion-label>
             <ion-range
               class="sec-timeout__range"
@@ -41,7 +41,7 @@
               (ionChange)="onSessionTimeoutSliderChange($event)"
             />
             <div class="sec-timeout__input-row">
-              <span class="sec-timeout__label-min">{{ securityForm.controls.sessionTimeout.value }} min</span>
+              <span class="sec-timeout__label-min">{{ securityForm.controls.sessionTimeout.value }} {{ 'settings.security.session_timeout.unit' | translate }}</span>
               <ion-input
                 class="sec-timeout__input"
                 type="number"
@@ -69,9 +69,9 @@
             >
               @if (isSavingSecurity()) {
                 <ion-spinner name="crescent" slot="start" />
-                Saving…
+                {{ 'settings.security.saving' | translate }}
               } @else {
-                Save Changes
+                {{ 'settings.security.save' | translate }}
               }
             </ion-button>
           </div>
@@ -82,24 +82,24 @@
     <!-- Card 2: Change Password -->
     <ion-card class="sec-card">
       <ion-card-header>
-        <ion-card-title>Change Password</ion-card-title>
+        <ion-card-title>{{ 'settings.security.change_password.title' | translate }}</ion-card-title>
       </ion-card-header>
       <ion-card-content>
         <form [formGroup]="passwordForm" (ngSubmit)="onChangePassword()">
           <div class="sec-pw-fields">
             <ui-input
-              label="Current password"
+              [label]="'settings.security.change_password.current' | translate"
               type="password"
               formControlName="currentPassword"
             />
             <ui-input
-              label="New password"
+              [label]="'settings.security.change_password.new' | translate"
               type="password"
               formControlName="newPassword"
-              [error]="passwordForm.controls.newPassword.touched && passwordForm.controls.newPassword.hasError('minlength') ? 'At least 8 characters required' : ''"
+              [error]="passwordForm.controls.newPassword.touched && passwordForm.controls.newPassword.hasError('minlength') ? ('settings.security.change_password.new_hint' | translate) : ''"
             />
             <ui-input
-              label="Confirm new password"
+              [label]="'settings.security.change_password.confirm' | translate"
               type="password"
               formControlName="confirmPassword"
               [error]="confirmPasswordError"
@@ -122,9 +122,9 @@
             >
               @if (isChangingPassword()) {
                 <ion-spinner name="crescent" slot="start" />
-                Updating…
+                {{ 'settings.security.change_password.submitting' | translate }}
               } @else {
-                Update Password
+                {{ 'settings.security.change_password.submit' | translate }}
               }
             </ion-button>
           </div>
@@ -136,12 +136,12 @@
     <ion-card class="sec-card">
       <ion-card-header>
         <div class="sec-sessions-header">
-          <ion-card-title>Active Sessions</ion-card-title>
+          <ion-card-title>{{ 'settings.security.sessions.title' | translate }}</ion-card-title>
           <ion-button fill="outline" size="small" (click)="toggleSessions()">
-            {{ showSessions() ? 'Hide' : 'Show sessions' }}
+            {{ showSessions() ? ('settings.security.sessions.hide' | translate) : ('settings.security.sessions.show' | translate) }}
           </ion-button>
         </div>
-        <p class="sec-sessions-desc">Devices and browsers currently signed in to your account</p>
+        <p class="sec-sessions-desc">{{ 'settings.security.sessions.desc' | translate }}</p>
       </ion-card-header>
 
       @if (showSessions()) {
@@ -153,7 +153,7 @@
           </ion-card-content>
         } @else if (sessions().length === 0) {
           <ion-card-content>
-            <p class="sec-empty">No active sessions found</p>
+            <p class="sec-empty">{{ 'settings.security.sessions.empty' | translate }}</p>
           </ion-card-content>
         } @else {
           <ion-list lines="full">
@@ -163,10 +163,10 @@
                   <h3>
                     <span class="sec-session__id">{{ s.id?.slice(0, 12) }}…</span>
                     @if (s.isCurrent) {
-                      <span class="sec-session__current">Current</span>
+                      <span class="sec-session__current">{{ 'settings.security.sessions.current' | translate }}</span>
                     }
                   </h3>
-                  <p>Started {{ s.createdAt | date:'short' }} · Expires {{ s.expiresAt | date:'short' }}</p>
+                  <p>{{ 'settings.security.sessions.started' | translate }} {{ s.createdAt | date:'short' }} · {{ 'settings.security.sessions.expires' | translate }} {{ s.expiresAt | date:'short' }}</p>
                 </ion-label>
                 @if (!s.isCurrent) {
                   <ion-button
@@ -180,7 +180,7 @@
                     @if (revokingId() === s.id) {
                       <ion-spinner name="crescent" slot="start" />
                     }
-                    Revoke
+                    {{ 'settings.security.sessions.revoke' | translate }}
                   </ion-button>
                 }
               </ion-item>
@@ -199,7 +199,7 @@
                   @if (isRevokingAll()) {
                     <ion-spinner name="crescent" slot="start" />
                   }
-                  Revoke all other sessions ({{ sessions().length - 1 }})
+                  {{ 'settings.security.sessions.revoke_others' | translate }} ({{ sessions().length - 1 }})
                 </ion-button>
               </div>
             </ion-card-content>
@@ -221,28 +221,28 @@
     <!-- Card 4: Security Recommendations -->
     <ion-card class="sec-card">
       <ion-card-header>
-        <ion-card-title>Security Recommendations</ion-card-title>
+        <ion-card-title>{{ 'settings.security.recommendations.title' | translate }}</ion-card-title>
       </ion-card-header>
       <ion-list lines="full">
         <ion-item lines="full">
           <ion-label>
-            <h3>Use a strong, unique password</h3>
-            <p>Ensure your password is at least 12 characters long and includes a mix of letters, numbers, and symbols.</p>
+            <h3>{{ 'settings.security.recommendations.strong_password' | translate }}</h3>
+            <p>{{ 'settings.security.recommendations.strong_password_desc' | translate }}</p>
           </ion-label>
         </ion-item>
         <ion-item lines="full" [class.sec-rec--warn]="!securityForm.controls.twoFactorAuth.value">
           <ion-label>
-            <h3>Enable two-factor authentication</h3>
-            <p>Add an extra layer of security by requiring a second verification step when logging in.</p>
+            <h3>{{ 'settings.security.recommendations.enable_2fa' | translate }}</h3>
+            <p>{{ 'settings.security.recommendations.enable_2fa_desc' | translate }}</p>
           </ion-label>
         </ion-item>
         <ion-item lines="none" [class.sec-rec--warn]="!sessionsLoaded() || sessions().length > 1">
           <ion-label>
-            <h3>Review active sessions</h3>
+            <h3>{{ 'settings.security.recommendations.review_sessions' | translate }}</h3>
             <p>
-              Regularly check and terminate any suspicious sessions.
+              {{ 'settings.security.recommendations.review_sessions_desc' | translate }}
               @if (sessionsLoaded() && sessions().length > 1) {
-                You have {{ sessions().length }} active sessions.
+                {{ 'settings.security.sessions.count' | translate:{ count: sessions().length } }}
               }
             </p>
           </ion-label>

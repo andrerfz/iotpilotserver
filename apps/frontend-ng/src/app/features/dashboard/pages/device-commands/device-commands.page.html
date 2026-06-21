@@ -4,7 +4,7 @@
   @if (device.data() !== null && device.data()?.status !== 'ONLINE') {
     <div class="offline-banner">
       <ion-icon name="alert-circle-outline"></ion-icon>
-      <span>Device is offline. Commands will be queued until the device comes online.</span>
+      <span>{{ 'device_commands.offline_warning' | translate }}. {{ 'device_commands.offline_desc' | translate }}</span>
     </div>
   }
 
@@ -35,7 +35,7 @@
     <div class="layout__sidebar">
       <ion-card>
         <ion-card-content>
-          <h3 class="card-title">Quick Actions</h3>
+          <h3 class="card-title">{{ 'device_commands.quick_actions' | translate }}</h3>
           <div class="quick-actions">
             @for (action of quickActions; track action.id) {
               <ion-button
@@ -58,7 +58,7 @@
 
       <ion-button fill="solid" color="primary" expand="block" (click)="onIssueCommand()">
         <ion-icon slot="start" name="flash-outline"></ion-icon>
-        Issue Command
+        {{ 'device_commands.issue_command' | translate }}
       </ion-button>
     </div>
 
@@ -67,9 +67,9 @@
       <ion-card>
         <ion-card-content>
           <div class="card-head">
-            <h3 class="card-title">Command History</h3>
+            <h3 class="card-title">{{ 'device_commands.history' | translate }}</h3>
             @if (commands.data()) {
-              <span class="card-count">{{ commands.data()!.length }} commands</span>
+              <span class="card-count">{{ commands.data()!.length }} {{ 'device_commands.commands' | translate }}</span>
             }
           </div>
 
@@ -84,14 +84,14 @@
 
           <!-- Error -->
           @if (commands.error() && !commands.data()) {
-            <ui-empty-state title="Could not load commands" [hasAction]="true">
-              <ion-button action fill="outline" size="small" (click)="onRetry()">Retry</ion-button>
+            <ui-empty-state [title]="'device_commands.failed.title' | translate" [hasAction]="true">
+              <ion-button action fill="outline" size="small" (click)="onRetry()">{{ 'device_commands.failed.retry' | translate }}</ion-button>
             </ui-empty-state>
           }
 
           <!-- Empty -->
           @if (!commands.loading() && (commands.data()?.length ?? 0) === 0 && !commands.error()) {
-            <ui-empty-state title="No commands yet" description="Use Quick Actions or Issue Command to get started"></ui-empty-state>
+            <ui-empty-state [title]="'device_commands.empty.title' | translate" [description]="'device_commands.empty.desc' | translate"></ui-empty-state>
           }
 
           <!-- Table -->

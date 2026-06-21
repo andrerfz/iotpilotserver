@@ -6,6 +6,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ActivatedRoute } from '@angular/router';
 import { TopbarService } from '@ng/shell/topbar.service';
 import {
@@ -27,6 +28,7 @@ import { DeviceDetailService } from '../../services/device-detail.service';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    TranslatePipe,
     IonContent,
     IonCard,
     IonCardContent,

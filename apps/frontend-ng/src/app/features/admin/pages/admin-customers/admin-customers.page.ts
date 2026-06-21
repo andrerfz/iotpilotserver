@@ -2,6 +2,7 @@ import {
   AfterViewInit, ChangeDetectionStrategy, Component,
   computed, DestroyRef, inject, signal, TemplateRef, ViewChild,
 } from '@angular/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { FormsModule } from '@angular/forms';
 import { addIcons } from 'ionicons';
 import {
@@ -37,6 +38,7 @@ addIcons({ addOutline, pencilOutline, banOutline, businessOutline });
     UiSearchFieldComponent, UiSelectComponent,
     AdminTabsComponent,
     IonRefresher, IonRefresherContent,
+    TranslatePipe,
   ],
 })
 export class AdminCustomersPage implements AfterViewInit, ViewWillEnter {

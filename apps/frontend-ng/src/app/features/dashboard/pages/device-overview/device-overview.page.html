@@ -2,8 +2,8 @@
 
   <!-- Error state -->
   @if (device.error() && !device.data()) {
-    <ui-empty-state title="Could not load overview" [hasAction]="true">
-      <ion-button action fill="outline" size="small" (click)="onRetry()">Retry</ion-button>
+    <ui-empty-state [title]="'device_overview.failed.title' | translate" [hasAction]="true">
+      <ion-button action fill="outline" size="small" (click)="onRetry()">{{ 'device_overview.failed.retry' | translate }}</ion-button>
     </ui-empty-state>
   }
 
@@ -12,7 +12,7 @@
     @if (showSystemMetrics()) {
       <ui-metric-card
         [loading]="device.loading() && !device.data()"
-        label="CPU"
+        [label]="'device_overview.metrics.cpu' | translate"
         [value]="formatMetric(deviceMetrics().cpu, 'cpu')"
         unit="%"
         iconColor="var(--primary)"
@@ -22,7 +22,7 @@
       </ui-metric-card>
       <ui-metric-card
         [loading]="device.loading() && !device.data()"
-        label="Memory"
+        [label]="'device_overview.metrics.memory' | translate"
         [value]="formatMetric(deviceMetrics().memory, 'memory')"
         unit="%"
         iconColor="var(--info)"
@@ -33,7 +33,7 @@
     }
     <ui-metric-card
       [loading]="device.loading() && !device.data()"
-      label="Temperature"
+      [label]="'device_overview.metrics.temperature' | translate"
       [value]="formatMetric(deviceMetrics().temp, 'temperature')"
       unit="°C"
       iconColor="var(--warning)"
@@ -44,7 +44,7 @@
     @if (showSystemMetrics()) {
       <ui-metric-card
         [loading]="device.loading() && !device.data()"
-        label="Disk"
+        [label]="'device_overview.metrics.disk' | translate"
         [value]="formatMetric(deviceMetrics().disk, 'disk')"
         unit="%"
         iconColor="var(--success)"
@@ -56,7 +56,7 @@
     @if (showSensorMetrics()) {
       <ui-metric-card
         [loading]="device.loading() && !device.data()"
-        label="Battery"
+        [label]="'device_overview.metrics.battery' | translate"
         [value]="formatMetric(deviceMetrics().battery, 'battery_level')"
         unit="%"
         iconColor="var(--success)"
@@ -87,7 +87,7 @@
             <ion-card-content>
               <div class="chart-placeholder__inner">
                 <ion-icon name="stats-chart-outline"></ion-icon>
-                <span>CPU &amp; Memory trends — available in the Metrics tab</span>
+                <span>{{ 'device_overview.cpu_memory_trends' | translate }} — {{ 'device_overview.metrics_tab_hint' | translate }}</span>
               </div>
             </ion-card-content>
           </ion-card>
@@ -96,16 +96,16 @@
           <ion-card>
             <ion-card-content>
               <div class="card-head">
-                <h3 class="card-title">Recent commands</h3>
+                <h3 class="card-title">{{ 'device_overview.recent_commands' | translate }}</h3>
                 <ion-button fill="clear" size="small" (click)="openRunCommand()">
                   <ion-icon slot="start" name="add-outline"></ion-icon>
-                  New
+                  {{ 'device_overview.new_command' | translate }}
                 </ion-button>
               </div>
               @if (commands.loading()) {
                 <ion-skeleton-text [animated]="true" style="height: 80px; width: 100%; border-radius: 6px;"></ion-skeleton-text>
               } @else if ((commands.data()?.length ?? 0) === 0) {
-                <ui-empty-state title="No commands yet"></ui-empty-state>
+                <ui-empty-state [title]="'device_overview.no_commands' | translate"></ui-empty-state>
               } @else {
                 <ui-data-table
                   [rows]="commands.data() ?? []"
@@ -125,7 +125,7 @@
           <ion-card-content>
             <div class="chart-placeholder__inner">
               <ion-icon name="stats-chart-outline"></ion-icon>
-              <span>Temperature &amp; Battery trends — available in the Metrics tab</span>
+              <span>{{ 'device_overview.temp_battery_trends' | translate }} — {{ 'device_overview.metrics_tab_hint' | translate }}</span>
             </div>
           </ion-card-content>
         </ion-card>
@@ -134,38 +134,38 @@
       <!-- Device info sidebar -->
       <ion-card class="devinfo-card">
         <ion-card-content>
-          <h3 class="card-title">Device info</h3>
+          <h3 class="card-title">{{ 'device_overview.device_info' | translate }}</h3>
           <div class="kv">
             @if (d.deviceId) {
-              <span class="kv__k">Public ID</span>
+              <span class="kv__k">{{ 'device_overview.public_id' | translate }}</span>
               <span class="kv__v mono">{{ d.deviceId }}</span>
             }
             @if (d.deviceType) {
-              <span class="kv__k">Hardware</span>
+              <span class="kv__k">{{ 'device_overview.hardware' | translate }}</span>
               <span class="kv__v">{{ d.deviceType }}{{ d.deviceModel ? ' · ' + d.deviceModel : '' }}</span>
             }
             @if (d.ipAddress) {
-              <span class="kv__k">IP Address</span>
+              <span class="kv__k">{{ 'device_overview.ip_address' | translate }}</span>
               <span class="kv__v mono">{{ d.ipAddress }}</span>
             }
             @if (d.tailscaleIp) {
-              <span class="kv__k">Tailscale IP</span>
+              <span class="kv__k">{{ 'device_overview.tailscale_ip' | translate }}</span>
               <span class="kv__v mono">{{ d.tailscaleIp }}</span>
             }
             @if (d.agentVersion) {
-              <span class="kv__k">Firmware</span>
+              <span class="kv__k">{{ 'device_overview.firmware' | translate }}</span>
               <span class="kv__v mono">{{ d.agentVersion }}</span>
             }
             @if (d.location) {
-              <span class="kv__k">Location</span>
+              <span class="kv__k">{{ 'device_overview.location' | translate }}</span>
               <span class="kv__v">{{ d.location }}</span>
             }
             @if (d.macAddress) {
-              <span class="kv__k">MAC</span>
+              <span class="kv__k">{{ 'device_overview.mac' | translate }}</span>
               <span class="kv__v mono">{{ d.macAddress }}</span>
             }
             @if (d.lastSeen) {
-              <span class="kv__k">Last Seen</span>
+              <span class="kv__k">{{ 'device_overview.last_seen' | translate }}</span>
               <span class="kv__v mono">{{ formatLastSeen(d.lastSeen) }}</span>
             }
           </div>

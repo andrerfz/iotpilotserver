@@ -6,38 +6,38 @@
   } @else {
     <ion-card>
       <ion-card-header>
-        <ion-card-title>Notification Preferences</ion-card-title>
+        <ion-card-title>{{ 'settings.notifications.title' | translate }}</ion-card-title>
       </ion-card-header>
       <ion-card-content>
         <form [formGroup]="form" (ngSubmit)="onSave()">
           <ion-item lines="full">
             <ion-label>
-              <h3>Email Notifications</h3>
-              <p>Receive notifications via email</p>
+              <h3>{{ 'settings.notifications.email.title' | translate }}</h3>
+              <p>{{ 'settings.notifications.email.desc' | translate }}</p>
             </ion-label>
             <ion-toggle formControlName="emailNotifications" slot="end" />
           </ion-item>
 
           <ion-item lines="full">
             <ion-label>
-              <h3>Push Notifications</h3>
-              <p>Receive push notifications in your browser</p>
+              <h3>{{ 'settings.notifications.push.title' | translate }}</h3>
+              <p>{{ 'settings.notifications.push.desc' | translate }}</p>
             </ion-label>
             <ion-toggle formControlName="pushNotifications" slot="end" />
           </ion-item>
 
           <ion-item lines="full">
             <ion-label>
-              <h3>Alert Notifications</h3>
-              <p>Receive notifications for system alerts and warnings</p>
+              <h3>{{ 'settings.notifications.alerts.title' | translate }}</h3>
+              <p>{{ 'settings.notifications.alerts.desc' | translate }}</p>
             </ion-label>
             <ion-toggle formControlName="alertNotifications" slot="end" />
           </ion-item>
 
           <ion-item lines="none">
             <ion-label>
-              <h3>Device Offline Notifications</h3>
-              <p>Get notified when devices go offline</p>
+              <h3>{{ 'settings.notifications.device_offline.title' | translate }}</h3>
+              <p>{{ 'settings.notifications.device_offline.desc' | translate }}</p>
             </ion-label>
             <ion-toggle formControlName="deviceOfflineNotifications" slot="end" />
           </ion-item>
@@ -58,9 +58,9 @@
             >
               @if (isSaving()) {
                 <ion-spinner name="crescent" slot="start" />
-                Saving…
+                {{ 'settings.notifications.saving' | translate }}
               } @else {
-                Save Changes
+                {{ 'settings.notifications.save' | translate }}
               }
             </ion-button>
           </div>

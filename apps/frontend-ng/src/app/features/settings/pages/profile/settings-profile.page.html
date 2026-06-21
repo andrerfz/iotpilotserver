@@ -1,7 +1,7 @@
 <ion-content class="ion-padding">
   <ion-card>
     <ion-card-header>
-      <ion-card-title>Profile</ion-card-title>
+      <ion-card-title>{{ 'settings.profile.title' | translate }}</ion-card-title>
     </ion-card-header>
     <ion-card-content>
       <div class="profile-form">
@@ -10,43 +10,43 @@
           <ui-input
             [loading]="isLoading()"
             [formControl]="form.controls.firstName"
-            label="First name"
+            [label]="'settings.profile.first_name' | translate"
             placeholder="Enter first name" />
           <ui-input
             [loading]="isLoading()"
             [formControl]="form.controls.lastName"
-            label="Last name"
+            [label]="'settings.profile.last_name' | translate"
             placeholder="Enter last name" />
         </div>
 
         <ui-input
           [loading]="isLoading()"
           [formControl]="form.controls.phoneNumber"
-          label="Phone number"
+          [label]="'settings.profile.phone' | translate"
           placeholder="Enter phone number"
           class="profile-phone" />
 
         <div class="profile-grid profile-readonly">
           <ion-item lines="none" class="profile-readonly__item">
             <ion-label>
-              <p class="profile-readonly__label">Email</p>
+              <p class="profile-readonly__label">{{ 'settings.profile.email' | translate }}</p>
               @if (isLoading()) {
                 <span class="sk profile-sk-text"></span>
               } @else {
                 <p class="profile-readonly__value">{{ email() }}</p>
               }
-              <ion-note>Email cannot be changed here</ion-note>
+              <ion-note>{{ 'settings.profile.email_hint' | translate }}</ion-note>
             </ion-label>
           </ion-item>
           <ion-item lines="none" class="profile-readonly__item">
             <ion-label>
-              <p class="profile-readonly__label">Username</p>
+              <p class="profile-readonly__label">{{ 'settings.profile.username' | translate }}</p>
               @if (isLoading()) {
                 <span class="sk profile-sk-text"></span>
               } @else {
                 <p class="profile-readonly__value">{{ username() }}</p>
               }
-              <ion-note>Username cannot be changed here</ion-note>
+              <ion-note>{{ 'settings.profile.username_hint' | translate }}</ion-note>
             </ion-label>
           </ion-item>
         </div>
@@ -56,19 +56,19 @@
         <ui-select
           [loading]="isLoading()"
           [formControl]="form.controls.language"
-          label="Language"
+          [label]="'settings.profile.language' | translate"
           [options]="languageOptions" />
 
         <ui-select
           [loading]="isLoading()"
           [formControl]="form.controls.timezone"
-          label="Timezone"
+          [label]="'settings.profile.timezone' | translate"
           [options]="timezoneOptions" />
 
         <ui-select
           [loading]="isLoading()"
           [formControl]="form.controls.dateFormat"
-          label="Date Format"
+          [label]="'settings.profile.date_format' | translate"
           [options]="dateFormatOptions" />
 
       </div>
@@ -89,9 +89,9 @@
         >
           @if (isSaving()) {
             <ion-spinner name="crescent" slot="start" />
-            Saving…
+            {{ 'settings.profile.saving' | translate }}
           } @else {
-            Save changes
+            {{ 'settings.profile.save' | translate }}
           }
         </ion-button>
       </div>

@@ -7,7 +7,7 @@
     aria-label="Terminal output"
   >
     @if (output().length === 0) {
-      <span class="terminal__hint">Type a command and press Enter or Send.</span>
+      <span class="terminal__hint">{{ 'device_terminal.placeholder' | translate }}</span>
     } @else {
       @for (line of output(); track $index) {
         <div class="terminal__line" [class.terminal__line--cmd]="line.startsWith('$ ')">{{ line }}</div>
@@ -21,7 +21,7 @@
       class="terminal__input"
       [(ngModel)]="command"
       name="command"
-      placeholder="command"
+      [placeholder]="'device_terminal.placeholder' | translate"
       [disabled]="executing()"
       autocomplete="off"
       autocorrect="off"
@@ -33,7 +33,7 @@
       size="small"
       [disabled]="executing() || !command.trim()"
     >
-      @if (executing()) { … } @else { Send }
+      @if (executing()) { … } @else { {{ 'device_terminal.send' | translate }} }
     </ion-button>
     <ion-button
       type="button"
@@ -41,6 +41,6 @@
       color="medium"
       size="small"
       (click)="onClear()"
-    >Clear</ion-button>
+    >{{ 'device_terminal.clear' | translate }}</ion-button>
   </form>
 </div>

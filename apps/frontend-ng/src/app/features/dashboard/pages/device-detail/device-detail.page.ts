@@ -23,6 +23,7 @@ import {
   timeOutline,
   cubeOutline,
 } from 'ionicons/icons';
+import { TranslatePipe } from '@ngx-translate/core';
 import {
   IonButton,
   IonIcon,
@@ -61,6 +62,7 @@ type DeviceExtended = Device & {
     EmptyStateComponent,
     DeviceTabNavComponent,
     CommandSheetComponent,
+    TranslatePipe,
   ],
 })
 export class DeviceDetailPage implements OnInit {

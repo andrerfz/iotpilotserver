@@ -1,13 +1,13 @@
 <ui-bottom-sheet
-  title="Register Device"
-  [saveLabel]="step() === 'success' ? 'Done' : ''"
+  [title]="'components.register_device.title' | translate"
+  [saveLabel]="step() === 'success' ? ('components.register_device.done' | translate) : ''"
   [saveDisabled]="step() !== 'success'"
   (dismiss)="onSheetDismiss()">
 
   <!-- ── Step 1: Claim form ──────────────────────────────────────────────── -->
   @if (step() === 'form') {
     <div class="form-step">
-      <p class="form-step__intro">Claim a new device to your account</p>
+      <p class="form-step__intro">{{ 'components.register_device.desc' | translate }}</p>
 
       @if (error()) {
         <div class="error-banner">{{ error() }}</div>
@@ -15,7 +15,7 @@
 
       <ion-item class="form-item">
         <ion-label position="stacked">
-          Device ID <ion-text color="danger">*</ion-text>
+          {{ 'components.register_device.device_id' | translate }} <ion-text color="danger">*</ion-text>
         </ion-label>
         <ion-input
           placeholder="IOT-XXXX-YYYY"
@@ -26,17 +26,17 @@
           spellcheck="false">
           <ion-icon name="qr-code-outline" slot="start" color="medium"></ion-icon>
         </ion-input>
-        <ion-note slot="helper">Found on the device label or QR code</ion-note>
+        <ion-note slot="helper">{{ 'components.register_device.device_id_hint' | translate }}</ion-note>
       </ion-item>
 
       <ion-item class="form-item">
-        <ion-label position="stacked">Device Name <ion-text color="medium">(optional)</ion-text></ion-label>
+        <ion-label position="stacked">{{ 'components.register_device.device_name' | translate }}</ion-label>
         <ion-input
           placeholder="e.g. Kitchen Freezer"
           [value]="deviceName()"
           (ionInput)="deviceName.set($any($event).detail.value ?? '')">
         </ion-input>
-        <ion-note slot="helper">A friendly name to identify this device</ion-note>
+        <ion-note slot="helper">{{ 'components.register_device.device_name_hint' | translate }}</ion-note>
       </ion-item>
 
       <ion-button
@@ -47,9 +47,9 @@
         (click)="onClaim()">
         @if (loading()) {
           <ion-spinner name="crescent" slot="start"></ion-spinner>
-          Claiming…
+          {{ 'components.register_device.submitting' | translate }}
         } @else {
-          Claim Device
+          {{ 'components.register_device.submit' | translate }}
         }
       </ion-button>
 
@@ -63,17 +63,17 @@
       <div class="success-head">
         <ion-icon name="checkmark-outline" class="success-head__icon" color="success"></ion-icon>
         <div>
-          <div class="success-head__title">Device Claimed!</div>
-          <div class="success-head__sub">Set up your device with the token below</div>
+          <div class="success-head__title">{{ 'components.register_device.claimed.title' | translate }}</div>
+          <div class="success-head__sub">{{ 'components.register_device.claimed.desc' | translate }}</div>
         </div>
       </div>
 
       <!-- Token display -->
       <div class="token-card">
-        <div class="token-card__label">Setup Token</div>
+        <div class="token-card__label">{{ 'components.register_device.claimed.token_label' | translate }}</div>
         <div class="token-card__value">{{ claimResult()?.claimingToken }}</div>
         <div class="token-card__expiry">
-          Expires in {{ minutesLeft() }} minute{{ minutesLeft() !== 1 ? 's' : '' }}
+          {{ 'components.register_device.claimed.expires' | translate }} {{ minutesLeft() }} {{ minutesLeft() !== 1 ? ('components.register_device.claimed.minutes' | translate) : ('components.register_device.claimed.minute' | translate) }}
         </div>
         <ion-button
           fill="outline"
@@ -81,14 +81,14 @@
           class="token-card__copy"
           (click)="copyToken()">
           <ion-icon slot="start" [name]="copied() ? 'checkmark-outline' : 'copy-outline'"></ion-icon>
-          {{ copied() ? 'Copied!' : 'Copy token' }}
+          {{ copied() ? ('common.copy' | translate) + '!' : ('components.register_device.claimed.copy' | translate) }}
         </ion-button>
       </div>
 
       <!-- Setup instructions -->
       @if (claimResult()?.instructions) {
         <div class="instructions">
-          <div class="instructions__title">Setup Instructions</div>
+          <div class="instructions__title">{{ 'components.register_device.instructions' | translate }}</div>
           <div class="instructions__body">{{ claimResult()?.instructions }}</div>
         </div>
       }

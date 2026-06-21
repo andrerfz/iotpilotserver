@@ -5,12 +5,12 @@
     <ion-card class="apikey-banner">
       <ion-card-content>
         <div class="apikey-banner__head">
-          <span class="apikey-banner__title">API key created — copy it now</span>
+          <span class="apikey-banner__title">{{ 'settings.api_keys.new_key_banner' | translate }}</span>
           <ion-button fill="clear" size="small" (click)="dismissCreated()">
             <ion-icon slot="icon-only" name="close-outline" />
           </ion-button>
         </div>
-        <p class="apikey-banner__warning">This key will not be shown again.</p>
+        <p class="apikey-banner__warning">{{ 'settings.api_keys.new_key_once' | translate }}</p>
         <div class="apikey-banner__key">
           <code>{{ created.key }}</code>
           <ion-button fill="clear" size="small" (click)="copyKey(created.key)">
@@ -25,7 +25,7 @@
   <ion-card class="filter-bar">
     <ion-card-content>
       <div class="filter-row">
-        <ui-search-field placeholder="Search keys…"
+        <ui-search-field [placeholder]="'settings.api_keys.search_placeholder' | translate"
           [value]="searchQuery()" (valueChange)="searchQuery.set($event)" />
       </div>
     </ion-card-content>
@@ -54,8 +54,8 @@
 
   <!-- Key list -->
   @if (listError()) {
-    <ui-empty-state title="Failed to load API keys" [hasAction]="true">
-      <ion-button action fill="outline" size="small" (click)="loadKeys()">Retry</ion-button>
+    <ui-empty-state [title]="'settings.api_keys.failed.title' | translate" [hasAction]="true">
+      <ion-button action fill="outline" size="small" (click)="loadKeys()">{{ 'settings.api_keys.failed.retry' | translate }}</ion-button>
     </ui-empty-state>
   } @else {
     <ui-data-table [columns]="cols()" [rows]="filteredKeys()" rowKey="id" [pageSize]="20" />
@@ -72,20 +72,20 @@
   <ng-template>
     <ion-header>
       <ion-toolbar>
-        <ion-title>New API Key</ion-title>
+        <ion-title>{{ 'settings.api_keys.title' | translate }}</ion-title>
         <ion-buttons slot="end">
-          <ion-button fill="clear" (click)="onModalDismiss()">Cancel</ion-button>
+          <ion-button fill="clear" (click)="onModalDismiss()">{{ 'common.cancel' | translate }}</ion-button>
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
     <ion-content class="ion-padding">
       <p class="apikey-modal__desc">
-        API keys allow devices and integrations to authenticate with the platform.
-        Each key is shown once on creation — store it securely.
+        {{ 'settings.api_keys.desc' | translate }}
+        {{ 'settings.api_keys.security_hint' | translate }}
       </p>
       <ui-input
-        label="Key name"
-        placeholder="e.g. Sensor Room A"
+        [label]="'settings.api_keys.form.name_label' | translate"
+        [placeholder]="'settings.api_keys.form.name_placeholder' | translate"
         [formControl]="nameCtrl"
         (keydown.enter)="canCreate() && onCreate()" />
       @if (createError()) {
@@ -96,10 +96,10 @@
           [disabled]="!canCreate()" (click)="onCreate()">
           @if (isCreating()) {
             <ion-spinner name="crescent" slot="start" />
-            Creating…
+            {{ 'settings.api_keys.form.submitting' | translate }}
           } @else {
             <ion-icon slot="start" name="add-outline" />
-            Create key
+            {{ 'settings.api_keys.form.submit' | translate }}
           }
         </ion-button>
       </div>

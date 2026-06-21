@@ -21,21 +21,21 @@
       }
     </div>
   } @else if (metrics.error() && !metrics.data()) {
-    <ui-empty-state title="Failed to load metrics" [hasAction]="true">
-      <ion-button action fill="outline" size="small" (click)="onRefresh()">Retry</ion-button>
+    <ui-empty-state [title]="'device_metrics.failed.title' | translate" [hasAction]="true">
+      <ion-button action fill="outline" size="small" (click)="onRefresh()">{{ 'device_metrics.failed.retry' | translate }}</ion-button>
     </ui-empty-state>
   } @else {
 
     <!-- Current-value KPI cards -->
     <div class="metrics-cards">
       @if (showSystem()) {
-        <ui-metric-card label="CPU Usage"  [value]="formatMetric(cpuLast(), 'cpu') + '%'"  [iconColor]="cpuIconColor()"  [iconBg]="cpuIconBg()"></ui-metric-card>
-        <ui-metric-card label="Memory"     [value]="formatMetric(memLast(), 'memory') + '%'"  [iconColor]="memIconColor()"  [iconBg]="memIconBg()"></ui-metric-card>
-        <ui-metric-card label="Disk Usage" [value]="formatMetric(diskLast(), 'disk') + '%'" [iconColor]="diskIconColor()" [iconBg]="diskIconBg()"></ui-metric-card>
+        <ui-metric-card [label]="'device_metrics.labels.cpu' | translate"  [value]="formatMetric(cpuLast(), 'cpu') + '%'"  [iconColor]="cpuIconColor()"  [iconBg]="cpuIconBg()"></ui-metric-card>
+        <ui-metric-card [label]="'device_metrics.labels.memory' | translate"     [value]="formatMetric(memLast(), 'memory') + '%'"  [iconColor]="memIconColor()"  [iconBg]="memIconBg()"></ui-metric-card>
+        <ui-metric-card [label]="'device_metrics.labels.disk' | translate" [value]="formatMetric(diskLast(), 'disk') + '%'" [iconColor]="diskIconColor()" [iconBg]="diskIconBg()"></ui-metric-card>
       }
       <ui-metric-card [label]="tempLabel()" [value]="formatMetric(tempLast(), 'temperature') + '°C'" [iconColor]="tempIconColor()" [iconBg]="tempIconBg()"></ui-metric-card>
       @if (showSensor()) {
-        <ui-metric-card label="Battery" [value]="formatMetric(batteryLast(), 'battery_level') + '%'" [iconColor]="batteryIconColor()" [iconBg]="batteryIconBg()"></ui-metric-card>
+        <ui-metric-card [label]="'device_metrics.labels.battery' | translate" [value]="formatMetric(batteryLast(), 'battery_level') + '%'" [iconColor]="batteryIconColor()" [iconBg]="batteryIconBg()"></ui-metric-card>
       }
     </div>
 
@@ -43,19 +43,19 @@
     <div class="metrics-charts">
       @if (showSystem()) {
         @for (chart of [
-          { title: 'CPU Usage',    option: cpuChart() },
-          { title: 'Memory Usage', option: memChart() },
-          { title: 'Disk Usage',   option: diskChart() }
+          { title: 'device_metrics.charts.cpu',    option: cpuChart() },
+          { title: 'device_metrics.charts.memory', option: memChart() },
+          { title: 'device_metrics.charts.disk',   option: diskChart() }
         ]; track chart.title) {
           <ion-card class="chart-card">
             <ion-card-header>
-              <ion-card-title class="chart-card__title">{{ chart.title }}</ion-card-title>
+              <ion-card-title class="chart-card__title">{{ chart.title | translate }}</ion-card-title>
             </ion-card-header>
             <ion-card-content>
               @if (chart.option) {
                 <div echarts [options]="chart.option" class="chart-canvas"></div>
               } @else {
-                <div class="chart-empty">No data available</div>
+                <div class="chart-empty">{{ 'device_metrics.no_chart_data' | translate }}</div>
               }
             </ion-card-content>
           </ion-card>
@@ -70,20 +70,20 @@
           @if (tempChart()) {
             <div echarts [options]="tempChart()!" class="chart-canvas"></div>
           } @else {
-            <div class="chart-empty">No data available</div>
+            <div class="chart-empty">{{ 'device_metrics.no_chart_data' | translate }}</div>
           }
         </ion-card-content>
       </ion-card>
       @if (showSensor()) {
         <ion-card class="chart-card">
           <ion-card-header>
-            <ion-card-title class="chart-card__title">Battery Level</ion-card-title>
+            <ion-card-title class="chart-card__title">{{ 'device_metrics.charts.battery' | translate }}</ion-card-title>
           </ion-card-header>
           <ion-card-content>
             @if (batteryChart()) {
               <div echarts [options]="batteryChart()!" class="chart-canvas"></div>
             } @else {
-              <div class="chart-empty">No data available</div>
+              <div class="chart-empty">{{ 'device_metrics.no_chart_data' | translate }}</div>
             }
           </ion-card-content>
         </ion-card>

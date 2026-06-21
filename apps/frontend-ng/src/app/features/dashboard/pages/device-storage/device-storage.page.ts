@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { TopbarService } from '@ng/shell/topbar.service';
+import { TranslatePipe } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
 import { refreshOutline, saveOutline } from 'ionicons/icons';
 import {
@@ -55,6 +56,7 @@ type DeviceWithStorage = Device & {
     IonSkeletonText,
     IonToggle,
     EmptyStateComponent,
+    TranslatePipe,
   ],
 })
 export class DeviceStoragePage implements OnInit, OnDestroy {

@@ -87,7 +87,7 @@ describe('LoginPage — 2FA step', () => {
     await page.onSubmit();
 
     expect(page.step()).toBe('2fa');
-    expect(fakeToast.success).toHaveBeenCalledWith('Verification code sent to your email');
+    expect(fakeToast.success).toHaveBeenCalledWith('Verification code sent to your email.');
   });
 
   it('back button resets to the credentials step and clears the code', async () => {

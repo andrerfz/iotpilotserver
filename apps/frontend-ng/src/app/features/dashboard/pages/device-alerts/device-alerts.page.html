@@ -2,22 +2,22 @@
 
   <!-- Stats row -->
   <div class="stats-row">
-    <ui-metric-card label="Open" [value]="openCount()" color="danger"></ui-metric-card>
-    <ui-metric-card label="Acknowledged" [value]="ackCount()" color="warning"></ui-metric-card>
-    <ui-metric-card label="Resolved" [value]="resolvedCount()" color="success"></ui-metric-card>
+    <ui-metric-card [label]="'device_alerts.states.open' | translate" [value]="openCount()" color="danger"></ui-metric-card>
+    <ui-metric-card [label]="'device_alerts.states.acknowledged' | translate" [value]="ackCount()" color="warning"></ui-metric-card>
+    <ui-metric-card [label]="'device_alerts.states.resolved' | translate" [value]="resolvedCount()" color="success"></ui-metric-card>
   </div>
 
   <!-- Top actions -->
   <div class="top-actions">
     <ui-multi-select-picker
-      label="Severity"
+      [label]="'device_alerts.filter.severity' | translate"
       [options]="severityOptions"
       [value]="severityFilter()"
       (valueChange)="severityFilter.set($event)"
     ></ui-multi-select-picker>
 
     <ui-multi-select-picker
-      label="State"
+      [label]="'device_alerts.filter.state' | translate"
       [options]="stateOptions"
       [value]="stateFilter()"
       (valueChange)="stateFilter.set($event)"
@@ -26,7 +26,7 @@
     @if (hasFilters()) {
       <ion-button fill="clear" color="medium" size="small"
         (click)="severityFilter.set([]); stateFilter.set([])">
-        Clear filters
+        {{ 'device_alerts.filter.clear' | translate }}
       </ion-button>
     }
 
@@ -34,12 +34,12 @@
 
     <ion-button fill="outline" color="medium" size="small" (click)="onOpenThresholds()">
       <ion-icon slot="start" name="settings-outline"></ion-icon>
-      Thresholds
+      {{ 'device_alerts.actions.thresholds' | translate }}
     </ion-button>
 
     <ion-button fill="outline" color="medium" size="small" (click)="onRefresh()">
       <ion-icon slot="start" name="refresh-outline"></ion-icon>
-      Refresh
+      {{ 'device_alerts.actions.refresh' | translate }}
     </ion-button>
   </div>
 
@@ -47,7 +47,7 @@
   @if (trend.data()?.length) {
     <ion-card class="trend-card">
       <ion-card-header>
-        <ion-card-title>Alert Trend — Last 7 Days</ion-card-title>
+        <ion-card-title>{{ 'device_alerts.chart.title' | translate }} — {{ 'device_alerts.chart.period' | translate }}</ion-card-title>
       </ion-card-header>
       <ion-card-content>
         <div class="trend-chart">
@@ -71,13 +71,13 @@
   @if (selectedAlerts().length > 0) {
     <div class="bulk-bar">
       <ion-text color="medium">
-        {{ selectedAlerts().length }} selected
+        {{ 'device_alerts.selected' | translate: { count: selectedAlerts().length } }}
       </ion-text>
       <ion-button fill="outline" color="warning" size="small" (click)="onBulkAcknowledge()">
-        Acknowledge selected
+        {{ 'device_alerts.actions.ack_selected' | translate }}
       </ion-button>
       <ion-button fill="outline" color="success" size="small" (click)="onBulkResolve()">
-        Resolve selected
+        {{ 'device_alerts.actions.resolve_selected' | translate }}
       </ion-button>
     </div>
   }
@@ -109,14 +109,14 @@
                 fill="clear" color="warning" size="small"
                 [disabled]="actionLoading() === row.id"
                 (click)="$event.stopPropagation(); onAcknowledge(row)">
-                Ack
+                {{ 'device_alerts.actions.ack' | translate }}
               </ion-button>
             }
             <ion-button
               fill="clear" color="success" size="small"
               [disabled]="actionLoading() === row.id"
               (click)="$event.stopPropagation(); onResolve(row)">
-              Resolve
+              {{ 'device_alerts.actions.resolve' | translate }}
             </ion-button>
           }
           <ion-button
@@ -140,16 +140,16 @@
 
       <!-- Error -->
       @if (alerts.error() && !localAlerts().length) {
-        <ui-empty-state title="Could not load alerts" [hasAction]="true">
-          <ion-button action fill="outline" size="small" (click)="onRefresh()">Retry</ion-button>
+        <ui-empty-state [title]="'device_alerts.failed.title' | translate" [hasAction]="true">
+          <ion-button action fill="outline" size="small" (click)="onRefresh()">{{ 'device_alerts.failed.retry' | translate }}</ion-button>
         </ui-empty-state>
       }
 
       <!-- Empty (after filter) -->
       @if (!alerts.loading() && filteredAlerts().length === 0 && !alerts.error()) {
         <ui-empty-state
-          title="No alerts"
-          [description]="hasFilters() ? 'Try adjusting your filters' : 'This device has no alerts yet'"
+          [title]="'device_alerts.empty.no_alerts' | translate"
+          [description]="hasFilters() ? ('device_alerts.empty.filtered' | translate) : ('device_alerts.empty.no_alerts_desc' | translate)"
         ></ui-empty-state>
       }
 

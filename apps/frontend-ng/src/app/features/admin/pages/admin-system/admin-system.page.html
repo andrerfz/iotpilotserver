@@ -5,18 +5,18 @@
   <div class="system-header">
     <span class="system-last-updated">
       @if (svc.lastUpdated()) {
-        Last updated: {{ formatTs(svc.lastUpdated()!.toISOString()) }}
+        {{ 'admin.system.last_updated' | translate }}: {{ formatTs(svc.lastUpdated()!.toISOString()) }}
       }
     </span>
     <ion-button fill="outline" size="small" (click)="svc.load()" [disabled]="svc.loading()">
       <ion-icon slot="start" name="reload-outline"></ion-icon>
-      Refresh
+      {{ 'admin.system.refresh' | translate }}
     </ion-button>
   </div>
 
   @if (svc.error() && !svc.data()) {
-    <ui-empty-state title="Failed to load system info" [hasAction]="true">
-      <ion-button action fill="outline" size="small" (click)="svc.load()">Retry</ion-button>
+    <ui-empty-state [title]="'admin.system.failed.title' | translate" [hasAction]="true">
+      <ion-button action fill="outline" size="small" (click)="svc.load()">{{ 'admin.system.failed.retry' | translate }}</ion-button>
     </ui-empty-state>
   } @else if (!svc.data() && svc.loading()) {
     <div class="system-grid">
@@ -36,17 +36,17 @@
       <ion-card>
         <ion-card-header>
           <ion-card-title>
-            <ion-icon name="server-outline"></ion-icon> System
+            <ion-icon name="server-outline"></ion-icon> {{ 'admin.system.sections.system' | translate }}
           </ion-card-title>
         </ion-card-header>
         <ion-card-content>
           <dl class="info-list">
-            <dt>Platform</dt><dd>{{ sys.platform }}</dd>
-            <dt>Node.js</dt><dd>{{ sys.nodeVersion }}</dd>
-            <dt>Uptime</dt><dd>{{ formatUptime(sys.uptime) }}</dd>
+            <dt>{{ 'admin.system.fields.platform' | translate }}</dt><dd>{{ sys.platform }}</dd>
+            <dt>{{ 'admin.system.fields.node' | translate }}</dt><dd>{{ sys.nodeVersion }}</dd>
+            <dt>{{ 'admin.system.fields.uptime' | translate }}</dt><dd>{{ formatUptime(sys.uptime) }}</dd>
           </dl>
           <div class="resource-row">
-            <span>CPU</span>
+            <span>{{ 'admin.system.fields.cpu' | translate }}</span>
             <ion-progress-bar
               [value]="sys.cpuUsage / 100"
               [color]="sys.cpuUsage > 80 ? 'danger' : sys.cpuUsage > 60 ? 'warning' : 'success'">
@@ -54,7 +54,7 @@
             <span class="resource-pct">{{ sys.cpuUsage.toFixed(0) }}%</span>
           </div>
           <div class="resource-row">
-            <span>Memory</span>
+            <span>{{ 'admin.system.fields.memory' | translate }}</span>
             <ion-progress-bar
               [value]="sys.memoryUsage.percentage / 100"
               [color]="sys.memoryUsage.percentage > 80 ? 'danger' : sys.memoryUsage.percentage > 60 ? 'warning' : 'success'">
@@ -72,22 +72,22 @@
       <ion-card>
         <ion-card-header>
           <ion-card-title>
-            <ion-icon name="layers-outline"></ion-icon> Database
+            <ion-icon name="layers-outline"></ion-icon> {{ 'admin.system.sections.database' | translate }}
           </ion-card-title>
         </ion-card-header>
         <ion-card-content>
           <dl class="info-list">
-            <dt>Status</dt>
+            <dt>{{ 'admin.system.fields.status' | translate }}</dt>
             <dd>
               <ion-badge [color]="db.status === 'connected' ? 'success' : 'danger'">
                 {{ db.status }}
               </ion-badge>
             </dd>
-            <dt>Version</dt><dd>{{ db.version }}</dd>
-            <dt>Size</dt><dd>{{ db.size }}</dd>
+            <dt>{{ 'admin.system.fields.version' | translate }}</dt><dd>{{ db.version }}</dd>
+            <dt>{{ 'admin.system.fields.size' | translate }}</dt><dd>{{ db.size }}</dd>
           </dl>
           <div class="resource-row">
-            <span>Connections</span>
+            <span>{{ 'admin.system.fields.connections' | translate }}</span>
             <ion-progress-bar
               [value]="dbConnPct(db)"
               [color]="dbColor(db)">
@@ -96,7 +96,7 @@
               {{ db.connections.active }} / {{ db.connections.max }}
             </span>
           </div>
-          <p class="conn-detail">{{ db.connections.idle }} idle</p>
+          <p class="conn-detail">{{ db.connections.idle }} {{ 'admin.system.fields.idle' | translate }}</p>
         </ion-card-content>
       </ion-card>
       }
@@ -106,19 +106,19 @@
       <ion-card>
         <ion-card-header>
           <ion-card-title>
-            <ion-icon name="albums-outline"></ion-icon> Application
+            <ion-icon name="albums-outline"></ion-icon> {{ 'admin.system.sections.application' | translate }}
           </ion-card-title>
         </ion-card-header>
         <ion-card-content>
           <dl class="info-list">
-            <dt>Version</dt><dd>{{ app.version }}</dd>
-            <dt>Environment</dt>
+            <dt>{{ 'admin.system.fields.version' | translate }}</dt><dd>{{ app.version }}</dd>
+            <dt>{{ 'admin.system.fields.environment' | translate }}</dt>
             <dd>
               <ion-badge [color]="app.environment === 'production' ? 'success' : 'warning'">
                 {{ app.environment }}
               </ion-badge>
             </dd>
-            <dt>Built</dt><dd>{{ app.buildDate }}</dd>
+            <dt>{{ 'admin.system.fields.built' | translate }}</dt><dd>{{ app.buildDate }}</dd>
           </dl>
           <div class="features-row">
             @for (feat of app.features; track feat.name) {
@@ -137,7 +137,7 @@
     @if (info.recentActivity?.length) {
       <ion-card class="activity-card">
         <ion-card-header>
-          <ion-card-title>Recent Activity</ion-card-title>
+          <ion-card-title>{{ 'admin.system.sections.recent_activity' | translate }}</ion-card-title>
         </ion-card-header>
         <ion-list lines="full">
           @for (act of info.recentActivity; track act.id) {

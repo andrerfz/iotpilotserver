@@ -10,6 +10,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ActivatedRoute } from '@angular/router';
 import { TopbarService } from '@ng/shell/topbar.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -66,6 +67,7 @@ const QUICK_ACTIONS: QuickAction[] = [
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    TranslatePipe,
     IonContent,
     IonCard,
     IonCardContent,

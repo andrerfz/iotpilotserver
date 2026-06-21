@@ -1,6 +1,6 @@
 <ion-header>
   <ion-toolbar>
-    <ion-title>New User</ion-title>
+    <ion-title>{{ 'admin.new_user.title' | translate }}</ion-title>
     <ion-buttons slot="end">
       <ion-button (click)="onCancel()">
         <ion-icon slot="icon-only" name="close-outline"></ion-icon>
@@ -12,26 +12,26 @@
 <ion-content class="ion-padding">
   <form [formGroup]="form" (ngSubmit)="onSubmit()">
 
-    <ui-input label="Email" type="email" placeholder="user@example.com"
+    <ui-input [label]="'admin.new_user.email' | translate" type="email" [placeholder]="'admin.new_user.email_placeholder' | translate"
       formControlName="email" [error]="fieldError('email')">
     </ui-input>
 
-    <ui-input label="Username" placeholder="johndoe"
+    <ui-input [label]="'admin.new_user.username' | translate" [placeholder]="'admin.new_user.username_placeholder' | translate"
       formControlName="username" [error]="fieldError('username')">
     </ui-input>
 
-    <ui-input label="Password" type="password" placeholder="Min 8 characters"
+    <ui-input [label]="'admin.new_user.password' | translate" type="password" [placeholder]="'admin.new_user.password_hint' | translate"
       formControlName="password" [error]="fieldError('password')">
     </ui-input>
 
-    <ui-select label="Role" [options]="roleOptions"
+    <ui-select [label]="'admin.new_user.role' | translate" [options]="roleOptions"
       formControlName="role" [error]="fieldError('role')">
     </ui-select>
 
-    <ui-select label="Customer / Tenant" [options]="customerOptions()"
+    <ui-select [label]="'admin.new_user.customer' | translate" [options]="customerOptions()"
       [loading]="customerOptions().length === 0"
       formControlName="customerId" [error]="fieldError('customerId')"
-      placeholder="Select a customer…">
+      [placeholder]="'admin.new_user.select_customer' | translate">
     </ui-select>
 
     @if (error()) {
@@ -44,12 +44,12 @@
 <ion-footer>
   <ion-toolbar>
     <ion-buttons slot="start">
-      <ion-button fill="outline" color="medium" (click)="onCancel()">Cancel</ion-button>
+      <ion-button fill="outline" color="medium" (click)="onCancel()">{{ 'admin.new_user.cancel' | translate }}</ion-button>
     </ion-buttons>
     <ion-buttons slot="end">
       <ion-button fill="solid" color="primary" (click)="onSubmit()" [disabled]="saving()">
         @if (saving()) { <ion-spinner name="crescent" slot="start"></ion-spinner> }
-        Create User
+        {{ 'admin.new_user.submit' | translate }}
       </ion-button>
     </ion-buttons>
   </ion-toolbar>

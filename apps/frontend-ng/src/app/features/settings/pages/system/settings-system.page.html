@@ -7,32 +7,32 @@
     <!-- Display Settings (all users) -->
     <ion-card class="sys-card">
       <ion-card-header>
-        <ion-card-title>Display Settings</ion-card-title>
+        <ion-card-title>{{ 'settings.system.title' | translate }}</ion-card-title>
       </ion-card-header>
       <ion-card-content>
         <form [formGroup]="displayForm" (ngSubmit)="onSaveDisplay()">
           <div class="sys-field">
             <ion-label class="sys-field__label">
-              <h3>Theme</h3>
-              <p>Choose your preferred color theme</p>
+              <h3>{{ 'settings.system.theme.label' | translate }}</h3>
+              <p>{{ 'settings.system.theme.desc' | translate }}</p>
             </ion-label>
             <ion-segment
               [value]="currentTheme()"
               (ionChange)="onThemeChange($event)"
             >
-              <ion-segment-button value="light">Light</ion-segment-button>
-              <ion-segment-button value="dark">Dark</ion-segment-button>
-              <ion-segment-button value="system">System</ion-segment-button>
+              <ion-segment-button value="light">{{ 'settings.system.theme.light' | translate }}</ion-segment-button>
+              <ion-segment-button value="dark">{{ 'settings.system.theme.dark' | translate }}</ion-segment-button>
+              <ion-segment-button value="system">{{ 'settings.system.theme.system' | translate }}</ion-segment-button>
             </ion-segment>
           </div>
 
           <div class="sys-field">
             <ion-label class="sys-field__label">
-              <h3>Dashboard Layout</h3>
-              <p>Choose how your dashboard is organized</p>
+              <h3>{{ 'settings.system.layout.label' | translate }}</h3>
+              <p>{{ 'settings.system.layout.desc' | translate }}</p>
             </ion-label>
             <ui-select
-              label="Dashboard Layout"
+              [label]="'settings.system.layout.label' | translate"
               formControlName="dashboardLayout"
               [options]="dashboardLayoutOptions"
             />
@@ -40,11 +40,11 @@
 
           <div class="sys-field">
             <ion-label class="sys-field__label">
-              <h3>Items Per Page</h3>
-              <p>Number of items to display in lists and tables</p>
+              <h3>{{ 'settings.system.items_per_page.label' | translate }}</h3>
+              <p>{{ 'settings.system.items_per_page.desc' | translate }}</p>
             </ion-label>
             <ui-select
-              label="Items Per Page"
+              [label]="'settings.system.items_per_page.label' | translate"
               formControlName="itemsPerPage"
               [options]="itemsPerPageOptions"
             />
@@ -66,9 +66,9 @@
             >
               @if (isSavingDisplay()) {
                 <ion-spinner name="crescent" slot="start" />
-                Saving…
+                {{ 'settings.system.saving' | translate }}
               } @else {
-                Save Changes
+                {{ 'settings.system.save' | translate }}
               }
             </ion-button>
           </div>
@@ -80,33 +80,33 @@
     @if (isAdmin()) {
       <ion-card class="sys-card">
         <ion-card-header>
-          <ion-card-title>Admin Settings</ion-card-title>
+          <ion-card-title>{{ 'settings.system.admin.title' | translate }}</ion-card-title>
         </ion-card-header>
         <ion-card-content>
           <form [formGroup]="adminForm" (ngSubmit)="onSaveAdmin()">
             <ion-item lines="full">
               <ion-label>
-                <h3>Advanced Metrics</h3>
-                <p>Enable detailed system metrics and analytics</p>
+                <h3>{{ 'settings.system.admin.advanced_metrics.label' | translate }}</h3>
+                <p>{{ 'settings.system.admin.advanced_metrics.desc' | translate }}</p>
               </ion-label>
               <ion-toggle formControlName="enableAdvancedMetrics" slot="end" />
             </ion-item>
 
             <ion-item lines="full">
               <ion-label>
-                <h3>Beta Features</h3>
-                <p>Enable experimental features and functionality</p>
+                <h3>{{ 'settings.system.admin.beta.label' | translate }}</h3>
+                <p>{{ 'settings.system.admin.beta.desc' | translate }}</p>
               </ion-label>
               <ion-toggle formControlName="enableBetaFeatures" slot="end" />
             </ion-item>
 
             <div class="sys-field">
               <ion-label class="sys-field__label">
-                <h3>Log Level</h3>
-                <p>Set the system logging verbosity</p>
+                <h3>{{ 'settings.system.admin.log_level.label' | translate }}</h3>
+                <p>{{ 'settings.system.admin.log_level.desc' | translate }}</p>
               </ion-label>
               <ui-select
-                label="Log Level"
+                [label]="'settings.system.admin.log_level.label' | translate"
                 formControlName="logLevel"
                 [options]="logLevelOptions"
               />
@@ -128,9 +128,9 @@
               >
                 @if (isSavingAdmin()) {
                   <ion-spinner name="crescent" slot="start" />
-                  Saving…
+                  {{ 'settings.system.saving' | translate }}
                 } @else {
-                  Save Admin Settings
+                  {{ 'settings.system.admin.save' | translate }}
                 }
               </ion-button>
             </div>

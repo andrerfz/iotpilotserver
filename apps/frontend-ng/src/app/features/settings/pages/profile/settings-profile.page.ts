@@ -1,5 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
+import { LangService, SUPPORTED_LANGS, LANG_LABELS } from '@ng/core/i18n/lang.service';
 import {
   IonButton,
   IonCard,
@@ -21,13 +23,10 @@ import { getProfileSettings } from '@ng/core/api/generated/fn/settings/get-profi
 import { updateProfileSettings } from '@ng/core/api/generated/fn/settings/update-profile-settings';
 import type { ProfileSettings } from '@ng/core/api/generated/models/profile-settings';
 
-const LANGUAGE_OPTIONS: SelectOption[] = [
-  { value: 'en', label: 'English' },
-  { value: 'es', label: 'Spanish' },
-  { value: 'fr', label: 'French' },
-  { value: 'de', label: 'German' },
-  { value: 'zh', label: 'Chinese' },
-];
+const LANGUAGE_OPTIONS: SelectOption[] = SUPPORTED_LANGS.map((lang) => ({
+  value: lang,
+  label: LANG_LABELS[lang],
+}));
 
 const TIMEZONE_OPTIONS: SelectOption[] = [
   { value: 'UTC', label: 'UTC' },
@@ -53,6 +52,7 @@ const DATE_FORMAT_OPTIONS: SelectOption[] = [
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     ReactiveFormsModule,
+    TranslatePipe,
     IonContent,
     IonCard,
     IonCardContent,
@@ -71,6 +71,7 @@ export class SettingsProfilePage implements OnInit {
   private readonly api = inject(Api);
   private readonly topbar = inject(TopbarService);
   private readonly fb = inject(FormBuilder);
+  private readonly lang = inject(LangService);
 
   readonly isLoading = signal(true);
   readonly email = signal('');
@@ -104,7 +105,7 @@ export class SettingsProfilePage implements OnInit {
         firstName: data.firstName ?? '',
         lastName: data.lastName ?? '',
         phoneNumber: data.phoneNumber ?? '',
-        language: data.language ?? 'en',
+        language: data.language ?? this.lang.current,
         timezone: data.timezone ?? 'UTC',
         dateFormat: data.dateFormat ?? 'MM/DD/YYYY',
       });
@@ -124,6 +125,8 @@ export class SettingsProfilePage implements OnInit {
       await this.api.invoke(updateProfileSettings, {
         body: this.form.getRawValue() as ProfileSettings,
       });
+      const lang = this.form.getRawValue().language;
+      if (lang) this.lang.use(lang as Parameters<typeof this.lang.use>[0]);
       this.success.set('Changes saved');
       this.form.markAsPristine();
     } catch (err) {

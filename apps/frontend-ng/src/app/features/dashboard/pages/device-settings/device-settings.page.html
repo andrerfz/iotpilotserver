@@ -17,39 +17,39 @@
       </ion-card>
     }
   } @else if (settings.error() && !settings.data()) {
-    <ui-empty-state title="Failed to load settings" [hasAction]="true">
-      <ion-button action fill="outline" size="small" (click)="settings.reload()">Retry</ion-button>
+    <ui-empty-state [title]="'device_settings.sections.general' | translate" [hasAction]="true">
+      <ion-button action fill="outline" size="small" (click)="settings.reload()">{{ 'common.retry' | translate }}</ion-button>
     </ui-empty-state>
   } @else {
 
     <!-- GENERAL -->
     <ion-card>
       <ion-card-header>
-        <ion-card-title>General</ion-card-title>
+        <ion-card-title>{{ 'device_settings.sections.general' | translate }}</ion-card-title>
       </ion-card-header>
       <ion-card-content>
         <ion-list lines="none">
           <ion-item>
-            <ion-label>Device</ion-label>
+            <ion-label>{{ 'device_settings.sections.device' | translate }}</ion-label>
             <ion-note slot="end">{{ device.data()?.name }}</ion-note>
           </ion-item>
           <ion-item>
-            <ion-label>Type</ion-label>
+            <ion-label>{{ 'device_settings.fields.type' | translate }}</ion-label>
             <ion-note slot="end">{{ device.data()?.deviceType }}</ion-note>
           </ion-item>
           <ion-item>
-            <ion-label>IP Address</ion-label>
+            <ion-label>{{ 'device_settings.fields.ip_address' | translate }}</ion-label>
             <ion-note slot="end">{{ device.data()?.ipAddress || '—' }}</ion-note>
           </ion-item>
           @if (showSSH()) {
             <ion-item>
-              <ion-label>SSH Enabled</ion-label>
+              <ion-label>{{ 'device_settings.fields.ssh_enabled' | translate }}</ion-label>
               <ui-switch slot="end" [(ngModel)]="formData.sshEnabled" name="sshEnabled"></ui-switch>
             </ion-item>
           }
           @if (showSystemCards()) {
             <ion-item>
-              <ion-label>Auto Update</ion-label>
+              <ion-label>{{ 'device_settings.fields.auto_update' | translate }}</ion-label>
               <ui-switch slot="end" [(ngModel)]="formData.autoUpdate" name="autoUpdate"></ui-switch>
             </ion-item>
           }
@@ -60,18 +60,18 @@
     <!-- MONITORING -->
     <ion-card>
       <ion-card-header>
-        <ion-card-title>Monitoring</ion-card-title>
+        <ion-card-title>{{ 'device_settings.sections.monitoring' | translate }}</ion-card-title>
       </ion-card-header>
       <ion-card-content>
         <ion-list lines="none">
           <ion-item>
-            <ion-label>Metrics Enabled</ion-label>
+            <ion-label>{{ 'device_settings.fields.metrics_enabled' | translate }}</ion-label>
             <ui-switch slot="end" [(ngModel)]="formData.metricsEnabled" name="metricsEnabled"></ui-switch>
           </ion-item>
 
           @if (showHeartbeat()) {
             <ion-item>
-              <ion-label>Heartbeat Interval (s)</ion-label>
+              <ion-label>{{ 'device_settings.fields.heartbeat_interval' | translate }}</ion-label>
               <ui-input
                 slot="end"
                 type="number"
@@ -81,7 +81,7 @@
               ></ui-input>
             </ion-item>
             <ion-item>
-              <ion-label>CPU Threshold (%)</ion-label>
+              <ion-label>{{ 'device_settings.fields.cpu_threshold' | translate }}</ion-label>
               <ui-input
                 slot="end"
                 type="number"
@@ -91,7 +91,7 @@
               ></ui-input>
             </ion-item>
             <ion-item>
-              <ion-label>Memory Threshold (%)</ion-label>
+              <ion-label>{{ 'device_settings.fields.memory_threshold' | translate }}</ion-label>
               <ui-input
                 slot="end"
                 type="number"
@@ -101,7 +101,7 @@
               ></ui-input>
             </ion-item>
             <ion-item>
-              <ion-label>Disk Threshold (%)</ion-label>
+              <ion-label>{{ 'device_settings.fields.disk_threshold' | translate }}</ion-label>
               <ui-input
                 slot="end"
                 type="number"
@@ -111,7 +111,7 @@
               ></ui-input>
             </ion-item>
             <ion-item>
-              <ion-label>Temp Threshold (°C)</ion-label>
+              <ion-label>{{ 'device_settings.fields.temp_threshold' | translate }}</ion-label>
               <ui-input
                 slot="end"
                 type="number"
@@ -123,7 +123,7 @@
           } @else {
             <!-- Sensor device: stepper for reporting interval -->
             <ion-item class="interval-item">
-              <ion-label>Reporting Interval</ion-label>
+              <ion-label>{{ 'device_settings.fields.reporting_interval' | translate }}</ion-label>
               <div slot="end" class="interval-stepper">
                 <span class="interval-stepper__value" [class.interval-stepper__value--warn]="reportingIntervalSec() === 0">
                   {{ formatInterval(reportingIntervalSec()) }}
@@ -139,11 +139,11 @@
             @if (reportingIntervalSec() === 0) {
               <div class="interval-hint">
                 <ion-icon name="warning-outline"></ion-icon>
-                Define a reporting interval — without it the device won't send data
+                {{ 'device_settings.fields.reporting_interval_hint' | translate }}
               </div>
             }
             <ion-item>
-              <ion-label>Sensor Temp Threshold (°C)</ion-label>
+              <ion-label>{{ 'device_settings.fields.sensor_temp_threshold' | translate }}</ion-label>
               <ui-input
                 slot="end"
                 type="number"
@@ -153,7 +153,7 @@
               ></ui-input>
             </ion-item>
             <ion-item>
-              <ion-label>Battery Threshold (%)</ion-label>
+              <ion-label>{{ 'device_settings.fields.battery_threshold' | translate }}</ion-label>
               <ui-input
                 slot="end"
                 type="number"
@@ -171,12 +171,12 @@
     @if (showSystemCards()) {
       <ion-card>
         <ion-card-header>
-          <ion-card-title>Network</ion-card-title>
+          <ion-card-title>{{ 'device_settings.sections.network' | translate }}</ion-card-title>
         </ion-card-header>
         <ion-card-content>
           <ion-list lines="none">
             <ion-item>
-              <ion-label>Network Monitoring</ion-label>
+              <ion-label>{{ 'device_settings.fields.network_monitoring' | translate }}</ion-label>
               <ui-switch slot="end" [(ngModel)]="formData.networkMonitoring" name="networkMonitoring"></ui-switch>
             </ion-item>
           </ion-list>
@@ -188,12 +188,12 @@
     @if (showSystemCards()) {
       <ion-card>
         <ion-card-header>
-          <ion-card-title>Agent</ion-card-title>
+          <ion-card-title>{{ 'device_settings.sections.agent' | translate }}</ion-card-title>
         </ion-card-header>
         <ion-card-content>
           <ion-list lines="none">
             <ion-item>
-              <ion-label>Update Channel</ion-label>
+              <ion-label>{{ 'device_settings.fields.update_channel' | translate }}</ion-label>
               <ui-select
                 slot="end"
                 [options]="updateChannels"
@@ -210,12 +210,12 @@
     <!-- SECURITY -->
     <ion-card>
       <ion-card-header>
-        <ion-card-title>Security</ion-card-title>
+        <ion-card-title>{{ 'device_settings.sections.security' | translate }}</ion-card-title>
       </ion-card-header>
       <ion-card-content>
         <ion-list lines="none">
           <ion-item>
-            <ion-label>Key Rotation (days)</ion-label>
+            <ion-label>{{ 'device_settings.fields.key_rotation' | translate }}</ion-label>
             <ui-input
               slot="end"
               type="number"
@@ -228,8 +228,7 @@
 
         <div class="rotate-key">
           <p class="rotate-key__hint">
-            Rotating the API key immediately invalidates the current key.
-            The device agent will reconnect using the new key.
+            {{ 'device_settings.fields.key_rotation_hint' | translate }}
           </p>
 
           @if (!newKey()) {
@@ -245,11 +244,11 @@
               } @else {
                 <ion-icon slot="start" name="refresh-outline"></ion-icon>
               }
-              Rotate API Key
+              {{ 'device_settings.rotate_key' | translate }}
             </ion-button>
           } @else {
             <div class="rotate-key__reveal">
-              <p class="rotate-key__label">New API Key (copy now — shown once):</p>
+              <p class="rotate-key__label">{{ 'device_settings.new_api_key' | translate }}:</p>
               <div class="rotate-key__value-row">
                 <code class="rotate-key__value">{{ maskedKey() }}</code>
                 <ion-button fill="clear" size="small" (click)="toggleKeyVisible()">
@@ -275,40 +274,40 @@
     >
       @if (saving()) {
         <ion-spinner slot="start" name="crescent" style="width:16px;height:16px;"></ion-spinner>
-        Saving…
+        {{ 'common.saving' | translate }}
       } @else {
-        Save Settings
+        {{ 'device_settings.save' | translate }}
       }
     </ion-button>
 
     <!-- DANGER ZONE -->
     <ion-card class="danger-zone">
       <ion-card-header>
-        <ion-card-title>Danger Zone</ion-card-title>
+        <ion-card-title>{{ 'device_settings.sections.danger' | translate }}</ion-card-title>
       </ion-card-header>
       <ion-card-content>
         @if (!deleteConfirm()) {
           <div class="danger-row">
             <div class="danger-row__text">
-              <strong>Delete this device</strong>
-              <p>Permanently removes the device and all its data. This action cannot be undone.</p>
+              <strong>{{ 'device_settings.delete_device.title' | translate }}</strong>
+              <p>{{ 'device_settings.delete_device.desc' | translate }}</p>
             </div>
             <ion-button fill="outline" color="danger" size="small" (click)="onDeleteClick()">
               <ion-icon slot="start" name="trash-outline"></ion-icon>
-              Delete
+              {{ 'device_settings.delete_device.button' | translate }}
             </ion-button>
           </div>
         } @else {
           <div class="danger-confirm">
-            <p>Are you sure? This will permanently delete <strong>{{ device.data()?.name }}</strong> and all associated data.</p>
+            <p>{{ 'device_settings.delete_device.confirm_title' | translate }} This will permanently delete <strong>{{ device.data()?.name }}</strong> and all associated data.</p>
             <div class="danger-confirm__actions">
-              <ion-button fill="outline" color="medium" size="small" [disabled]="deleting()" (click)="onDeleteCancel()">Cancel</ion-button>
+              <ion-button fill="outline" color="medium" size="small" [disabled]="deleting()" (click)="onDeleteCancel()">{{ 'common.cancel' | translate }}</ion-button>
               <ion-button fill="solid" color="danger" size="small" [disabled]="deleting()" (click)="onDeleteConfirm()">
                 @if (deleting()) {
                   <ion-spinner slot="start" name="crescent" style="width:14px;height:14px;"></ion-spinner>
-                  Deleting…
+                  {{ 'common.saving' | translate }}
                 } @else {
-                  Confirm Delete
+                  {{ 'device_settings.delete_device.confirm' | translate }}
                 }
               </ion-button>
             </div>

@@ -12,6 +12,7 @@ import {
   UiCheckboxComponent,
   UiInputComponent,
 } from '@ng/shared/ui';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '@ng/core/auth/auth.service';
 import { ToastService } from '@ng/core/errors/toast.service';
 
@@ -31,6 +32,7 @@ import { ToastService } from '@ng/core/errors/toast.service';
     AppLogoComponent,
     UiInputComponent,
     UiCheckboxComponent,
+    TranslatePipe,
   ],
 })
 export class LoginPage {
@@ -41,6 +43,7 @@ export class LoginPage {
   private readonly route = inject(ActivatedRoute);
   private readonly fb = inject(FormBuilder);
   private readonly toast = inject(ToastService);
+  private readonly translate = inject(TranslateService);
 
   readonly form = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
@@ -70,7 +73,7 @@ export class LoginPage {
       } else {
         this.userId = result.userId;
         this.step.set('2fa');
-        void this.toast.success('Verification code sent to your email');
+        void this.toast.success(this.translate.instant('auth.login.toast_code_sent'));
         setTimeout(() => void this.twoFaInput?.setFocus(), 0);
       }
     } catch (err) {

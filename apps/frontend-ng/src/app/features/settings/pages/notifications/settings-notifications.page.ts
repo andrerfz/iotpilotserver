@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
 import {
   IonButton,
   IonCard,
@@ -25,6 +26,7 @@ import type { NotificationSettings } from '@ng/core/api/generated/models/notific
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     ReactiveFormsModule,
+    TranslatePipe,
     IonContent,
     IonCard,
     IonCardContent,

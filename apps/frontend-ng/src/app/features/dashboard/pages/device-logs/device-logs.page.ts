@@ -11,6 +11,7 @@ import {
   signal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ActivatedRoute } from '@angular/router';
 import { TopbarService } from '@ng/shell/topbar.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -55,6 +56,7 @@ const LEVEL_OPTIONS: SelectOption[] = [
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
+    TranslatePipe,
     IonContent,
     IonCard,
     IonCardContent,

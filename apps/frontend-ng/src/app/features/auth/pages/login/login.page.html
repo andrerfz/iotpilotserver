@@ -9,28 +9,28 @@
 
         @if (step() === 'credentials') {
           <div class="login-card__header">
-            <h2 class="login-card__title">Welcome back</h2>
-            <p class="login-card__subtitle">Sign in to your account to continue</p>
+            <h2 class="login-card__title">{{ 'auth.login.title' | translate }}</h2>
+            <p class="login-card__subtitle">{{ 'auth.login.subtitle' | translate }}</p>
           </div>
 
           <form [formGroup]="form" (ngSubmit)="onSubmit()" class="login-form">
             <ui-input
               formControlName="email"
-              label="Email"
+              [label]="'auth.login.email' | translate"
               type="email"
-              placeholder="Enter your email"
+              [placeholder]="'auth.login.email_placeholder' | translate"
               [error]="emailError()" />
 
             <ui-input
               formControlName="password"
-              label="Password"
+              [label]="'auth.login.password' | translate"
               type="password"
-              placeholder="Enter your password"
+              [placeholder]="'auth.login.password_placeholder' | translate"
               [error]="passwordError()" />
 
             <ui-checkbox
               formControlName="remember"
-              label="Remember me" />
+              [label]="'auth.login.remember_me' | translate" />
 
             @if (errorMessage()) {
               <p class="login-error">{{ errorMessage() }}</p>
@@ -43,19 +43,19 @@
               @if (isLoading()) {
                 <ion-spinner name="crescent" slot="start" />
               }
-              {{ isLoading() ? 'Signing in...' : 'Sign in' }}
+              {{ isLoading() ? ('auth.login.submitting' | translate) : ('auth.login.submit' | translate) }}
             </ion-button>
           </form>
 
           <div class="login-footer">
-            <p>Don't have an account? <a routerLink="/register">Create account</a></p>
+            <p>{{ 'auth.login.no_account' | translate }} <a routerLink="/register">{{ 'auth.login.create_account' | translate }}</a></p>
           </div>
         }
 
         @if (step() === '2fa') {
           <div class="login-card__header">
-            <h2 class="login-card__title">Verification required</h2>
-            <p class="login-card__subtitle">Enter the 6-digit code sent to your email</p>
+            <h2 class="login-card__title">{{ 'auth.two_fa.title' | translate }}</h2>
+            <p class="login-card__subtitle">{{ 'auth.two_fa.subtitle' | translate }}</p>
           </div>
 
           <div class="login-form">
@@ -82,7 +82,7 @@
               @if (isLoading()) {
                 <ion-spinner name="crescent" slot="start" />
               }
-              {{ isLoading() ? 'Verifying...' : 'Verify' }}
+              {{ isLoading() ? ('auth.two_fa.verifying' | translate) : ('auth.two_fa.verify' | translate) }}
             </ion-button>
 
             <ion-button
@@ -90,7 +90,7 @@
               fill="clear"
               [disabled]="isLoading()"
               (click)="onBack()">
-              Back to login
+              {{ 'auth.two_fa.back' | translate }}
             </ion-button>
           </div>
         }
@@ -98,6 +98,6 @@
       </ion-card-content>
     </ion-card>
 
-    <p class="login-tagline">Secure IoT device management platform</p>
+    <p class="login-tagline">{{ 'auth.login.tagline' | translate }}</p>
   </div>
 </ion-content>

@@ -6,21 +6,21 @@
   <ion-card class="filter-bar">
     <ion-card-content>
       <div class="filter-row">
-        <ui-search-field placeholder="Search logs…"
+        <ui-search-field [placeholder]="'admin.logs.search_placeholder' | translate"
           [value]="searchQuery()" (valueChange)="onSearchInput($event)">
         </ui-search-field>
-        <ui-select placeholder="All Levels"  [options]="levelOptions"  [(ngModel)]="levelFilter"  (ngModelChange)="onFilterChange()"></ui-select>
-        <ui-select placeholder="All Devices" [options]="deviceOptions()" [(ngModel)]="deviceFilter" (ngModelChange)="onFilterChange()"></ui-select>
+        <ui-select [placeholder]="'admin.logs.all_levels' | translate"  [options]="levelOptions"  [(ngModel)]="levelFilter"  (ngModelChange)="onFilterChange()"></ui-select>
+        <ui-select [placeholder]="'admin.logs.all_devices' | translate" [options]="deviceOptions()" [(ngModel)]="deviceFilter" (ngModelChange)="onFilterChange()"></ui-select>
         @if (hasSourceFilter()) {
-          <ui-select placeholder="All Sources" [options]="sourceOptions()" [(ngModel)]="sourceFilter" (ngModelChange)="onFilterChange()"></ui-select>
+          <ui-select [placeholder]="'admin.logs.all_sources' | translate" [options]="sourceOptions()" [(ngModel)]="sourceFilter" (ngModelChange)="onFilterChange()"></ui-select>
         }
         <div class="filter-row__actions">
-          <ion-button fill="outline" color="medium" size="small" (click)="svc.reload()" [disabled]="svc.loading()">
+          <ion-button fill="outline" color="medium" size="small" (click)="svc.reload()" [disabled]="svc.loading()" [title]="'admin.logs.reload' | translate">
             <ion-icon slot="icon-only" name="reload-outline"></ion-icon>
           </ion-button>
           <ion-button fill="outline" size="small" (click)="onExportOpen()" [disabled]="!svc.logs().length">
             <ion-icon slot="start" name="download-outline"></ion-icon>
-            Export
+            {{ 'admin.logs.export' | translate }}
           </ion-button>
         </div>
       </div>
@@ -29,8 +29,8 @@
 
   <!-- Table -->
   @if (svc.error() && !svc.logs().length) {
-    <ui-empty-state title="Failed to load logs" [hasAction]="true">
-      <ion-button action fill="outline" size="small" (click)="svc.reload()">Retry</ion-button>
+    <ui-empty-state [title]="'admin.logs.failed.title' | translate" [hasAction]="true">
+      <ion-button action fill="outline" size="small" (click)="svc.reload()">{{ 'admin.logs.failed.retry' | translate }}</ion-button>
     </ui-empty-state>
   } @else {
     <ion-card>
@@ -38,11 +38,11 @@
         <table class="logs-table">
           <thead>
             <tr>
-              <th class="col-ts">Timestamp</th>
-              <th class="col-level">Level</th>
-              <th class="col-device">Device</th>
-              <th class="col-source">Source</th>
-              <th>Message</th>
+              <th class="col-ts">{{ 'admin.logs.table.timestamp' | translate }}</th>
+              <th class="col-level">{{ 'admin.logs.table.level' | translate }}</th>
+              <th class="col-device">{{ 'admin.logs.table.device' | translate }}</th>
+              <th class="col-source">{{ 'admin.logs.table.source' | translate }}</th>
+              <th>{{ 'admin.logs.table.message' | translate }}</th>
             </tr>
           </thead>
           <tbody>
@@ -54,7 +54,7 @@
               }
             } @else if (!svc.logs().length) {
               <tr>
-                <td colspan="5" class="logs-empty">No logs found.</td>
+                <td colspan="5" class="logs-empty">{{ 'admin.logs.empty' | translate }}</td>
               </tr>
             } @else {
               @for (log of svc.logs(); track log.id) {
@@ -99,22 +99,19 @@
     <button class="opt-row" (click)="exportXlsx(); exportSheet.close()">
       <ion-icon name="document-outline"></ion-icon>
       <div class="opt-row__body">
-        <div class="opt-row__label">Export XLSX</div>
-        <div class="opt-row__sub">Excel spreadsheet</div>
+        <div class="opt-row__label">{{ 'admin.logs.export_sheet.xlsx_label' | translate }}</div>
       </div>
     </button>
     <button class="opt-row" (click)="exportCsv(); exportSheet.close()">
       <ion-icon name="code-outline"></ion-icon>
       <div class="opt-row__body">
-        <div class="opt-row__label">Export CSV</div>
-        <div class="opt-row__sub">Comma-separated values</div>
+        <div class="opt-row__label">{{ 'admin.logs.export_sheet.csv_label' | translate }}</div>
       </div>
     </button>
     <button class="opt-row" (click)="exportPdf(); exportSheet.close()">
       <ion-icon name="document-text-outline"></ion-icon>
       <div class="opt-row__body">
-        <div class="opt-row__label">Export PDF</div>
-        <div class="opt-row__sub">Printable document</div>
+        <div class="opt-row__label">{{ 'admin.logs.export_sheet.pdf_label' | translate }}</div>
       </div>
     </button>
   </div>

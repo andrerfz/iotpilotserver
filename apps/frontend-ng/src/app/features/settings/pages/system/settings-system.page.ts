@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
 import {
   IonButton,
   IonCard,
@@ -50,6 +51,7 @@ const LOG_LEVEL_OPTIONS: SelectOption[] = [
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     ReactiveFormsModule,
+    TranslatePipe,
     IonContent,
     IonCard,
     IonCardContent,

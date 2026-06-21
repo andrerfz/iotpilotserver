@@ -6,9 +6,9 @@
   <!-- Page head -->
   <div class="pagehead">
     <div>
-      <div class="pagehead__title">Fleet overview</div>
+      <div class="pagehead__title">{{ 'dashboard.title' | translate }}</div>
       <div class="pagehead__sub">
-        Real-time health across {{ totalCount() }} device{{ totalCount() !== 1 ? 's' : '' }}
+        {{ 'dashboard.subtitle' | translate }} across {{ totalCount() }} device{{ totalCount() !== 1 ? 's' : '' }}
       </div>
     </div>
   </div>
@@ -16,7 +16,7 @@
   <!-- Error state -->
   @if (devicesError()) {
     <ui-empty-state
-      title="Failed to load devices"
+      [title]="'devices.failed.title' | translate"
       [description]="devicesError()?.message ?? 'Check your connection and try again.'"
       [hasAction]="true"
       (action)="onRetry()">
@@ -27,19 +27,19 @@
   <div class="metrics">
     <ui-metric-card
       [loading]="devicesLoading() || alertsLoading()"
-      label="Online" [value]="onlineCount() + '/' + totalCount()" iconColor="var(--ion-color-success)">
+      [label]="'dashboard.online' | translate" [value]="onlineCount() + '/' + totalCount()" iconColor="var(--ion-color-success)">
       <ion-icon icon name="wifi-outline"></ion-icon>
     </ui-metric-card>
 
     <ui-metric-card
       [loading]="devicesLoading() || alertsLoading()"
-      label="Open alerts" [value]="openAlertsCount()" iconColor="var(--ion-color-danger)">
+      [label]="'dashboard.open_alerts' | translate" [value]="openAlertsCount()" iconColor="var(--ion-color-danger)">
       <ion-icon icon name="alert-circle-outline"></ion-icon>
     </ui-metric-card>
 
     <ui-metric-card
       [loading]="devicesLoading() || alertsLoading()"
-      label="Avg CPU"
+      [label]="'dashboard.avg_cpu' | translate"
       [value]="avgCpu() ?? '—'"
       [unit]="avgCpu() !== null ? '%' : ''"
       iconColor="var(--ion-color-primary)">
@@ -48,7 +48,7 @@
 
     <ui-metric-card
       [loading]="devicesLoading() || alertsLoading()"
-      label="Ingest rate" value="—" unit="pts/s" iconColor="var(--ion-color-tertiary)">
+      [label]="'dashboard.ingest_rate' | translate" value="—" unit="pts/s" iconColor="var(--ion-color-tertiary)">
       <ion-icon icon name="flash-outline"></ion-icon>
     </ui-metric-card>
   </div>
@@ -62,7 +62,7 @@
       <!-- Left: device table -->
       <div>
         <div class="section-head">
-          <span class="section-head__title">Devices</span>
+          <span class="section-head__title">{{ 'dashboard.devices' | translate }}</span>
           <div class="section-head__actions">
             <ui-device-picker
               [devices]="devicePickerItems()"
@@ -70,9 +70,9 @@
               (valueChange)="devFilter.set($event)">
             </ui-device-picker>
             <ui-multi-select-picker
-              label="Status"
-              title="Filter by status"
-              sub="Show only devices in these states"
+              [label]="'dashboard.status' | translate"
+              [title]="'dashboard.filter_by_status' | translate"
+              [sub]="'dashboard.filter_sub' | translate"
               [options]="statusOptions"
               [value]="statusFilter()"
               (valueChange)="statusFilter.set($event)">
@@ -96,11 +96,11 @@
         <ion-card class="alerts-card">
           <div class="card-head">
             <ion-icon name="alert-circle-outline" color="danger"></ion-icon>
-            <span class="card-head__title">Live alerts</span>
+            <span class="card-head__title">{{ 'dashboard.live_alerts' | translate }}</span>
             <span class="card-head__badge">{{ openAlertsCount() }} open</span>
           </div>
           @if (_liveAlerts().length === 0 && !alertsLoading()) {
-            <div class="alerts-empty">No active alerts</div>
+            <div class="alerts-empty">{{ 'dashboard.no_alerts' | translate }}</div>
           }
           @for (alert of _liveAlerts(); track alert.id) {
             <div class="alert-row">
@@ -117,7 +117,7 @@
         <ion-card class="chart-card">
           <div class="card-head">
             <ion-icon name="hardware-chip-outline" color="primary"></ion-icon>
-            <span class="card-head__title">Fleet CPU</span>
+            <span class="card-head__title">{{ 'dashboard.fleet_cpu' | translate }}</span>
             <ui-date-range-picker
               [value]="period()"
               (valueChange)="onPeriodChange($event)">
@@ -129,7 +129,7 @@
             } @else if (cpuChartOptions()) {
               <div echarts [options]="cpuChartOptions()!" style="height: 150px;"></div>
             } @else {
-              <div class="chart-empty">No CPU data for this period</div>
+              <div class="chart-empty">{{ 'dashboard.no_cpu_data' | translate }}</div>
             }
           </div>
         </ion-card>

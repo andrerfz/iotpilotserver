@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy, Component, inject, OnInit, output, signal,
 } from '@angular/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { addIcons } from 'ionicons';
 import { closeOutline } from 'ionicons/icons';
@@ -28,6 +29,7 @@ interface Customer { id: string; name: string; }
     IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonIcon,
     IonContent, IonFooter, IonSpinner,
     UiInputComponent, UiSelectComponent,
+    TranslatePipe,
   ],
 })
 export class AdminNewUserModalComponent implements OnInit {

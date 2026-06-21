@@ -47,6 +47,7 @@ import {
 } from '@ng/shared/ui';
 import type { ColumnDef, DevicePickerItem, PickerOption } from '@ng/shared/ui';
 import type { Device } from '@ng/core/api/generated/models/device';
+import { TranslatePipe } from '@ngx-translate/core';
 import { SocketService } from '@ng/core/realtime/socket.service';
 import { DashboardService } from '../../services/dashboard.service';
 import { applyDeviceFilters } from '../../filters/device-filters';
@@ -98,6 +99,7 @@ const STATUS_OPTIONS: PickerOption[] = [
     RegisterDeviceSheetComponent,
     BottomSheetComponent,
     IonRefresher, IonRefresherContent,
+    TranslatePipe,
   ],
 })
 export class DevicesPage implements AfterViewInit, ViewWillEnter {

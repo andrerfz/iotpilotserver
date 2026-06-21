@@ -1,0 +1,804 @@
+{
+  "common": {
+    "retry": "Reintentar",
+    "save": "Guardar cambios",
+    "saving": "Guardando...",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "refresh": "Actualizar",
+    "search": "Buscar",
+    "export": "Exportar",
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "no_data": "No hay datos disponibles",
+    "close": "Cerrar",
+    "confirm": "Confirmar",
+    "new": "Nuevo",
+    "view": "Ver",
+    "reload": "Recargar",
+    "clear": "Limpiar",
+    "back": "Volver",
+    "copy": "Copiar",
+    "send": "Enviar",
+    "create": "Crear",
+    "update": "Actualizar",
+    "unknown": "Desconocido",
+    "online": "En línea",
+    "offline": "Desconectado",
+    "yes": "Sí",
+    "no": "No",
+    "selected": "seleccionados",
+    "entries": "entradas",
+    "page": "Página",
+    "of": "de",
+    "total": "total",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "last_7_days": "Últimos 7 días",
+    "period": "Período",
+    "all": "Todos"
+  },
+  "errors": {
+    "network": "No se puede conectar con el servidor. Comprueba tu conexión e inténtalo de nuevo.",
+    "unauthorized": "Tu sesión ha expirado. Por favor, inicia sesión de nuevo.",
+    "forbidden": "No tienes permiso para realizar esta acción.",
+    "not_found": "El elemento solicitado no se encontró.",
+    "validation": "Por favor, revisa los campos destacados e inténtalo de nuevo.",
+    "bad_request": "Por favor, revisa los campos destacados e inténtalo de nuevo.",
+    "conflict": "Esta acción entra en conflicto con datos existentes.",
+    "too_many_requests": "Demasiados intentos. Por favor, espera un momento e inténtalo de nuevo.",
+    "internal": "Algo salió mal en nuestro servidor. Por favor, inténtalo de nuevo.",
+    "service_unavailable": "El servicio no está disponible temporalmente. Por favor, inténtalo de nuevo en breve.",
+    "fallback": "Algo salió mal. Por favor, inténtalo de nuevo."
+  },
+  "auth": {
+    "login": {
+      "toast_code_sent": "Código de verificación enviado a tu correo electrónico.",
+      "title": "Bienvenido de nuevo",
+      "subtitle": "Inicia sesión en tu cuenta para continuar",
+      "email": "Correo electrónico",
+      "email_placeholder": "Introduce tu correo electrónico",
+      "password": "Contraseña",
+      "password_placeholder": "Introduce tu contraseña",
+      "remember_me": "Recordarme",
+      "submit": "Iniciar sesión",
+      "submitting": "Iniciando sesión...",
+      "no_account": "¿No tienes cuenta?",
+      "create_account": "Crear cuenta",
+      "tagline": "Plataforma segura de gestión de dispositivos IoT"
+    },
+    "two_fa": {
+      "title": "Verificación requerida",
+      "subtitle": "Introduce el código de 6 dígitos enviado a tu correo electrónico",
+      "verify": "Verificar",
+      "verifying": "Verificando...",
+      "back": "Volver al inicio de sesión"
+    },
+    "register": {
+      "toast_submitted": "Registro enviado. Un administrador revisará tu cuenta.",
+      "toast_created": "Cuenta creada correctamente. Ya puedes iniciar sesión.",
+      "error_email_exists": "Ya existe una cuenta con este correo electrónico.",
+      "title": "Crear una cuenta",
+      "subtitle": "Empieza a gestionar tus dispositivos IoT",
+      "username": "Nombre de usuario",
+      "email": "Correo electrónico",
+      "password": "Contraseña",
+      "password_placeholder": "Crea una contraseña",
+      "confirm_password": "Confirmar contraseña",
+      "submit": "Crear cuenta",
+      "submitting": "Creando cuenta...",
+      "have_account": "¿Ya tienes cuenta?",
+      "sign_in": "Iniciar sesión",
+      "tagline": "Plataforma segura de gestión de dispositivos IoT"
+    }
+  },
+  "nav": {
+    "dashboard": "Panel",
+    "devices": "Dispositivos",
+    "monitoring": "Monitorización",
+    "logs": "Registros",
+    "settings": "Configuración",
+    "admin": "Administración",
+    "overview": "Resumen",
+    "users": "Usuarios",
+    "customers": "Clientes",
+    "system": "Sistema"
+  },
+  "dashboard": {
+    "title": "Resumen de la flota",
+    "subtitle": "Estado en tiempo real",
+    "online": "En línea",
+    "open_alerts": "Alertas abiertas",
+    "avg_cpu": "CPU media",
+    "ingest_rate": "Tasa de ingesta",
+    "devices": "Dispositivos",
+    "status": "Estado",
+    "filter_by_status": "Filtrar por estado",
+    "filter_sub": "Mostrar solo dispositivos en estos estados",
+    "live_alerts": "Alertas activas",
+    "no_alerts": "Sin alertas activas",
+    "fleet_cpu": "CPU de la flota",
+    "no_cpu_data": "Sin datos de CPU para este período"
+  },
+  "devices": {
+    "kpi": {
+      "online": "En línea",
+      "offline_error": "Desconectado / Error",
+      "maintenance": "Mantenimiento",
+      "firmware_ok": "Firmware OK"
+    },
+    "search_placeholder": "Buscar hostname, ID de dispositivo o ubicación…",
+    "filter_by_status": "Filtrar por estado",
+    "filter_sub": "Mostrar solo dispositivos en estos estados",
+    "selected": "{{count}} seleccionados",
+    "export": "Exportar",
+    "empty_filtered": {
+      "title": "Ningún dispositivo coincide con tus filtros",
+      "desc": "Prueba a limpiar la búsqueda o el filtro de estado."
+    },
+    "empty": {
+      "title": "No hay dispositivos registrados",
+      "desc": "Registra tu primer dispositivo para comenzar."
+    },
+    "failed": {
+      "title": "Error al cargar los dispositivos",
+      "desc": "Comprueba tu conexión e inténtalo de nuevo."
+    },
+    "export_sheet": {
+      "title": "Exportar dispositivos",
+      "xlsx_label": "Exportar XLSX",
+      "xlsx_sub": "Hoja de cálculo Excel",
+      "csv_label": "Exportar CSV",
+      "csv_sub": "Valores separados por comas",
+      "pdf_label": "Exportar PDF",
+      "pdf_sub": "Documento imprimible"
+    }
+  },
+  "device_detail": {
+    "pending_title": "Dispositivo pendiente de activación",
+    "pending_desc": "Conéctate al AP WiFi e introduce el token a continuación.",
+    "token_expired": "Token expirado",
+    "regenerate_token": "Regenerar token",
+    "ssh": "SSH",
+    "run_command": "Ejecutar comando",
+    "not_found": {
+      "title": "Dispositivo no encontrado",
+      "retry": "Reintentar"
+    },
+    "tabs": {
+      "overview": "Resumen",
+      "metrics": "Métricas",
+      "alerts": "Alertas",
+      "logs": "Registros",
+      "commands": "Comandos",
+      "settings": "Configuración",
+      "network": "Red",
+      "storage": "Almacenamiento",
+      "terminal": "Terminal"
+    }
+  },
+  "device_overview": {
+    "metrics": {
+      "cpu": "CPU",
+      "memory": "Memoria",
+      "temperature": "Temperatura",
+      "disk": "Disco",
+      "battery": "Batería"
+    },
+    "failed": {
+      "title": "No se pudo cargar el resumen",
+      "retry": "Reintentar"
+    },
+    "cpu_memory_trends": "Tendencias de CPU y memoria",
+    "metrics_tab_hint": "Disponible en la pestaña Métricas",
+    "recent_commands": "Comandos recientes",
+    "no_commands": "Aún no hay comandos",
+    "new_command": "Nuevo",
+    "device_info": "Información del dispositivo",
+    "public_id": "ID público",
+    "hardware": "Hardware",
+    "ip_address": "Dirección IP",
+    "tailscale_ip": "IP de Tailscale",
+    "firmware": "Firmware",
+    "location": "Ubicación",
+    "mac": "MAC",
+    "last_seen": "Última vez visto",
+    "temp_battery_trends": "Tendencias de temperatura y batería"
+  },
+  "device_metrics": {
+    "labels": {
+      "cpu": "Uso de CPU",
+      "memory": "Memoria",
+      "disk": "Uso de disco",
+      "temperature": "Temperatura",
+      "battery": "Batería"
+    },
+    "charts": {
+      "cpu": "Uso de CPU",
+      "memory": "Uso de memoria",
+      "disk": "Uso de disco",
+      "battery": "Nivel de batería"
+    },
+    "failed": {
+      "title": "Error al cargar las métricas",
+      "retry": "Reintentar"
+    },
+    "no_chart_data": "No hay datos disponibles"
+  },
+  "device_alerts": {
+    "states": {
+      "open": "Abierta",
+      "acknowledged": "Reconocida",
+      "resolved": "Resuelta"
+    },
+    "filter": {
+      "severity": "Severidad",
+      "state": "Estado",
+      "clear": "Limpiar filtros"
+    },
+    "actions": {
+      "thresholds": "Umbrales",
+      "refresh": "Actualizar",
+      "ack": "Reconocer",
+      "resolve": "Resolver",
+      "ack_selected": "Reconocer seleccionadas",
+      "resolve_selected": "Resolver seleccionadas"
+    },
+    "chart": {
+      "title": "Tendencia de alertas",
+      "period": "Últimos 7 días"
+    },
+    "selected": "{{count}} seleccionadas",
+    "empty": {
+      "no_alerts": "Sin alertas",
+      "no_alerts_desc": "Este dispositivo aún no tiene alertas.",
+      "filtered": "Prueba a ajustar los filtros."
+    },
+    "failed": {
+      "title": "No se pudieron cargar las alertas",
+      "retry": "Reintentar"
+    }
+  },
+  "device_logs": {
+    "search_placeholder": "Buscar en los registros",
+    "levels": {
+      "all": "Todos los niveles"
+    },
+    "filter": {
+      "options": "Opciones de filtro",
+      "auto_refresh": "Actualización automática",
+      "refresh": "Actualizar ahora",
+      "search_in": "Buscar en",
+      "messages": "Mensajes",
+      "source": "Fuente",
+      "clear": "Limpiar filtros"
+    },
+    "title": "Registros del dispositivo",
+    "entries": "entradas",
+    "failed": {
+      "title": "No se pudieron cargar los registros",
+      "retry": "Reintentar"
+    },
+    "empty": {
+      "no_logs": "No se encontraron registros",
+      "filtered": "Prueba a ajustar los filtros.",
+      "none": "Este dispositivo aún no tiene entradas de registro."
+    }
+  },
+  "device_commands": {
+    "offline_warning": "El dispositivo está desconectado",
+    "offline_desc": "Los comandos se pondrán en cola",
+    "quick_actions": "Acciones rápidas",
+    "issue_command": "Enviar comando",
+    "history": "Historial de comandos",
+    "commands": "comandos",
+    "failed": {
+      "title": "No se pudieron cargar los comandos",
+      "retry": "Reintentar"
+    },
+    "empty": {
+      "title": "Aún no hay comandos",
+      "desc": "Usa Acciones rápidas o Enviar comando para comenzar."
+    }
+  },
+  "device_settings": {
+    "sections": {
+      "general": "General",
+      "device": "Dispositivo",
+      "monitoring": "Monitorización",
+      "network": "Red",
+      "agent": "Agente",
+      "security": "Seguridad",
+      "danger": "Zona de peligro"
+    },
+    "fields": {
+      "type": "Tipo",
+      "ip_address": "Dirección IP",
+      "ssh_enabled": "SSH habilitado",
+      "auto_update": "Actualización automática",
+      "metrics_enabled": "Métricas habilitadas",
+      "heartbeat_interval": "Intervalo de heartbeat (s)",
+      "cpu_threshold": "Umbral de CPU (%)",
+      "memory_threshold": "Umbral de memoria (%)",
+      "disk_threshold": "Umbral de disco (%)",
+      "temp_threshold": "Umbral de temperatura (°C)",
+      "reporting_interval": "Intervalo de reporte",
+      "reporting_interval_hint": "Define un intervalo de reporte",
+      "sensor_temp_threshold": "Umbral de temperatura del sensor (°C)",
+      "battery_threshold": "Umbral de batería (%)",
+      "network_monitoring": "Monitorización de red",
+      "update_channel": "Canal de actualización",
+      "key_rotation": "Rotación de clave (días)",
+      "key_rotation_hint": "Rotar la API key invalida inmediatamente la clave actual"
+    },
+    "rotate_key": "Rotar API Key",
+    "new_api_key": "Nueva API Key (cópiala ahora — se muestra una sola vez)",
+    "save": "Guardar configuración",
+    "delete_device": {
+      "title": "Eliminar este dispositivo",
+      "desc": "Elimina permanentemente el dispositivo y todos sus datos.",
+      "button": "Eliminar",
+      "confirm_title": "¿Estás seguro?",
+      "confirm": "Confirmar eliminación"
+    }
+  },
+  "device_network": {
+    "title": "Red",
+    "auto_refresh": "Actualización automática",
+    "refresh": "Actualizar",
+    "failed": {
+      "title": "No se pudo cargar la información de red",
+      "retry": "Reintentar"
+    },
+    "sections": {
+      "connectivity": "Conectividad",
+      "ip_addresses": "Direcciones IP",
+      "identity": "Identidad del dispositivo"
+    },
+    "fields": {
+      "status": "Estado",
+      "quality": "Calidad",
+      "last_seen": "Última vez visto",
+      "primary_ip": "IP principal",
+      "tailscale_ip": "IP de Tailscale",
+      "mac": "Dirección MAC",
+      "hostname": "Hostname",
+      "device_type": "Tipo de dispositivo",
+      "architecture": "Arquitectura",
+      "agent_version": "Versión del agente",
+      "location": "Ubicación"
+    }
+  },
+  "device_storage": {
+    "title": "Almacenamiento y sistema",
+    "auto_refresh": "Actualización automática",
+    "refresh": "Actualizar",
+    "failed": {
+      "title": "No se pudo cargar la información de almacenamiento",
+      "retry": "Reintentar"
+    },
+    "sections": {
+      "disk": "Uso de disco",
+      "memory": "Uso de memoria",
+      "load": "Carga del sistema"
+    },
+    "fields": {
+      "used": "Usado",
+      "total_capacity": "Capacidad total",
+      "free": "Libre (estimado)",
+      "total_ram": "RAM total",
+      "load_average": "Carga promedio",
+      "uptime": "Tiempo activo",
+      "cpu": "CPU"
+    }
+  },
+  "device_terminal": {
+    "offline_title": "Dispositivo desconectado",
+    "offline_desc": "El terminal solo está disponible cuando el dispositivo está en línea.",
+    "title": "Terminal SSH",
+    "desc": "Los comandos se ejecutan a través del agente del dispositivo por un canal seguro.",
+    "stateless": "Las sesiones no mantienen estado",
+    "connect": "Conectar terminal",
+    "placeholder": "Escribe un comando y pulsa Intro o Enviar",
+    "send": "Enviar",
+    "clear": "Limpiar"
+  },
+  "monitoring": {
+    "title": "Monitorización",
+    "alert_singular": "alerta",
+    "alert_plural": "alertas",
+    "states": {
+      "open": "Abierta",
+      "acknowledged": "Reconocida",
+      "resolved": "Resuelta"
+    },
+    "filter": {
+      "search": "Buscar alertas",
+      "device": "Dispositivo",
+      "severity": "Severidad",
+      "state": "Estado",
+      "period": "Período"
+    },
+    "actions": {
+      "acknowledge": "Reconocer",
+      "resolve": "Resolver",
+      "clear": "Limpiar"
+    },
+    "selected": "{{count}} seleccionadas",
+    "empty": {
+      "no_alerts": "Sin alertas",
+      "no_alerts_period": "No se han generado alertas en este intervalo de tiempo.",
+      "filtered": "Prueba a ajustar los filtros de severidad, estado o período."
+    },
+    "chart": {
+      "title": "Tendencia de alertas",
+      "no_data": "Sin datos de tendencia para este período"
+    }
+  },
+  "logs": {
+    "title": "Registros",
+    "subtitle": "Registros del dispositivo y del sistema",
+    "search_placeholder": "Buscar en los registros",
+    "levels": {
+      "all": "Todos los niveles"
+    },
+    "filters": {
+      "all_devices": "Todos los dispositivos",
+      "all_sources": "Todas las fuentes"
+    },
+    "actions": {
+      "reload": "Recargar",
+      "export": "Exportar"
+    },
+    "table": {
+      "timestamp": "Fecha y hora",
+      "level": "Nivel",
+      "device": "Dispositivo",
+      "source": "Fuente",
+      "message": "Mensaje"
+    },
+    "failed": {
+      "title": "Error al cargar los registros",
+      "retry": "Reintentar"
+    },
+    "empty": "No se encontraron registros",
+    "entries": "entradas"
+  },
+  "settings": {
+    "profile": {
+      "title": "Perfil",
+      "first_name": "Nombre",
+      "last_name": "Apellidos",
+      "phone": "Número de teléfono",
+      "email": "Correo electrónico",
+      "email_hint": "El correo electrónico no se puede cambiar aquí.",
+      "username": "Nombre de usuario",
+      "username_hint": "El nombre de usuario no se puede cambiar aquí.",
+      "language": "Idioma",
+      "timezone": "Zona horaria",
+      "date_format": "Formato de fecha",
+      "save": "Guardar cambios",
+      "saving": "Guardando..."
+    },
+    "security": {
+      "title": "Seguridad de la cuenta",
+      "two_fa": {
+        "title": "Autenticación de dos factores (2FA)",
+        "desc": "Añade una capa extra de seguridad a tu cuenta."
+      },
+      "login_notifications": {
+        "title": "Notificaciones de inicio de sesión",
+        "desc": "Recibe notificaciones cuando alguien inicie sesión en tu cuenta."
+      },
+      "session_timeout": {
+        "title": "Tiempo de espera de sesión",
+        "desc": "Cierra sesión automáticamente tras un período de inactividad.",
+        "unit": "min"
+      },
+      "save": "Guardar cambios",
+      "saving": "Guardando...",
+      "change_password": {
+        "title": "Cambiar contraseña",
+        "current": "Contraseña actual",
+        "new": "Nueva contraseña",
+        "new_hint": "Se requieren al menos 8 caracteres.",
+        "confirm": "Confirmar nueva contraseña",
+        "submit": "Actualizar contraseña",
+        "submitting": "Actualizando..."
+      },
+      "sessions": {
+        "title": "Sesiones activas",
+        "show": "Mostrar sesiones",
+        "hide": "Ocultar",
+        "desc": "Dispositivos y navegadores con sesión iniciada actualmente en tu cuenta.",
+        "empty": "No se encontraron sesiones activas.",
+        "current": "Actual",
+        "started": "Iniciada",
+        "expires": "Expira",
+        "revoke": "Revocar",
+        "revoke_others": "Revocar todas las demás sesiones",
+        "count": "Tienes {{count}} sesiones activas."
+      },
+      "recommendations": {
+        "title": "Recomendaciones de seguridad",
+        "strong_password": "Usa una contraseña segura y única",
+        "strong_password_desc": "Asegúrate de que tu contraseña tenga al menos 12 caracteres.",
+        "enable_2fa": "Activa la autenticación de dos factores",
+        "enable_2fa_desc": "Añade una capa extra de seguridad.",
+        "review_sessions": "Revisa las sesiones activas",
+        "review_sessions_desc": "Comprueba y cierra regularmente cualquier sesión sospechosa."
+      }
+    },
+    "notifications": {
+      "title": "Preferencias de notificaciones",
+      "email": {
+        "title": "Notificaciones por correo electrónico",
+        "desc": "Recibe notificaciones por correo electrónico."
+      },
+      "push": {
+        "title": "Notificaciones push",
+        "desc": "Recibe notificaciones push en tu navegador."
+      },
+      "alerts": {
+        "title": "Notificaciones de alertas",
+        "desc": "Recibe notificaciones por alertas y avisos del sistema."
+      },
+      "device_offline": {
+        "title": "Notificaciones de dispositivo desconectado",
+        "desc": "Recibe avisos cuando los dispositivos se desconecten."
+      },
+      "save": "Guardar cambios",
+      "saving": "Guardando..."
+    },
+    "api_keys": {
+      "title": "API Keys",
+      "desc": "Las API keys permiten a los dispositivos e integraciones autenticarse con la plataforma.",
+      "security_hint": "Cada clave se muestra una sola vez al crearla — guárdala de forma segura.",
+      "new_key_banner": "API key creada — cópiala ahora.",
+      "new_key_once": "Esta clave no se volverá a mostrar.",
+      "search_placeholder": "Buscar claves",
+      "failed": {
+        "title": "Error al cargar las API keys",
+        "retry": "Reintentar"
+      },
+      "form": {
+        "name_label": "Nombre de la clave",
+        "name_placeholder": "Sensor Sala A",
+        "submit": "Crear clave",
+        "submitting": "Creando..."
+      }
+    },
+    "system": {
+      "title": "Configuración de pantalla",
+      "theme": {
+        "label": "Tema",
+        "desc": "Elige tu tema de color preferido.",
+        "light": "Claro",
+        "dark": "Oscuro",
+        "system": "Sistema"
+      },
+      "layout": {
+        "label": "Diseño del panel",
+        "desc": "Elige cómo se organiza tu panel."
+      },
+      "items_per_page": {
+        "label": "Elementos por página",
+        "desc": "Número de elementos a mostrar en listas y tablas."
+      },
+      "save": "Guardar cambios",
+      "saving": "Guardando...",
+      "admin": {
+        "title": "Configuración de administrador",
+        "advanced_metrics": {
+          "label": "Métricas avanzadas",
+          "desc": "Activa métricas detalladas del sistema y análisis."
+        },
+        "beta": {
+          "label": "Funciones beta",
+          "desc": "Activa funciones y funcionalidades experimentales."
+        },
+        "log_level": {
+          "label": "Nivel de registro",
+          "desc": "Establece el nivel de detalle del registro del sistema."
+        },
+        "save": "Guardar configuración de administrador"
+      }
+    }
+  },
+  "admin": {
+    "overview": {
+      "title": "Resumen de administración",
+      "kpi": {
+        "users": "Total de usuarios",
+        "devices": "Total de dispositivos",
+        "active_devices": "Dispositivos activos",
+        "open_alerts": "Alertas abiertas"
+      },
+      "quick_access": "Acceso rápido",
+      "cards": {
+        "devices": {
+          "label": "Gestión de dispositivos",
+          "desc": "Ver, reiniciar y gestionar todos los dispositivos."
+        },
+        "users": {
+          "label": "Gestión de usuarios",
+          "desc": "Aprobar, suspender y gestionar cuentas."
+        },
+        "logs": {
+          "label": "Visor de registros",
+          "desc": "Explorar y exportar registros del dispositivo."
+        },
+        "system": {
+          "label": "Estado del sistema",
+          "desc": "Estado de CPU, memoria y base de datos."
+        }
+      },
+      "failed": {
+        "title": "Error al cargar las estadísticas",
+        "retry": "Reintentar"
+      }
+    },
+    "devices": {
+      "kpi": {
+        "total": "Total",
+        "online": "En línea",
+        "offline": "Desconectados",
+        "issues": "Con problemas"
+      },
+      "search_placeholder": "Buscar hostname, ID o IP",
+      "all_statuses": "Todos los estados",
+      "reload": "Recargar",
+      "failed": {
+        "title": "Error al cargar los dispositivos",
+        "retry": "Reintentar"
+      },
+      "actions": {
+        "view": "Ver",
+        "restart": "Reiniciar"
+      }
+    },
+    "users": {
+      "search_placeholder": "Buscar nombre o correo electrónico",
+      "all_statuses": "Todos los estados",
+      "failed": {
+        "title": "Error al cargar los usuarios",
+        "retry": "Reintentar"
+      },
+      "actions": {
+        "approve": "Aprobar",
+        "reject": "Rechazar",
+        "suspend": "Suspender",
+        "activate": "Activar"
+      }
+    },
+    "customers": {
+      "search_placeholder": "Buscar nombre o slug",
+      "all_statuses": "Todos los estados",
+      "failed": {
+        "title": "Error al cargar los clientes",
+        "retry": "Reintentar"
+      },
+      "actions": {
+        "edit": "Editar",
+        "deactivate": "Desactivar"
+      }
+    },
+    "logs": {
+      "search_placeholder": "Buscar en los registros",
+      "all_levels": "Todos los niveles",
+      "all_devices": "Todos los dispositivos",
+      "all_sources": "Todas las fuentes",
+      "reload": "Recargar",
+      "export": "Exportar",
+      "table": {
+        "timestamp": "Fecha y hora",
+        "level": "Nivel",
+        "device": "Dispositivo",
+        "source": "Fuente",
+        "message": "Mensaje"
+      },
+      "failed": {
+        "title": "Error al cargar los registros",
+        "retry": "Reintentar"
+      },
+      "empty": "No se encontraron registros",
+      "entries": "entradas",
+      "export_sheet": {
+        "xlsx_label": "Exportar XLSX",
+        "csv_label": "Exportar CSV",
+        "pdf_label": "Exportar PDF"
+      }
+    },
+    "system": {
+      "last_updated": "Última actualización",
+      "refresh": "Actualizar",
+      "failed": {
+        "title": "Error al cargar la información del sistema",
+        "retry": "Reintentar"
+      },
+      "sections": {
+        "system": "Sistema",
+        "database": "Base de datos",
+        "application": "Aplicación",
+        "recent_activity": "Actividad reciente"
+      },
+      "fields": {
+        "platform": "Plataforma",
+        "node": "Node.js",
+        "uptime": "Tiempo activo",
+        "cpu": "CPU",
+        "memory": "Memoria",
+        "status": "Estado",
+        "version": "Versión",
+        "size": "Tamaño",
+        "connections": "Conexiones",
+        "idle": "inactivas",
+        "environment": "Entorno",
+        "built": "Compilado",
+        "features": "funcionalidades"
+      }
+    },
+    "new_user": {
+      "title": "Nuevo usuario",
+      "email": "Correo electrónico",
+      "email_placeholder": "usuario@ejemplo.com",
+      "username": "Nombre de usuario",
+      "username_placeholder": "juanperez",
+      "password": "Contraseña",
+      "password_hint": "Mínimo 8 caracteres",
+      "role": "Rol",
+      "customer": "Cliente / Tenant",
+      "select_customer": "Selecciona un cliente",
+      "cancel": "Cancelar",
+      "submit": "Crear usuario"
+    }
+  },
+  "components": {
+    "register_device": {
+      "title": "Registrar dispositivo",
+      "done": "Listo",
+      "desc": "Vincula un nuevo dispositivo a tu cuenta.",
+      "device_id": "ID del dispositivo",
+      "device_id_hint": "Se encuentra en la etiqueta del dispositivo o en el código QR.",
+      "device_name": "Nombre del dispositivo (opcional)",
+      "device_name_hint": "Un nombre descriptivo para identificar este dispositivo.",
+      "submit": "Vincular dispositivo",
+      "submitting": "Vinculando...",
+      "claimed": {
+        "title": "Dispositivo vinculado",
+        "desc": "Configura tu dispositivo con el token que aparece a continuación.",
+        "token_label": "Token de configuración",
+        "expires": "Expira en",
+        "minute": "minuto",
+        "minutes": "minutos",
+        "copy": "Copiar token"
+      },
+      "instructions": "Instrucciones de configuración"
+    },
+    "command_sheet": {
+      "command_label": "Comando",
+      "args_label": "Argumentos (opcional)",
+      "args_hint": "Argumentos de shell que se pasan al comando.",
+      "shutdown_warning": "Aviso: Apagar el sistema apagará el dispositivo.",
+      "shutdown_hint": "Es posible que se requiera acceso físico para reiniciarlo.",
+      "result": {
+        "command": "Comando",
+        "status": "Estado",
+        "exit_code": "Código de salida",
+        "created": "Creado",
+        "executed": "Ejecutado",
+        "output": "Salida",
+        "error": "Error"
+      }
+    },
+    "threshold": {
+      "title": "Umbrales de alerta",
+      "save": "Guardar",
+      "scope_device": "Este dispositivo",
+      "scope_global": "Global",
+      "failed": "Error al cargar los umbrales."
+    }
+  }
+}

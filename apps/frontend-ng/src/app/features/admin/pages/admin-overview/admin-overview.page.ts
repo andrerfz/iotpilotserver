@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { skip } from 'rxjs';
 import { RouterLink } from '@angular/router';
@@ -33,6 +34,7 @@ addIcons({ hardwareChipOutline, peopleOutline, documentTextOutline, serverOutlin
     MetricCardComponent, EmptyStateComponent,
     AdminTabsComponent,
     IonRefresher, IonRefresherContent,
+    TranslatePipe,
   ],
 })
 export class AdminOverviewPage implements ViewWillEnter {

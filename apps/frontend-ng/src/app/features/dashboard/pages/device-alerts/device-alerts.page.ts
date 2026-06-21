@@ -17,6 +17,7 @@ import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { filter } from 'rxjs';
 import { addIcons } from 'ionicons';
 import { refreshOutline, settingsOutline, trashOutline } from 'ionicons/icons';
+import { TranslatePipe } from '@ngx-translate/core';
 import {
   IonButton,
   IonCard,
@@ -72,6 +73,7 @@ const STATE_OPTIONS: PickerOption[] = [
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    TranslatePipe,
     IonContent,
     IonCard,
     IonCardContent,

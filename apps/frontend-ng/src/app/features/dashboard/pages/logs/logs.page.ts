@@ -13,6 +13,7 @@ import {
   UiSearchFieldComponent, UiSelectComponent,
   ViewWillEnter,
 } from '@ng/shared/ui';
+import { TranslatePipe } from '@ngx-translate/core';
 import type { SelectOption } from '@ng/shared/ui';
 import { AdminLogsService, AdminLogEntry } from '../../../admin/services/admin-logs.service';
 import { TopbarService } from '../../../../shell/topbar.service';
@@ -34,6 +35,7 @@ const LEVEL_COLOR: Record<string, string> = {
     IonContent, IonCard, IonCardContent, IonButton, IonIcon, IonBadge, IonSkeletonText,
     EmptyStateComponent,
     UiSearchFieldComponent, UiSelectComponent,
+    TranslatePipe,
   ],
 })
 export class LogsPage implements ViewWillEnter {

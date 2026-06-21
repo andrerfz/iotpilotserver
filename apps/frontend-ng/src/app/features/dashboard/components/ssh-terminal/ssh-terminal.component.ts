@@ -8,6 +8,7 @@ import {
   inject,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
 import { IonButton, IonInput } from '@ng/shared/ui';
 import { DeviceDetailService } from '../../services/device-detail.service';
 
@@ -17,7 +18,7 @@ import { DeviceDetailService } from '../../services/device-detail.service';
   styleUrls: ['ssh-terminal.component.scss'],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, IonButton, IonInput],
+  imports: [FormsModule, TranslatePipe, IonButton, IonInput],
 })
 export class SshTerminalComponent {
   readonly deviceId = input.required<string>();

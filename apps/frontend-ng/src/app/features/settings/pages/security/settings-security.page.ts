@@ -14,6 +14,7 @@ import {
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { Router } from '@angular/router';
+import { TranslatePipe } from '@ngx-translate/core';
 import { TopbarService } from '@ng/shell/topbar.service';
 import {
   IonButton,
@@ -56,6 +57,7 @@ function passwordMatchValidator(group: AbstractControl): ValidationErrors | null
   imports: [
     ReactiveFormsModule,
     DatePipe,
+    TranslatePipe,
     IonContent,
     IonCard,
     IonCardContent,

@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { TopbarService } from '@ng/shell/topbar.service';
+import { TranslatePipe } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
 import { refreshOutline, wifiOutline, globeOutline } from 'ionicons/icons';
 import {
@@ -52,6 +53,7 @@ type DeviceWithNetwork = Device & {
     IonToggle,
     EmptyStateComponent,
     StatusBadgeComponent,
+    TranslatePipe,
   ],
 })
 export class DeviceNetworkPage implements OnInit, OnDestroy {

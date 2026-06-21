@@ -3,28 +3,28 @@
   <!-- Unified toolbar -->
   <div class="log-toolbar">
     <ui-select
-      placeholder="All levels"
+      [placeholder]="'device_logs.levels.all' | translate"
       [options]="levelOptions"
       [ngModel]="levelFilter()"
       (ngModelChange)="onLevelChange($event)"
     ></ui-select>
 
     <ui-search-field
-      placeholder="Search logs…"
+      [placeholder]="'device_logs.search_placeholder' | translate"
       [value]="search()"
       (valueChange)="onSearchChange($event)"
     ></ui-search-field>
 
     <div class="toolbar-actions">
       <button class="tbtn" [class.tbtn--active]="filterOpen()"
-        title="Filter options" (click)="toggleFilter()">
+        [title]="'device_logs.filter.options' | translate" (click)="toggleFilter()">
         <ion-icon name="options-outline"></ion-icon>
       </button>
       <button class="tbtn" [class.tbtn--active]="autoRefresh()"
-        title="Auto-refresh" (click)="toggleAutoRefresh()">
+        [title]="'device_logs.filter.auto_refresh' | translate" (click)="toggleAutoRefresh()">
         <ion-icon name="sync-outline"></ion-icon>
       </button>
-      <button class="tbtn" title="Refresh now" (click)="onRefresh()">
+      <button class="tbtn" [title]="'device_logs.filter.refresh' | translate" (click)="onRefresh()">
         <ion-icon name="refresh-outline"></ion-icon>
       </button>
     </div>
@@ -33,19 +33,19 @@
   <!-- Filter scope panel -->
   @if (filterOpen()) {
     <div class="filter-panel">
-      <span class="filter-panel__label">Search in</span>
+      <span class="filter-panel__label">{{ 'device_logs.filter.search_in' | translate }}</span>
       <label class="scope-check">
         <input type="checkbox" [checked]="searchInMessages()"
           (change)="toggleSearchInMessages()">
-        Messages
+        {{ 'device_logs.filter.messages' | translate }}
       </label>
       <label class="scope-check">
         <input type="checkbox" [checked]="searchInSource()"
           (change)="toggleSearchInSource()">
-        Source
+        {{ 'device_logs.filter.source' | translate }}
       </label>
       @if (hasFilters()) {
-        <button class="filter-panel__clear" (click)="onClearFilters()">Clear filters</button>
+        <button class="filter-panel__clear" (click)="onClearFilters()">{{ 'device_logs.filter.clear' | translate }}</button>
       }
     </div>
   }
@@ -54,9 +54,9 @@
   <ion-card>
     <ion-card-content>
       <div class="card-head">
-        <h3 class="card-title">Device Logs</h3>
+        <h3 class="card-title">{{ 'device_logs.title' | translate }}</h3>
         @if (logs.data()) {
-          <span class="card-count">{{ logs.data()!.length }} entries</span>
+          <span class="card-count">{{ logs.data()!.length }} {{ 'device_logs.entries' | translate }}</span>
         }
       </div>
 
@@ -83,15 +83,15 @@
       }
 
       @if (logs.error() && !logs.data()) {
-        <ui-empty-state title="Could not load logs" [hasAction]="true">
-          <ion-button action fill="outline" size="small" (click)="onRetry()">Retry</ion-button>
+        <ui-empty-state [title]="'device_logs.failed.title' | translate" [hasAction]="true">
+          <ion-button action fill="outline" size="small" (click)="onRetry()">{{ 'device_logs.failed.retry' | translate }}</ion-button>
         </ui-empty-state>
       }
 
       @if (!logs.loading() && (logs.data()?.length ?? 0) === 0 && !logs.error()) {
         <ui-empty-state
-          title="No logs found"
-          [description]="hasFilters() ? 'Try adjusting your filters' : 'This device has no log entries yet'"
+          [title]="'device_logs.empty.no_logs' | translate"
+          [description]="hasFilters() ? ('device_logs.empty.filtered' | translate) : ('device_logs.empty.none' | translate)"
         ></ui-empty-state>
       }
 

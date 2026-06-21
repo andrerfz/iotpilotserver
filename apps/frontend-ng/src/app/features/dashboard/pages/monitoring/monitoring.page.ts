@@ -42,6 +42,7 @@ import {
   IonRefresher,
   IonRefresherContent,
 } from '@ng/shared/ui';
+import { TranslatePipe } from '@ngx-translate/core';
 import type { ColumnDef, DevicePickerItem, PickerOption } from '@ng/shared/ui';
 import type { Alert } from '@ng/core/api/generated/models/alert';
 import { DashboardService } from '../../services/dashboard.service';
@@ -103,6 +104,7 @@ function presetToTimeRange(preset: string): { startTime?: string; endTime?: stri
     MultiSelectPickerComponent,
     DateRangePickerComponent,
     IonRefresher, IonRefresherContent,
+    TranslatePipe,
   ],
 })
 export class MonitoringPage implements AfterViewInit, ViewWillEnter {

@@ -15,6 +15,7 @@ import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { skip } from 'rxjs';
 import { NgxEchartsDirective } from 'ngx-echarts';
 import type { EChartsOption } from 'echarts';
+import { TranslatePipe } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
 import {
   addOutline,
@@ -92,6 +93,7 @@ const STATUS_OPTIONS: PickerOption[] = [
     DateRangePickerComponent,
     RegisterDeviceSheetComponent,
     IonRefresher, IonRefresherContent,
+    TranslatePipe,
   ],
 })
 export class DashboardPage implements AfterViewInit, ViewWillEnter {

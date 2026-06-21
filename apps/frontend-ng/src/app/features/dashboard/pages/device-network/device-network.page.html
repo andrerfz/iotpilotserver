@@ -4,10 +4,10 @@
   <div class="page-toolbar">
     <div class="page-toolbar__left">
       <ion-icon name="wifi-outline"></ion-icon>
-      <span class="page-toolbar__title">Network</span>
+      <span class="page-toolbar__title">{{ 'device_network.title' | translate }}</span>
     </div>
     <div class="page-toolbar__right">
-      <span class="page-toolbar__toggle-label">Auto-refresh</span>
+      <span class="page-toolbar__toggle-label">{{ 'device_network.auto_refresh' | translate }}</span>
       <ion-toggle
         [checked]="autoRefresh()"
         (ionChange)="onAutoRefreshToggle($any($event).detail.checked)"
@@ -15,7 +15,7 @@
       </ion-toggle>
       <ion-button fill="outline" color="medium" size="small" (click)="onRefresh()">
         <ion-icon slot="start" name="refresh-outline"></ion-icon>
-        Refresh
+        {{ 'device_network.refresh' | translate }}
       </ion-button>
     </div>
   </div>
@@ -38,8 +38,8 @@
 
   <!-- Error -->
   @if (device.error() && !device.data()) {
-    <ui-empty-state title="Could not load network info" [hasAction]="true">
-      <ion-button action fill="outline" size="small" (click)="onRetry()">Retry</ion-button>
+    <ui-empty-state [title]="'device_network.failed.title' | translate" [hasAction]="true">
+      <ion-button action fill="outline" size="small" (click)="onRetry()">{{ 'device_network.failed.retry' | translate }}</ion-button>
     </ui-empty-state>
   }
 
@@ -49,21 +49,21 @@
       <!-- Connectivity card -->
       <ion-card>
         <ion-card-header>
-          <ion-card-title>Connectivity</ion-card-title>
+          <ion-card-title>{{ 'device_network.sections.connectivity' | translate }}</ion-card-title>
         </ion-card-header>
         <ion-card-content>
           <div class="kv">
-            <span class="kv__k">Status</span>
+            <span class="kv__k">{{ 'device_network.fields.status' | translate }}</span>
             <span class="kv__v">
               <ui-status-badge [status]="d.status ?? 'OFFLINE'"></ui-status-badge>
             </span>
             @if (d.connectionQuality) {
-              <span class="kv__k">Quality</span>
+              <span class="kv__k">{{ 'device_network.fields.quality' | translate }}</span>
               <span class="kv__v">
                 <ui-status-badge [status]="connectionQualityStatus()"></ui-status-badge>
               </span>
             }
-            <span class="kv__k">Last seen</span>
+            <span class="kv__k">{{ 'device_network.fields.last_seen' | translate }}</span>
             <span class="kv__v mono">{{ formatLastSeen(d.lastSeen) }}</span>
           </div>
         </ion-card-content>
@@ -72,17 +72,17 @@
       <!-- IP Addresses card -->
       <ion-card>
         <ion-card-header>
-          <ion-card-title>IP Addresses</ion-card-title>
+          <ion-card-title>{{ 'device_network.sections.ip_addresses' | translate }}</ion-card-title>
         </ion-card-header>
         <ion-card-content>
           <div class="kv">
-            <span class="kv__k">Primary IP</span>
+            <span class="kv__k">{{ 'device_network.fields.primary_ip' | translate }}</span>
             <span class="kv__v mono">{{ d.ipAddress || '—' }}</span>
-            <span class="kv__k">Tailscale IP</span>
+            <span class="kv__k">{{ 'device_network.fields.tailscale_ip' | translate }}</span>
             <span class="kv__v mono">{{ d.tailscaleIp || '—' }}</span>
-            <span class="kv__k">MAC address</span>
+            <span class="kv__k">{{ 'device_network.fields.mac' | translate }}</span>
             <span class="kv__v mono">{{ d.macAddress || '—' }}</span>
-            <span class="kv__k">Hostname</span>
+            <span class="kv__k">{{ 'device_network.fields.hostname' | translate }}</span>
             <span class="kv__v mono">{{ d.hostname || '—' }}</span>
           </div>
         </ion-card-content>
@@ -91,17 +91,17 @@
       <!-- Device Identity card -->
       <ion-card>
         <ion-card-header>
-          <ion-card-title>Device Identity</ion-card-title>
+          <ion-card-title>{{ 'device_network.sections.identity' | translate }}</ion-card-title>
         </ion-card-header>
         <ion-card-content>
           <div class="kv">
-            <span class="kv__k">Device type</span>
+            <span class="kv__k">{{ 'device_network.fields.device_type' | translate }}</span>
             <span class="kv__v">{{ d.deviceType || '—' }}</span>
-            <span class="kv__k">Architecture</span>
+            <span class="kv__k">{{ 'device_network.fields.architecture' | translate }}</span>
             <span class="kv__v mono">{{ d.architecture || '—' }}</span>
-            <span class="kv__k">Agent version</span>
+            <span class="kv__k">{{ 'device_network.fields.agent_version' | translate }}</span>
             <span class="kv__v mono">{{ d.agentVersion || '—' }}</span>
-            <span class="kv__k">Location</span>
+            <span class="kv__k">{{ 'device_network.fields.location' | translate }}</span>
             <span class="kv__v">{{ d.location || '—' }}</span>
           </div>
         </ion-card-content>

@@ -8,6 +8,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
 import { alertCircleOutline } from 'ionicons/icons';
 import {
@@ -57,6 +58,7 @@ const SENSOR_METRICS: MetricConfig[] = [
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    TranslatePipe,
     BottomSheetComponent,
     IonIcon,
     IonRange,

@@ -12,6 +12,7 @@ import { NgxEchartsDirective } from 'ngx-echarts';
 import type { EChartsOption } from 'echarts';
 import { addIcons } from 'ionicons';
 import { refreshOutline } from 'ionicons/icons';
+import { TranslatePipe } from '@ngx-translate/core';
 import {
   IonContent,
   IonCard,
@@ -109,6 +110,7 @@ function batteryColor(v: number | null): string {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     NgxEchartsDirective,
+    TranslatePipe,
     IonContent,
     IonCard,
     IonCardContent,

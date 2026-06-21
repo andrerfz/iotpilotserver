@@ -9,6 +9,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
 import { terminalOutline } from 'ionicons/icons';
 import {
@@ -45,6 +46,7 @@ const COMMAND_OPTIONS: SelectOption[] = [
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
+    TranslatePipe,
     BottomSheetComponent,
     IonInput,
     IonItem,

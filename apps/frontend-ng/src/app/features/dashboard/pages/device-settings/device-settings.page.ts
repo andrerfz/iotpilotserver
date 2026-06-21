@@ -10,6 +10,7 @@ import {
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TopbarService } from '@ng/shell/topbar.service';
+import { TranslatePipe } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
 import { copyOutline, eyeOffOutline, eyeOutline, refreshOutline, trashOutline, warningOutline } from 'ionicons/icons';
 import {
@@ -77,6 +78,7 @@ const INTERVAL_PRESETS = [
     UiInputComponent,
     UiSwitchComponent,
     UiSelectComponent,
+    TranslatePipe,
   ],
 })
 export class DeviceSettingsPage implements OnInit {

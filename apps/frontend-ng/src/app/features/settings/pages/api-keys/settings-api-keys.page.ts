@@ -12,6 +12,7 @@ import {
 } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { TranslatePipe } from '@ngx-translate/core';
 import { firstValueFrom } from 'rxjs';
 import { addIcons } from 'ionicons';
 import { addOutline, closeOutline, copyOutline, checkmarkOutline, trashOutline } from 'ionicons/icons';
@@ -64,6 +65,7 @@ interface CreatedKey {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     ReactiveFormsModule,
+    TranslatePipe,
     IonContent,
     IonCard,
     IonCardContent,

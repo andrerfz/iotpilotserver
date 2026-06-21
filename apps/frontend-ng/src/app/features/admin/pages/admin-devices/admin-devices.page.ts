@@ -2,6 +2,7 @@ import {
   AfterViewInit, ChangeDetectionStrategy, Component,
   computed, inject, signal, TemplateRef, ViewChild,
 } from '@angular/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { skip } from 'rxjs';
 import { RouterLink } from '@angular/router';
@@ -43,6 +44,7 @@ addIcons({ refreshOutline, eyeOutline, reloadOutline, hardwareChipOutline, check
     UiSearchFieldComponent, UiSelectComponent,
     AdminTabsComponent,
     IonRefresher, IonRefresherContent,
+    TranslatePipe,
   ],
 })
 export class AdminDevicesPage implements AfterViewInit, ViewWillEnter {

@@ -4,10 +4,10 @@
   <div class="page-toolbar">
     <div class="page-toolbar__left">
       <ion-icon name="save-outline"></ion-icon>
-      <span class="page-toolbar__title">Storage &amp; System</span>
+      <span class="page-toolbar__title">{{ 'device_storage.title' | translate }}</span>
     </div>
     <div class="page-toolbar__right">
-      <span class="page-toolbar__toggle-label">Auto-refresh</span>
+      <span class="page-toolbar__toggle-label">{{ 'device_storage.auto_refresh' | translate }}</span>
       <ion-toggle
         [checked]="autoRefresh()"
         (ionChange)="onAutoRefreshToggle($any($event).detail.checked)"
@@ -15,7 +15,7 @@
       </ion-toggle>
       <ion-button fill="outline" color="medium" size="small" (click)="onRefresh()">
         <ion-icon slot="start" name="refresh-outline"></ion-icon>
-        Refresh
+        {{ 'device_storage.refresh' | translate }}
       </ion-button>
     </div>
   </div>
@@ -37,8 +37,8 @@
 
   <!-- Error -->
   @if (device.error() && !device.data()) {
-    <ui-empty-state title="Could not load storage info" [hasAction]="true">
-      <ion-button action fill="outline" size="small" (click)="onRetry()">Retry</ion-button>
+    <ui-empty-state [title]="'device_storage.failed.title' | translate" [hasAction]="true">
+      <ion-button action fill="outline" size="small" (click)="onRetry()">{{ 'device_storage.failed.retry' | translate }}</ion-button>
     </ui-empty-state>
   }
 
@@ -48,13 +48,13 @@
       <!-- Disk usage card -->
       <ion-card>
         <ion-card-header>
-          <ion-card-title>Disk Usage</ion-card-title>
+          <ion-card-title>{{ 'device_storage.sections.disk' | translate }}</ion-card-title>
         </ion-card-header>
         <ion-card-content>
           @if (d.diskUsage !== null && d.diskUsage !== undefined) {
             <div class="usage-block">
               <div class="usage-block__head">
-                <span>Used</span>
+                <span>{{ 'device_storage.fields.used' | translate }}</span>
                 <span class="usage-block__pct" [style.color]="barColor(diskBarWidth())">
                   {{ d.diskUsage.toFixed(1) }}%
                 </span>
@@ -70,10 +70,10 @@
             <p class="no-data">No disk data available</p>
           }
           <div class="kv kv--small">
-            <span class="kv__k">Total capacity</span>
+            <span class="kv__k">{{ 'device_storage.fields.total_capacity' | translate }}</span>
             <span class="kv__v mono">{{ d.diskTotal || '—' }}</span>
             @if (d.diskUsage !== null && d.diskUsage !== undefined && d.diskTotal) {
-              <span class="kv__k">Free (estimated)</span>
+              <span class="kv__k">{{ 'device_storage.fields.free' | translate }}</span>
               <span class="kv__v mono">~{{ (100 - d.diskUsage).toFixed(1) }}% of {{ d.diskTotal }}</span>
             }
           </div>
@@ -83,13 +83,13 @@
       <!-- Memory usage card -->
       <ion-card>
         <ion-card-header>
-          <ion-card-title>Memory Usage</ion-card-title>
+          <ion-card-title>{{ 'device_storage.sections.memory' | translate }}</ion-card-title>
         </ion-card-header>
         <ion-card-content>
           @if (d.memoryUsage !== null && d.memoryUsage !== undefined) {
             <div class="usage-block">
               <div class="usage-block__head">
-                <span>Used</span>
+                <span>{{ 'device_storage.fields.used' | translate }}</span>
                 <span class="usage-block__pct" [style.color]="barColor(memBarWidth())">
                   {{ d.memoryUsage.toFixed(1) }}%
                 </span>
@@ -105,7 +105,7 @@
             <p class="no-data">No memory data available</p>
           }
           <div class="kv kv--small">
-            <span class="kv__k">Total RAM</span>
+            <span class="kv__k">{{ 'device_storage.fields.total_ram' | translate }}</span>
             <span class="kv__v mono">{{ formatMemory(d.memoryTotal) }}</span>
           </div>
         </ion-card-content>
@@ -114,19 +114,19 @@
       <!-- System load card -->
       <ion-card>
         <ion-card-header>
-          <ion-card-title>System Load</ion-card-title>
+          <ion-card-title>{{ 'device_storage.sections.load' | translate }}</ion-card-title>
         </ion-card-header>
         <ion-card-content>
           <div class="kv kv--small">
-            <span class="kv__k">Load average</span>
+            <span class="kv__k">{{ 'device_storage.fields.load_average' | translate }}</span>
             <span class="kv__v mono">{{ d.loadAverage || '—' }}</span>
-            <span class="kv__k">Uptime</span>
+            <span class="kv__k">{{ 'device_storage.fields.uptime' | translate }}</span>
             <span class="kv__v mono">{{ d.uptime || '—' }}</span>
           </div>
           @if (d.cpuUsage !== null && d.cpuUsage !== undefined) {
             <div class="usage-block" style="margin-top: 12px;">
               <div class="usage-block__head">
-                <span>CPU</span>
+                <span>{{ 'device_storage.fields.cpu' | translate }}</span>
                 <span class="usage-block__pct" [style.color]="barColor(cpuBarWidth())">
                   {{ d.cpuUsage.toFixed(1) }}%
                 </span>

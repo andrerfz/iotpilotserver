@@ -7,38 +7,38 @@
     <ion-card class="register-card">
       <ion-card-content>
         <div class="register-card__header">
-          <h2 class="register-card__title">Create an account</h2>
-          <p class="register-card__subtitle">Start managing your IoT devices</p>
+          <h2 class="register-card__title">{{ 'auth.register.title' | translate }}</h2>
+          <p class="register-card__subtitle">{{ 'auth.register.subtitle' | translate }}</p>
         </div>
 
         <form [formGroup]="form" (ngSubmit)="onSubmit()" class="register-form">
           <ui-input
             formControlName="username"
-            label="Username"
-            placeholder="Enter your username"
+            [label]="'auth.register.username' | translate"
+            [placeholder]="'auth.register.username' | translate"
             [error]="usernameError()" />
 
           <ui-input
             formControlName="email"
-            label="Email"
+            [label]="'auth.register.email' | translate"
             type="email"
-            placeholder="Enter your email"
+            [placeholder]="'auth.register.email' | translate"
             [error]="emailError()" />
 
           <ui-input
             formControlName="password"
-            label="Password"
+            [label]="'auth.register.password' | translate"
             type="password"
-            placeholder="Create a password"
+            [placeholder]="'auth.register.password_placeholder' | translate"
             [error]="passwordError()" />
 
           <app-password-strength [password]="passwordValue" />
 
           <ui-input
             formControlName="confirmPassword"
-            label="Confirm password"
+            [label]="'auth.register.confirm_password' | translate"
             type="password"
-            placeholder="Repeat your password"
+            [placeholder]="'auth.register.confirm_password' | translate"
             [error]="confirmPasswordError()" />
 
           @if (errorMessage()) {
@@ -52,16 +52,16 @@
             @if (isLoading()) {
               <ion-spinner name="crescent" slot="start" />
             }
-            {{ isLoading() ? 'Creating account...' : 'Create account' }}
+            {{ isLoading() ? ('auth.register.submitting' | translate) : ('auth.register.submit' | translate) }}
           </ion-button>
         </form>
 
         <div class="register-footer">
-          <p>Already have an account? <a routerLink="/login">Sign in</a></p>
+          <p>{{ 'auth.register.have_account' | translate }} <a routerLink="/login">{{ 'auth.register.sign_in' | translate }}</a></p>
         </div>
       </ion-card-content>
     </ion-card>
 
-    <p class="register-tagline">Secure IoT device management platform</p>
+    <p class="register-tagline">{{ 'auth.register.tagline' | translate }}</p>
   </div>
 </ion-content>

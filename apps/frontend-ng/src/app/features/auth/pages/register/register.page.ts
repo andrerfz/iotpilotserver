@@ -16,6 +16,7 @@ import {
   IonSpinner,
   UiInputComponent,
 } from '@ng/shared/ui';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Api } from '@ng/core/api/generated/api';
 import { register as registerFn } from '@ng/core/api/generated/fn/auth/register';
 import { ApiError } from '@ng/core/errors/api-error';
@@ -43,6 +44,7 @@ function passwordMatchValidator(group: AbstractControl): ValidationErrors | null
     AppLogoComponent,
     UiInputComponent,
     PasswordStrengthComponent,
+    TranslatePipe,
   ],
 })
 export class RegisterPage {
@@ -50,6 +52,7 @@ export class RegisterPage {
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
   private readonly toast = inject(ToastService);
+  private readonly translate = inject(TranslateService);
 
   readonly form = this.fb.nonNullable.group(
     {
@@ -73,16 +76,16 @@ export class RegisterPage {
     try {
       const res = await this.api.invoke(registerFn, { body: { username, email, password } });
       if (res.data?.requiresApproval) {
-        void this.toast.success('Registration submitted. An administrator will review your account.');
+        void this.toast.success(this.translate.instant('auth.register.toast_submitted'));
       } else {
-        void this.toast.success('Account created successfully. You can now log in.');
+        void this.toast.success(this.translate.instant('auth.register.toast_created'));
       }
       await this.router.navigate(['/login']);
     } catch (err) {
       if (err instanceof ApiError && err.status === 409) {
-        this.errorMessage.set('An account with this email already exists.');
+        this.errorMessage.set(this.translate.instant('auth.register.error_email_exists'));
       } else {
-        this.errorMessage.set(err instanceof Error ? err.message : 'Registration failed');
+        this.errorMessage.set(err instanceof Error ? err.message : this.translate.instant('errors.fallback'));
       }
     } finally {
       this.isLoading.set(false);

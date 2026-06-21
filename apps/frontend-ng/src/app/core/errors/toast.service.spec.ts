@@ -1,7 +1,8 @@
 import { TestBed } from '@angular/core/testing';
+import { TranslateService } from '@ngx-translate/core';
 import { ToastController } from '@ng/shared/ui';
 import { ApiError } from './api-error';
-import { ToastService, toUserMessage } from './toast.service';
+import { ToastService } from './toast.service';
 
 interface CreatedToast {
   message: string;
@@ -9,6 +10,13 @@ interface CreatedToast {
   duration: number;
   position: string;
 }
+
+const TRANSLATE_MOCK: Record<string, string> = {
+  'errors.network': 'Could not reach the server.',
+  'errors.unauthorized': 'Your session has expired. Please log in again.',
+  'errors.forbidden': "You don't have permission to do that.",
+  'errors.validation': 'Please check the highlighted fields.',
+};
 
 describe('ToastService', () => {
   let created: CreatedToast[];
@@ -24,8 +32,15 @@ describe('ToastService', () => {
         return Promise.resolve({ present: () => Promise.resolve((presented += 1)) });
       },
     };
+    const fakeTranslate = {
+      instant: (key: string) => TRANSLATE_MOCK[key] ?? key,
+    };
     TestBed.configureTestingModule({
-      providers: [ToastService, { provide: ToastController, useValue: fakeController }],
+      providers: [
+        ToastService,
+        { provide: ToastController, useValue: fakeController },
+        { provide: TranslateService, useValue: fakeTranslate },
+      ],
     });
     toast = TestBed.inject(ToastService);
   });
@@ -51,13 +66,19 @@ describe('ToastService', () => {
     expect(created[0].message).toBe('Custom failure');
   });
 
-  it('falls back to the backend message for an unmapped code', () => {
-    expect(toUserMessage(new ApiError(418, 'TEAPOT', 'I am a teapot'))).toBe('I am a teapot');
+  it('falls back to the backend message for an unmapped code', async () => {
+    await toast.error(new ApiError(418, 'TEAPOT', 'I am a teapot'));
+    expect(created[0].message).toBe('I am a teapot');
   });
 
-  it('maps known codes to curated copy', () => {
-    expect(toUserMessage(new ApiError(0, 'NETWORK_ERROR', 'x'))).toMatch(/reach the server/i);
-    expect(toUserMessage(new ApiError(401, 'UNAUTHORIZED', 'x'))).toMatch(/session has expired/i);
-    expect(toUserMessage(new ApiError(400, 'VALIDATION_ERROR', 'x'))).toMatch(/highlighted fields/i);
+  it('maps known codes to curated copy', async () => {
+    await toast.error(new ApiError(0, 'NETWORK_ERROR', 'x'));
+    expect(created[0].message).toMatch(/reach the server/i);
+
+    await toast.error(new ApiError(401, 'UNAUTHORIZED', 'x'));
+    expect(created[1].message).toMatch(/session has expired/i);
+
+    await toast.error(new ApiError(400, 'VALIDATION_ERROR', 'x'));
+    expect(created[2].message).toMatch(/highlighted fields/i);
   });
 });

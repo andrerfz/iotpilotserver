@@ -12,29 +12,29 @@
       }
     </div>
   } @else if (svc.error() && !svc.data()) {
-    <ui-empty-state title="Failed to load stats" [hasAction]="true">
-      <ion-button action fill="outline" size="small" (click)="svc.load()">Retry</ion-button>
+    <ui-empty-state [title]="'admin.overview.failed.title' | translate" [hasAction]="true">
+      <ion-button action fill="outline" size="small" (click)="svc.load()">{{ 'admin.overview.failed.retry' | translate }}</ion-button>
     </ui-empty-state>
   } @else {
     <div class="overview-stats">
-      <ui-metric-card label="Total Users" [value]="svc.data()?.userCount ?? 0">
+      <ui-metric-card [label]="'admin.overview.kpi.users' | translate" [value]="svc.data()?.userCount ?? 0">
         <ion-icon icon name="people-outline"></ion-icon>
       </ui-metric-card>
-      <ui-metric-card label="Total Devices" [value]="svc.data()?.deviceCount ?? 0">
+      <ui-metric-card [label]="'admin.overview.kpi.devices' | translate" [value]="svc.data()?.deviceCount ?? 0">
         <ion-icon icon name="hardware-chip-outline"></ion-icon>
       </ui-metric-card>
-      <ui-metric-card label="Active Devices" [value]="svc.data()?.activeDevices ?? 0"
+      <ui-metric-card [label]="'admin.overview.kpi.active_devices' | translate" [value]="svc.data()?.activeDevices ?? 0"
         iconColor="var(--success)" iconBg="var(--success-weak)">
         <ion-icon icon name="stats-chart-outline"></ion-icon>
       </ui-metric-card>
-      <ui-metric-card label="Open Alerts" [value]="svc.data()?.alertCount ?? 0"
+      <ui-metric-card [label]="'admin.overview.kpi.open_alerts' | translate" [value]="svc.data()?.alertCount ?? 0"
         iconColor="var(--danger)" iconBg="var(--danger-weak)">
         <ion-icon icon name="document-text-outline"></ion-icon>
       </ui-metric-card>
     </div>
   }
 
-  <h3 class="overview-section">Quick Access</h3>
+  <h3 class="overview-section">{{ 'admin.overview.quick_access' | translate }}</h3>
 
   <div class="overview-links">
     <a class="overview-link" routerLink="/app/admin/devices">
@@ -42,8 +42,8 @@
         <ion-icon name="hardware-chip-outline"></ion-icon>
       </div>
       <div>
-        <div class="overview-link__title">Device Management</div>
-        <div class="overview-link__sub">View, restart and manage all devices</div>
+        <div class="overview-link__title">{{ 'admin.overview.cards.devices.label' | translate }}</div>
+        <div class="overview-link__sub">{{ 'admin.overview.cards.devices.desc' | translate }}</div>
       </div>
     </a>
     <a class="overview-link" routerLink="/app/admin/users">
@@ -51,8 +51,8 @@
         <ion-icon name="people-outline"></ion-icon>
       </div>
       <div>
-        <div class="overview-link__title">User Management</div>
-        <div class="overview-link__sub">Approve, suspend and manage accounts</div>
+        <div class="overview-link__title">{{ 'admin.overview.cards.users.label' | translate }}</div>
+        <div class="overview-link__sub">{{ 'admin.overview.cards.users.desc' | translate }}</div>
       </div>
     </a>
     <a class="overview-link" routerLink="/app/admin/logs">
@@ -60,8 +60,8 @@
         <ion-icon name="document-text-outline"></ion-icon>
       </div>
       <div>
-        <div class="overview-link__title">Logs Viewer</div>
-        <div class="overview-link__sub">Browse and export device logs</div>
+        <div class="overview-link__title">{{ 'admin.overview.cards.logs.label' | translate }}</div>
+        <div class="overview-link__sub">{{ 'admin.overview.cards.logs.desc' | translate }}</div>
       </div>
     </a>
     <a class="overview-link" routerLink="/app/admin/system">
@@ -69,8 +69,8 @@
         <ion-icon name="server-outline"></ion-icon>
       </div>
       <div>
-        <div class="overview-link__title">System Health</div>
-        <div class="overview-link__sub">CPU, memory and database status</div>
+        <div class="overview-link__title">{{ 'admin.overview.cards.system.label' | translate }}</div>
+        <div class="overview-link__sub">{{ 'admin.overview.cards.system.desc' | translate }}</div>
       </div>
     </a>
   </div>

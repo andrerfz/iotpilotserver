@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy, Component, inject, OnDestroy,
 } from '@angular/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
 import { reloadOutline, serverOutline, layersOutline, albumsOutline } from 'ionicons/icons';
 import {
@@ -28,6 +29,7 @@ addIcons({ reloadOutline, serverOutline, layersOutline, albumsOutline });
     IonList, IonItem, IonLabel, IonSkeletonText,
     EmptyStateComponent,
     AdminTabsComponent,
+    TranslatePipe,
   ],
 })
 export class AdminSystemPage implements OnDestroy, ViewWillEnter {

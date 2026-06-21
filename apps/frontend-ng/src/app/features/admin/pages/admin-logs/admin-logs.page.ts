@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy, Component, computed, DestroyRef,
   inject, signal, viewChild,
 } from '@angular/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
@@ -48,6 +49,7 @@ function toLogRows(logs: AdminLogEntry[]): Record<string, string>[] {
     UiSearchFieldComponent, UiSelectComponent,
     BottomSheetComponent,
     AdminTabsComponent,
+    TranslatePipe,
   ],
 })
 export class AdminLogsPage implements ViewWillEnter {

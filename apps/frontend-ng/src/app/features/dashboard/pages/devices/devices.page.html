@@ -15,7 +15,7 @@
   <!-- Error state -->
   @if (devicesError()) {
     <ui-empty-state
-      title="Failed to load devices"
+      [title]="'devices.failed.title' | translate"
       [description]="devicesError()?.message ?? 'Check your connection and try again.'"
       [hasAction]="true"
       (action)="onRetry()">
@@ -26,16 +26,16 @@
 
     <!-- KPI row -->
     <div class="metrics">
-      <ui-metric-card label="Online" [value]="onlineCount() + '/' + totalCount()" iconColor="var(--ion-color-success)">
+      <ui-metric-card [label]="'devices.kpi.online' | translate" [value]="onlineCount() + '/' + totalCount()" iconColor="var(--ion-color-success)">
         <ion-icon icon name="wifi-outline"></ion-icon>
       </ui-metric-card>
-      <ui-metric-card label="Offline / Error" [value]="offlineErrorCount()" iconColor="var(--ion-color-danger)">
+      <ui-metric-card [label]="'devices.kpi.offline_error' | translate" [value]="offlineErrorCount()" iconColor="var(--ion-color-danger)">
         <ion-icon icon name="alert-circle-outline"></ion-icon>
       </ui-metric-card>
-      <ui-metric-card label="Maintenance" [value]="maintenanceCount()" iconColor="var(--ion-color-warning)">
+      <ui-metric-card [label]="'devices.kpi.maintenance' | translate" [value]="maintenanceCount()" iconColor="var(--ion-color-warning)">
         <ion-icon icon name="construct-outline"></ion-icon>
       </ui-metric-card>
-      <ui-metric-card label="Firmware OK" [value]="firmwareCurrentCount()" iconColor="var(--ion-color-success)">
+      <ui-metric-card [label]="'devices.kpi.firmware_ok' | translate" [value]="firmwareCurrentCount()" iconColor="var(--ion-color-success)">
         <ion-icon icon name="checkmark-circle-outline"></ion-icon>
       </ui-metric-card>
     </div>
@@ -45,14 +45,14 @@
       <ion-card-content>
         <div class="filter-row">
           <ui-search-field
-            placeholder="Search hostname, device ID or location…"
+            [placeholder]="'devices.search_placeholder' | translate"
             [value]="search()"
             (valueChange)="search.set($event)">
           </ui-search-field>
           <ui-multi-select-picker
             label="Status"
-            title="Filter by status"
-            sub="Show only devices in these states"
+            [title]="'devices.filter_by_status' | translate"
+            [sub]="'devices.filter_sub' | translate"
             [options]="statusOptions"
             [value]="statusFilter()"
             (valueChange)="statusFilter.set($event)">
@@ -64,10 +64,10 @@
     <!-- Bulk actions bar -->
     @if (selectedCount() > 0) {
       <div class="bulk-bar">
-        <span class="bulk-bar__label">{{ selectedCount() }} selected</span>
+        <span class="bulk-bar__label">{{ 'devices.selected' | translate:{ count: selectedCount() } }}</span>
         <ion-button fill="clear" size="small" color="medium" (click)="onExportSelected()">
           <ion-icon slot="start" name="download-outline"></ion-icon>
-          Export
+          {{ 'devices.export' | translate }}
         </ion-button>
       </div>
     }
@@ -102,15 +102,15 @@
 
     @if (filteredDevices().length === 0 && _deviceRows().length > 0) {
       <ui-empty-state
-        title="No devices match your filters"
-        description="Try clearing the search or status filter.">
+        [title]="'devices.empty_filtered.title' | translate"
+        [description]="'devices.empty_filtered.desc' | translate">
       </ui-empty-state>
     }
 
     @if (_deviceRows().length === 0) {
       <ui-empty-state
-        title="No devices registered"
-        description="Register your first device to get started."
+        [title]="'devices.empty.title' | translate"
+        [description]="'devices.empty.desc' | translate"
         [hasAction]="true"
         (action)="onRegisterDevice()">
       </ui-empty-state>
@@ -137,27 +137,27 @@
 
 <app-register-device-sheet (deviceClaimed)="onDeviceClaimed()"></app-register-device-sheet>
 
-<ui-bottom-sheet #exportSheet title="Export devices">
+<ui-bottom-sheet #exportSheet [title]="'devices.export_sheet.title' | translate">
   <div class="opt-list">
     <button class="opt-row" (click)="onExportXlsx(); exportSheet.close()">
       <ion-icon name="document-outline"></ion-icon>
       <div class="opt-row__body">
-        <div class="opt-row__label">Export XLSX</div>
-        <div class="opt-row__sub">Excel spreadsheet</div>
+        <div class="opt-row__label">{{ 'devices.export_sheet.xlsx_label' | translate }}</div>
+        <div class="opt-row__sub">{{ 'devices.export_sheet.xlsx_sub' | translate }}</div>
       </div>
     </button>
     <button class="opt-row" (click)="onExportCsv(); exportSheet.close()">
       <ion-icon name="code-outline"></ion-icon>
       <div class="opt-row__body">
-        <div class="opt-row__label">Export CSV</div>
-        <div class="opt-row__sub">Comma-separated values</div>
+        <div class="opt-row__label">{{ 'devices.export_sheet.csv_label' | translate }}</div>
+        <div class="opt-row__sub">{{ 'devices.export_sheet.csv_sub' | translate }}</div>
       </div>
     </button>
     <button class="opt-row" (click)="onExportPdf(); exportSheet.close()">
       <ion-icon name="document-text-outline"></ion-icon>
       <div class="opt-row__body">
-        <div class="opt-row__label">Export PDF</div>
-        <div class="opt-row__sub">Printable document</div>
+        <div class="opt-row__label">{{ 'devices.export_sheet.pdf_label' | translate }}</div>
+        <div class="opt-row__sub">{{ 'devices.export_sheet.pdf_sub' | translate }}</div>
       </div>
     </button>
   </div>

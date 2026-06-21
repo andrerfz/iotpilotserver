@@ -9,10 +9,10 @@
   <ion-card class="filter-bar">
     <ion-card-content>
       <div class="filter-row">
-        <ui-search-field placeholder="Search name or slug…"
+        <ui-search-field [placeholder]="'admin.customers.search_placeholder' | translate"
           [value]="searchQuery()" (valueChange)="searchQuery.set($event)">
         </ui-search-field>
-        <ui-select placeholder="All Statuses" [options]="statusOptions"
+        <ui-select [placeholder]="'admin.customers.all_statuses' | translate" [options]="statusOptions"
           [(ngModel)]="statusFilter" (ngModelChange)="onStatusChange($event)">
         </ui-select>
       </div>
@@ -29,13 +29,13 @@
       <ion-button size="small" fill="outline" color="medium"
         [disabled]="actionLoading()" (click)="onEdit(row)">
         <ion-icon slot="start" name="pencil-outline"></ion-icon>
-        Edit
+        {{ 'admin.customers.actions.edit' | translate }}
       </ion-button>
       @if (row.status !== 'INACTIVE') {
         <ion-button size="small" fill="outline" color="warning"
           [disabled]="actionLoading()" (click)="onDeactivate(row)">
           <ion-icon slot="start" name="ban-outline"></ion-icon>
-          Deactivate
+          {{ 'admin.customers.actions.deactivate' | translate }}
         </ion-button>
       }
     </div>
@@ -43,8 +43,8 @@
 
   <!-- Table -->
   @if (svc.error() && !svc.customers().length) {
-    <ui-empty-state title="Failed to load customers" [hasAction]="true">
-      <ion-button action fill="outline" size="small" (click)="svc.load()">Retry</ion-button>
+    <ui-empty-state [title]="'admin.customers.failed.title' | translate" [hasAction]="true">
+      <ion-button action fill="outline" size="small" (click)="svc.load()">{{ 'admin.customers.failed.retry' | translate }}</ion-button>
     </ui-empty-state>
   } @else {
     <ui-data-table [columns]="cols()" [rows]="filtered()" rowKey="id" [pageSize]="20">

@@ -10,6 +10,7 @@ import {
 import { addIcons } from 'ionicons';
 import { copyOutline, checkmarkOutline, qrCodeOutline } from 'ionicons/icons';
 
+import { TranslatePipe } from '@ngx-translate/core';
 import {
   BottomSheetComponent,
   IonButton,
@@ -33,6 +34,7 @@ addIcons({ copyOutline, checkmarkOutline, qrCodeOutline });
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    TranslatePipe,
     BottomSheetComponent,
     IonButton,
     IonIcon,

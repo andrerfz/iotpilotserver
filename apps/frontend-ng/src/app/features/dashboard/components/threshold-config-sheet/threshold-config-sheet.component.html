@@ -1,6 +1,6 @@
 <ui-bottom-sheet
-  title="Alert Thresholds"
-  saveLabel="Save"
+  [title]="'components.threshold.title' | translate"
+  [saveLabel]="'components.threshold.save' | translate"
   [saveDisabled]="saving()"
   (willOpen)="onWillOpen()"
   (save)="onSave()">
@@ -10,8 +10,8 @@
     <ion-segment
       [value]="scope()"
       (ionChange)="onScopeChange($any($event).detail.value)">
-      <ion-segment-button value="device">This device</ion-segment-button>
-      <ion-segment-button value="global">Global</ion-segment-button>
+      <ion-segment-button value="device">{{ 'components.threshold.scope_device' | translate }}</ion-segment-button>
+      <ion-segment-button value="global">{{ 'components.threshold.scope_global' | translate }}</ion-segment-button>
     </ion-segment>
   </div>
 
@@ -26,7 +26,7 @@
   @if (thresholds.error() && !thresholds.loading()) {
     <div class="sheet-error">
       <ion-icon name="alert-circle-outline"></ion-icon>
-      <ion-text color="danger">Failed to load thresholds</ion-text>
+      <ion-text color="danger">{{ 'components.threshold.failed' | translate }}</ion-text>
     </div>
   }
 

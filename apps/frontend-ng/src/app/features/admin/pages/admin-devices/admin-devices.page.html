@@ -7,17 +7,17 @@
 
   <!-- Stat cards -->
   <div class="admin-stats">
-    <ui-metric-card label="Total"    [value]="svc.stats().total"       [loading]="svc.loading() && !svc.devices().length">
+    <ui-metric-card [label]="'admin.devices.kpi.total' | translate"    [value]="svc.stats().total"       [loading]="svc.loading() && !svc.devices().length">
       <ion-icon icon name="hardware-chip-outline"></ion-icon>
     </ui-metric-card>
-    <ui-metric-card label="Online"   [value]="svc.stats().online"      [loading]="svc.loading() && !svc.devices().length"
+    <ui-metric-card [label]="'admin.devices.kpi.online' | translate"   [value]="svc.stats().online"      [loading]="svc.loading() && !svc.devices().length"
       iconColor="var(--success)" iconBg="var(--success-weak)">
       <ion-icon icon name="checkmark-circle-outline"></ion-icon>
     </ui-metric-card>
-    <ui-metric-card label="Offline"  [value]="svc.stats().offline"     [loading]="svc.loading() && !svc.devices().length">
+    <ui-metric-card [label]="'admin.devices.kpi.offline' | translate"  [value]="svc.stats().offline"     [loading]="svc.loading() && !svc.devices().length">
       <ion-icon icon name="close-circle-outline"></ion-icon>
     </ui-metric-card>
-    <ui-metric-card label="Issues"   [value]="svc.stats().error"       [loading]="svc.loading() && !svc.devices().length"
+    <ui-metric-card [label]="'admin.devices.kpi.issues' | translate"   [value]="svc.stats().error"       [loading]="svc.loading() && !svc.devices().length"
       iconColor="var(--danger)" iconBg="var(--danger-weak)">
       <ion-icon icon name="warning-outline"></ion-icon>
     </ui-metric-card>
@@ -27,13 +27,13 @@
   <ion-card class="filter-bar">
     <ion-card-content>
       <div class="filter-row">
-        <ui-search-field placeholder="Search hostname, ID or IP…"
+        <ui-search-field [placeholder]="'admin.devices.search_placeholder' | translate"
           [value]="searchQuery()" (valueChange)="searchQuery.set($event)">
         </ui-search-field>
-        <ui-select placeholder="All Statuses" [options]="statusOptions"
+        <ui-select [placeholder]="'admin.devices.all_statuses' | translate" [options]="statusOptions"
           [(ngModel)]="statusFilter" (ngModelChange)="onStatusChange($event)">
         </ui-select>
-        <ion-button fill="outline" color="medium" size="small" (click)="svc.load(statusFilter || undefined)" [disabled]="svc.loading()">
+        <ion-button fill="outline" color="medium" size="small" (click)="svc.load(statusFilter || undefined)" [disabled]="svc.loading()" [title]="'admin.devices.reload' | translate">
           <ion-icon slot="icon-only" name="reload-outline"></ion-icon>
         </ion-button>
       </div>
@@ -52,13 +52,13 @@
   <ng-template #actionsCell let-row>
     <div class="row-actions">
       <ion-button size="small" fill="outline" [routerLink]="['/app/devices', row.id]">
-        View
+        {{ 'admin.devices.actions.view' | translate }}
       </ion-button>
       @if (row.status === 'ONLINE') {
         <ion-button size="small" fill="outline" color="warning"
           [disabled]="actionLoading()" (click)="onRestart(row)">
           <ion-icon slot="start" name="refresh-outline"></ion-icon>
-          Restart
+          {{ 'admin.devices.actions.restart' | translate }}
         </ion-button>
       }
     </div>
@@ -66,8 +66,8 @@
 
   <!-- Table -->
   @if (svc.error() && !svc.devices().length) {
-    <ui-empty-state title="Failed to load devices" [hasAction]="true">
-      <ion-button action fill="outline" size="small" (click)="svc.load()">Retry</ion-button>
+    <ui-empty-state [title]="'admin.devices.failed.title' | translate" [hasAction]="true">
+      <ion-button action fill="outline" size="small" (click)="svc.load()">{{ 'admin.devices.failed.retry' | translate }}</ion-button>
     </ui-empty-state>
   } @else {
     <ui-data-table [columns]="cols()" [rows]="filtered()" rowKey="id" [pageSize]="20">

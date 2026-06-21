@@ -6,8 +6,8 @@
   <!-- Page head -->
   <div class="pagehead">
     <div>
-      <div class="pagehead__title">Monitoring</div>
-      <div class="pagehead__sub">{{ totalCount() }} alert{{ totalCount() !== 1 ? 's' : '' }} loaded</div>
+      <div class="pagehead__title">{{ 'monitoring.title' | translate }}</div>
+      <div class="pagehead__sub">{{ totalCount() }} {{ totalCount() !== 1 ? ('monitoring.alert_plural' | translate) : ('monitoring.alert_singular' | translate) }} loaded</div>
     </div>
   </div>
 
@@ -39,13 +39,13 @@
 
     <!-- KPI row -->
     <div class="metrics">
-      <ui-metric-card label="Open" [value]="openCount().toString()" iconColor="var(--ion-color-danger)">
+      <ui-metric-card [label]="'monitoring.states.open' | translate" [value]="openCount().toString()" iconColor="var(--ion-color-danger)">
         <ion-icon icon name="alert-circle-outline"></ion-icon>
       </ui-metric-card>
-      <ui-metric-card label="Acknowledged" [value]="ackCount().toString()" iconColor="var(--ion-color-warning)">
+      <ui-metric-card [label]="'monitoring.states.acknowledged' | translate" [value]="ackCount().toString()" iconColor="var(--ion-color-warning)">
         <ion-icon icon name="alert-circle-outline"></ion-icon>
       </ui-metric-card>
-      <ui-metric-card label="Resolved" [value]="resolvedCount().toString()" iconColor="var(--ion-color-success)">
+      <ui-metric-card [label]="'monitoring.states.resolved' | translate" [value]="resolvedCount().toString()" iconColor="var(--ion-color-success)">
         <ion-icon icon name="checkmark-circle-outline"></ion-icon>
       </ui-metric-card>
     </div>
@@ -55,30 +55,30 @@
       <ion-card-content>
         <div class="filter-row">
           <ui-search-field
-            placeholder="Search alerts…"
+            [placeholder]="'monitoring.filter.search' | translate"
             [value]="search()"
             (valueChange)="search.set($event)">
           </ui-search-field>
           <ui-device-picker
-            label="Device"
+            [label]="'monitoring.filter.device' | translate"
             [devices]="devicePickerItems()"
             [value]="deviceFilter()"
             (valueChange)="deviceFilter.set($event)">
           </ui-device-picker>
           <ui-multi-select-picker
-            label="Severity"
+            [label]="'monitoring.filter.severity' | translate"
             [options]="severityOptions"
             [value]="severityFilter()"
             (valueChange)="severityFilter.set($event)">
           </ui-multi-select-picker>
           <ui-multi-select-picker
-            label="State"
+            [label]="'monitoring.filter.state' | translate"
             [options]="stateOptions"
             [value]="stateFilter()"
             (valueChange)="stateFilter.set($event)">
           </ui-multi-select-picker>
           <ui-date-range-picker
-            label="Period"
+            [label]="'monitoring.filter.period' | translate"
             [value]="period()"
             (valueChange)="onPeriodChange($event)">
           </ui-date-range-picker>
@@ -89,15 +89,15 @@
     <!-- Bulk action bar -->
     @if (selectedCount() > 0) {
       <div class="bulk-bar">
-        <span class="bulk-bar__count">{{ selectedCount() }} selected</span>
+        <span class="bulk-bar__count">{{ 'monitoring.selected' | translate: { count: selectedCount() } }}</span>
         <ion-button fill="outline" color="warning" size="small" [disabled]="_bulkBusy()" (click)="onBulkAcknowledge()">
-          Acknowledge
+          {{ 'monitoring.actions.acknowledge' | translate }}
         </ion-button>
         <ion-button fill="outline" color="success" size="small" [disabled]="_bulkBusy()" (click)="onBulkResolve()">
-          Resolve
+          {{ 'monitoring.actions.resolve' | translate }}
         </ion-button>
         <ion-button fill="clear" color="medium" size="small" (click)="_selectedIds.set([])">
-          Clear
+          {{ 'monitoring.actions.clear' | translate }}
         </ion-button>
       </div>
     }
@@ -105,13 +105,13 @@
     <!-- Alerts table / empty states -->
     @if (_liveAlerts().length === 0) {
       <ui-empty-state
-        title="No alerts"
-        description="No alerts have been triggered for this time range.">
+        [title]="'monitoring.empty.no_alerts' | translate"
+        [description]="'monitoring.empty.no_alerts_period' | translate">
       </ui-empty-state>
     } @else if (filteredAlerts().length === 0) {
       <ui-empty-state
-        title="No alerts match filters"
-        description="Try adjusting the severity, state or period filters.">
+        [title]="'monitoring.empty.no_alerts' | translate"
+        [description]="'monitoring.empty.filtered' | translate">
       </ui-empty-state>
     } @else {
       <ui-data-table
@@ -124,7 +124,7 @@
     }
 
     <!-- Alert trend chart -->
-    <div class="section-head">Alert Trend</div>
+    <div class="section-head">{{ 'monitoring.chart.title' | translate }}</div>
     <ion-card class="chart-card">
       <ion-card-content>
         @if (trendLoading()) {
@@ -132,7 +132,7 @@
         } @else if (trendChartOptions()) {
           <div echarts [options]="trendChartOptions()!" class="trend-chart"></div>
         } @else {
-          <div class="dim">No trend data for this period</div>
+          <div class="dim">{{ 'monitoring.chart.no_data' | translate }}</div>
         }
       </ion-card-content>
     </ion-card>

@@ -12,6 +12,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { TranslatePipe } from '@ngx-translate/core';
 import { TopbarService } from '@ng/shell/topbar.service';
 import { addIcons } from 'ionicons';
 import {
@@ -69,6 +70,7 @@ function lastVal(series: MetricPoint[] | undefined): number | null {
     EmptyStateComponent,
     StatusBadgeComponent,
     CommandSheetComponent,
+    TranslatePipe,
   ],
 })
 export class DeviceOverviewPage implements OnInit, AfterViewInit {

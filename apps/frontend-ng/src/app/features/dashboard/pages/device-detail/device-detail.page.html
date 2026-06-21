@@ -11,8 +11,8 @@
   <!-- Error state (no data at all) -->
   @if (device.error() && !device.data()) {
     <div class="devdetail__error">
-      <ui-empty-state title="Device not found" [hasAction]="true">
-        <ion-button action fill="outline" size="small" (click)="onRetry()">Retry</ion-button>
+      <ui-empty-state [title]="'device_detail.not_found.title' | translate" [hasAction]="true">
+        <ion-button action fill="outline" size="small" (click)="onRetry()">{{ 'device_detail.not_found.retry' | translate }}</ion-button>
       </ui-empty-state>
     </div>
   }
@@ -24,8 +24,8 @@
         <div class="setup-banner__header">
           <ion-icon name="wifi-outline"></ion-icon>
           <div>
-            <strong>Device pending activation</strong>
-            <p>Connect to the WiFi AP <span class="mono">IotPilot-Setup-XXXX</span> and enter the token below.</p>
+            <strong>{{ 'device_detail.pending_title' | translate }}</strong>
+            <p>{{ 'device_detail.pending_desc' | translate }}</p>
           </div>
         </div>
 
@@ -38,10 +38,10 @@
           </div>
         } @else {
           <div class="setup-banner__expired">
-            <span>Token expired.</span>
+            <span>{{ 'device_detail.token_expired' | translate }}</span>
             <ion-button fill="outline" size="small" color="primary" (click)="onRegenerateToken()" [disabled]="regenerating()">
               <ion-icon slot="start" name="refresh-outline"></ion-icon>
-              Regenerate Token
+              {{ 'device_detail.regenerate_token' | translate }}
             </ion-button>
           </div>
         }
@@ -96,7 +96,7 @@
           <ion-button fill="outline" color="medium" size="small"
             [routerLink]="['/app/devices', deviceId(), 'terminal']">
             <ion-icon slot="start" name="terminal-outline"></ion-icon>
-            SSH
+            {{ 'device_detail.ssh' | translate }}
           </ion-button>
         }
         <ion-button fill="outline" color="medium" size="small" (click)="onRefresh()">
@@ -105,7 +105,7 @@
         @if (canRunCommand()) {
           <ion-button fill="solid" color="primary" size="small" (click)="onRunCommand()">
             <ion-icon slot="start" name="flash-outline"></ion-icon>
-            Run command
+            {{ 'device_detail.run_command' | translate }}
           </ion-button>
         }
       </div>

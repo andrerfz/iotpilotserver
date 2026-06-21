@@ -8,7 +8,7 @@
   @if (mode() === 'issue') {
     <div class="cmd-form">
       <ui-select
-        label="Command"
+        [label]="'components.command_sheet.command_label' | translate"
         [options]="commandOptions"
         [ngModel]="commandType()"
         (ngModelChange)="commandType.set($event)"
@@ -17,7 +17,7 @@
       @if (showArgs()) {
         <ion-item class="form-item">
           <ion-label position="stacked">
-            Arguments <ion-text color="medium">(optional)</ion-text>
+            {{ 'components.command_sheet.args_label' | translate }}
           </ion-label>
           <ion-input
             placeholder="e.g. ls -la /tmp"
@@ -26,14 +26,15 @@
             autocomplete="off"
             spellcheck="false">
           </ion-input>
-          <ion-note slot="helper">Shell arguments passed to the command</ion-note>
+          <ion-note slot="helper">{{ 'components.command_sheet.args_hint' | translate }}</ion-note>
         </ion-item>
       }
 
       @if (commandType() === 'SHUTDOWN') {
         <div class="cmd-form__warning">
           <ion-text color="danger">
-            Warning: Shutdown will power off the device. Physical access may be required to restart it.
+            {{ 'components.command_sheet.shutdown_warning' | translate }}
+            {{ 'components.command_sheet.shutdown_hint' | translate }}
           </ion-text>
         </div>
       }
@@ -46,30 +47,30 @@
       <div class="cmd-detail">
         <dl class="cmd-detail__grid">
           <div class="cmd-detail__row">
-            <dt>Command</dt>
+            <dt>{{ 'components.command_sheet.result.command' | translate }}</dt>
             <dd class="mono">{{ cmd.command }}{{ cmd.arguments ? ' ' + cmd.arguments : '' }}</dd>
           </div>
           <div class="cmd-detail__row">
-            <dt>Status</dt>
+            <dt>{{ 'components.command_sheet.result.status' | translate }}</dt>
             <dd>
               <ui-status-badge [status]="cmd.status ?? 'UNKNOWN'"></ui-status-badge>
             </dd>
           </div>
           @if (cmd.exitCode !== null && cmd.exitCode !== undefined) {
             <div class="cmd-detail__row">
-              <dt>Exit Code</dt>
+              <dt>{{ 'components.command_sheet.result.exit_code' | translate }}</dt>
               <dd class="mono">{{ cmd.exitCode }}</dd>
             </div>
           }
           @if (cmd.createdAt) {
             <div class="cmd-detail__row">
-              <dt>Created</dt>
+              <dt>{{ 'components.command_sheet.result.created' | translate }}</dt>
               <dd>{{ cmd.createdAt }}</dd>
             </div>
           }
           @if (cmd.executedAt) {
             <div class="cmd-detail__row">
-              <dt>Executed</dt>
+              <dt>{{ 'components.command_sheet.result.executed' | translate }}</dt>
               <dd>{{ cmd.executedAt }}</dd>
             </div>
           }
@@ -77,14 +78,14 @@
 
         @if (cmd.output) {
           <div class="cmd-detail__section">
-            <p class="cmd-detail__section-title">Output</p>
+            <p class="cmd-detail__section-title">{{ 'components.command_sheet.result.output' | translate }}</p>
             <pre class="cmd-detail__pre">{{ cmd.output }}</pre>
           </div>
         }
 
         @if (cmd.error) {
           <div class="cmd-detail__section">
-            <p class="cmd-detail__section-title">Error</p>
+            <p class="cmd-detail__section-title">{{ 'components.command_sheet.result.error' | translate }}</p>
             <pre class="cmd-detail__pre cmd-detail__pre--error">{{ cmd.error }}</pre>
           </div>
         }

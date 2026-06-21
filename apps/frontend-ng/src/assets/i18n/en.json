@@ -1,0 +1,804 @@
+{
+  "common": {
+    "retry": "Retry",
+    "save": "Save changes",
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "refresh": "Refresh",
+    "search": "Search",
+    "export": "Export",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "no_data": "No data available",
+    "close": "Close",
+    "confirm": "Confirm",
+    "new": "New",
+    "view": "View",
+    "reload": "Reload",
+    "clear": "Clear",
+    "back": "Back",
+    "copy": "Copy",
+    "send": "Send",
+    "create": "Create",
+    "update": "Update",
+    "unknown": "Unknown",
+    "online": "Online",
+    "offline": "Offline",
+    "yes": "Yes",
+    "no": "No",
+    "selected": "selected",
+    "entries": "entries",
+    "page": "Page",
+    "of": "of",
+    "total": "total",
+    "previous": "Previous",
+    "next": "Next",
+    "last_7_days": "Last 7 Days",
+    "period": "Period",
+    "all": "All"
+  },
+  "errors": {
+    "network": "Unable to reach the server. Check your connection and try again.",
+    "unauthorized": "Your session has expired. Please sign in again.",
+    "forbidden": "You don't have permission to do that.",
+    "not_found": "The requested item could not be found.",
+    "validation": "Please review the highlighted fields and try again.",
+    "bad_request": "Please review the highlighted fields and try again.",
+    "conflict": "That action conflicts with existing data.",
+    "too_many_requests": "Too many attempts. Please wait a moment and try again.",
+    "internal": "Something went wrong on our end. Please try again.",
+    "service_unavailable": "The service is temporarily unavailable. Please try again shortly.",
+    "fallback": "Something went wrong. Please try again."
+  },
+  "auth": {
+    "login": {
+      "toast_code_sent": "Verification code sent to your email.",
+      "title": "Welcome back",
+      "subtitle": "Sign in to your account to continue",
+      "email": "Email",
+      "email_placeholder": "Enter your email",
+      "password": "Password",
+      "password_placeholder": "Enter your password",
+      "remember_me": "Remember me",
+      "submit": "Sign in",
+      "submitting": "Signing in...",
+      "no_account": "Don't have an account?",
+      "create_account": "Create account",
+      "tagline": "Secure IoT device management platform"
+    },
+    "two_fa": {
+      "title": "Verification required",
+      "subtitle": "Enter the 6-digit code sent to your email",
+      "verify": "Verify",
+      "verifying": "Verifying...",
+      "back": "Back to login"
+    },
+    "register": {
+      "toast_submitted": "Registration submitted. An administrator will review your account.",
+      "toast_created": "Account created successfully. You can now log in.",
+      "error_email_exists": "An account with this email already exists.",
+      "title": "Create an account",
+      "subtitle": "Start managing your IoT devices",
+      "username": "Username",
+      "email": "Email",
+      "password": "Password",
+      "password_placeholder": "Create a password",
+      "confirm_password": "Confirm password",
+      "submit": "Create account",
+      "submitting": "Creating account...",
+      "have_account": "Already have an account?",
+      "sign_in": "Sign in",
+      "tagline": "Secure IoT device management platform"
+    }
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "devices": "Devices",
+    "monitoring": "Monitoring",
+    "logs": "Logs",
+    "settings": "Settings",
+    "admin": "Admin",
+    "overview": "Overview",
+    "users": "Users",
+    "customers": "Customers",
+    "system": "System"
+  },
+  "dashboard": {
+    "title": "Fleet overview",
+    "subtitle": "Real-time health",
+    "online": "Online",
+    "open_alerts": "Open alerts",
+    "avg_cpu": "Avg CPU",
+    "ingest_rate": "Ingest rate",
+    "devices": "Devices",
+    "status": "Status",
+    "filter_by_status": "Filter by status",
+    "filter_sub": "Show only devices in these states",
+    "live_alerts": "Live alerts",
+    "no_alerts": "No active alerts",
+    "fleet_cpu": "Fleet CPU",
+    "no_cpu_data": "No CPU data for this period"
+  },
+  "devices": {
+    "kpi": {
+      "online": "Online",
+      "offline_error": "Offline / Error",
+      "maintenance": "Maintenance",
+      "firmware_ok": "Firmware OK"
+    },
+    "search_placeholder": "Search hostname, device ID or location…",
+    "filter_by_status": "Filter by status",
+    "filter_sub": "Show only devices in these states",
+    "selected": "{{count}} selected",
+    "export": "Export",
+    "empty_filtered": {
+      "title": "No devices match your filters",
+      "desc": "Try clearing the search or status filter."
+    },
+    "empty": {
+      "title": "No devices registered",
+      "desc": "Register your first device to get started."
+    },
+    "failed": {
+      "title": "Failed to load devices",
+      "desc": "Check your connection and try again."
+    },
+    "export_sheet": {
+      "title": "Export devices",
+      "xlsx_label": "Export XLSX",
+      "xlsx_sub": "Excel spreadsheet",
+      "csv_label": "Export CSV",
+      "csv_sub": "Comma-separated values",
+      "pdf_label": "Export PDF",
+      "pdf_sub": "Printable document"
+    }
+  },
+  "device_detail": {
+    "pending_title": "Device pending activation",
+    "pending_desc": "Connect to the WiFi AP, enter the token below.",
+    "token_expired": "Token expired",
+    "regenerate_token": "Regenerate Token",
+    "ssh": "SSH",
+    "run_command": "Run command",
+    "not_found": {
+      "title": "Device not found",
+      "retry": "Retry"
+    },
+    "tabs": {
+      "overview": "Overview",
+      "metrics": "Metrics",
+      "alerts": "Alerts",
+      "logs": "Logs",
+      "commands": "Commands",
+      "settings": "Settings",
+      "network": "Network",
+      "storage": "Storage",
+      "terminal": "Terminal"
+    }
+  },
+  "device_overview": {
+    "metrics": {
+      "cpu": "CPU",
+      "memory": "Memory",
+      "temperature": "Temperature",
+      "disk": "Disk",
+      "battery": "Battery"
+    },
+    "failed": {
+      "title": "Could not load overview",
+      "retry": "Retry"
+    },
+    "cpu_memory_trends": "CPU & Memory trends",
+    "metrics_tab_hint": "Available in the Metrics tab",
+    "recent_commands": "Recent commands",
+    "no_commands": "No commands yet",
+    "new_command": "New",
+    "device_info": "Device info",
+    "public_id": "Public ID",
+    "hardware": "Hardware",
+    "ip_address": "IP Address",
+    "tailscale_ip": "Tailscale IP",
+    "firmware": "Firmware",
+    "location": "Location",
+    "mac": "MAC",
+    "last_seen": "Last Seen",
+    "temp_battery_trends": "Temperature & Battery trends"
+  },
+  "device_metrics": {
+    "labels": {
+      "cpu": "CPU Usage",
+      "memory": "Memory",
+      "disk": "Disk Usage",
+      "temperature": "Temperature",
+      "battery": "Battery"
+    },
+    "charts": {
+      "cpu": "CPU Usage",
+      "memory": "Memory Usage",
+      "disk": "Disk Usage",
+      "battery": "Battery Level"
+    },
+    "failed": {
+      "title": "Failed to load metrics",
+      "retry": "Retry"
+    },
+    "no_chart_data": "No data available"
+  },
+  "device_alerts": {
+    "states": {
+      "open": "Open",
+      "acknowledged": "Acknowledged",
+      "resolved": "Resolved"
+    },
+    "filter": {
+      "severity": "Severity",
+      "state": "State",
+      "clear": "Clear filters"
+    },
+    "actions": {
+      "thresholds": "Thresholds",
+      "refresh": "Refresh",
+      "ack": "Ack",
+      "resolve": "Resolve",
+      "ack_selected": "Acknowledge selected",
+      "resolve_selected": "Resolve selected"
+    },
+    "chart": {
+      "title": "Alert Trend",
+      "period": "Last 7 Days"
+    },
+    "selected": "{{count}} selected",
+    "empty": {
+      "no_alerts": "No alerts",
+      "no_alerts_desc": "This device has no alerts yet.",
+      "filtered": "Try adjusting your filters."
+    },
+    "failed": {
+      "title": "Could not load alerts",
+      "retry": "Retry"
+    }
+  },
+  "device_logs": {
+    "search_placeholder": "Search logs",
+    "levels": {
+      "all": "All levels"
+    },
+    "filter": {
+      "options": "Filter options",
+      "auto_refresh": "Auto-refresh",
+      "refresh": "Refresh now",
+      "search_in": "Search in",
+      "messages": "Messages",
+      "source": "Source",
+      "clear": "Clear filters"
+    },
+    "title": "Device Logs",
+    "entries": "entries",
+    "failed": {
+      "title": "Could not load logs",
+      "retry": "Retry"
+    },
+    "empty": {
+      "no_logs": "No logs found",
+      "filtered": "Try adjusting your filters.",
+      "none": "This device has no log entries yet."
+    }
+  },
+  "device_commands": {
+    "offline_warning": "Device is offline",
+    "offline_desc": "Commands will be queued",
+    "quick_actions": "Quick Actions",
+    "issue_command": "Issue Command",
+    "history": "Command History",
+    "commands": "commands",
+    "failed": {
+      "title": "Could not load commands",
+      "retry": "Retry"
+    },
+    "empty": {
+      "title": "No commands yet",
+      "desc": "Use Quick Actions or Issue Command to get started."
+    }
+  },
+  "device_settings": {
+    "sections": {
+      "general": "General",
+      "device": "Device",
+      "monitoring": "Monitoring",
+      "network": "Network",
+      "agent": "Agent",
+      "security": "Security",
+      "danger": "Danger Zone"
+    },
+    "fields": {
+      "type": "Type",
+      "ip_address": "IP Address",
+      "ssh_enabled": "SSH Enabled",
+      "auto_update": "Auto Update",
+      "metrics_enabled": "Metrics Enabled",
+      "heartbeat_interval": "Heartbeat Interval (s)",
+      "cpu_threshold": "CPU Threshold (%)",
+      "memory_threshold": "Memory Threshold (%)",
+      "disk_threshold": "Disk Threshold (%)",
+      "temp_threshold": "Temp Threshold (°C)",
+      "reporting_interval": "Reporting Interval",
+      "reporting_interval_hint": "Define a reporting interval",
+      "sensor_temp_threshold": "Sensor Temp Threshold (°C)",
+      "battery_threshold": "Battery Threshold (%)",
+      "network_monitoring": "Network Monitoring",
+      "update_channel": "Update Channel",
+      "key_rotation": "Key Rotation (days)",
+      "key_rotation_hint": "Rotating the API key immediately invalidates the current key"
+    },
+    "rotate_key": "Rotate API Key",
+    "new_api_key": "New API Key (copy now — shown once)",
+    "save": "Save Settings",
+    "delete_device": {
+      "title": "Delete this device",
+      "desc": "Permanently removes the device and all its data.",
+      "button": "Delete",
+      "confirm_title": "Are you sure?",
+      "confirm": "Confirm Delete"
+    }
+  },
+  "device_network": {
+    "title": "Network",
+    "auto_refresh": "Auto-refresh",
+    "refresh": "Refresh",
+    "failed": {
+      "title": "Could not load network info",
+      "retry": "Retry"
+    },
+    "sections": {
+      "connectivity": "Connectivity",
+      "ip_addresses": "IP Addresses",
+      "identity": "Device Identity"
+    },
+    "fields": {
+      "status": "Status",
+      "quality": "Quality",
+      "last_seen": "Last seen",
+      "primary_ip": "Primary IP",
+      "tailscale_ip": "Tailscale IP",
+      "mac": "MAC address",
+      "hostname": "Hostname",
+      "device_type": "Device type",
+      "architecture": "Architecture",
+      "agent_version": "Agent version",
+      "location": "Location"
+    }
+  },
+  "device_storage": {
+    "title": "Storage & System",
+    "auto_refresh": "Auto-refresh",
+    "refresh": "Refresh",
+    "failed": {
+      "title": "Could not load storage info",
+      "retry": "Retry"
+    },
+    "sections": {
+      "disk": "Disk Usage",
+      "memory": "Memory Usage",
+      "load": "System Load"
+    },
+    "fields": {
+      "used": "Used",
+      "total_capacity": "Total capacity",
+      "free": "Free (estimated)",
+      "total_ram": "Total RAM",
+      "load_average": "Load average",
+      "uptime": "Uptime",
+      "cpu": "CPU"
+    }
+  },
+  "device_terminal": {
+    "offline_title": "Device offline",
+    "offline_desc": "The terminal is only available when the device is online.",
+    "title": "SSH Terminal",
+    "desc": "Commands are executed via the device agent over a secure channel.",
+    "stateless": "Sessions are stateless",
+    "connect": "Connect Terminal",
+    "placeholder": "Type a command and press Enter or Send",
+    "send": "Send",
+    "clear": "Clear"
+  },
+  "monitoring": {
+    "title": "Monitoring",
+    "alert_singular": "alert",
+    "alert_plural": "alerts",
+    "states": {
+      "open": "Open",
+      "acknowledged": "Acknowledged",
+      "resolved": "Resolved"
+    },
+    "filter": {
+      "search": "Search alerts",
+      "device": "Device",
+      "severity": "Severity",
+      "state": "State",
+      "period": "Period"
+    },
+    "actions": {
+      "acknowledge": "Acknowledge",
+      "resolve": "Resolve",
+      "clear": "Clear"
+    },
+    "selected": "{{count}} selected",
+    "empty": {
+      "no_alerts": "No alerts",
+      "no_alerts_period": "No alerts have been triggered for this time range.",
+      "filtered": "Try adjusting the severity, state or period filters."
+    },
+    "chart": {
+      "title": "Alert Trend",
+      "no_data": "No trend data for this period"
+    }
+  },
+  "logs": {
+    "title": "Logs",
+    "subtitle": "Device & system logs",
+    "search_placeholder": "Search logs",
+    "levels": {
+      "all": "All Levels"
+    },
+    "filters": {
+      "all_devices": "All Devices",
+      "all_sources": "All Sources"
+    },
+    "actions": {
+      "reload": "Reload",
+      "export": "Export"
+    },
+    "table": {
+      "timestamp": "Timestamp",
+      "level": "Level",
+      "device": "Device",
+      "source": "Source",
+      "message": "Message"
+    },
+    "failed": {
+      "title": "Failed to load logs",
+      "retry": "Retry"
+    },
+    "empty": "No logs found",
+    "entries": "entries"
+  },
+  "settings": {
+    "profile": {
+      "title": "Profile",
+      "first_name": "First name",
+      "last_name": "Last name",
+      "phone": "Phone number",
+      "email": "Email",
+      "email_hint": "Email cannot be changed here.",
+      "username": "Username",
+      "username_hint": "Username cannot be changed here.",
+      "language": "Language",
+      "timezone": "Timezone",
+      "date_format": "Date Format",
+      "save": "Save changes",
+      "saving": "Saving..."
+    },
+    "security": {
+      "title": "Account Security",
+      "two_fa": {
+        "title": "Two-Factor Authentication",
+        "desc": "Add an extra layer of security to your account."
+      },
+      "login_notifications": {
+        "title": "Login Notifications",
+        "desc": "Receive notifications when someone logs into your account."
+      },
+      "session_timeout": {
+        "title": "Session Timeout",
+        "desc": "Automatically log out after a period of inactivity.",
+        "unit": "min"
+      },
+      "save": "Save Changes",
+      "saving": "Saving...",
+      "change_password": {
+        "title": "Change Password",
+        "current": "Current password",
+        "new": "New password",
+        "new_hint": "At least 8 characters required.",
+        "confirm": "Confirm new password",
+        "submit": "Update Password",
+        "submitting": "Updating..."
+      },
+      "sessions": {
+        "title": "Active Sessions",
+        "show": "Show sessions",
+        "hide": "Hide",
+        "desc": "Devices and browsers currently signed in to your account.",
+        "empty": "No active sessions found.",
+        "current": "Current",
+        "started": "Started",
+        "expires": "Expires",
+        "revoke": "Revoke",
+        "revoke_others": "Revoke all other sessions",
+        "count": "You have {{count}} active sessions."
+      },
+      "recommendations": {
+        "title": "Security Recommendations",
+        "strong_password": "Use a strong, unique password",
+        "strong_password_desc": "Ensure your password is at least 12 characters long.",
+        "enable_2fa": "Enable two-factor authentication",
+        "enable_2fa_desc": "Add an extra layer of security.",
+        "review_sessions": "Review active sessions",
+        "review_sessions_desc": "Regularly check and terminate any suspicious sessions."
+      }
+    },
+    "notifications": {
+      "title": "Notification Preferences",
+      "email": {
+        "title": "Email Notifications",
+        "desc": "Receive notifications via email."
+      },
+      "push": {
+        "title": "Push Notifications",
+        "desc": "Receive push notifications in your browser."
+      },
+      "alerts": {
+        "title": "Alert Notifications",
+        "desc": "Receive notifications for system alerts and warnings."
+      },
+      "device_offline": {
+        "title": "Device Offline Notifications",
+        "desc": "Get notified when devices go offline."
+      },
+      "save": "Save Changes",
+      "saving": "Saving..."
+    },
+    "api_keys": {
+      "title": "API Keys",
+      "desc": "API keys allow devices and integrations to authenticate with the platform.",
+      "security_hint": "Each key is shown once on creation — store it securely.",
+      "new_key_banner": "API key created — copy it now.",
+      "new_key_once": "This key will not be shown again.",
+      "search_placeholder": "Search keys",
+      "failed": {
+        "title": "Failed to load API keys",
+        "retry": "Retry"
+      },
+      "form": {
+        "name_label": "Key name",
+        "name_placeholder": "Sensor Room A",
+        "submit": "Create key",
+        "submitting": "Creating..."
+      }
+    },
+    "system": {
+      "title": "Display Settings",
+      "theme": {
+        "label": "Theme",
+        "desc": "Choose your preferred color theme.",
+        "light": "Light",
+        "dark": "Dark",
+        "system": "System"
+      },
+      "layout": {
+        "label": "Dashboard Layout",
+        "desc": "Choose how your dashboard is organized."
+      },
+      "items_per_page": {
+        "label": "Items Per Page",
+        "desc": "Number of items to display in lists and tables."
+      },
+      "save": "Save Changes",
+      "saving": "Saving...",
+      "admin": {
+        "title": "Admin Settings",
+        "advanced_metrics": {
+          "label": "Advanced Metrics",
+          "desc": "Enable detailed system metrics and analytics."
+        },
+        "beta": {
+          "label": "Beta Features",
+          "desc": "Enable experimental features and functionality."
+        },
+        "log_level": {
+          "label": "Log Level",
+          "desc": "Set the system logging verbosity."
+        },
+        "save": "Save Admin Settings"
+      }
+    }
+  },
+  "admin": {
+    "overview": {
+      "title": "Admin Overview",
+      "kpi": {
+        "users": "Total Users",
+        "devices": "Total Devices",
+        "active_devices": "Active Devices",
+        "open_alerts": "Open Alerts"
+      },
+      "quick_access": "Quick Access",
+      "cards": {
+        "devices": {
+          "label": "Device Management",
+          "desc": "View, restart and manage all devices."
+        },
+        "users": {
+          "label": "User Management",
+          "desc": "Approve, suspend and manage accounts."
+        },
+        "logs": {
+          "label": "Logs Viewer",
+          "desc": "Browse and export device logs."
+        },
+        "system": {
+          "label": "System Health",
+          "desc": "CPU, memory and database status."
+        }
+      },
+      "failed": {
+        "title": "Failed to load stats",
+        "retry": "Retry"
+      }
+    },
+    "devices": {
+      "kpi": {
+        "total": "Total",
+        "online": "Online",
+        "offline": "Offline",
+        "issues": "Issues"
+      },
+      "search_placeholder": "Search hostname, ID or IP",
+      "all_statuses": "All Statuses",
+      "reload": "Reload",
+      "failed": {
+        "title": "Failed to load devices",
+        "retry": "Retry"
+      },
+      "actions": {
+        "view": "View",
+        "restart": "Restart"
+      }
+    },
+    "users": {
+      "search_placeholder": "Search name or email",
+      "all_statuses": "All Statuses",
+      "failed": {
+        "title": "Failed to load users",
+        "retry": "Retry"
+      },
+      "actions": {
+        "approve": "Approve",
+        "reject": "Reject",
+        "suspend": "Suspend",
+        "activate": "Activate"
+      }
+    },
+    "customers": {
+      "search_placeholder": "Search name or slug",
+      "all_statuses": "All Statuses",
+      "failed": {
+        "title": "Failed to load customers",
+        "retry": "Retry"
+      },
+      "actions": {
+        "edit": "Edit",
+        "deactivate": "Deactivate"
+      }
+    },
+    "logs": {
+      "search_placeholder": "Search logs",
+      "all_levels": "All Levels",
+      "all_devices": "All Devices",
+      "all_sources": "All Sources",
+      "reload": "Reload",
+      "export": "Export",
+      "table": {
+        "timestamp": "Timestamp",
+        "level": "Level",
+        "device": "Device",
+        "source": "Source",
+        "message": "Message"
+      },
+      "failed": {
+        "title": "Failed to load logs",
+        "retry": "Retry"
+      },
+      "empty": "No logs found",
+      "entries": "entries",
+      "export_sheet": {
+        "xlsx_label": "Export XLSX",
+        "csv_label": "Export CSV",
+        "pdf_label": "Export PDF"
+      }
+    },
+    "system": {
+      "last_updated": "Last updated",
+      "refresh": "Refresh",
+      "failed": {
+        "title": "Failed to load system info",
+        "retry": "Retry"
+      },
+      "sections": {
+        "system": "System",
+        "database": "Database",
+        "application": "Application",
+        "recent_activity": "Recent Activity"
+      },
+      "fields": {
+        "platform": "Platform",
+        "node": "Node.js",
+        "uptime": "Uptime",
+        "cpu": "CPU",
+        "memory": "Memory",
+        "status": "Status",
+        "version": "Version",
+        "size": "Size",
+        "connections": "Connections",
+        "idle": "idle",
+        "environment": "Environment",
+        "built": "Built",
+        "features": "features"
+      }
+    },
+    "new_user": {
+      "title": "New User",
+      "email": "Email",
+      "email_placeholder": "user@example.com",
+      "username": "Username",
+      "username_placeholder": "johndoe",
+      "password": "Password",
+      "password_hint": "Min 8 characters",
+      "role": "Role",
+      "customer": "Customer / Tenant",
+      "select_customer": "Select a customer",
+      "cancel": "Cancel",
+      "submit": "Create User"
+    }
+  },
+  "components": {
+    "register_device": {
+      "title": "Register Device",
+      "done": "Done",
+      "desc": "Claim a new device to your account.",
+      "device_id": "Device ID",
+      "device_id_hint": "Found on the device label or QR code.",
+      "device_name": "Device Name (optional)",
+      "device_name_hint": "A friendly name to identify this device.",
+      "submit": "Claim Device",
+      "submitting": "Claiming...",
+      "claimed": {
+        "title": "Device Claimed",
+        "desc": "Set up your device with the token below.",
+        "token_label": "Setup Token",
+        "expires": "Expires in",
+        "minute": "minute",
+        "minutes": "minutes",
+        "copy": "Copy token"
+      },
+      "instructions": "Setup Instructions"
+    },
+    "command_sheet": {
+      "command_label": "Command",
+      "args_label": "Arguments (optional)",
+      "args_hint": "Shell arguments passed to the command.",
+      "shutdown_warning": "Warning: Shutdown will power off the device.",
+      "shutdown_hint": "Physical access may be required to restart it.",
+      "result": {
+        "command": "Command",
+        "status": "Status",
+        "exit_code": "Exit Code",
+        "created": "Created",
+        "executed": "Executed",
+        "output": "Output",
+        "error": "Error"
+      }
+    },
+    "threshold": {
+      "title": "Alert Thresholds",
+      "save": "Save",
+      "scope_device": "This device",
+      "scope_global": "Global",
+      "failed": "Failed to load thresholds."
+    }
+  }
+}
