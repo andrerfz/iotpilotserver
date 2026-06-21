@@ -45,7 +45,7 @@ function makeApi() {
 
 function setup(api = makeApi()) {
   TestBed.configureTestingModule({
-    providers: [{ provide: Api, useValue: api }],
+    providers: [DeviceDetailService, { provide: Api, useValue: api }],
   });
   return { service: TestBed.inject(DeviceDetailService), api };
 }
