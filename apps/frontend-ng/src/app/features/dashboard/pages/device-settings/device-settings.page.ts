@@ -11,7 +11,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TopbarService } from '@ng/shell/topbar.service';
 import { addIcons } from 'ionicons';
-import { copyOutline, eyeOffOutline, eyeOutline, refreshOutline, trashOutline } from 'ionicons/icons';
+import { copyOutline, eyeOffOutline, eyeOutline, refreshOutline, trashOutline, warningOutline } from 'ionicons/icons';
 import {
   IonContent,
   IonCard,
@@ -34,14 +34,22 @@ import {
 import type { SelectOption } from '@ng/shared/ui';
 import type { DeviceSettings } from '../../services/device-detail.service';
 import { DeviceDetailService } from '../../services/device-detail.service';
-import { isSensorDevice, hasSSH } from '../../device-capabilities';
+import { ToastService } from '@ng/core/errors/toast.service';
+import { hasHeartbeat, hasSSH, hasSystemInfo } from '../../device-capabilities';
 
-addIcons({ copyOutline, eyeOffOutline, eyeOutline, refreshOutline, trashOutline });
+addIcons({ copyOutline, eyeOffOutline, eyeOutline, refreshOutline, trashOutline, warningOutline });
 
 const UPDATE_CHANNELS: SelectOption[] = [
   { value: 'stable', label: 'Stable' },
   { value: 'beta', label: 'Beta' },
   { value: 'nightly', label: 'Nightly' },
+];
+
+const INTERVAL_PRESETS = [
+  { label: '+5m',  seconds: 300   },
+  { label: '+10m', seconds: 600   },
+  { label: '+30m', seconds: 1800  },
+  { label: '+1h',  seconds: 3600  },
 ];
 
 @Component({
@@ -77,13 +85,13 @@ export class DeviceSettingsPage implements OnInit {
   private readonly topbar = inject(TopbarService);
   private readonly svc = inject(DeviceDetailService);
 
+  private readonly toast = inject(ToastService);
+
   readonly device = this.svc.device;
   readonly settings = this.svc.deviceSettings;
 
   readonly deviceId = signal('');
   readonly saving = signal(false);
-  readonly saveError = signal<string | null>(null);
-  readonly saveSuccess = signal(false);
   readonly rotating = signal(false);
   readonly newKey = signal<string | null>(null);
   readonly keyVisible = signal(false);
@@ -91,8 +99,15 @@ export class DeviceSettingsPage implements OnInit {
   readonly deleteConfirm = signal(false);
 
   readonly updateChannels = UPDATE_CHANNELS;
-  readonly isSensor = computed(() => isSensorDevice(this.device.data()?.deviceType));
-  readonly showSSH = computed(() => hasSSH(this.device.data()?.deviceType));
+  readonly intervalPresets = INTERVAL_PRESETS;
+
+  // Capability-based visibility
+  readonly showHeartbeat   = computed(() => hasHeartbeat(this.device.data()?.deviceType));
+  readonly showSSH         = computed(() => hasSSH(this.device.data()?.deviceType));
+  readonly showSystemCards = computed(() => hasSystemInfo(this.device.data()?.deviceType));
+
+  // Reporting interval stepper (seconds, sensor devices only)
+  readonly reportingIntervalSec = signal(0);
 
   // Mutable form model — populated once settings load
   formData: DeviceSettings = {};
@@ -103,7 +118,10 @@ export class DeviceSettingsPage implements OnInit {
 
     effect(() => {
       const s = this.settings.data();
-      if (s) this.formData = { ...s };
+      if (s) {
+        this.formData = { ...s };
+        this.reportingIntervalSec.set(Number(s.reportingInterval ?? 0));
+      }
     });
   }
 
@@ -112,28 +130,49 @@ export class DeviceSettingsPage implements OnInit {
     void this.settings.load({ id: this.deviceId() });
   }
 
+  addInterval(seconds: number): void {
+    this.reportingIntervalSec.update(v => v + seconds);
+  }
+
+  resetInterval(): void {
+    this.reportingIntervalSec.set(0);
+  }
+
+  formatInterval(totalSeconds: number): string {
+    if (!totalSeconds) return '—';
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = totalSeconds % 60;
+    const parts: string[] = [];
+    if (h) parts.push(`${h}h`);
+    if (m) parts.push(`${m}m`);
+    if (s) parts.push(`${s}s`);
+    return parts.join(' ');
+  }
+
   async onSave(): Promise<void> {
+    if (!this.showHeartbeat() && this.reportingIntervalSec() === 0) {
+      void this.toast.error('Set a reporting interval before saving.');
+      return;
+    }
     this.saving.set(true);
-    this.saveError.set(null);
-    this.saveSuccess.set(false);
     try {
       const payload: DeviceSettings = {
         ...this.formData,
-        heartbeatInterval: this.toNum(this.formData.heartbeatInterval),
-        reportingInterval: this.toNum(this.formData.reportingInterval),
-        cpuThreshold: this.toNum(this.formData.cpuThreshold),
-        memoryThreshold: this.toNum(this.formData.memoryThreshold),
-        diskThreshold: this.toNum(this.formData.diskThreshold),
+        heartbeatInterval:    this.toNum(this.formData.heartbeatInterval),
+        reportingInterval:    this.reportingIntervalSec(),
+        cpuThreshold:         this.toNum(this.formData.cpuThreshold),
+        memoryThreshold:      this.toNum(this.formData.memoryThreshold),
+        diskThreshold:        this.toNum(this.formData.diskThreshold),
         temperatureThreshold: this.toNum(this.formData.temperatureThreshold),
-        sensorTempThreshold: this.toNum(this.formData.sensorTempThreshold),
-        batteryThreshold: this.toNum(this.formData.batteryThreshold),
-        apiKeyRotationDays: this.toNum(this.formData.apiKeyRotationDays),
+        sensorTempThreshold:  this.toNum(this.formData.sensorTempThreshold),
+        batteryThreshold:     this.toNum(this.formData.batteryThreshold),
+        apiKeyRotationDays:   this.toNum(this.formData.apiKeyRotationDays),
       };
       await this.svc.updateSettings(this.deviceId(), payload);
-      this.saveSuccess.set(true);
-      setTimeout(() => this.saveSuccess.set(false), 3000);
+      void this.toast.success('Settings saved');
     } catch (e) {
-      this.saveError.set(e instanceof Error ? e.message : 'Save failed');
+      void this.toast.error(e instanceof Error ? e.message : 'Save failed');
     } finally {
       this.saving.set(false);
     }
@@ -153,7 +192,7 @@ export class DeviceSettingsPage implements OnInit {
       this.newKey.set(res.apiKey);
       this.keyVisible.set(false);
     } catch (e) {
-      this.saveError.set(e instanceof Error ? e.message : 'Rotate failed');
+      void this.toast.error(e instanceof Error ? e.message : 'Rotate failed');
     } finally {
       this.rotating.set(false);
     }
@@ -188,7 +227,7 @@ export class DeviceSettingsPage implements OnInit {
       await this.svc.deleteDevice(this.deviceId());
       void this.router.navigate(['/app/devices']);
     } catch (e) {
-      this.saveError.set(e instanceof Error ? e.message : 'Delete failed');
+      void this.toast.error(e instanceof Error ? e.message : 'Delete failed');
       this.deleteConfirm.set(false);
     } finally {
       this.deleting.set(false);

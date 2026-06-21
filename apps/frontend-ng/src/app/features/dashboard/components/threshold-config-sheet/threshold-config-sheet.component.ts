@@ -23,6 +23,7 @@ import type { Threshold } from '@ng/core/api/generated/models/threshold';
 import type { CreateThresholdPayload } from '../../services/device-detail.service';
 import { DeviceDetailService } from '../../services/device-detail.service';
 import { ToastService } from '@ng/core/errors/toast.service';
+import { hasSystemMetrics } from '../../device-capabilities';
 
 addIcons({ alertCircleOutline });
 
@@ -48,13 +49,6 @@ const SENSOR_METRICS: MetricConfig[] = [
   { metricName: 'sensor_temp',   label: 'Sensor Temp',   unit: '°C', min: -20, max: 80,  step: 1, defaultValue: 50, operator: 'GREATER_THAN' },
   { metricName: 'battery',       label: 'Battery Low',   unit: '%',  min: 0,   max: 100, step: 5, defaultValue: 20, operator: 'LESS_THAN' },
 ];
-
-const SENSOR_TYPES = ['ESP32', 'HELTEC', 'SENSOR'];
-
-function isSensorDevice(dt: string | undefined): boolean {
-  if (!dt) return false;
-  return SENSOR_TYPES.some(t => dt.toUpperCase().includes(t));
-}
 
 @Component({
   selector: 'app-threshold-config-sheet',
@@ -89,7 +83,7 @@ export class ThresholdConfigSheetComponent {
   readonly thresholds = this.svc.thresholds;
 
   protected readonly activeMetrics = computed(() =>
-    isSensorDevice(this.deviceType()) ? SENSOR_METRICS : SYSTEM_METRICS,
+    hasSystemMetrics(this.deviceType()) ? SYSTEM_METRICS : SENSOR_METRICS,
   );
 
   protected readonly scopedThresholds = computed(() => {

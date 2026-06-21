@@ -3,7 +3,7 @@ import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/ro
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, startWith } from 'rxjs';
 import { IonSegment, IonSegmentButton, IonLabel } from '@ng/shared/ui';
-import { hasSSH, isSensorDevice } from '../../device-capabilities';
+import { hasSSH, hasSystemInfo, hasCommands } from '../../device-capabilities';
 
 interface Tab {
   path: string;
@@ -42,8 +42,9 @@ export class DeviceTabNavComponent {
   );
 
   readonly groups = computed<Group[]>(() => {
-    const sensor = isSensorDevice(this.deviceType());
-    const ssh = hasSSH(this.deviceType());
+    const sysInfo = hasSystemInfo(this.deviceType());
+    const ssh     = hasSSH(this.deviceType());
+    const cmds    = hasCommands(this.deviceType());
 
     return [
       {
@@ -59,7 +60,7 @@ export class DeviceTabNavComponent {
         key: 'operate',
         label: 'Operate',
         tabs: [
-          { path: 'commands', label: 'Commands' },
+          ...(cmds ? [{ path: 'commands', label: 'Commands' }] : []),
           { path: 'logs', label: 'Logs' },
           ...(ssh ? [{ path: 'terminal', label: 'Terminal' }] : []),
         ],
@@ -68,7 +69,7 @@ export class DeviceTabNavComponent {
         key: 'system',
         label: 'System',
         tabs: [
-          ...(!sensor ? [
+          ...(sysInfo ? [
             { path: 'network', label: 'Network' },
             { path: 'storage', label: 'Storage' },
           ] : []),

@@ -102,7 +102,7 @@
         <ion-button fill="outline" color="medium" size="small" (click)="onRefresh()">
           <ion-icon slot="icon-only" name="refresh-outline"></ion-icon>
         </ion-button>
-        @if (!isSensor()) {
+        @if (canRunCommand()) {
           <ion-button fill="solid" color="primary" size="small" (click)="onRunCommand()">
             <ion-icon slot="start" name="flash-outline"></ion-icon>
             Run command

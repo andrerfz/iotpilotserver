@@ -47,10 +47,12 @@
               <ui-switch slot="end" [(ngModel)]="formData.sshEnabled" name="sshEnabled"></ui-switch>
             </ion-item>
           }
-          <ion-item>
-            <ion-label>Auto Update</ion-label>
-            <ui-switch slot="end" [(ngModel)]="formData.autoUpdate" name="autoUpdate"></ui-switch>
-          </ion-item>
+          @if (showSystemCards()) {
+            <ion-item>
+              <ion-label>Auto Update</ion-label>
+              <ui-switch slot="end" [(ngModel)]="formData.autoUpdate" name="autoUpdate"></ui-switch>
+            </ion-item>
+          }
         </ion-list>
       </ion-card-content>
     </ion-card>
@@ -67,7 +69,7 @@
             <ui-switch slot="end" [(ngModel)]="formData.metricsEnabled" name="metricsEnabled"></ui-switch>
           </ion-item>
 
-          @if (!isSensor()) {
+          @if (showHeartbeat()) {
             <ion-item>
               <ion-label>Heartbeat Interval (s)</ion-label>
               <ui-input
@@ -119,16 +121,27 @@
               ></ui-input>
             </ion-item>
           } @else {
-            <ion-item>
-              <ion-label>Reporting Interval (s)</ion-label>
-              <ui-input
-                slot="end"
-                type="number"
-                [(ngModel)]="formData.reportingInterval"
-                name="reportingInterval"
-                placeholder="30"
-              ></ui-input>
+            <!-- Sensor device: stepper for reporting interval -->
+            <ion-item class="interval-item">
+              <ion-label>Reporting Interval</ion-label>
+              <div slot="end" class="interval-stepper">
+                <span class="interval-stepper__value" [class.interval-stepper__value--warn]="reportingIntervalSec() === 0">
+                  {{ formatInterval(reportingIntervalSec()) }}
+                </span>
+                @for (p of intervalPresets; track p.label) {
+                  <ion-button fill="outline" size="small" (click)="addInterval(p.seconds)">{{ p.label }}</ion-button>
+                }
+                <ion-button fill="outline" color="medium" size="small" (click)="resetInterval()">
+                  <ion-icon slot="icon-only" name="refresh-outline"></ion-icon>
+                </ion-button>
+              </div>
             </ion-item>
+            @if (reportingIntervalSec() === 0) {
+              <div class="interval-hint">
+                <ion-icon name="warning-outline"></ion-icon>
+                Define a reporting interval — without it the device won't send data
+              </div>
+            }
             <ion-item>
               <ion-label>Sensor Temp Threshold (°C)</ion-label>
               <ui-input
@@ -154,41 +167,45 @@
       </ion-card-content>
     </ion-card>
 
-    <!-- NETWORK -->
-    <ion-card>
-      <ion-card-header>
-        <ion-card-title>Network</ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-        <ion-list lines="none">
-          <ion-item>
-            <ion-label>Network Monitoring</ion-label>
-            <ui-switch slot="end" [(ngModel)]="formData.networkMonitoring" name="networkMonitoring"></ui-switch>
-          </ion-item>
-        </ion-list>
-      </ion-card-content>
-    </ion-card>
+    <!-- NETWORK — system devices only -->
+    @if (showSystemCards()) {
+      <ion-card>
+        <ion-card-header>
+          <ion-card-title>Network</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <ion-list lines="none">
+            <ion-item>
+              <ion-label>Network Monitoring</ion-label>
+              <ui-switch slot="end" [(ngModel)]="formData.networkMonitoring" name="networkMonitoring"></ui-switch>
+            </ion-item>
+          </ion-list>
+        </ion-card-content>
+      </ion-card>
+    }
 
-    <!-- AGENT -->
-    <ion-card>
-      <ion-card-header>
-        <ion-card-title>Agent</ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-        <ion-list lines="none">
-          <ion-item>
-            <ion-label>Update Channel</ion-label>
-            <ui-select
-              slot="end"
-              [options]="updateChannels"
-              [(ngModel)]="formData.updateChannel"
-              name="updateChannel"
-              placeholder="stable"
-            ></ui-select>
-          </ion-item>
-        </ion-list>
-      </ion-card-content>
-    </ion-card>
+    <!-- AGENT — system devices only -->
+    @if (showSystemCards()) {
+      <ion-card>
+        <ion-card-header>
+          <ion-card-title>Agent</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <ion-list lines="none">
+            <ion-item>
+              <ion-label>Update Channel</ion-label>
+              <ui-select
+                slot="end"
+                [options]="updateChannels"
+                [(ngModel)]="formData.updateChannel"
+                name="updateChannel"
+                placeholder="stable"
+              ></ui-select>
+            </ion-item>
+          </ion-list>
+        </ion-card-content>
+      </ion-card>
+    }
 
     <!-- SECURITY -->
     <ion-card>
@@ -249,12 +266,6 @@
     </ion-card>
 
     <!-- SAVE -->
-    @if (saveError()) {
-      <p class="settings-error">{{ saveError() }}</p>
-    }
-    @if (saveSuccess()) {
-      <p class="settings-ok">Settings saved.</p>
-    }
     <ion-button
       expand="block"
       fill="solid"

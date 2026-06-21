@@ -9,7 +9,7 @@
 
   <!-- Metric cards — filtered by device capability -->
   <div class="metrics">
-    @if (!isSensor()) {
+    @if (showSystemMetrics()) {
       <ui-metric-card
         [loading]="device.loading() && !device.data()"
         label="CPU"
@@ -41,7 +41,7 @@
     >
       <ion-icon name="thermometer-outline" icon></ion-icon>
     </ui-metric-card>
-    @if (!isSensor()) {
+    @if (showSystemMetrics()) {
       <ui-metric-card
         [loading]="device.loading() && !device.data()"
         label="Disk"
@@ -51,6 +51,18 @@
         iconBg="var(--success-weak)"
       >
         <ion-icon name="save-outline" icon></ion-icon>
+      </ui-metric-card>
+    }
+    @if (showSensorMetrics()) {
+      <ui-metric-card
+        [loading]="device.loading() && !device.data()"
+        label="Battery"
+        [value]="metricVal(deviceMetrics().battery)"
+        unit="%"
+        iconColor="var(--success)"
+        iconBg="var(--success-weak)"
+      >
+        <ion-icon name="battery-half-outline" icon></ion-icon>
       </ui-metric-card>
     }
   </div>
@@ -67,7 +79,7 @@
 
     <!-- grid-2: left = chart + commands (system devices only), right = device info -->
     <div class="grid-2">
-      @if (!isSensor()) {
+      @if (showCommands()) {
         <div class="stack">
 
           <!-- Chart placeholder (ECharts — wired in fe-device-advanced) -->
@@ -105,6 +117,18 @@
           </ion-card>
 
         </div>
+      }
+
+      @if (showSensorMetrics() && !showCommands()) {
+        <!-- Sensor devices: show chart trends placeholder in the left column -->
+        <ion-card class="chart-placeholder">
+          <ion-card-content>
+            <div class="chart-placeholder__inner">
+              <ion-icon name="stats-chart-outline"></ion-icon>
+              <span>Temperature &amp; Battery trends — available in the Metrics tab</span>
+            </div>
+          </ion-card-content>
+        </ion-card>
       }
 
       <!-- Device info sidebar -->
@@ -151,7 +175,7 @@
   }
 
   <!-- Command sheet — only for devices that support commands -->
-  @if (device.data() && !isSensor()) {
+  @if (device.data() && showCommands()) {
     <app-command-sheet [deviceId]="device.data()!.id ?? ''"></app-command-sheet>
   }
 

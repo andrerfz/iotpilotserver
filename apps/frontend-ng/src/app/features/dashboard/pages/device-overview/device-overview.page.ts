@@ -6,6 +6,7 @@ import {
   TemplateRef,
   ViewChild,
   computed,
+  effect,
   inject,
   signal,
   viewChild,
@@ -21,6 +22,7 @@ import {
   thermometerOutline,
   saveOutline,
   addOutline,
+  batteryHalfOutline,
 } from 'ionicons/icons';
 import {
   IonContent,
@@ -36,11 +38,17 @@ import {
 } from '@ng/shared/ui';
 import type { ColumnDef } from '@ng/shared/ui';
 import type { DeviceCommand } from '@ng/core/api/generated/models/device-command';
+import type { MetricPoint } from '@ng/core/api/generated/models/metric-point';
 import { DeviceDetailService } from '../../services/device-detail.service';
 import { CommandSheetComponent } from '../../components/command-sheet/command-sheet.component';
-import { isSensorDevice } from '../../device-capabilities';
+import { hasSystemMetrics, hasCommands, hasSensorMetrics } from '../../device-capabilities';
 
-addIcons({ flashOutline, serverOutline, statsChartOutline, hardwareChipOutline, thermometerOutline, saveOutline, addOutline });
+addIcons({ flashOutline, serverOutline, statsChartOutline, hardwareChipOutline, thermometerOutline, saveOutline, addOutline, batteryHalfOutline });
+
+function lastVal(series: MetricPoint[] | undefined): number | null {
+  if (!series?.length) return null;
+  return series[series.length - 1].value ?? null;
+}
 
 @Component({
   selector: 'app-device-overview',
@@ -71,15 +79,20 @@ export class DeviceOverviewPage implements OnInit, AfterViewInit {
   private readonly deviceId = signal('');
   readonly device = this.svc.device;
   readonly commands = this.svc.deviceCommands;
-  readonly isSensor = computed(() => isSensorDevice(this.device.data()?.deviceType));
+  readonly showSystemMetrics = computed(() => hasSystemMetrics(this.device.data()?.deviceType));
+  readonly showSensorMetrics = computed(() => hasSensorMetrics(this.device.data()?.deviceType));
+  readonly showCommands      = computed(() => hasCommands(this.device.data()?.deviceType));
 
   readonly deviceMetrics = computed(() => {
     const d = this.device.data();
+    const mData = this.svc.deviceMetrics.data()?.metrics ?? {};
     return {
-      cpu: d?.cpuUsage ?? null,
-      memory: d?.memoryUsage ?? null,
-      temp: d?.cpuTemp ?? null,
-      disk: d?.diskUsage ?? null,
+      cpu:     d?.cpuUsage ?? null,
+      memory:  d?.memoryUsage ?? null,
+      // Pi devices have cpuTemp on heartbeat; sensor devices fall back to metric series
+      temp:    d?.cpuTemp ?? lastVal(mData['temperature']),
+      disk:    d?.diskUsage ?? null,
+      battery: lastVal(mData['battery_level']),
     };
   });
 
@@ -89,6 +102,14 @@ export class DeviceOverviewPage implements OnInit, AfterViewInit {
   constructor() {
     const id = this.route.parent?.snapshot.paramMap.get('id') ?? '';
     this.deviceId.set(id);
+
+    // Load metric time-series for sensor devices so overview KPI cards can show last values
+    effect(() => {
+      const dt = this.device.data()?.deviceType;
+      if (dt && hasSensorMetrics(dt) && !this.svc.deviceMetrics.data()) {
+        void this.svc.deviceMetrics.load({ id: this.deviceId(), period: '24h' });
+      }
+    });
   }
 
   ngOnInit(): void {

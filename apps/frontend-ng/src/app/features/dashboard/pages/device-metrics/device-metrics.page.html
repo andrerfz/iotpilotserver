@@ -25,29 +25,63 @@
       <ion-button action fill="outline" size="small" (click)="onRefresh()">Retry</ion-button>
     </ui-empty-state>
   } @else {
-    <!-- Current-value cards -->
+
+    <!-- Current-value KPI cards -->
     <div class="metrics-cards">
-      <ui-metric-card label="CPU Usage"   [value]="fmt(cpuLast(), '%')"   [iconColor]="cpuIconColor()"  [iconBg]="cpuIconBg()"></ui-metric-card>
-      <ui-metric-card label="Memory"      [value]="fmt(memLast(), '%')"   [iconColor]="memIconColor()"  [iconBg]="memIconBg()"></ui-metric-card>
-      <ui-metric-card label="Disk Usage"  [value]="fmt(diskLast(), '%')"  [iconColor]="diskIconColor()" [iconBg]="diskIconBg()"></ui-metric-card>
-      <ui-metric-card label="Temperature" [value]="fmt(tempLast(), '°C')" [iconColor]="tempIconColor()" [iconBg]="tempIconBg()"></ui-metric-card>
+      @if (showSystem()) {
+        <ui-metric-card label="CPU Usage"  [value]="fmt(cpuLast(), '%')"  [iconColor]="cpuIconColor()"  [iconBg]="cpuIconBg()"></ui-metric-card>
+        <ui-metric-card label="Memory"     [value]="fmt(memLast(), '%')"  [iconColor]="memIconColor()"  [iconBg]="memIconBg()"></ui-metric-card>
+        <ui-metric-card label="Disk Usage" [value]="fmt(diskLast(), '%')" [iconColor]="diskIconColor()" [iconBg]="diskIconBg()"></ui-metric-card>
+      }
+      <ui-metric-card [label]="tempLabel()" [value]="fmt(tempLast(), '°C')" [iconColor]="tempIconColor()" [iconBg]="tempIconBg()"></ui-metric-card>
+      @if (showSensor()) {
+        <ui-metric-card label="Battery" [value]="fmt(batteryLast(), '%')" [iconColor]="batteryIconColor()" [iconBg]="batteryIconBg()"></ui-metric-card>
+      }
     </div>
 
     <!-- Line charts -->
     <div class="metrics-charts">
-      @for (chart of [
-        { title: 'CPU Usage',    option: cpuChart() },
-        { title: 'Memory Usage', option: memChart() },
-        { title: 'Disk Usage',   option: diskChart() },
-        { title: 'Temperature',  option: tempChart() }
-      ]; track chart.title) {
+      @if (showSystem()) {
+        @for (chart of [
+          { title: 'CPU Usage',    option: cpuChart() },
+          { title: 'Memory Usage', option: memChart() },
+          { title: 'Disk Usage',   option: diskChart() }
+        ]; track chart.title) {
+          <ion-card class="chart-card">
+            <ion-card-header>
+              <ion-card-title class="chart-card__title">{{ chart.title }}</ion-card-title>
+            </ion-card-header>
+            <ion-card-content>
+              @if (chart.option) {
+                <div echarts [options]="chart.option" class="chart-canvas"></div>
+              } @else {
+                <div class="chart-empty">No data available</div>
+              }
+            </ion-card-content>
+          </ion-card>
+        }
+      }
+      <!-- Temperature — shown for all device types -->
+      <ion-card class="chart-card">
+        <ion-card-header>
+          <ion-card-title class="chart-card__title">{{ tempLabel() }}</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          @if (tempChart()) {
+            <div echarts [options]="tempChart()!" class="chart-canvas"></div>
+          } @else {
+            <div class="chart-empty">No data available</div>
+          }
+        </ion-card-content>
+      </ion-card>
+      @if (showSensor()) {
         <ion-card class="chart-card">
           <ion-card-header>
-            <ion-card-title class="chart-card__title">{{ chart.title }}</ion-card-title>
+            <ion-card-title class="chart-card__title">Battery Level</ion-card-title>
           </ion-card-header>
           <ion-card-content>
-            @if (chart.option) {
-              <div echarts [options]="chart.option" class="chart-canvas"></div>
+            @if (batteryChart()) {
+              <div echarts [options]="batteryChart()!" class="chart-canvas"></div>
             } @else {
               <div class="chart-empty">No data available</div>
             }
