@@ -86,15 +86,15 @@ for sql in "$DEPLOY_DIR"/apps/backend/prisma/migration/*.sql; do
     continue
   fi
   info "  ↳ ${name}"
-  if docker exec -i iotpilot-postgres psql -U iotpilot -d iotpilot < "$sql" >/dev/null 2>&1; then
+  MIG_OUTPUT=$(docker exec -i iotpilot-postgres psql -U iotpilot -d iotpilot < "$sql" 2>&1)
+  MIG_EXIT=$?
+  if [ $MIG_EXIT -eq 0 ]; then
     docker exec iotpilot-postgres psql -U iotpilot -d iotpilot \
       -c "INSERT INTO _migrations (name) VALUES ('${name}');" >/dev/null 2>&1
     info "    ✓ applied"
   else
-    warn "    ⚠ errors (may be harmless if objects already exist)"
-    # Record it anyway so we don't retry on every deploy
-    docker exec iotpilot-postgres psql -U iotpilot -d iotpilot \
-      -c "INSERT INTO _migrations (name) VALUES ('${name}') ON CONFLICT DO NOTHING;" >/dev/null 2>&1
+    error "    ✗ migration ${name} FAILED — aborting deploy to prevent schema drift
+${MIG_OUTPUT}"
   fi
 done
 
