@@ -112,6 +112,7 @@ docker-compose.override.yml
 
 # Logs
 logs/
+!apps/**/pages/logs/
 *.log
 
 # Runtime data
