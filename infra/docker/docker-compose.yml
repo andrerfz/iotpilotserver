@@ -6,6 +6,7 @@ services:
     image: tailscale/tailscale:latest
     container_name: iotpilot-tailscale
     hostname: iotpilot-server
+    mem_limit: 64m
     environment:
       - TS_AUTHKEY=${TAILSCALE_AUTH_KEY}
       - TS_HOSTNAME=iotpilot-server
@@ -28,6 +29,7 @@ services:
   cloudflared:
     image: cloudflare/cloudflared:latest
     container_name: iotpilot-cloudflared
+    mem_limit: 64m
     command: tunnel --no-autoupdate run
     environment:
       - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
@@ -45,6 +47,7 @@ services:
       dockerfile: ./infra/docker/Dockerfile
       target: production-ng
     container_name: iotpilot-ng
+    mem_limit: 64m
     depends_on:
       postgres:
         condition: service_healthy
@@ -136,6 +139,7 @@ services:
       args:
         - NODE_ENV=production
     container_name: iotpilot-backend
+    mem_limit: 384m
     command: ["/bin/sh", "/app/apps/backend/start.sh"]
     environment:
       - NODE_ENV=production
@@ -176,6 +180,7 @@ services:
       args:
         - NODE_ENV=production
     container_name: iotpilot-worker
+    mem_limit: 256m
     command: ["/bin/sh", "/app/apps/worker/start.sh"]
     environment:
       - NODE_ENV=production
@@ -204,6 +209,7 @@ services:
   postgres:
     image: postgres:15-alpine
     container_name: iotpilot-postgres
+    mem_limit: 384m
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
@@ -226,6 +232,7 @@ services:
   redis:
     image: redis:7-alpine
     container_name: iotpilot-redis
+    mem_limit: 64m
     volumes:
       - redis-data:/data
     restart: unless-stopped
@@ -242,6 +249,8 @@ services:
   grafana:
     image: grafana/grafana:latest
     container_name: iotpilot-grafana
+    profiles: [monitoring]
+    mem_limit: 256m
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
       - GF_SERVER_DOMAIN=${DOMAIN_TUNEL}
@@ -268,8 +277,6 @@ services:
         condition: service_healthy
       influxdb:
         condition: service_healthy
-      loki:
-        condition: service_healthy
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
@@ -291,6 +298,7 @@ services:
   influxdb:
     image: influxdb:2.7-alpine
     container_name: iotpilot-influxdb
+    mem_limit: 384m
     environment:
       - DOCKER_INFLUXDB_INIT_MODE=setup
       - DOCKER_INFLUXDB_INIT_USERNAME=${INFLUXDB_USERNAME}
@@ -317,6 +325,8 @@ services:
   loki:
     image: grafana/loki:2.9.8
     container_name: iotpilot-loki
+    profiles: [monitoring]
+    mem_limit: 256m
     user: root
     volumes:
       - ../loki/config.yml:/etc/loki/config.yaml:ro
@@ -336,6 +346,7 @@ services:
   traefik:
     image: traefik:v3.0
     container_name: iotpilot-traefik
+    mem_limit: 96m
     ports:
       - "80:80"
       - "443:443"
@@ -370,6 +381,8 @@ services:
   prometheus:
     image: prom/prometheus:latest
     container_name: iotpilot-prometheus
+    profiles: [monitoring]
+    mem_limit: 256m
     volumes:
       - ../prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ../prometheus/rules:/etc/prometheus/rules:ro
