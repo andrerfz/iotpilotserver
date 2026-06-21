@@ -111,6 +111,12 @@ export class DeviceDetailPage implements OnInit {
     void this.svc.device.load({ id: this.deviceId() });
   }
 
+  ionViewWillEnter(): void {
+    const id = this.route.snapshot.paramMap.get('id') ?? '';
+    this.deviceId.set(id);
+    void this.svc.device.load({ id });
+  }
+
   async onRegenerateToken(): Promise<void> {
     const d = this.device.data();
     if (!d?.id) return;

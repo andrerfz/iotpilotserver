@@ -57,10 +57,6 @@
             [value]="statusFilter()"
             (valueChange)="statusFilter.set($event)">
           </ui-multi-select-picker>
-          <ion-button fill="solid" color="primary" (click)="onRegisterDevice()">
-            <ion-icon slot="start" name="add-outline"></ion-icon>
-            Register
-          </ion-button>
         </div>
       </ion-card-content>
     </ion-card>
@@ -97,7 +93,7 @@
           <ui-status-dot [status]="device.status ?? 'OFFLINE'"></ui-status-dot>
           <div class="device-item__info">
             <div class="device-item__name">{{ device.hostname ?? device.name ?? device.id }}</div>
-            <div class="device-item__sub">{{ device.deviceId }} · {{ device.deviceType }}</div>
+            <div class="device-item__sub">{{ device.deviceType ?? 'Unknown' }}{{ device.ipAddress ? ' · ' + device.ipAddress : '' }}</div>
           </div>
           <ui-status-badge [status]="device.status ?? 'OFFLINE'"></ui-status-badge>
         </div>
