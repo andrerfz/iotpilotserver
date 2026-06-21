@@ -10,7 +10,7 @@ const METRIC_PRECISION: Record<string, number> = {
  * writing per-page toFixed() calls.
  */
 export function formatMetric(value: number | null | undefined, metricKey: string): string {
-  if (value == null) return '—';
+  if (value == null) return '--';
   const precision = METRIC_PRECISION[metricKey] ?? 0;
   return value.toFixed(precision);
 }
