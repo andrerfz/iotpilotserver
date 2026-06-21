@@ -50,6 +50,7 @@ type DeviceExtended = Device & {
   styleUrls: ['device-detail.page.scss'],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [DeviceDetailService],
   imports: [
     RouterLink,
     RouterOutlet,

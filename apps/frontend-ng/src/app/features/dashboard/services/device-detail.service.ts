@@ -86,7 +86,7 @@ export type UpdateThresholdPayload = UpdateThreshold$Params['body'];
 export type UpdateDevicePayload = { hostname?: string; location?: string; description?: string; tags?: string[] };
 export type { DeviceMetrics, DeviceSettings, SshResult };
 
-@Injectable({ providedIn: 'root' })
+@Injectable()
 export class DeviceDetailService {
   private readonly api = inject(Api);
 

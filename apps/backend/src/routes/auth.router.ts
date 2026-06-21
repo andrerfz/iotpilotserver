@@ -258,6 +258,15 @@ authRouter.post('/login', async (req: AuthenticatedRequest, res: Response) => {
         const isHttps = (req.headers['x-forwarded-proto'] as string | undefined) === 'https' ||
             (req.protocol === 'https');
 
+        // Extend DB session to match cookie duration when remember=true (default is 24h)
+        if (remember) {
+            const sevenDaysFromNow = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+            await serviceContainer.getPrismaClient().getClient().session.updateMany({
+                where: { token: authResult.token, deletedAt: null },
+                data: { expiresAt: sevenDaysFromNow },
+            });
+        }
+
         res.cookie('auth-token', authResult.token, {
             httpOnly: true,
             secure: isHttps,
