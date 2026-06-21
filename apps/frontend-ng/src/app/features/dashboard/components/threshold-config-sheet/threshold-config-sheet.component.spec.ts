@@ -57,8 +57,8 @@ describe('ThresholdConfigSheetComponent', () => {
       expect(metrics.map(m => m.metricName)).toContain('disk_usage');
     });
 
-    it('returns sensor metrics for ESP32', async () => {
-      const { comp } = await createComp({ deviceId: 'dev-2', deviceType: 'ESP32' });
+    it('returns sensor metrics for ESP32C3_SENSOR', async () => {
+      const { comp } = await createComp({ deviceId: 'dev-2', deviceType: 'ESP32C3_SENSOR' });
       const metrics = comp['activeMetrics']();
       expect(metrics.map(m => m.metricName)).toContain('sensor_temp');
       expect(metrics.map(m => m.metricName)).toContain('battery');

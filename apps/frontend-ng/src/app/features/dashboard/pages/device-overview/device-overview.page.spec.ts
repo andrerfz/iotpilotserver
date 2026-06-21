@@ -21,7 +21,7 @@ const MOCK_DEVICE: Device = {
   id: 'dev-1',
   hostname: 'pi-kitchen',
   status: 'ONLINE',
-  deviceType: 'RaspberryPi',
+  deviceType: 'PI_4',
   deviceId: 'ABC-123',
   ipAddress: '192.168.1.10',
   location: 'Kitchen',
@@ -45,6 +45,7 @@ function buildProviders(overrides: {
       useValue: {
         device: overrides.device ?? makeSurface<Device>(MOCK_DEVICE),
         deviceCommands: overrides.commands ?? makeSurface<DeviceCommand[]>(MOCK_COMMANDS),
+        deviceMetrics: makeSurface(null),
         deviceAlerts: makeSurface(null),
         deviceLogs: makeSurface(null),
         thresholds: makeSurface(null),
@@ -55,7 +56,7 @@ function buildProviders(overrides: {
 
 describe('DeviceOverviewPage', () => {
   describe('metric cards', () => {
-    it('shows 4 metric cards', async () => {
+    it('shows 4 metric cards for Pi device', async () => {
       const { container } = await render(DeviceOverviewPage, {
         imports: [RouterTestingModule],
         providers: buildProviders(),
@@ -115,7 +116,7 @@ describe('DeviceOverviewPage', () => {
         imports: [RouterTestingModule],
         providers: buildProviders(),
       });
-      expect(screen.getByText('RaspberryPi')).toBeTruthy();
+      expect(screen.getByText('PI_4')).toBeTruthy();
     });
   });
 
