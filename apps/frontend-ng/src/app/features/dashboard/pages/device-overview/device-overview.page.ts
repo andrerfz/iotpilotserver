@@ -125,8 +125,8 @@ export class DeviceOverviewPage implements OnInit, AfterViewInit {
     ]);
   }
 
-  metricVal(value: number | null): string {
-    return value != null ? value.toFixed(1) : '--';
+  metricVal(value: number | null, precision = 1): string {
+    return value != null ? value.toFixed(precision) : '--';
   }
 
   formatLastSeen(ts: string | null | undefined): string {

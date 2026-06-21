@@ -57,7 +57,7 @@
       <ui-metric-card
         [loading]="device.loading() && !device.data()"
         label="Battery"
-        [value]="metricVal(deviceMetrics().battery)"
+        [value]="metricVal(deviceMetrics().battery, 2)"
         unit="%"
         iconColor="var(--success)"
         iconBg="var(--success-weak)"

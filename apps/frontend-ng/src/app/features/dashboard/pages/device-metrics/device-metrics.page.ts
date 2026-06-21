@@ -182,8 +182,8 @@ export class DeviceMetricsPage implements OnInit {
     void this.metrics.reload();
   }
 
-  fmt(v: number | null, unit: string): string {
+  fmt(v: number | null, unit: string, decimals = 0): string {
     if (v === null) return '—';
-    return `${Math.round(v)}${unit}`;
+    return `${v.toFixed(decimals)}${unit}`;
   }
 }

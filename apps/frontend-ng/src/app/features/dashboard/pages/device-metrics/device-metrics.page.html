@@ -35,7 +35,7 @@
       }
       <ui-metric-card [label]="tempLabel()" [value]="fmt(tempLast(), '°C')" [iconColor]="tempIconColor()" [iconBg]="tempIconBg()"></ui-metric-card>
       @if (showSensor()) {
-        <ui-metric-card label="Battery" [value]="fmt(batteryLast(), '%')" [iconColor]="batteryIconColor()" [iconBg]="batteryIconBg()"></ui-metric-card>
+        <ui-metric-card label="Battery" [value]="fmt(batteryLast(), '%', 2)" [iconColor]="batteryIconColor()" [iconBg]="batteryIconBg()"></ui-metric-card>
       }
     </div>
 
