@@ -13,7 +13,7 @@
       <ui-metric-card
         [loading]="device.loading() && !device.data()"
         label="CPU"
-        [value]="metricVal(deviceMetrics().cpu)"
+        [value]="formatMetric(deviceMetrics().cpu, 'cpu')"
         unit="%"
         iconColor="var(--primary)"
         iconBg="var(--primary-weak)"
@@ -23,7 +23,7 @@
       <ui-metric-card
         [loading]="device.loading() && !device.data()"
         label="Memory"
-        [value]="metricVal(deviceMetrics().memory)"
+        [value]="formatMetric(deviceMetrics().memory, 'memory')"
         unit="%"
         iconColor="var(--info)"
         iconBg="var(--info-weak)"
@@ -34,7 +34,7 @@
     <ui-metric-card
       [loading]="device.loading() && !device.data()"
       label="Temperature"
-      [value]="metricVal(deviceMetrics().temp)"
+      [value]="formatMetric(deviceMetrics().temp, 'temperature')"
       unit="°C"
       iconColor="var(--warning)"
       iconBg="var(--warning-weak)"
@@ -45,7 +45,7 @@
       <ui-metric-card
         [loading]="device.loading() && !device.data()"
         label="Disk"
-        [value]="metricVal(deviceMetrics().disk)"
+        [value]="formatMetric(deviceMetrics().disk, 'disk')"
         unit="%"
         iconColor="var(--success)"
         iconBg="var(--success-weak)"
@@ -57,7 +57,7 @@
       <ui-metric-card
         [loading]="device.loading() && !device.data()"
         label="Battery"
-        [value]="metricVal(deviceMetrics().battery, 2)"
+        [value]="formatMetric(deviceMetrics().battery, 'battery_level')"
         unit="%"
         iconColor="var(--success)"
         iconBg="var(--success-weak)"

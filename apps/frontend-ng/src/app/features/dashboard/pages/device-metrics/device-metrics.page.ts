@@ -30,6 +30,7 @@ import {
 import type { MetricPoint } from '@ng/core/api/generated/models/metric-point';
 import { DeviceDetailService } from '../../services/device-detail.service';
 import { hasSystemMetrics, hasSensorMetrics } from '../../device-capabilities';
+import { formatMetric } from '../../metric-format';
 
 addIcons({ refreshOutline });
 
@@ -182,8 +183,5 @@ export class DeviceMetricsPage implements OnInit {
     void this.metrics.reload();
   }
 
-  fmt(v: number | null, unit: string, decimals = 0): string {
-    if (v === null) return '—';
-    return `${v.toFixed(decimals)}${unit}`;
-  }
+  readonly formatMetric = formatMetric;
 }

@@ -42,6 +42,7 @@ import type { MetricPoint } from '@ng/core/api/generated/models/metric-point';
 import { DeviceDetailService } from '../../services/device-detail.service';
 import { CommandSheetComponent } from '../../components/command-sheet/command-sheet.component';
 import { hasSystemMetrics, hasCommands, hasSensorMetrics } from '../../device-capabilities';
+import { formatMetric } from '../../metric-format';
 
 addIcons({ flashOutline, serverOutline, statsChartOutline, hardwareChipOutline, thermometerOutline, saveOutline, addOutline, batteryHalfOutline });
 
@@ -125,9 +126,7 @@ export class DeviceOverviewPage implements OnInit, AfterViewInit {
     ]);
   }
 
-  metricVal(value: number | null, precision = 1): string {
-    return value != null ? value.toFixed(precision) : '--';
-  }
+  readonly formatMetric = formatMetric;
 
   formatLastSeen(ts: string | null | undefined): string {
     if (!ts) return '';

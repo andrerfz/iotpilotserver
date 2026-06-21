@@ -29,13 +29,13 @@
     <!-- Current-value KPI cards -->
     <div class="metrics-cards">
       @if (showSystem()) {
-        <ui-metric-card label="CPU Usage"  [value]="fmt(cpuLast(), '%')"  [iconColor]="cpuIconColor()"  [iconBg]="cpuIconBg()"></ui-metric-card>
-        <ui-metric-card label="Memory"     [value]="fmt(memLast(), '%')"  [iconColor]="memIconColor()"  [iconBg]="memIconBg()"></ui-metric-card>
-        <ui-metric-card label="Disk Usage" [value]="fmt(diskLast(), '%')" [iconColor]="diskIconColor()" [iconBg]="diskIconBg()"></ui-metric-card>
+        <ui-metric-card label="CPU Usage"  [value]="formatMetric(cpuLast(), 'cpu') + '%'"  [iconColor]="cpuIconColor()"  [iconBg]="cpuIconBg()"></ui-metric-card>
+        <ui-metric-card label="Memory"     [value]="formatMetric(memLast(), 'memory') + '%'"  [iconColor]="memIconColor()"  [iconBg]="memIconBg()"></ui-metric-card>
+        <ui-metric-card label="Disk Usage" [value]="formatMetric(diskLast(), 'disk') + '%'" [iconColor]="diskIconColor()" [iconBg]="diskIconBg()"></ui-metric-card>
       }
-      <ui-metric-card [label]="tempLabel()" [value]="fmt(tempLast(), '°C')" [iconColor]="tempIconColor()" [iconBg]="tempIconBg()"></ui-metric-card>
+      <ui-metric-card [label]="tempLabel()" [value]="formatMetric(tempLast(), 'temperature') + '°C'" [iconColor]="tempIconColor()" [iconBg]="tempIconBg()"></ui-metric-card>
       @if (showSensor()) {
-        <ui-metric-card label="Battery" [value]="fmt(batteryLast(), '%', 2)" [iconColor]="batteryIconColor()" [iconBg]="batteryIconBg()"></ui-metric-card>
+        <ui-metric-card label="Battery" [value]="formatMetric(batteryLast(), 'battery_level') + '%'" [iconColor]="batteryIconColor()" [iconBg]="batteryIconBg()"></ui-metric-card>
       }
     </div>
 
