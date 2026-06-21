@@ -41,20 +41,26 @@ function buildProviders(overrides: {
   socketOn?: ReturnType<typeof vi.fn>;
 } = {}) {
   const socketOn = overrides.socketOn ?? vi.fn().mockReturnValue(new Subject());
-  return [
-    {
-      provide: DeviceDetailService,
-      useValue: {
-        device: overrides.device ?? makeSurface<Device>(MOCK_DEVICE),
-        deviceAlerts: makeSurface(null),
-        deviceCommands: makeSurface(null),
-        deviceLogs: makeSurface(null),
-        thresholds: makeSurface(null),
-        regenerateToken: vi.fn(),
+  // DeviceDetailService is component-scoped (providers: [DeviceDetailService] in @Component),
+  // so the mock must go in componentProviders to shadow it at the component injector level.
+  return {
+    providers: [
+      { provide: SocketService, useValue: { on: socketOn } },
+    ],
+    componentProviders: [
+      {
+        provide: DeviceDetailService,
+        useValue: {
+          device: overrides.device ?? makeSurface<Device>(MOCK_DEVICE),
+          deviceAlerts: makeSurface(null),
+          deviceCommands: makeSurface(null),
+          deviceLogs: makeSurface(null),
+          thresholds: makeSurface(null),
+          regenerateToken: vi.fn(),
+        },
       },
-    },
-    { provide: SocketService, useValue: { on: socketOn } },
-  ];
+    ],
+  };
 }
 
 describe('DeviceDetailPage', () => {
@@ -62,7 +68,7 @@ describe('DeviceDetailPage', () => {
     it('shows device hostname when loaded', async () => {
       await render(DeviceDetailPage, {
         imports: [RouterTestingModule],
-        providers: buildProviders(),
+        ...buildProviders(),
       });
       expect(screen.getByText('pi-kitchen')).toBeTruthy();
     });
@@ -70,7 +76,7 @@ describe('DeviceDetailPage', () => {
     it('shows device type', async () => {
       await render(DeviceDetailPage, {
         imports: [RouterTestingModule],
-        providers: buildProviders(),
+        ...buildProviders(),
       });
       expect(screen.getByText('RaspberryPi')).toBeTruthy();
     });
@@ -80,7 +86,7 @@ describe('DeviceDetailPage', () => {
       device.loading.set(true);
       const { container } = await render(DeviceDetailPage, {
         imports: [RouterTestingModule],
-        providers: buildProviders({ device }),
+        ...buildProviders({ device }),
       });
       expect(container.querySelector('ion-skeleton-text')).toBeTruthy();
     });
@@ -90,7 +96,7 @@ describe('DeviceDetailPage', () => {
       device.error.set({ message: 'Not found', code: 404, errorCode: 'NOT_FOUND' } as never);
       await render(DeviceDetailPage, {
         imports: [RouterTestingModule],
-        providers: buildProviders({ device }),
+        ...buildProviders({ device }),
       });
       expect(screen.getByText('Device not found')).toBeTruthy();
     });
@@ -101,7 +107,7 @@ describe('DeviceDetailPage', () => {
       const device = makeSurface<Device>(UNCLAIMED_DEVICE);
       await render(DeviceDetailPage, {
         imports: [RouterTestingModule],
-        providers: buildProviders({ device }),
+        ...buildProviders({ device }),
       });
       expect(screen.getByText(/pending activation/i)).toBeTruthy();
     });
@@ -109,7 +115,7 @@ describe('DeviceDetailPage', () => {
     it('does not show banner when status is ONLINE', async () => {
       await render(DeviceDetailPage, {
         imports: [RouterTestingModule],
-        providers: buildProviders(),
+        ...buildProviders(),
       });
       expect(screen.queryByText(/pending activation/i)).toBeNull();
     });
@@ -119,7 +125,7 @@ describe('DeviceDetailPage', () => {
     it('shows IP address in meta row', async () => {
       await render(DeviceDetailPage, {
         imports: [RouterTestingModule],
-        providers: buildProviders(),
+        ...buildProviders(),
       });
       expect(screen.getByText(/192\.168\.1\.10/)).toBeTruthy();
     });
@@ -127,7 +133,7 @@ describe('DeviceDetailPage', () => {
     it('shows location in meta row', async () => {
       await render(DeviceDetailPage, {
         imports: [RouterTestingModule],
-        providers: buildProviders(),
+        ...buildProviders(),
       });
       expect(screen.getByText('Kitchen')).toBeTruthy();
     });
@@ -138,7 +144,7 @@ describe('DeviceDetailPage', () => {
       const socketOn = vi.fn().mockReturnValue(new Subject());
       await render(DeviceDetailPage, {
         imports: [RouterTestingModule],
-        providers: buildProviders({ socketOn }),
+        ...buildProviders({ socketOn }),
       });
       expect(socketOn).toHaveBeenCalledWith('device:update');
     });
