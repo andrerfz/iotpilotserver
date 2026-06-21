@@ -64,7 +64,7 @@
 #define LED_PIN           3     // GPIO3 — IO3 controllable green LED (active HIGH)
 #define LED_ON            HIGH
 #define LED_OFF           LOW
-#define BATTERY_ADC_PIN   2     // GPIO2 — A0/ADC1_CH2, battery voltage via ÷2 divider
+#define BATTERY_ADC_PIN   1     // GPIO1 — ADC1_CH1, battery voltage via ÷2 divider (T-OI Plus)
 
 // Battery calibration (T-OI Plus: 1:1 voltage divider, 12-bit ADC, 3.3V ref)
 // ADC reads half the battery voltage. Adjust BATTERY_DIVIDER_RATIO if readings
