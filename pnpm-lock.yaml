@@ -147,6 +147,12 @@ importers:
       '@ionic/angular':
         specifier: 8.8.11
         version: 8.8.11(f4f55a8c3ed29d9a32f569059e8e99fb)
+      '@ngx-translate/core':
+        specifier: ^18.0.0
+        version: 18.0.0(@angular/common@20.3.24(@angular/core@20.3.24(@angular/compiler@20.3.24)(rxjs@7.8.2)(zone.js@0.16.2))(rxjs@7.8.2))(@angular/core@20.3.24(@angular/compiler@20.3.24)(rxjs@7.8.2)(zone.js@0.16.2))(rxjs@7.8.2)
+      '@ngx-translate/http-loader':
+        specifier: ^18.0.0
+        version: 18.0.0(@angular/common@20.3.24(@angular/core@20.3.24(@angular/compiler@20.3.24)(rxjs@7.8.2)(zone.js@0.16.2))(rxjs@7.8.2))(@angular/core@20.3.24(@angular/compiler@20.3.24)(rxjs@7.8.2)(zone.js@0.16.2))(@ngx-translate/core@18.0.0(@angular/common@20.3.24(@angular/core@20.3.24(@angular/compiler@20.3.24)(rxjs@7.8.2)(zone.js@0.16.2))(rxjs@7.8.2))(@angular/core@20.3.24(@angular/compiler@20.3.24)(rxjs@7.8.2)(zone.js@0.16.2))(rxjs@7.8.2))
       echarts:
         specifier: ^6.1.0
         version: 6.1.0
@@ -2541,6 +2547,20 @@ packages:
       '@angular/compiler-cli': ^20.0.0
       typescript: '>=5.8 <6.0'
       webpack: ^5.54.0
+
+  '@ngx-translate/core@18.0.0':
+    resolution: {integrity: sha512-Z9u9AXaeuyeHHimivvJQvhal/LJNB+5tlH+FimSU4QQ61FrtRDqgyn6nfFbc6Cb+59NDZdsh4QeTJyPCldFUwA==}
+    peerDependencies:
+      '@angular/common': '>=18'
+      '@angular/core': '>=18'
+      rxjs: '>=7'
+
+  '@ngx-translate/http-loader@18.0.0':
+    resolution: {integrity: sha512-p6QpNcU3rkCYjHbKVIadcYtml/Njpr0aLp8neJ4uJWQ4Xm9f09bIePhOjdjAFHupTptKqKrG1J2gSi3RSwgYeA==}
+    peerDependencies:
+      '@angular/common': '>=18'
+      '@angular/core': '>=18'
+      '@ngx-translate/core': '>=18.0.0'
 
   '@noble/hashes@1.8.0':
     resolution: {integrity: sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A==}
@@ -10864,6 +10884,20 @@ snapshots:
       '@angular/compiler-cli': 20.3.24(@angular/compiler@20.3.24)(typescript@5.8.3)
       typescript: 5.8.3
       webpack: 5.105.0(esbuild@0.28.0)(lightningcss@1.32.0)(postcss@8.5.15)
+
+  '@ngx-translate/core@18.0.0(@angular/common@20.3.24(@angular/core@20.3.24(@angular/compiler@20.3.24)(rxjs@7.8.2)(zone.js@0.16.2))(rxjs@7.8.2))(@angular/core@20.3.24(@angular/compiler@20.3.24)(rxjs@7.8.2)(zone.js@0.16.2))(rxjs@7.8.2)':
+    dependencies:
+      '@angular/common': 20.3.24(@angular/core@20.3.24(@angular/compiler@20.3.24)(rxjs@7.8.2)(zone.js@0.16.2))(rxjs@7.8.2)
+      '@angular/core': 20.3.24(@angular/compiler@20.3.24)(rxjs@7.8.2)(zone.js@0.16.2)
+      rxjs: 7.8.2
+      tslib: 2.8.1
+
+  '@ngx-translate/http-loader@18.0.0(@angular/common@20.3.24(@angular/core@20.3.24(@angular/compiler@20.3.24)(rxjs@7.8.2)(zone.js@0.16.2))(rxjs@7.8.2))(@angular/core@20.3.24(@angular/compiler@20.3.24)(rxjs@7.8.2)(zone.js@0.16.2))(@ngx-translate/core@18.0.0(@angular/common@20.3.24(@angular/core@20.3.24(@angular/compiler@20.3.24)(rxjs@7.8.2)(zone.js@0.16.2))(rxjs@7.8.2))(@angular/core@20.3.24(@angular/compiler@20.3.24)(rxjs@7.8.2)(zone.js@0.16.2))(rxjs@7.8.2))':
+    dependencies:
+      '@angular/common': 20.3.24(@angular/core@20.3.24(@angular/compiler@20.3.24)(rxjs@7.8.2)(zone.js@0.16.2))(rxjs@7.8.2)
+      '@angular/core': 20.3.24(@angular/compiler@20.3.24)(rxjs@7.8.2)(zone.js@0.16.2)
+      '@ngx-translate/core': 18.0.0(@angular/common@20.3.24(@angular/core@20.3.24(@angular/compiler@20.3.24)(rxjs@7.8.2)(zone.js@0.16.2))(rxjs@7.8.2))(@angular/core@20.3.24(@angular/compiler@20.3.24)(rxjs@7.8.2)(zone.js@0.16.2))(rxjs@7.8.2)
+      tslib: 2.8.1
 
   '@noble/hashes@1.8.0': {}
 
