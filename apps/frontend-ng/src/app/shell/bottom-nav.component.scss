@@ -25,8 +25,15 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: 56px;
-  padding-bottom: env(safe-area-inset-bottom);
+  /*
+   * box-sizing is border-box (Ionic normalize), so padding-bottom would eat into
+   * a fixed 56px height and squash the icons up against the home indicator on iOS.
+   * Grow the bar by the safe-area inset instead: icons stay centred in the 56px
+   * content row, and the inset becomes clear space below them over the home bar.
+   * Matches the content scroll padding in global.scss (56px + 20px + inset).
+   */
+  height: calc(56px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   z-index: 300;
   pointer-events: auto;
   display: flex;
