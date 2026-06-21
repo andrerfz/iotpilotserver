@@ -57,8 +57,13 @@ git reset --hard origin/main
 info "Code at: $(git rev-parse --short HEAD) — $(git log -1 --format='%s')"
 
 # ── Build images ──────────────────────────────────────────────────────────────
-header "Building images"
-$COMPOSE build
+# Build sequentially to avoid OOM on memory-constrained hosts: NG first
+# (Angular esbuild is the heaviest step), then backend+worker together.
+header "Building images (1/2) — Angular"
+$COMPOSE build iotpilot-ng
+
+header "Building images (2/2) — backend + worker"
+$COMPOSE build iotpilot-backend iotpilot-worker
 
 # ── Run migrations (before swapping containers) ───────────────────────────────
 header "Running database migrations"

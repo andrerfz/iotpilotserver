@@ -153,6 +153,8 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PATH="/app/node_modules/.bin:/app/apps/frontend-ng/node_modules/.bin:$PATH"
 ENV NODE_PATH="/app/node_modules"
+# Cap heap to avoid OOM-kills on memory-constrained hosts (esbuild needs ~400 MB max)
+ENV NODE_OPTIONS="--max-old-space-size=896"
 
 COPY --from=deps /app/node_modules                    ./node_modules
 COPY --from=deps /tmp/frontend-ng-nm.tar.gz           /tmp/frontend-ng-nm.tar.gz

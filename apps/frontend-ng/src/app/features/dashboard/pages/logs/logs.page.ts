@@ -113,16 +113,22 @@ export class LogsPage implements ViewWillEnter {
     return new Date(ts).toLocaleString();
   }
 
+  private csvCell(value: string): string {
+    const s = String(value ?? '');
+    const guarded = /^[=+\-@\t\r]/.test(s) ? `'${s}` : s;
+    return `"${guarded.replace(/"/g, '""')}"`;
+  }
+
   protected exportCsv(): void {
     const logs = this.svc.logs();
     if (!logs.length) return;
     const header = 'Timestamp,Level,Device,Source,Message';
     const rows = logs.map((l: AdminLogEntry) => [
-      new Date(l.timestamp).toISOString(),
-      l.level,
-      l.device?.hostname ?? 'Unknown',
-      l.source ?? 'system',
-      `"${l.message.replace(/"/g, '""')}"`,
+      this.csvCell(new Date(l.timestamp).toISOString()),
+      this.csvCell(l.level),
+      this.csvCell(l.device?.hostname ?? 'Unknown'),
+      this.csvCell(l.source ?? 'system'),
+      this.csvCell(l.message),
     ].join(','));
     const csv = [header, ...rows].join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
