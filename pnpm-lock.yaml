@@ -218,8 +218,8 @@ importers:
         specifier: 20.3.24
         version: 20.3.24(@angular/compiler@20.3.24)(typescript@5.8.3)
       '@angular/language-service':
-        specifier: 20.3.24
-        version: 20.3.24
+        specifier: 22.0.2
+        version: 22.0.2
       '@capacitor/cli':
         specifier: ^8.4.1
         version: 8.4.1
@@ -720,9 +720,9 @@ packages:
       '@angular/platform-browser': 20.3.24
       rxjs: ^6.5.3 || ^7.4.0
 
-  '@angular/language-service@20.3.24':
-    resolution: {integrity: sha512-pc1D3u/nP4tZuLioFVVbMsya9q3JFWs9Qjq8y778rf/umBOZZQsKCN6UtkE9XR2G0LpB+ny7/rtAN3kP2VZ+ug==}
-    engines: {node: ^20.19.0 || ^22.12.0 || >=24.0.0}
+  '@angular/language-service@22.0.2':
+    resolution: {integrity: sha512-J7QXjv9R/wFVwK4CZBjzE6B1owFQTKsb0KWVhuuPcglD3jtVAJ5xipUI9gco93GmCT3EU9oANmN8jQcAn67h4A==}
+    engines: {node: ^22.22.3 || ^24.15.0 || >=26.0.0}
 
   '@angular/platform-browser-dynamic@20.3.24':
     resolution: {integrity: sha512-Vl4j7G0aKyRTcZ5KvKQU6B5NBmqs+0uaGkWukpk5ooLCJ7z1vCBCb6fDTF9hoxY3RUk+YA4vGrmkTGGoABnnZA==}
@@ -8869,7 +8869,7 @@ snapshots:
       rxjs: 7.8.2
       tslib: 2.8.1
 
-  '@angular/language-service@20.3.24': {}
+  '@angular/language-service@22.0.2': {}
 
   '@angular/platform-browser-dynamic@20.3.24(@angular/common@20.3.24(@angular/core@20.3.24(@angular/compiler@20.3.24)(rxjs@7.8.2)(zone.js@0.16.2))(rxjs@7.8.2))(@angular/compiler@20.3.24)(@angular/core@20.3.24(@angular/compiler@20.3.24)(rxjs@7.8.2)(zone.js@0.16.2))(@angular/platform-browser@20.3.24(@angular/animations@20.3.24(@angular/core@20.3.24(@angular/compiler@20.3.24)(rxjs@7.8.2)(zone.js@0.16.2)))(@angular/common@20.3.24(@angular/core@20.3.24(@angular/compiler@20.3.24)(rxjs@7.8.2)(zone.js@0.16.2))(rxjs@7.8.2))(@angular/core@20.3.24(@angular/compiler@20.3.24)(rxjs@7.8.2)(zone.js@0.16.2)))':
     dependencies:
