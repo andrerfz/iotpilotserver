@@ -105,7 +105,7 @@ export class SettingsProfilePage implements OnInit {
         firstName: data.firstName ?? '',
         lastName: data.lastName ?? '',
         phoneNumber: data.phoneNumber ?? '',
-        language: data.language ?? this.lang.current,
+        language: data.language || this.lang.current,
         timezone: data.timezone ?? 'UTC',
         dateFormat: data.dateFormat ?? 'MM/DD/YYYY',
       });

@@ -97,6 +97,7 @@ export class SettingsSystemPage implements OnInit {
   readonly adminSuccess = signal('');
 
   readonly currentTheme = this.themeService.theme;
+  private _ready = false;
 
   readonly dashboardLayoutOptions = DASHBOARD_LAYOUT_OPTIONS;
   readonly itemsPerPageOptions = ITEMS_PER_PAGE_OPTIONS;
@@ -119,17 +120,19 @@ export class SettingsSystemPage implements OnInit {
           logLevel: data.logLevel ?? 'info',
         });
       }
-      if (data.theme) {
-        this.themeService.setTheme(data.theme as Theme);
-      }
     } catch {
       this.displayError.set('Failed to load system settings');
     } finally {
       this.isLoading.set(false);
     }
+    // Guard against the spurious ionChange ion-segment fires on first render.
+    // One microtask is enough for the init event to have already fired.
+    await Promise.resolve();
+    this._ready = true;
   }
 
   onThemeChange(event: Event): void {
+    if (!this._ready) return;
     const value = (event as CustomEvent<{ value: string }>).detail?.value as Theme;
     if (value) {
       this.themeService.setTheme(value);
