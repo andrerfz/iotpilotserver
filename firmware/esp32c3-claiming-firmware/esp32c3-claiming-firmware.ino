@@ -69,7 +69,7 @@
 // Battery calibration (T-OI Plus: two equal resistors → ÷2 divider)
 // Uses esp_adc_cal for accurate mV readings (corrects ESP32-C3 ADC non-linearity).
 #define BATTERY_DIVIDER_RATIO  2.0
-#define BATTERY_FULL_V         4.2
+#define BATTERY_FULL_V         4.10  // ADC reads ~4.10V at full charge on T-OI Plus; constrain() clamps >100% anyway
 #define BATTERY_EMPTY_V        3.0
 #define BATTERY_LOW_THRESHOLD  15.0      // % — flag alertPending when below this
 
