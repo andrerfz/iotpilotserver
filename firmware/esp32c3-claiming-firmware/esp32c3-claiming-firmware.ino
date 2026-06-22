@@ -79,7 +79,7 @@
 
 #define NVS_NAMESPACE          "iotpilot"
 #define WIFI_AP_PASSWORD       "iotpilot123"
-#define FIRMWARE_VERSION       "1.1.0"
+#define FIRMWARE_VERSION       "1.1.1"
 #define FACTORY_RESET_PIN      9        // GPIO9 — BOOT button (active LOW, internal pull-up)
 #define FACTORY_RESET_HOLD_MS  5000     // Hold 5 seconds to trigger factory reset
 
@@ -221,8 +221,13 @@ float readBatteryVoltage() {
   return (adcReading / BATTERY_ADC_MAX) * BATTERY_ADC_VREF * BATTERY_DIVIDER_RATIO;
 }
 
+// Returns -1.0 when the battery voltage is too low to be a valid reading
+// (no battery connected, or so deeply discharged the ADC reads near zero).
+#define BATTERY_MIN_VALID_V 2.0
+
 float readBatteryPercent() {
   float voltage = readBatteryVoltage();
+  if (voltage < BATTERY_MIN_VALID_V) return -1.0;
   float percent = (voltage - BATTERY_EMPTY_V) / (BATTERY_FULL_V - BATTERY_EMPTY_V) * 100.0;
   return constrain(percent, 0.0, 100.0);
 }
@@ -372,13 +377,19 @@ bool sendData(float temperature, float batteryPct, float batteryV, bool sensorEr
   http.addHeader("x-api-key", config.apiKey);
   http.setTimeout(15000);  // longer timeout for bulk payloads
 
-  bool batteryLow = (batteryPct <= BATTERY_LOW_THRESHOLD);
+  bool batteryValid = (batteryPct >= 0.0);
+  bool batteryLow   = batteryValid && (batteryPct <= BATTERY_LOW_THRESHOLD);
 
   // 512 base + 64 bytes per buffered reading
   DynamicJsonDocument doc(512 + MAX_BUFFERED_READINGS * 64);
   doc["deviceId"]        = config.deviceId;
-  doc["batteryLevel"]    = batteryPct;
-  doc["batteryVoltage"]  = round(batteryV * 1000.0) / 1000.0;
+  if (batteryValid) {
+    doc["batteryLevel"]   = batteryPct;
+    doc["batteryVoltage"] = round(batteryV * 1000.0) / 1000.0;
+  } else {
+    doc["batteryLevel"]   = nullptr;
+    doc["batteryVoltage"] = nullptr;
+  }
   doc["rssi"]            = WiFi.RSSI();
   doc["firmwareVersion"] = FIRMWARE_VERSION;
   doc["alertPending"]    = batteryLow || sensorError;
@@ -642,9 +653,14 @@ void setup() {
   }
 
   // Read battery at rest BEFORE WiFi radio powers up to avoid voltage sag
-  float batteryPct = readBatteryPercent();
   float batteryV   = readBatteryVoltage();
-  Serial.printf("[BATTERY] %.1f%%  %.3fV (at rest, pre-WiFi)\n", batteryPct, batteryV);
+  float batteryPct = readBatteryPercent();
+  if (batteryPct >= 0.0) {
+    Serial.printf("[BATTERY] %.1f%%  %.3fV (at rest, pre-WiFi)\n", batteryPct, batteryV);
+  } else {
+    Serial.printf("[BATTERY] Not measurable (%.3fV < %.1fV) — no battery or fully discharged\n",
+      batteryV, BATTERY_MIN_VALID_V);
+  }
 
   // Read temperature before WiFi — so it can be buffered even if WiFi fails
   float temp = readTemperature();
