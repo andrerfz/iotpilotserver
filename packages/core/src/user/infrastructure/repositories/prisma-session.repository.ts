@@ -53,21 +53,38 @@ export class PrismaSessionRepository implements SessionRepository {
     // Sessions are scoped by customerId; do a best-effort tenant check when context exists.
     this.assertTenantAccess(entity.getCustomerId(), tenantContext);
 
-    await this.prisma.session.upsert({
-      where: { token: entity.getToken() },
-      create: {
+    // Manual upsert keyed on the token. We deliberately avoid prisma.upsert()
+    // here: the `token`/`userId` unique indexes are *partial* (… WHERE
+    // "deletedAt" IS NULL — see migration 001), and Postgres cannot use a
+    // partial index as an ON CONFLICT target, so prisma.upsert() raises
+    // 42P10 ("no unique or exclusion constraint matching the ON CONFLICT
+    // specification") on every call. Finding-then-update/create by the plain
+    // `id` PK works regardless of the index being partial or plain.
+    const existing = await this.prisma.session.findFirst({
+      where: { token: entity.getToken() }
+    });
+
+    if (existing) {
+      await this.prisma.session.update({
+        where: { id: (existing as PrismaSessionRow).id },
+        data: {
+          userId: entity.getUserId().getValue(),
+          customerId: entity.getCustomerId()?.getValue() ?? null,
+          expiresAt: entity.getExpiresAt(),
+          deletedAt: entity.isRevoked() ? new Date() : null
+        }
+      });
+      return;
+    }
+
+    await this.prisma.session.create({
+      data: {
         id: entity.getId().getValue(),
         userId: entity.getUserId().getValue(),
         customerId: entity.getCustomerId()?.getValue() ?? null,
         token: entity.getToken(),
         expiresAt: entity.getExpiresAt(),
         createdAt: entity.getCreatedAt(),
-        deletedAt: entity.isRevoked() ? new Date() : null
-      },
-      update: {
-        userId: entity.getUserId().getValue(),
-        customerId: entity.getCustomerId()?.getValue() ?? null,
-        expiresAt: entity.getExpiresAt(),
         deletedAt: entity.isRevoked() ? new Date() : null
       }
     });
