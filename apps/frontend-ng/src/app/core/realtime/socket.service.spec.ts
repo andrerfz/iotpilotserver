@@ -18,6 +18,7 @@ const { ioMock, makeSocket } = vi.hoisted(() => {
         handlers.delete(event);
         return this;
       },
+      emit: vi.fn(),
       disconnect: vi.fn(function (this: { connected: boolean }) {
         this.connected = false;
       }),

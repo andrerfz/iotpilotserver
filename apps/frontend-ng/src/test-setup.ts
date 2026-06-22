@@ -61,6 +61,13 @@ function resolveKey(key: string): string {
 // signal (() => value). Specs that need custom translation can override by providing
 // their own TranslateService mock — the spec-level provider added later always wins.
 beforeEach(() => {
+  // jsdom's sessionStorage/localStorage are a single global shared across all
+  // specs in a run. InMemoryTokenStorage persists the session token in
+  // sessionStorage, so without this reset a token set in one spec leaks into
+  // the next (e.g. a logged-out spec would read a stale token).
+  sessionStorage.clear();
+  localStorage.clear();
+
   TestBed.configureTestingModule({
     providers: [
       {
