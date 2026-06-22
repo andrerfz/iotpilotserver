@@ -64,22 +64,18 @@
 #define LED_PIN           3     // GPIO3 — IO3 controllable green LED (active HIGH)
 #define LED_ON            HIGH
 #define LED_OFF           LOW
-#define BATTERY_ADC_PIN   1     // GPIO1 — ADC1_CH1, battery voltage via ÷2 divider (T-OI Plus)
+#define BATTERY_ADC_PIN   2     // GPIO2 — ADC1_CH2, battery via ÷2 divider (confirmed in official LILYGO example)
 
-// Battery calibration (T-OI Plus: 1:1 voltage divider, 12-bit ADC, 3.3V ref)
-// ADC reads half the battery voltage. Adjust BATTERY_DIVIDER_RATIO if readings
-// are off — measure actual voltage with a multimeter and calibrate.
+// Battery calibration (T-OI Plus: two equal resistors → ÷2 divider)
+// Uses esp_adc_cal for accurate mV readings (corrects ESP32-C3 ADC non-linearity).
 #define BATTERY_DIVIDER_RATIO  2.0
-#define BATTERY_ADC_BITS       12        // ESP32 ADC resolution
-#define BATTERY_ADC_MAX        4095.0
-#define BATTERY_ADC_VREF       3.3
 #define BATTERY_FULL_V         4.2
 #define BATTERY_EMPTY_V        3.0
 #define BATTERY_LOW_THRESHOLD  15.0      // % — flag alertPending when below this
 
 #define NVS_NAMESPACE          "iotpilot"
 #define WIFI_AP_PASSWORD       "iotpilot123"
-#define FIRMWARE_VERSION       "1.1.1"
+#define FIRMWARE_VERSION       "1.1.3"
 #define FACTORY_RESET_PIN      9        // GPIO9 — BOOT button (active LOW, internal pull-up)
 #define FACTORY_RESET_HOLD_MS  5000     // Hold 5 seconds to trigger factory reset
 
@@ -92,9 +88,9 @@
 #define MAX_REPORTING_INTERVAL 86400     // 24 hours
 
 // Activation server — override via build flag:
-// -DACTIVATION_URL=\"https://app.iotpilot.com/api/devices/activate\"
+// -DACTIVATION_URL=\"https://dashboarddev.iotpilot.app/api/devices/activate\"
 #ifndef ACTIVATION_URL
-#define ACTIVATION_URL    "https://dashboarddev.iotpilot.app/api/devices/activate"
+#define ACTIVATION_URL    "https://dashboard.iotpilot.app/api/devices/activate"
 #endif
 
 // ====================
@@ -210,20 +206,20 @@ void clearBuffer() {
 // BATTERY
 // ====================
 
+// analogReadMilliVolts() is the arduino-esp32 v3.x calibrated ADC API —
+// handles eFuse calibration internally, no esp_adc_cal needed.
 float readBatteryVoltage() {
-  // Average 16 samples to reduce ADC noise
   uint32_t sum = 0;
   for (int i = 0; i < 16; i++) {
-    sum += analogRead(BATTERY_ADC_PIN);
+    sum += analogReadMilliVolts(BATTERY_ADC_PIN);
     delay(2);
   }
-  float adcReading = sum / 16.0;
-  return (adcReading / BATTERY_ADC_MAX) * BATTERY_ADC_VREF * BATTERY_DIVIDER_RATIO;
+  return (sum / 16.0 / 1000.0) * BATTERY_DIVIDER_RATIO;
 }
 
-// Returns -1.0 when the battery voltage is too low to be a valid reading
-// (no battery connected, or so deeply discharged the ADC reads near zero).
-#define BATTERY_MIN_VALID_V 2.0
+// Returns -1.0 when voltage is too low to be a valid reading
+// (no battery, or deeply discharged below protection threshold).
+#define BATTERY_MIN_VALID_V 0.5   // ADC floor ~0.5V → battery < 1.0V = dead/absent
 
 float readBatteryPercent() {
   float voltage = readBatteryVoltage();
@@ -620,10 +616,6 @@ void setup() {
 
   checkFactoryReset();
   Serial.printf("[BOOT] WiFi fail count: %d/%d\n", wifiFailCount, MAX_WIFI_FAILS);
-
-  // Configure ADC for battery
-  analogReadResolution(BATTERY_ADC_BITS);
-  analogSetAttenuation(ADC_11db);  // Full range: 0–3.3V
 
   loadConfig();
 
