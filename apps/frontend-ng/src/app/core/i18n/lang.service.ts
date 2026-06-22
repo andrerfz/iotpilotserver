@@ -1,5 +1,6 @@
-import { inject, Injectable } from '@angular/core';
+import { ApplicationRef, inject, Injectable } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
+import { firstValueFrom } from 'rxjs';
 
 export const SUPPORTED_LANGS = ['en', 'es', 'pt-br', 'fr', 'it'] as const;
 export type SupportedLang = (typeof SUPPORTED_LANGS)[number];
@@ -17,22 +18,31 @@ export const LANG_LABELS: Record<SupportedLang, string> = {
 @Injectable({ providedIn: 'root' })
 export class LangService {
   private readonly translate = inject(TranslateService);
+  private readonly appRef = inject(ApplicationRef);
 
   get current(): SupportedLang {
     const lang = this.translate.getCurrentLang() ?? 'en';
     return SUPPORTED_LANGS.includes(lang as SupportedLang) ? (lang as SupportedLang) : 'en';
   }
 
-  init(): Promise<unknown> {
+  async init(): Promise<void> {
     this.translate.addLangs([...SUPPORTED_LANGS]);
     const saved = localStorage.getItem(LANG_KEY) as SupportedLang | null;
     const lang = saved && SUPPORTED_LANGS.includes(saved) ? saved : this.detectBrowserLang();
-    return this.translate.use(lang).toPromise();
+    await firstValueFrom(this.translate.use(lang));
   }
 
-  use(lang: SupportedLang): void {
+  /**
+   * Change the active language, persist to localStorage, and await the
+   * translation file load before returning. Callers can await this to
+   * guarantee _currentLang is already set before any subsequent rendering.
+   * After the load, we call ApplicationRef.tick() so Ionic-cached views
+   * that were detached from the CD tree re-render with the new language.
+   */
+  async use(lang: SupportedLang): Promise<void> {
     localStorage.setItem(LANG_KEY, lang);
-    this.translate.use(lang);
+    await firstValueFrom(this.translate.use(lang));
+    this.appRef.tick();
   }
 
   private detectBrowserLang(): SupportedLang {

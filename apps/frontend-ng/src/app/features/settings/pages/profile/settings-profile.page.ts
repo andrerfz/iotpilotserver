@@ -126,7 +126,7 @@ export class SettingsProfilePage implements OnInit {
         body: this.form.getRawValue() as ProfileSettings,
       });
       const lang = this.form.getRawValue().language;
-      if (lang) this.lang.use(lang as Parameters<typeof this.lang.use>[0]);
+      if (lang) await this.lang.use(lang as Parameters<typeof this.lang.use>[0]);
       this.success.set('Changes saved');
       this.form.markAsPristine();
     } catch (err) {
