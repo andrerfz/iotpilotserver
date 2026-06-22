@@ -320,8 +320,8 @@ importers:
         specifier: ^2.4.3
         version: 2.4.3
       bullmq:
-        specifier: ^5.79.0
-        version: 5.79.0
+        specifier: ^5.79.1
+        version: 5.79.1
       class-transformer:
         specifier: ^0.5.1
         version: 0.5.1
@@ -4106,8 +4106,8 @@ packages:
     resolution: {integrity: sha512-zhaCDicdLuWN5UbN5IMnFqNMhNfo919sH85y2/ea+5Yg9TsTkeZxpL+JLbp6cgYFS4sRLp3YV4S6yDuqVWHYOw==}
     engines: {node: '>=6'}
 
-  bullmq@5.79.0:
-    resolution: {integrity: sha512-sg+kYGn7PIDI/AAkSWINPNz0vMp745YaBYMyo3AtcfXk5iCvjEPU+XMbU3yf7rSf1KsU+OfU+GH8FhxUa+WDNA==}
+  bullmq@5.79.1:
+    resolution: {integrity: sha512-cteoHRr1FGOTUgzFrnMyBNGtQhNeVR8Ej6nImNSHQDJi4tj6GMD0p9ZG65ZsTnvR9RVf18dhRxWu4kFl634QGA==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       redis: '>=5.0.0'
@@ -12425,7 +12425,7 @@ snapshots:
 
   builtin-modules@3.3.0: {}
 
-  bullmq@5.79.0:
+  bullmq@5.79.1:
     dependencies:
       cron-parser: 4.9.0
       ioredis: 5.10.1
