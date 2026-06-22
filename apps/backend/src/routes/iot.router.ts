@@ -507,8 +507,20 @@ iotRouter.post('/temperature', async (req: Request, res: Response) => {
         const prisma = ServiceContainer.getInstance().getPrismaClient().getClient();
         const device = await prisma.device.findFirst({
             where: { deviceId: data.deviceId },
-            select: { capabilities: true, targetFirmwareVersion: true }
+            select: { id: true, capabilities: true, targetFirmwareVersion: true }
         });
+
+        // Notify connected dashboards — send the UUID so the page can match by URL param.
+        try {
+            if (device?.id) {
+                (global as any).broadcastDeviceUpdate?.(device.id, {
+                    deviceId: data.deviceId,
+                    status: 'ONLINE',
+                    batteryLevel: data.batteryLevel,
+                    lastSeen: new Date().toISOString(),
+                });
+            }
+        } catch { /* non-fatal */ }
         const caps = (device?.capabilities as any) ?? {};
         const reportingInterval = caps.reportingInterval ?? 1800;
         const deepSleepEnabled  = caps.deepSleepEnabled  ?? true;

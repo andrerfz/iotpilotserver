@@ -53,7 +53,11 @@ export class SocketService {
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
     });
-    this.socket.on('connect', () => this._connected.set(true));
+    this.socket.on('connect', () => {
+      this._connected.set(true);
+      // Join the devices room so device:update events are received.
+      this.socket?.emit('subscribe:devices');
+    });
     this.socket.on('disconnect', () => this._connected.set(false));
   }
 

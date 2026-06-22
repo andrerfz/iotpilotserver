@@ -7,12 +7,14 @@ import {
   signal,
 } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TopbarService } from '@ng/shell/topbar.service';
 import { NgxEchartsDirective } from 'ngx-echarts';
 import type { EChartsOption } from 'echarts';
 import { addIcons } from 'ionicons';
 import { refreshOutline } from 'ionicons/icons';
 import { TranslatePipe } from '@ngx-translate/core';
+import { SocketService } from '@ng/core/realtime/socket.service';
 import {
   IonContent,
   IonCard,
@@ -130,6 +132,7 @@ export class DeviceMetricsPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly topbar = inject(TopbarService);
   private readonly svc = inject(DeviceDetailService);
+  private readonly socketService = inject(SocketService);
 
   private readonly deviceId = signal('');
   readonly metrics = this.svc.deviceMetrics;
@@ -168,6 +171,17 @@ export class DeviceMetricsPage implements OnInit {
   constructor() {
     const id = this.route.parent?.snapshot.paramMap.get('id') ?? '';
     this.deviceId.set(id);
+
+    // Auto-reload metrics when the backend pushes a device:update event
+    // (fired each time the device successfully delivers a data payload).
+    this.socketService
+      .on<{ deviceId: string }>('device:update')
+      .pipe(takeUntilDestroyed())
+      .subscribe((ev) => {
+        if (ev.deviceId === this.deviceId()) {
+          void this.metrics.reload();
+        }
+      });
   }
 
   ngOnInit(): void {
