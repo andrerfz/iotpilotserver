@@ -20,36 +20,27 @@ export abstract class TokenStorage {
   abstract clear(): Promise<void>;
 }
 
-const SESSION_KEY = 'iotpilot.web-token';
-
 /**
- * Web strategy: keeps the token in memory for fast reads AND in sessionStorage
- * so it survives Command+R page reloads within the same tab. sessionStorage is
- * JS-readable (unlike an httpOnly cookie) but is scoped to the tab and cleared
- * on tab close, which is an acceptable tradeoff for developer ergonomics.
- *
- * TODO(security): the ideal path is in-memory only + httpOnly-cookie /auth/refresh
- * on bootstrap. That flow exists in the backend but the cookie never reaches
- * req.cookies in practice (root cause unknown — nginx forwarding confirmed OK,
- * cookie-parser configured). Until that is debugged and fixed, sessionStorage
- * is the working fallback. Do NOT promote this to localStorage.
+ * Web strategy: the token lives in memory only. It is intentionally NOT persisted
+ * to sessionStorage/localStorage — JS-readable storage is an XSS exfiltration
+ * target. Persistence across page reloads is provided by the httpOnly `auth-token`
+ * cookie: on bootstrap, `restoreSession()` calls `/auth/refresh`, which re-mints
+ * the in-memory token from the cookie. (XSS cannot read what JS cannot reach.)
  */
 @Injectable()
 export class InMemoryTokenStorage extends TokenStorage {
   private token: string | null = null;
 
   async get(): Promise<string | null> {
-    return this.token ?? sessionStorage.getItem(SESSION_KEY);
+    return this.token;
   }
 
   async set(token: string): Promise<void> {
     this.token = token;
-    sessionStorage.setItem(SESSION_KEY, token);
   }
 
   async clear(): Promise<void> {
     this.token = null;
-    sessionStorage.removeItem(SESSION_KEY);
   }
 }
 

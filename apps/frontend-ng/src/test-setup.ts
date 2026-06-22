@@ -62,9 +62,8 @@ function resolveKey(key: string): string {
 // their own TranslateService mock — the spec-level provider added later always wins.
 beforeEach(() => {
   // jsdom's sessionStorage/localStorage are a single global shared across all
-  // specs in a run. InMemoryTokenStorage persists the session token in
-  // sessionStorage, so without this reset a token set in one spec leaks into
-  // the next (e.g. a logged-out spec would read a stale token).
+  // specs in a run. Reset them between specs so any web-storage state can't leak
+  // from one spec into the next.
   sessionStorage.clear();
   localStorage.clear();
 
