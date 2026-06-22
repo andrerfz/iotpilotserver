@@ -2,6 +2,7 @@ import {
   Component, ElementRef, inject, input, output, computed, viewChild, ChangeDetectionStrategy,
 } from '@angular/core';
 import { IonModal, IonHeader, IonContent } from '@ionic/angular/standalone';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 /**
  * Bottom sheet — the prototype's signature selector shell over `ion-modal`.
@@ -28,7 +29,7 @@ import { IonModal, IonHeader, IonContent } from '@ionic/angular/standalone';
   selector: 'ui-bottom-sheet',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonModal, IonHeader, IonContent],
+  imports: [IonModal, IonHeader, IonContent, TranslatePipe],
   template: `
     <ion-modal #modalEl class="ui-sheet" [class.ui-sheet--card]="isCard()"
       [mode]="isCard() ? 'ios' : undefined"
@@ -40,7 +41,7 @@ import { IonModal, IonHeader, IonContent } from '@ionic/angular/standalone';
       <ng-template>
         <ion-header class="sheet__header">
           <div class="sheet__bar">
-            <button type="button" class="sheet__act" (click)="modalEl.dismiss()">Cancel</button>
+            <button type="button" class="sheet__act" (click)="modalEl.dismiss()">{{ 'common.cancel' | translate }}</button>
             <div class="sheet__titles">
               <div class="sheet__title">{{ title() }}</div>
               @if (subline()) {
@@ -49,7 +50,7 @@ import { IonModal, IonHeader, IonContent } from '@ionic/angular/standalone';
             </div>
             <button type="button" class="sheet__act sheet__act--save"
               [disabled]="saveDisabled()" (click)="save.emit(); modalEl.dismiss()">
-              {{ saveLabel() }}
+              {{ saveLabel() || ('ui.apply' | translate) }}
             </button>
           </div>
         </ion-header>
@@ -68,10 +69,11 @@ export class BottomSheetComponent {
   private readonly modal = viewChild.required(IonModal);
   private readonly modalElRef = viewChild.required('modalEl', { read: ElementRef });
   private readonly hostEl = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly t = inject(TranslateService);
 
   readonly title = input('');
   readonly sub = input('');
-  readonly saveLabel = input('Apply');
+  readonly saveLabel = input('');
   readonly saveDisabled = input(false);
   /** Selected count shown under the title; null/undefined falls back to `sub`. */
   readonly count = input<number | null>(null);
@@ -94,7 +96,7 @@ export class BottomSheetComponent {
 
   protected readonly subline = computed(() => {
     const c = this.count();
-    return c !== null && c !== undefined ? `${c} selected` : this.sub();
+    return c !== null && c !== undefined ? `${c} ${this.t.instant('common.selected')}` : this.sub();
   });
 
   close(): void {

@@ -7,6 +7,7 @@ import {
 } from '@angular/core';
 import { NG_VALUE_ACCESSOR, ControlValueAccessor } from '@angular/forms';
 import { IonInput, IonLabel, IonNote, IonButton, IonIcon } from '@ionic/angular/standalone';
+import { TranslatePipe } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
 import { eyeOutline, eyeOffOutline } from 'ionicons/icons';
 
@@ -16,7 +17,7 @@ addIcons({ eyeOutline, eyeOffOutline });
   selector: 'ui-input',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonInput, IonLabel, IonNote, IonButton, IonIcon],
+  imports: [IonInput, IonLabel, IonNote, IonButton, IonIcon, TranslatePipe],
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
@@ -47,7 +48,7 @@ addIcons({ eyeOutline, eyeOffOutline });
               size="small"
               class="ui-input__reveal"
               (click)="showPassword.set(!showPassword())"
-              [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'">
+              [attr.aria-label]="(showPassword() ? 'ui.input.hide_password' : 'ui.input.show_password') | translate">
               <ion-icon slot="icon-only" [name]="showPassword() ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
             </ion-button>
           }

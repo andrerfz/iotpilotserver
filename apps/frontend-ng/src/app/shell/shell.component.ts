@@ -81,7 +81,7 @@ export class ShellComponent {
     const out: CommandItem[] = [];
     for (const g of NAV) {
       for (const it of g.items) {
-        out.push({ group: 'Navigate', label: it.label, icon: it.icon, route: `${b}/${it.path}` });
+        out.push({ group: 'shell.palette.navigate', label: it.label, icon: it.icon, route: `${b}/${it.path}` });
       }
     }
     return out;

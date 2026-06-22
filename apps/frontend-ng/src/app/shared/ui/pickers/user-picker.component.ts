@@ -1,4 +1,5 @@
 import { Component, input, output, computed, ChangeDetectionStrategy } from '@angular/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
 import { personOutline } from 'ionicons/icons';
 import { MultiSelectPickerComponent, PickerOption } from './multi-select-picker.component';
@@ -22,18 +23,18 @@ export interface UserPickerItem {
   selector: 'ui-user-picker',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MultiSelectPickerComponent],
+  imports: [MultiSelectPickerComponent, TranslatePipe],
   template: `
     <ui-multi-select-picker
       [label]="label()"
-      title="Select user"
-      [sub]="multi() ? 'Assign one or more users' : 'Choose a user'"
+      [title]="'ui.user_picker.title' | translate"
+      [sub]="(multi() ? 'ui.user_picker.multi' : 'ui.user_picker.single') | translate"
       chipIcon="person-outline"
       [options]="options()"
       [value]="value()"
       [multi]="multi()"
       [searchable]="true"
-      searchPlaceholder="Search people…"
+      [searchPlaceholder]="'ui.user_picker.search_ph' | translate"
       (valueChange)="valueChange.emit($event)">
     </ui-multi-select-picker>
   `,

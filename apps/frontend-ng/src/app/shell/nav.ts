@@ -26,24 +26,24 @@ export interface NavGroup {
 // production shell (/app) and the dev preview (/__shell).
 export const NAV: NavGroup[] = [
   {
-    group: 'Operate',
+    group: 'nav.operate',
     items: [
-      { label: 'Dashboard', path: 'dashboard', icon: 'grid-outline' },
-      { label: 'Devices', path: 'devices', icon: 'hardware-chip-outline' },
-      { label: 'Monitoring', path: 'monitoring', icon: 'notifications-outline' },
-      { label: 'Logs', path: 'logs', icon: 'document-text-outline', adminOnly: true },
+      { label: 'nav.dashboard', path: 'dashboard', icon: 'grid-outline' },
+      { label: 'nav.devices', path: 'devices', icon: 'hardware-chip-outline' },
+      { label: 'nav.monitoring', path: 'monitoring', icon: 'notifications-outline' },
+      { label: 'nav.logs', path: 'logs', icon: 'document-text-outline', adminOnly: true },
     ],
   },
   {
-    group: 'Administer',
+    group: 'nav.administer',
     items: [
       {
-        label: 'Overview', path: 'admin', icon: 'stats-chart-outline', exact: true, adminOnly: true,
+        label: 'nav.overview', path: 'admin', icon: 'stats-chart-outline', exact: true, adminOnly: true,
         children: [
-          { label: 'Devices', path: 'admin/devices', icon: 'hardware-chip-outline', adminOnly: true, superAdminOnly: true },
-          { label: 'Users',   path: 'admin/users',   icon: 'people-outline', adminOnly: true },
-          { label: 'Logs',    path: 'admin/logs',    icon: 'document-text-outline', adminOnly: true },
-          { label: 'System',  path: 'admin/system',  icon: 'server-outline', adminOnly: true },
+          { label: 'nav.devices', path: 'admin/devices', icon: 'hardware-chip-outline', adminOnly: true, superAdminOnly: true },
+          { label: 'nav.users',   path: 'admin/users',   icon: 'people-outline', adminOnly: true },
+          { label: 'nav.logs',    path: 'admin/logs',    icon: 'document-text-outline', adminOnly: true },
+          { label: 'nav.system',  path: 'admin/system',  icon: 'server-outline', adminOnly: true },
         ],
       },
     ],

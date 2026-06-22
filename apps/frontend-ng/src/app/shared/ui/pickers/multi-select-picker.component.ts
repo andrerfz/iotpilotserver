@@ -1,5 +1,6 @@
-import { Component, input, output, signal, computed, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, input, output, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { IonIcon } from '@ionic/angular/standalone';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
 import { search, checkmark } from 'ionicons/icons';
 import { FilterChipComponent } from '../sheets/filter-chip.component';
@@ -33,7 +34,7 @@ export interface PickerOption<T = string> {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     IonIcon, FilterChipComponent, BottomSheetComponent,
-    StatusDotComponent, SeverityBadgeComponent, EmptyStateComponent,
+    StatusDotComponent, SeverityBadgeComponent, EmptyStateComponent, TranslatePipe,
   ],
   template: `
     <ui-filter-chip
@@ -53,13 +54,13 @@ export interface PickerOption<T = string> {
       [title]="title()"
       [sub]="sub()"
       [count]="multi() ? draft().length : null"
-      saveLabel="Apply"
+      [saveLabel]="'ui.apply' | translate"
       (willOpen)="onWillOpen()"
       (save)="save()">
       @if (searchable()) {
         <div class="field">
           <ion-icon name="search"></ion-icon>
-          <input [placeholder]="searchPlaceholder()" [value]="query()"
+          <input [placeholder]="searchPlaceholder() || ('ui.search_placeholder' | translate)" [value]="query()"
             (input)="query.set($any($event.target).value)" />
         </div>
       }
@@ -81,7 +82,7 @@ export interface PickerOption<T = string> {
             </div>
           </div>
         } @empty {
-          <ui-empty-state title="No matches"></ui-empty-state>
+          <ui-empty-state [title]="'ui.no_matches' | translate"></ui-empty-state>
         }
       </div>
     </ui-bottom-sheet>
@@ -98,9 +99,11 @@ export class MultiSelectPickerComponent<T = string> {
   readonly value = input<T[]>([]);
   readonly multi = input(true);
   readonly searchable = input(false);
-  readonly searchPlaceholder = input('Search…');
+  readonly searchPlaceholder = input('');
 
   readonly valueChange = output<T[]>();
+
+  private readonly t = inject(TranslateService);
 
   protected readonly draft = signal<T[]>([]);
   protected readonly query = signal('');
@@ -115,7 +118,7 @@ export class MultiSelectPickerComponent<T = string> {
     const v = this.value();
     if (!v.length) return '';
     if (v.length === 1) return this.options().find(o => o.value === v[0])?.label ?? '';
-    return `${v.length} selected`;
+    return `${v.length} ${this.t.instant('common.selected')}`;
   });
 
   protected onWillOpen(): void {

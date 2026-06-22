@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { IonIcon, AppLogoComponent } from '@ng/shared/ui';
+import { TranslatePipe } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
 import {
   gridOutline, hardwareChipOutline, notificationsOutline,
@@ -26,7 +27,7 @@ addIcons({
   selector: 'app-rail',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, RouterLinkActive, IonIcon, AppLogoComponent],
+  imports: [RouterLink, RouterLinkActive, IonIcon, AppLogoComponent, TranslatePipe],
   template: `
     <div class="rail">
       <div class="rail__brand">
@@ -36,12 +37,12 @@ addIcons({
       <div class="rail__scroll">
         @for (g of visibleNav(); track g.group) {
           <div class="nav-group">
-            <div class="nav-group__label">{{ g.group }}</div>
+            <div class="nav-group__label">{{ g.group | translate }}</div>
             @for (it of g.items; track it.path) {
               <a class="nav-item" [routerLink]="it.path" routerLinkActive="nav-item--active"
                  [routerLinkActiveOptions]="{ exact: it.exact ?? false }">
                 <ion-icon [name]="it.icon"></ion-icon>
-                <span>{{ it.label }}</span>
+                <span>{{ it.label | translate }}</span>
                 @if (it.badge) {
                   <span class="nav-item__badge">{{ it.badge }}</span>
                 }
@@ -51,7 +52,7 @@ addIcons({
                   @for (sub of it.children; track sub.path) {
                     <a class="nav-sub__item" [routerLink]="sub.path" routerLinkActive="nav-sub__item--active">
                       <ion-icon [name]="sub.icon"></ion-icon>
-                      <span>{{ sub.label }}</span>
+                      <span>{{ sub.label | translate }}</span>
                       @if (sub.badge) {
                         <span class="nav-item__badge">{{ sub.badge }}</span>
                       }

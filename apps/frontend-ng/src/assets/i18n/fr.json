@@ -104,7 +104,9 @@
     "overview": "Vue d'ensemble",
     "users": "Utilisateurs",
     "customers": "Clients",
-    "system": "Système"
+    "system": "Système",
+    "operate": "Exploiter",
+    "administer": "Administrer"
   },
   "dashboard": {
     "title": "Vue de la flotte",
@@ -480,7 +482,10 @@
       "timezone": "Fuseau horaire",
       "date_format": "Format de date",
       "save": "Enregistrer les modifications",
-      "saving": "Enregistrement..."
+      "saving": "Enregistrement...",
+      "first_name_ph": "Saisir le prénom",
+      "last_name_ph": "Saisir le nom",
+      "phone_ph": "Saisir le téléphone"
     },
     "security": {
       "title": "Sécurité du compte",
@@ -605,6 +610,13 @@
         },
         "save": "Enregistrer les paramètres d'administration"
       }
+    },
+    "tabs": {
+      "profile": "Profil",
+      "notifications": "Notifications",
+      "security": "Sécurité",
+      "system": "Système",
+      "api_keys": "Clés API"
     }
   },
   "admin": {
@@ -800,5 +812,121 @@
       "scope_global": "Global",
       "failed": "Échec du chargement des seuils."
     }
+  },
+  "shell": {
+    "search": "Rechercher appareils, alertes, utilisateurs…",
+    "theme": {
+      "light": "Mode clair",
+      "dark": "Mode sombre"
+    },
+    "user_menu": {
+      "aria": "Menu utilisateur",
+      "profile": "Votre profil",
+      "settings": "Paramètres",
+      "command_palette": "Palette de commandes",
+      "grafana": "Tableaux de bord Grafana",
+      "influxdb": "Admin InfluxDB",
+      "debug": "Informations de débogage",
+      "admin": "Panneau d’administration",
+      "sign_out": "Se déconnecter"
+    },
+    "bottom_nav": {
+      "navigate": "Naviguer",
+      "account": "Compte",
+      "admin": "Administration",
+      "platform": "Plateforme",
+      "settings": "Paramètres",
+      "sign_out": "Se déconnecter",
+      "close_menu": "Fermer le menu",
+      "more": "Plus"
+    },
+    "tenant": {
+      "switch": "Changer de client",
+      "exit": "Quitter le client",
+      "exit_short": "Quitter",
+      "acting_as": "Agit en tant que",
+      "title": "Changer de client",
+      "search_ph": "Rechercher des clients…",
+      "loading": "Chargement…",
+      "none": "Aucun client trouvé",
+      "loading_more": "Chargement…",
+      "customer": "Client",
+      "platform": "Plateforme",
+      "tenant": "Locataire",
+      "manage_users": "Gérer les utilisateurs",
+      "devices": "appareils",
+      "users": "utilisateurs",
+      "acting_as_customer": "Agit en tant que client"
+    },
+    "palette": {
+      "search_ph": "Rechercher ou accéder à…",
+      "no_matches": "Aucun résultat",
+      "navigate": "Naviguer"
+    }
+  },
+  "ui": {
+    "select_placeholder": "Sélectionner…",
+    "select_title": "Sélectionner",
+    "apply": "Appliquer",
+    "search_placeholder": "Rechercher…",
+    "no_matches": "Aucun résultat",
+    "table": {
+      "rows": "lignes"
+    },
+    "input": {
+      "show_password": "Afficher le mot de passe",
+      "hide_password": "Masquer le mot de passe"
+    },
+    "filter": {
+      "clear": "Effacer le filtre"
+    },
+    "network": {
+      "offline": "Vous êtes hors ligne — les modifications pourraient ne pas être enregistrées."
+    },
+    "device_picker": {
+      "title": "Sélectionner un appareil",
+      "multi": "Choisissez un ou plusieurs appareils",
+      "single": "Choisissez un appareil",
+      "search_ph": "Rechercher par nom, ID ou emplacement…"
+    },
+    "user_picker": {
+      "title": "Sélectionner un utilisateur",
+      "multi": "Attribuez un ou plusieurs utilisateurs",
+      "single": "Choisissez un utilisateur",
+      "search_ph": "Rechercher des personnes…"
+    },
+    "date_range": {
+      "last_hour": "Dernière heure",
+      "last_24h": "Dernières 24 heures",
+      "last_7d": "7 derniers jours",
+      "last_30d": "30 derniers jours",
+      "title": "Sélectionner une période",
+      "subtitle": "Préréglage rapide ou période personnalisée",
+      "custom": "Période personnalisée",
+      "period": "Période",
+      "custom_short": "Personnalisé"
+    }
+  },
+  "status": {
+    "online": "En ligne",
+    "offline": "Hors ligne",
+    "maintenance": "Maintenance",
+    "error": "Erreur",
+    "unclaimed": "Non réclamé",
+    "pending_setup": "Configuration en attente",
+    "pending": "En attente",
+    "running": "En cours",
+    "completed": "Terminé",
+    "failed": "Échoué",
+    "timeout": "Délai dépassé",
+    "open": "Ouvert",
+    "acknowledged": "Acquitté",
+    "resolved": "Résolu"
+  },
+  "severity": {
+    "critical": "Critique",
+    "warning": "Avertissement",
+    "error": "Erreur",
+    "info": "Info"
   }
 }

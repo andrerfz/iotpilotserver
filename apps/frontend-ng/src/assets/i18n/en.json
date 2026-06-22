@@ -104,7 +104,9 @@
     "overview": "Overview",
     "users": "Users",
     "customers": "Customers",
-    "system": "System"
+    "system": "System",
+    "operate": "Operate",
+    "administer": "Administer"
   },
   "dashboard": {
     "title": "Fleet overview",
@@ -480,7 +482,10 @@
       "timezone": "Timezone",
       "date_format": "Date Format",
       "save": "Save changes",
-      "saving": "Saving..."
+      "saving": "Saving...",
+      "first_name_ph": "Enter first name",
+      "last_name_ph": "Enter last name",
+      "phone_ph": "Enter phone number"
     },
     "security": {
       "title": "Account Security",
@@ -605,6 +610,13 @@
         },
         "save": "Save Admin Settings"
       }
+    },
+    "tabs": {
+      "profile": "Profile",
+      "notifications": "Notifications",
+      "security": "Security",
+      "system": "System",
+      "api_keys": "API Keys"
     }
   },
   "admin": {
@@ -800,5 +812,121 @@
       "scope_global": "Global",
       "failed": "Failed to load thresholds."
     }
+  },
+  "shell": {
+    "search": "Search devices, alerts, users…",
+    "theme": {
+      "light": "Light mode",
+      "dark": "Dark mode"
+    },
+    "user_menu": {
+      "aria": "User menu",
+      "profile": "Your profile",
+      "settings": "Settings",
+      "command_palette": "Command palette",
+      "grafana": "Grafana dashboards",
+      "influxdb": "InfluxDB admin",
+      "debug": "Debug info",
+      "admin": "Admin panel",
+      "sign_out": "Sign out"
+    },
+    "bottom_nav": {
+      "navigate": "Navigate",
+      "account": "Account",
+      "admin": "Admin",
+      "platform": "Platform",
+      "settings": "Settings",
+      "sign_out": "Sign out",
+      "close_menu": "Close menu",
+      "more": "More"
+    },
+    "tenant": {
+      "switch": "Switch tenant",
+      "exit": "Exit tenant",
+      "exit_short": "Exit",
+      "acting_as": "Acting as",
+      "title": "Switch Tenant",
+      "search_ph": "Search customers…",
+      "loading": "Loading…",
+      "none": "No customers found",
+      "loading_more": "Loading more…",
+      "customer": "Customer",
+      "platform": "Platform",
+      "tenant": "Tenant",
+      "manage_users": "Manage users",
+      "devices": "devices",
+      "users": "users",
+      "acting_as_customer": "Acting as customer"
+    },
+    "palette": {
+      "search_ph": "Search or jump to…",
+      "no_matches": "No matches",
+      "navigate": "Navigate"
+    }
+  },
+  "ui": {
+    "select_placeholder": "Select…",
+    "select_title": "Select",
+    "apply": "Apply",
+    "search_placeholder": "Search…",
+    "no_matches": "No matches",
+    "table": {
+      "rows": "rows"
+    },
+    "input": {
+      "show_password": "Show password",
+      "hide_password": "Hide password"
+    },
+    "filter": {
+      "clear": "Clear filter"
+    },
+    "network": {
+      "offline": "You're offline — changes may not be saved."
+    },
+    "device_picker": {
+      "title": "Select device",
+      "multi": "Choose one or more devices",
+      "single": "Choose a device",
+      "search_ph": "Search by name, ID or location…"
+    },
+    "user_picker": {
+      "title": "Select user",
+      "multi": "Assign one or more users",
+      "single": "Choose a user",
+      "search_ph": "Search people…"
+    },
+    "date_range": {
+      "last_hour": "Last hour",
+      "last_24h": "Last 24 hours",
+      "last_7d": "Last 7 days",
+      "last_30d": "Last 30 days",
+      "title": "Select time range",
+      "subtitle": "Quick preset or custom range",
+      "custom": "Custom range",
+      "period": "Period",
+      "custom_short": "Custom"
+    }
+  },
+  "status": {
+    "online": "Online",
+    "offline": "Offline",
+    "maintenance": "Maintenance",
+    "error": "Error",
+    "unclaimed": "Unclaimed",
+    "pending_setup": "Pending setup",
+    "pending": "Pending",
+    "running": "Running",
+    "completed": "Completed",
+    "failed": "Failed",
+    "timeout": "Timeout",
+    "open": "Open",
+    "acknowledged": "Acknowledged",
+    "resolved": "Resolved"
+  },
+  "severity": {
+    "critical": "Critical",
+    "warning": "Warning",
+    "error": "Error",
+    "info": "Info"
   }
 }

@@ -3,6 +3,7 @@ import {
 } from '@angular/core';
 import { NG_VALUE_ACCESSOR, ControlValueAccessor } from '@angular/forms';
 import { IonLabel, IonNote, IonIcon } from '@ionic/angular/standalone';
+import { TranslatePipe } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
 import { chevronDown, checkmark } from 'ionicons/icons';
 import { BottomSheetComponent } from '../sheets/bottom-sheet.component';
@@ -24,7 +25,7 @@ export interface SelectOption<T = string> {
   selector: 'ui-select',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonLabel, IonNote, IonIcon, BottomSheetComponent],
+  imports: [IonLabel, IonNote, IonIcon, BottomSheetComponent, TranslatePipe],
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
@@ -44,7 +45,7 @@ export interface SelectOption<T = string> {
         <button type="button" class="ui-select" [disabled]="isDisabled()"
           (click)="sheet.open()" (blur)="onTouched()">
           <span class="ui-select__value" [class.ui-select__value--placeholder]="!selectedLabel()">
-            {{ selectedLabel() || placeholder() }}
+            {{ selectedLabel() || placeholder() || ('ui.select_placeholder' | translate) }}
           </span>
           <ion-icon name="chevron-down" class="ui-select__chev"></ion-icon>
         </button>
@@ -55,8 +56,8 @@ export interface SelectOption<T = string> {
 
       <ui-bottom-sheet
         #sheet
-        [title]="label() || 'Select'"
-        saveLabel="Apply"
+        [title]="label() || ('ui.select_title' | translate)"
+        [saveLabel]="'ui.apply' | translate"
         (willOpen)="draft.set(value())"
         (save)="commit()">
         <div class="optlist">
@@ -80,7 +81,7 @@ export interface SelectOption<T = string> {
 })
 export class UiSelectComponent<T = string> implements ControlValueAccessor {
   readonly label = input('');
-  readonly placeholder = input('Select…');
+  readonly placeholder = input('');
   readonly loading = input(false);
   readonly error = input('');
   readonly options = input<SelectOption<T>[]>([]);

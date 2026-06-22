@@ -4,6 +4,7 @@ import {
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { IonIcon, ThemeService } from '@ng/shared/ui';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ToastService } from '../core/errors/toast.service';
 import { addIcons } from 'ionicons';
 import {
@@ -28,11 +29,11 @@ addIcons({
   selector: 'app-user-menu',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonIcon],
+  imports: [IonIcon, TranslatePipe],
   template: `
     <div class="usermenu">
       <button class="avatar" [style.background]="avatarBg()" [style.color]="avatarFg()"
-        [style.borderColor]="avatarBorder()" (click)="toggle()" aria-label="User menu">
+        [style.borderColor]="avatarBorder()" (click)="toggle()" [attr.aria-label]="'shell.user_menu.aria' | translate">
         {{ initials() }}
       </button>
 
@@ -48,42 +49,42 @@ addIcons({
           </div>
 
           <div class="menu__sec">
-            <button class="menu__item" (click)="go('settings/profile')"><ion-icon name="person-outline"></ion-icon>Your profile</button>
-            <button class="menu__item" (click)="go('settings/system')"><ion-icon name="settings-outline"></ion-icon>Settings</button>
+            <button class="menu__item" (click)="go('settings/profile')"><ion-icon name="person-outline"></ion-icon>{{ 'shell.user_menu.profile' | translate }}</button>
+            <button class="menu__item" (click)="go('settings/system')"><ion-icon name="settings-outline"></ion-icon>{{ 'shell.user_menu.settings' | translate }}</button>
           </div>
 
           <div class="menu__sec">
             <button class="menu__item" (click)="toggleTheme()">
-              <ion-icon [name]="themeIcon()"></ion-icon>{{ themeLabel() }}
+              <ion-icon [name]="themeIcon()"></ion-icon>{{ themeLabel() | translate }}
             </button>
             <button class="menu__item" (click)="openPalette.emit(); close()">
-              <ion-icon name="terminal-outline"></ion-icon>Command palette<span class="mono">⌘K</span>
+              <ion-icon name="terminal-outline"></ion-icon>{{ 'shell.user_menu.command_palette' | translate }}<span class="mono">⌘K</span>
             </button>
           </div>
 
           @if (showInfra()) {
             <div class="menu__sec">
               <a class="menu__item" [href]="grafanaUrl()" target="_blank" rel="noopener noreferrer">
-                <ion-icon name="bar-chart-outline"></ion-icon>Grafana dashboards
+                <ion-icon name="bar-chart-outline"></ion-icon>{{ 'shell.user_menu.grafana' | translate }}
               </a>
               <a class="menu__item" [href]="influxUrl()" target="_blank" rel="noopener noreferrer">
-                <ion-icon name="server-outline"></ion-icon>InfluxDB admin
+                <ion-icon name="server-outline"></ion-icon>{{ 'shell.user_menu.influxdb' | translate }}
               </a>
               <button class="menu__item" (click)="debug()">
-                <ion-icon name="bug-outline"></ion-icon>Debug info
+                <ion-icon name="bug-outline"></ion-icon>{{ 'shell.user_menu.debug' | translate }}
               </button>
             </div>
           }
 
           @if (showAdmin()) {
             <div class="menu__sec">
-              <button class="menu__item" (click)="go('admin')"><ion-icon name="shield-outline"></ion-icon>Admin panel</button>
+              <button class="menu__item" (click)="go('admin')"><ion-icon name="shield-outline"></ion-icon>{{ 'shell.user_menu.admin' | translate }}</button>
             </div>
           }
 
           <div class="menu__sec">
             <button class="menu__item menu__item--danger" (click)="signOut()">
-              <ion-icon name="log-out-outline"></ion-icon>Sign out
+              <ion-icon name="log-out-outline"></ion-icon>{{ 'shell.user_menu.sign_out' | translate }}
             </button>
           </div>
         </div>
@@ -132,7 +133,7 @@ export class UserMenuComponent {
   protected readonly avatarBorder = computed(() => `hsl(${this.hue()} 55% 50% / 0.35)`);
 
   protected readonly themeIcon = computed(() => this.themeService.theme() === 'dark' ? 'sunny-outline' : 'moon-outline');
-  protected readonly themeLabel = computed(() => this.themeService.theme() === 'dark' ? 'Light theme' : 'Dark theme');
+  protected readonly themeLabel = computed(() => this.themeService.theme() === 'dark' ? 'shell.theme.light' : 'shell.theme.dark');
 
   @HostListener('document:click', ['$event'])
   protected onDocClick(e: MouseEvent): void {

@@ -4,6 +4,7 @@ import {
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { IonIcon, BottomSheetComponent } from '@ng/shared/ui';
+import { TranslatePipe } from '@ngx-translate/core';
 import { IonInfiniteScroll, IonInfiniteScrollContent } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -28,14 +29,14 @@ interface Customer { id: string; name: string; status: string; }
   selector: 'app-tenant-menu',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonIcon, RouterLink, BottomSheetComponent, IonInfiniteScroll, IonInfiniteScrollContent],
+  imports: [IonIcon, RouterLink, BottomSheetComponent, IonInfiniteScroll, IonInfiniteScrollContent, TranslatePipe],
   template: `
     <div class="tenant-wrap">
       <button class="tenant" [class.tenant--active]="ctx.isActive()" (click)="toggle()" aria-label="Tenant">
         <span class="tenant__logo">{{ logo() }}</span>
         <span class="tenant__main">
           <span class="tenant__name">{{ displayName() }}</span>
-          <span class="tenant__meta">{{ isSuperAdmin() ? (ctx.isActive() ? 'Acting as customer' : 'Platform') : 'Tenant' }}</span>
+          <span class="tenant__meta">{{ isSuperAdmin() ? (ctx.isActive() ? ('shell.tenant.acting_as_customer' | translate) : ('shell.tenant.platform' | translate)) : ('shell.tenant.tenant' | translate) }}</span>
         </span>
         <ion-icon name="chevron-down" class="tenant__chev" [class.tenant__chev--open]="open()"></ion-icon>
       </button>
@@ -45,11 +46,11 @@ interface Customer { id: string; name: string; status: string; }
 
           @if (isSuperAdmin() && ctx.isActive()) {
             <div class="menu__sec menu__banner">
-              <span class="banner__label">Acting as</span>
+              <span class="banner__label">{{ 'shell.tenant.acting_as' | translate }}</span>
               <span class="banner__name">{{ ctx.customer()!.name }}</span>
               <button class="banner__exit" (click)="exitCustomer()">
                 <ion-icon name="close-outline"></ion-icon>
-                Exit
+                {{ 'shell.tenant.exit_short' | translate }}
               </button>
             </div>
           }
@@ -57,12 +58,12 @@ interface Customer { id: string; name: string; status: string; }
           <div class="menu__sec menu__info">
             <div class="tenant__title">{{ displayName() }}</div>
             <div class="tenant__tags">
-              <span class="badge badge--primary">{{ isSuperAdmin() ? (ctx.isActive() ? 'Customer' : 'Platform') : 'Tenant' }}</span>
+              <span class="badge badge--primary">{{ isSuperAdmin() ? (ctx.isActive() ? ('shell.tenant.customer' | translate) : ('shell.tenant.platform' | translate)) : ('shell.tenant.tenant' | translate) }}</span>
             </div>
             @if (!ctx.isActive()) {
               <div class="tenant__stats">
-                <span><b>{{ loading() ? '—' : deviceCount() }}</b> devices</span>
-                <span><b>{{ loading() ? '—' : userCount() }}</b> users</span>
+                <span><b>{{ loading() ? '—' : deviceCount() }}</b> {{ 'shell.tenant.devices' | translate }}</span>
+                <span><b>{{ loading() ? '—' : userCount() }}</b> {{ 'shell.tenant.users' | translate }}</span>
               </div>
             }
           </div>
@@ -70,41 +71,41 @@ interface Customer { id: string; name: string; status: string; }
           @if (isSuperAdmin()) {
             <div class="menu__sec">
               <button class="menu__item" (click)="openTenantSheet()">
-                <ion-icon name="swap-horizontal-outline"></ion-icon>Switch tenant
+                <ion-icon name="swap-horizontal-outline"></ion-icon>{{ 'shell.tenant.switch' | translate }}
               </button>
             </div>
           }
 
           <div class="menu__sec">
-            <a class="menu__item" routerLink="admin" (click)="close()"><ion-icon name="people-outline"></ion-icon>Manage users</a>
-            <a class="menu__item" routerLink="settings" (click)="close()"><ion-icon name="settings-outline"></ion-icon>Settings</a>
+            <a class="menu__item" routerLink="admin" (click)="close()"><ion-icon name="people-outline"></ion-icon>{{ 'shell.tenant.manage_users' | translate }}</a>
+            <a class="menu__item" routerLink="settings" (click)="close()"><ion-icon name="settings-outline"></ion-icon>{{ 'nav.settings' | translate }}</a>
           </div>
         </div>
       }
     </div>
 
     @if (isSuperAdmin()) {
-      <ui-bottom-sheet #tenantSheet title="Switch Tenant" saveLabel="" (willOpen)="onSheetOpen()">
+      <ui-bottom-sheet #tenantSheet [title]="'shell.tenant.title' | translate" saveLabel="" (willOpen)="onSheetOpen()">
         <div class="tp">
           @if (ctx.isActive()) {
             <div class="tp__banner">
-              <span class="tp__banner-label">Acting as</span>
+              <span class="tp__banner-label">{{ 'shell.tenant.acting_as' | translate }}</span>
               <span class="tp__banner-name">{{ ctx.customer()!.name }}</span>
               <button class="tp__banner-exit" (click)="exitCustomer()">
                 <ion-icon name="close-outline"></ion-icon>
-                Exit
+                {{ 'shell.tenant.exit_short' | translate }}
               </button>
             </div>
           }
           <div class="tp__search">
             <ion-icon name="search-outline" class="tp__search-icon"></ion-icon>
-            <input class="tp__input" type="text" placeholder="Search customers…"
+            <input class="tp__input" type="text" [placeholder]="'shell.tenant.search_ph' | translate"
                    [value]="tenantSearch()" (input)="onSearchInput($event)">
           </div>
           @if (loadingCustomers() && customers().length === 0) {
-            <div class="tp__empty">Loading…</div>
+            <div class="tp__empty">{{ 'shell.tenant.loading' | translate }}</div>
           } @else if (customers().length === 0) {
-            <div class="tp__empty">No customers found</div>
+            <div class="tp__empty">{{ 'shell.tenant.none' | translate }}</div>
           } @else {
             <div class="tp__list">
               @for (c of customers(); track c.id) {
@@ -116,7 +117,7 @@ interface Customer { id: string; name: string; status: string; }
               }
             </div>
             <ion-infinite-scroll [disabled]="!customersHasMore()" (ionInfinite)="loadMore($event)">
-              <ion-infinite-scroll-content loadingText="Loading more…"></ion-infinite-scroll-content>
+              <ion-infinite-scroll-content [loadingText]="'shell.tenant.loading_more' | translate"></ion-infinite-scroll-content>
             </ion-infinite-scroll>
           }
         </div>

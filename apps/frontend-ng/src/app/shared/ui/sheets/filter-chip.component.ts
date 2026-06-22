@@ -1,5 +1,6 @@
 import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
 import { IonIcon } from '@ionic/angular/standalone';
+import { TranslatePipe } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
 import { chevronDown, close } from 'ionicons/icons';
 
@@ -15,7 +16,7 @@ addIcons({ chevronDown, close });
   selector: 'ui-filter-chip',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonIcon],
+  imports: [IonIcon, TranslatePipe],
   template: `
     <button class="chip" [class.chip--active]="active()" (click)="chipClick.emit()">
       <ng-content select="[icon]"></ng-content>
@@ -28,7 +29,7 @@ addIcons({ chevronDown, close });
       }
       @if (active()) {
         <span class="chip__x" role="button" tabindex="0"
-          aria-label="Clear filter"
+          [attr.aria-label]="'ui.filter.clear' | translate"
           (click)="$event.stopPropagation(); clear.emit()"
           (keydown.enter)="$event.stopPropagation(); clear.emit()"
           (keydown.space)="$event.stopPropagation(); clear.emit()">

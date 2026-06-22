@@ -1,4 +1,5 @@
 import { Component, input, output, computed, ChangeDetectionStrategy } from '@angular/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
 import { hardwareChipOutline } from 'ionicons/icons';
 import { MultiSelectPickerComponent, PickerOption } from './multi-select-picker.component';
@@ -21,18 +22,18 @@ export interface DevicePickerItem {
   selector: 'ui-device-picker',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MultiSelectPickerComponent],
+  imports: [MultiSelectPickerComponent, TranslatePipe],
   template: `
     <ui-multi-select-picker
       [label]="label()"
-      title="Select device"
-      [sub]="multi() ? 'Choose one or more devices' : 'Choose a device'"
+      [title]="'ui.device_picker.title' | translate"
+      [sub]="(multi() ? 'ui.device_picker.multi' : 'ui.device_picker.single') | translate"
       chipIcon="hardware-chip-outline"
       [options]="options()"
       [value]="value()"
       [multi]="multi()"
       [searchable]="true"
-      searchPlaceholder="Search by name, ID or location…"
+      [searchPlaceholder]="'ui.device_picker.search_ph' | translate"
       (valueChange)="valueChange.emit($event)">
     </ui-multi-select-picker>
   `,

@@ -1,6 +1,7 @@
 import { Component, input, output, inject, ChangeDetectionStrategy } from '@angular/core';
 import { IonIcon } from '@ng/shared/ui';
 import { AppLogoComponent } from '@ng/shared/ui';
+import { TranslatePipe } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
 import { chevronForward, search } from 'ionicons/icons';
 import { TopbarService } from './topbar.service';
@@ -17,7 +18,7 @@ addIcons({ chevronForward, search });
   selector: 'app-topbar',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonIcon, AppLogoComponent],
+  imports: [IonIcon, AppLogoComponent, TranslatePipe],
   template: `
     <header class="topbar">
       <ui-app-logo class="topbar__logo" [size]="32" [showText]="false"></ui-app-logo>
@@ -37,7 +38,7 @@ addIcons({ chevronForward, search });
 
       <button class="searchbtn" (click)="openSearch.emit()">
         <ion-icon name="search"></ion-icon>
-        <span class="searchbtn__label">Search devices, alerts, users…</span>
+        <span class="searchbtn__label">{{ 'shell.search' | translate }}</span>
         <kbd>⌘K</kbd>
       </button>
 

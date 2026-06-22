@@ -3,6 +3,7 @@ import {
 } from '@angular/core';
 import { RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { IonIcon, ThemeService, BottomSheetComponent } from '@ng/shared/ui';
+import { TranslatePipe } from '@ngx-translate/core';
 import { IonInfiniteScroll, IonInfiniteScrollContent } from '@ionic/angular/standalone';
 import { AuthService } from '../core/auth/auth.service';
 import { hasRole } from '../core/auth/roles';
@@ -31,11 +32,11 @@ addIcons({
   selector: 'app-bottom-nav',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, RouterLinkActive, IonIcon, BottomSheetComponent, IonInfiniteScroll, IonInfiniteScrollContent],
+  imports: [RouterLink, RouterLinkActive, IonIcon, BottomSheetComponent, IonInfiniteScroll, IonInfiniteScrollContent, TranslatePipe],
   template: `
     <!-- Backdrop -->
     <div class="more-backdrop" [class.more-backdrop--open]="open()"
-         role="button" tabindex="-1" aria-label="Close menu"
+         role="button" tabindex="-1" [attr.aria-label]="'shell.bottom_nav.close_menu' | translate"
          (click)="close()" (keydown.escape)="close()"></div>
 
     <!-- Right drawer -->
@@ -43,13 +44,13 @@ addIcons({
 
       @if (secondaryNav.length) {
         <div class="more-section">
-          <div class="more-section__label">Navigate</div>
+          <div class="more-section__label">{{ 'shell.bottom_nav.navigate' | translate }}</div>
           <div class="more-grid">
             @for (it of secondaryNav; track it.path) {
               <a class="more-tile" [routerLink]="it.path"
                 routerLinkActive="more-tile--active" (click)="close()">
                 <span class="more-tile__icon"><ion-icon [name]="it.icon"></ion-icon></span>
-                <span class="more-tile__label">{{ it.label }}</span>
+                <span class="more-tile__label">{{ it.label | translate }}</span>
               </a>
             }
           </div>
@@ -58,19 +59,19 @@ addIcons({
       }
 
       <div class="more-section">
-        <div class="more-section__label">Account</div>
+        <div class="more-section__label">{{ 'shell.bottom_nav.account' | translate }}</div>
         <div class="more-grid">
           <a class="more-tile" routerLink="settings" routerLinkActive="more-tile--active" (click)="close()">
             <span class="more-tile__icon"><ion-icon name="settings-outline"></ion-icon></span>
-            <span class="more-tile__label">Settings</span>
+            <span class="more-tile__label">{{ 'shell.bottom_nav.settings' | translate }}</span>
           </a>
           <button class="more-tile" (click)="toggleTheme()">
             <span class="more-tile__icon"><ion-icon [name]="themeIcon()"></ion-icon></span>
-            <span class="more-tile__label">{{ themeLabel() }}</span>
+            <span class="more-tile__label">{{ themeLabel() | translate }}</span>
           </button>
           <button class="more-tile more-tile--danger" (click)="signOut()">
             <span class="more-tile__icon"><ion-icon name="log-out-outline"></ion-icon></span>
-            <span class="more-tile__label">Sign out</span>
+            <span class="more-tile__label">{{ 'shell.bottom_nav.sign_out' | translate }}</span>
           </button>
         </div>
       </div>
@@ -78,7 +79,7 @@ addIcons({
       @if (showAdmin()) {
         <div class="more-sep"></div>
         <div class="more-section">
-          <div class="more-section__label">Admin</div>
+          <div class="more-section__label">{{ 'shell.bottom_nav.admin' | translate }}</div>
           <div class="more-grid">
             @for (it of adminNav; track it.path) {
               <a class="more-tile" [routerLink]="it.path"
@@ -86,7 +87,7 @@ addIcons({
                 [routerLinkActiveOptions]="{ exact: it.exact ?? false }"
                 (click)="close()">
                 <span class="more-tile__icon"><ion-icon [name]="it.icon"></ion-icon></span>
-                <span class="more-tile__label">{{ it.label }}</span>
+                <span class="more-tile__label">{{ it.label | translate }}</span>
               </a>
             }
           </div>
@@ -96,16 +97,16 @@ addIcons({
       @if (isSuperAdmin()) {
         <div class="more-sep"></div>
         <div class="more-section">
-          <div class="more-section__label">Platform</div>
+          <div class="more-section__label">{{ 'shell.bottom_nav.platform' | translate }}</div>
           <div class="more-grid">
             <button class="more-tile" [class.more-tile--active]="ctx.isActive()" (click)="openTenantSheet()">
               <span class="more-tile__icon"><ion-icon name="people-outline"></ion-icon></span>
-              <span class="more-tile__label">{{ ctx.isActive() ? ctx.customer()!.name : 'Switch tenant' }}</span>
+              <span class="more-tile__label">{{ ctx.isActive() ? ctx.customer()!.name : ('shell.tenant.switch' | translate) }}</span>
             </button>
             @if (ctx.isActive()) {
               <button class="more-tile more-tile--danger" (click)="exitTenant()">
                 <span class="more-tile__icon"><ion-icon name="close-outline"></ion-icon></span>
-                <span class="more-tile__label">Exit tenant</span>
+                <span class="more-tile__label">{{ 'shell.tenant.exit' | translate }}</span>
               </button>
             }
           </div>
@@ -117,39 +118,39 @@ addIcons({
     <nav class="bnav">
       @for (it of primary; track it.path) {
         <a class="bnav-tab" [routerLink]="it.path" routerLinkActive="bnav-tab--active" (click)="close()"
-           [attr.aria-label]="it.label">
+           [attr.aria-label]="it.label | translate">
           <ion-icon [name]="it.icon"></ion-icon>
         </a>
       }
-      <button class="bnav-tab" [class.bnav-tab--active]="open()" (click)="toggle()" aria-label="More">
+      <button class="bnav-tab" [class.bnav-tab--active]="open()" (click)="toggle()" [attr.aria-label]="'shell.bottom_nav.more' | translate">
         <ion-icon name="ellipsis-horizontal"></ion-icon>
       </button>
     </nav>
 
     <!-- Tenant switcher sheet (SUPERADMIN only) -->
     @if (isSuperAdmin()) {
-      <ui-bottom-sheet #tenantSheet title="Switch Tenant" saveLabel=""
+      <ui-bottom-sheet #tenantSheet [title]="'shell.tenant.title' | translate" saveLabel=""
         (willOpen)="onSheetOpen()">
         <div class="tp">
           @if (ctx.isActive()) {
             <div class="tp__banner">
-              <span class="tp__banner-label">Acting as</span>
+              <span class="tp__banner-label">{{ 'shell.tenant.acting_as' | translate }}</span>
               <span class="tp__banner-name">{{ ctx.customer()!.name }}</span>
               <button class="tp__banner-exit" (click)="exitTenant()">
                 <ion-icon name="close-outline"></ion-icon>
-                Exit
+                {{ 'shell.tenant.exit_short' | translate }}
               </button>
             </div>
           }
           <div class="tp__search">
             <ion-icon name="search-outline" class="tp__search-icon"></ion-icon>
-            <input class="tp__input" type="text" placeholder="Search customers…"
+            <input class="tp__input" type="text" [placeholder]="'shell.tenant.search_ph' | translate"
                    [value]="tenantSearch()" (input)="onSearchInput($event)">
           </div>
           @if (loadingTenants() && tenants().length === 0) {
-            <div class="tp__empty">Loading…</div>
+            <div class="tp__empty">{{ 'shell.tenant.loading' | translate }}</div>
           } @else if (tenants().length === 0) {
-            <div class="tp__empty">No customers found</div>
+            <div class="tp__empty">{{ 'shell.tenant.none' | translate }}</div>
           } @else {
             <div class="tp__list">
               @for (c of tenants(); track c.id) {
@@ -161,7 +162,7 @@ addIcons({
               }
             </div>
             <ion-infinite-scroll [disabled]="!tenantsHasMore()" (ionInfinite)="loadMore($event)">
-              <ion-infinite-scroll-content loadingText="Loading more…"></ion-infinite-scroll-content>
+              <ion-infinite-scroll-content [loadingText]="'shell.tenant.loading_more' | translate"></ion-infinite-scroll-content>
             </ion-infinite-scroll>
           }
         </div>
@@ -204,7 +205,7 @@ export class BottomNavComponent {
     this.themeService.theme() === 'dark' ? 'sunny-outline' : 'moon-outline',
   );
   protected readonly themeLabel = computed(() =>
-    this.themeService.theme() === 'dark' ? 'Light mode' : 'Dark mode',
+    this.themeService.theme() === 'dark' ? 'shell.theme.light' : 'shell.theme.dark',
   );
 
   constructor() {

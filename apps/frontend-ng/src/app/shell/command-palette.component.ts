@@ -4,6 +4,7 @@ import {
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { IonIcon } from '@ng/shared/ui';
+import { TranslatePipe } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
 import { search } from 'ionicons/icons';
 
@@ -32,7 +33,7 @@ export interface CommandItem {
   selector: 'app-command-palette',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonIcon],
+  imports: [IonIcon, TranslatePipe],
   template: `
     @if (open()) {
       <div class="palette-wrap">
@@ -40,7 +41,7 @@ export interface CommandItem {
         <div class="palette">
           <div class="palette__input">
             <ion-icon name="search"></ion-icon>
-            <input #box placeholder="Search or jump to…"
+            <input #box [placeholder]="'shell.palette.search_ph' | translate"
               [value]="query()"
               (input)="query.set($any($event.target).value)"
               (keydown)="onKeydown($event)" />
@@ -49,16 +50,16 @@ export interface CommandItem {
           <div class="palette__results">
             @for (it of filtered(); track it.label; let i = $index) {
               @if (it.group !== filtered()[i - 1]?.group) {
-                <div class="palette__group">{{ it.group }}</div>
+                <div class="palette__group">{{ it.group | translate }}</div>
               }
               <button class="palette__item" [class.palette__item--active]="i === active()"
                 (mouseenter)="active.set(i)" (click)="run(it)">
                 <ion-icon [name]="it.icon"></ion-icon>
-                <span class="palette__label">{{ it.label }}</span>
+                <span class="palette__label">{{ it.label | translate }}</span>
                 @if (it.kbd) { <span class="mono">{{ it.kbd }}</span> }
               </button>
             } @empty {
-              <div class="palette__empty">No matches</div>
+              <div class="palette__empty">{{ 'shell.palette.no_matches' | translate }}</div>
             }
           </div>
         </div>

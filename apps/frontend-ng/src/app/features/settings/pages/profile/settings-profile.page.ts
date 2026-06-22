@@ -105,7 +105,12 @@ export class SettingsProfilePage implements OnInit {
         firstName: data.firstName ?? '',
         lastName: data.lastName ?? '',
         phoneNumber: data.phoneNumber ?? '',
-        language: data.language || this.lang.current,
+        // Fall back to the active UI language when the stored preference isn't
+        // one we support (e.g. a legacy 'zh' value) — otherwise the select has
+        // no matching option and renders its empty "Select…" placeholder.
+        language: SUPPORTED_LANGS.includes(data.language as (typeof SUPPORTED_LANGS)[number])
+          ? data.language
+          : this.lang.current,
         timezone: data.timezone ?? 'UTC',
         dateFormat: data.dateFormat ?? 'MM/DD/YYYY',
       });

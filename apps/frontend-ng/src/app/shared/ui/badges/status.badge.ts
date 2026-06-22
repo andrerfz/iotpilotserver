@@ -1,5 +1,6 @@
 import { Component, input } from '@angular/core';
 import { NgClass } from '@angular/common';
+import { TranslatePipe } from '@ngx-translate/core';
 
 export type DeviceStatus = 'ONLINE' | 'OFFLINE' | 'MAINTENANCE' | 'ERROR' | 'UNCLAIMED' | 'PENDING_SETUP';
 export type CommandStatus = 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED' | 'TIMEOUT';
@@ -12,22 +13,22 @@ interface StatusMeta { color: BadgeColor; label: string; }
 
 const STATUS_META: Record<string, StatusMeta> = {
   // Device
-  ONLINE:       { color: 'success', label: 'Online' },
-  OFFLINE:      { color: 'danger',  label: 'Offline' },
-  MAINTENANCE:  { color: 'warning', label: 'Maintenance' },
-  ERROR:        { color: 'danger',  label: 'Error' },
-  UNCLAIMED:    { color: 'neutral', label: 'Unclaimed' },
-  PENDING_SETUP:{ color: 'warning', label: 'Pending setup' },
+  ONLINE:       { color: 'success', label: 'status.online' },
+  OFFLINE:      { color: 'danger',  label: 'status.offline' },
+  MAINTENANCE:  { color: 'warning', label: 'status.maintenance' },
+  ERROR:        { color: 'danger',  label: 'status.error' },
+  UNCLAIMED:    { color: 'neutral', label: 'status.unclaimed' },
+  PENDING_SETUP:{ color: 'warning', label: 'status.pending_setup' },
   // Command
-  PENDING:      { color: 'warning', label: 'Pending' },
-  RUNNING:      { color: 'info',    label: 'Running' },
-  COMPLETED:    { color: 'success', label: 'Completed' },
-  FAILED:       { color: 'danger',  label: 'Failed' },
-  TIMEOUT:      { color: 'warning', label: 'Timeout' },
+  PENDING:      { color: 'warning', label: 'status.pending' },
+  RUNNING:      { color: 'info',    label: 'status.running' },
+  COMPLETED:    { color: 'success', label: 'status.completed' },
+  FAILED:       { color: 'danger',  label: 'status.failed' },
+  TIMEOUT:      { color: 'warning', label: 'status.timeout' },
   // Alert
-  OPEN:         { color: 'danger',  label: 'Open' },
-  ACK:          { color: 'warning', label: 'Acknowledged' },
-  RESOLVED:     { color: 'success', label: 'Resolved' },
+  OPEN:         { color: 'danger',  label: 'status.open' },
+  ACK:          { color: 'warning', label: 'status.acknowledged' },
+  RESOLVED:     { color: 'success', label: 'status.resolved' },
 };
 
 const FALLBACK: StatusMeta = { color: 'neutral', label: '' };
@@ -39,9 +40,9 @@ function getMeta(status: string): StatusMeta {
 @Component({
   selector: 'ui-status-badge',
   standalone: true,
-  imports: [NgClass],
+  imports: [NgClass, TranslatePipe],
   template: `
-    <span class="badge" [ngClass]="'badge--' + color()">{{ label() }}</span>
+    <span class="badge" [ngClass]="'badge--' + color()">{{ label() | translate }}</span>
   `,
   styleUrl: './badge.scss',
 })

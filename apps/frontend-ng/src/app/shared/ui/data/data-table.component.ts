@@ -8,6 +8,7 @@ import {
   TemplateRef,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
+import { TranslatePipe } from '@ngx-translate/core';
 import { EmptyStateComponent } from './empty-state.component';
 
 export interface ColumnDef<T extends object = Record<string, unknown>> {
@@ -25,16 +26,16 @@ interface SortState { key: string; dir: 1 | -1; }
   selector: 'ui-data-table',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgTemplateOutlet, EmptyStateComponent],
+  imports: [NgTemplateOutlet, EmptyStateComponent, TranslatePipe],
   template: `
     <!-- Bulk-action bar -->
     @if (selectable() && selected().length) {
       <div class="selbar">
         <span class="selbar__count">{{ selected().length }}</span>
-        <span class="selbar__muted">selected</span>
+        <span class="selbar__muted">{{ 'common.selected' | translate }}</span>
         <div style="flex:1"></div>
         <ng-content select="[bulkActions]"></ng-content>
-        <button class="selbar__clear btn-ghost" (click)="clearSelection()">Clear</button>
+        <button class="selbar__clear btn-ghost" (click)="clearSelection()">{{ 'common.clear' | translate }}</button>
       </div>
     }
 
@@ -119,7 +120,7 @@ interface SortState { key: string; dir: 1 | -1; }
             } @empty {
               <tr>
                 <td [attr.colspan]="columns().length + (selectable() ? 1 : 0)">
-                  <ui-empty-state title="No data"></ui-empty-state>
+                  <ui-empty-state [title]="'common.no_data' | translate"></ui-empty-state>
                 </td>
               </tr>
             }
@@ -130,9 +131,9 @@ interface SortState { key: string; dir: 1 | -1; }
       <!-- Footer: count + pager -->
       <div class="table__foot">
         <span>
-          {{ sorted().length }} rows
+          {{ sorted().length }} {{ 'ui.table.rows' | translate }}
           @if (selectable() && selected().length) {
-            &middot; {{ selected().length }} selected
+            &middot; {{ selected().length }} {{ 'common.selected' | translate }}
           }
         </span>
         @if (pageCount() > 1) {

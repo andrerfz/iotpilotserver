@@ -104,7 +104,9 @@
     "overview": "Resumen",
     "users": "Usuarios",
     "customers": "Clientes",
-    "system": "Sistema"
+    "system": "Sistema",
+    "operate": "Operar",
+    "administer": "Administrar"
   },
   "dashboard": {
     "title": "Resumen de la flota",
@@ -480,7 +482,10 @@
       "timezone": "Zona horaria",
       "date_format": "Formato de fecha",
       "save": "Guardar cambios",
-      "saving": "Guardando..."
+      "saving": "Guardando...",
+      "first_name_ph": "Introduce el nombre",
+      "last_name_ph": "Introduce los apellidos",
+      "phone_ph": "Introduce el teléfono"
     },
     "security": {
       "title": "Seguridad de la cuenta",
@@ -605,6 +610,13 @@
         },
         "save": "Guardar configuración de administrador"
       }
+    },
+    "tabs": {
+      "profile": "Perfil",
+      "notifications": "Notificaciones",
+      "security": "Seguridad",
+      "system": "Sistema",
+      "api_keys": "Claves API"
     }
   },
   "admin": {
@@ -800,5 +812,121 @@
       "scope_global": "Global",
       "failed": "Error al cargar los umbrales."
     }
+  },
+  "shell": {
+    "search": "Buscar dispositivos, alertas, usuarios…",
+    "theme": {
+      "light": "Modo claro",
+      "dark": "Modo oscuro"
+    },
+    "user_menu": {
+      "aria": "Menú de usuario",
+      "profile": "Tu perfil",
+      "settings": "Configuración",
+      "command_palette": "Paleta de comandos",
+      "grafana": "Paneles de Grafana",
+      "influxdb": "Admin de InfluxDB",
+      "debug": "Información de depuración",
+      "admin": "Panel de administración",
+      "sign_out": "Cerrar sesión"
+    },
+    "bottom_nav": {
+      "navigate": "Navegar",
+      "account": "Cuenta",
+      "admin": "Administración",
+      "platform": "Plataforma",
+      "settings": "Configuración",
+      "sign_out": "Cerrar sesión",
+      "close_menu": "Cerrar menú",
+      "more": "Más"
+    },
+    "tenant": {
+      "switch": "Cambiar de cliente",
+      "exit": "Salir del cliente",
+      "exit_short": "Salir",
+      "acting_as": "Actuando como",
+      "title": "Cambiar de cliente",
+      "search_ph": "Buscar clientes…",
+      "loading": "Cargando…",
+      "none": "No se encontraron clientes",
+      "loading_more": "Cargando más…",
+      "customer": "Cliente",
+      "platform": "Plataforma",
+      "tenant": "Inquilino",
+      "manage_users": "Gestionar usuarios",
+      "devices": "dispositivos",
+      "users": "usuarios",
+      "acting_as_customer": "Actuando como cliente"
+    },
+    "palette": {
+      "search_ph": "Buscar o saltar a…",
+      "no_matches": "Sin coincidencias",
+      "navigate": "Navegar"
+    }
+  },
+  "ui": {
+    "select_placeholder": "Seleccionar…",
+    "select_title": "Seleccionar",
+    "apply": "Aplicar",
+    "search_placeholder": "Buscar…",
+    "no_matches": "Sin coincidencias",
+    "table": {
+      "rows": "filas"
+    },
+    "input": {
+      "show_password": "Mostrar contraseña",
+      "hide_password": "Ocultar contraseña"
+    },
+    "filter": {
+      "clear": "Limpiar filtro"
+    },
+    "network": {
+      "offline": "Estás sin conexión — los cambios podrían no guardarse."
+    },
+    "device_picker": {
+      "title": "Seleccionar dispositivo",
+      "multi": "Elige uno o varios dispositivos",
+      "single": "Elige un dispositivo",
+      "search_ph": "Buscar por nombre, ID o ubicación…"
+    },
+    "user_picker": {
+      "title": "Seleccionar usuario",
+      "multi": "Asigna uno o varios usuarios",
+      "single": "Elige un usuario",
+      "search_ph": "Buscar personas…"
+    },
+    "date_range": {
+      "last_hour": "Última hora",
+      "last_24h": "Últimas 24 horas",
+      "last_7d": "Últimos 7 días",
+      "last_30d": "Últimos 30 días",
+      "title": "Seleccionar rango de tiempo",
+      "subtitle": "Preajuste rápido o rango personalizado",
+      "custom": "Rango personalizado",
+      "period": "Período",
+      "custom_short": "Personalizado"
+    }
+  },
+  "status": {
+    "online": "En línea",
+    "offline": "Desconectado",
+    "maintenance": "Mantenimiento",
+    "error": "Error",
+    "unclaimed": "Sin reclamar",
+    "pending_setup": "Configuración pendiente",
+    "pending": "Pendiente",
+    "running": "En ejecución",
+    "completed": "Completado",
+    "failed": "Fallido",
+    "timeout": "Tiempo agotado",
+    "open": "Abierto",
+    "acknowledged": "Reconocido",
+    "resolved": "Resuelto"
+  },
+  "severity": {
+    "critical": "Crítico",
+    "warning": "Advertencia",
+    "error": "Error",
+    "info": "Información"
   }
 }

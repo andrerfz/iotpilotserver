@@ -11,19 +11,19 @@
             [loading]="isLoading()"
             [formControl]="form.controls.firstName"
             [label]="'settings.profile.first_name' | translate"
-            placeholder="Enter first name" />
+            [placeholder]="'settings.profile.first_name_ph' | translate" />
           <ui-input
             [loading]="isLoading()"
             [formControl]="form.controls.lastName"
             [label]="'settings.profile.last_name' | translate"
-            placeholder="Enter last name" />
+            [placeholder]="'settings.profile.last_name_ph' | translate" />
         </div>
 
         <ui-input
           [loading]="isLoading()"
           [formControl]="form.controls.phoneNumber"
           [label]="'settings.profile.phone' | translate"
-          placeholder="Enter phone number"
+          [placeholder]="'settings.profile.phone_ph' | translate"
           class="profile-phone" />
 
         <div class="profile-grid profile-readonly">

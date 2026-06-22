@@ -1,5 +1,6 @@
 import { Component, signal, HostListener, ChangeDetectionStrategy } from '@angular/core';
 import { IonIcon } from '@ionic/angular/standalone';
+import { TranslatePipe } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
 import { cloudOfflineOutline } from 'ionicons/icons';
 
@@ -13,12 +14,12 @@ addIcons({ cloudOfflineOutline });
   selector: 'ui-network-status',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonIcon],
+  imports: [IonIcon, TranslatePipe],
   template: `
     @if (!online()) {
       <div class="netbar" role="status">
         <ion-icon name="cloud-offline-outline"></ion-icon>
-        <span>You're offline — changes may not be saved.</span>
+        <span>{{ 'ui.network.offline' | translate }}</span>
       </div>
     }
   `,

@@ -104,7 +104,9 @@
     "overview": "Panoramica",
     "users": "Utenti",
     "customers": "Clienti",
-    "system": "Sistema"
+    "system": "Sistema",
+    "operate": "Operare",
+    "administer": "Amministrare"
   },
   "dashboard": {
     "title": "Panoramica flotta",
@@ -480,7 +482,10 @@
       "timezone": "Fuso orario",
       "date_format": "Formato data",
       "save": "Salva modifiche",
-      "saving": "Salvataggio..."
+      "saving": "Salvataggio...",
+      "first_name_ph": "Inserisci il nome",
+      "last_name_ph": "Inserisci il cognome",
+      "phone_ph": "Inserisci il telefono"
     },
     "security": {
       "title": "Sicurezza account",
@@ -605,6 +610,13 @@
         },
         "save": "Salva impostazioni amministratore"
       }
+    },
+    "tabs": {
+      "profile": "Profilo",
+      "notifications": "Notifiche",
+      "security": "Sicurezza",
+      "system": "Sistema",
+      "api_keys": "Chiavi API"
     }
   },
   "admin": {
@@ -800,5 +812,121 @@
       "scope_global": "Globale",
       "failed": "Caricamento soglie non riuscito."
     }
+  },
+  "shell": {
+    "search": "Cerca dispositivi, avvisi, utenti…",
+    "theme": {
+      "light": "Modalità chiara",
+      "dark": "Modalità scura"
+    },
+    "user_menu": {
+      "aria": "Menu utente",
+      "profile": "Il tuo profilo",
+      "settings": "Impostazioni",
+      "command_palette": "Palette comandi",
+      "grafana": "Dashboard Grafana",
+      "influxdb": "Admin InfluxDB",
+      "debug": "Informazioni di debug",
+      "admin": "Pannello di amministrazione",
+      "sign_out": "Esci"
+    },
+    "bottom_nav": {
+      "navigate": "Naviga",
+      "account": "Account",
+      "admin": "Amministrazione",
+      "platform": "Piattaforma",
+      "settings": "Impostazioni",
+      "sign_out": "Esci",
+      "close_menu": "Chiudi menu",
+      "more": "Altro"
+    },
+    "tenant": {
+      "switch": "Cambia cliente",
+      "exit": "Esci dal cliente",
+      "exit_short": "Esci",
+      "acting_as": "Agendo come",
+      "title": "Cambia cliente",
+      "search_ph": "Cerca clienti…",
+      "loading": "Caricamento…",
+      "none": "Nessun cliente trovato",
+      "loading_more": "Caricamento…",
+      "customer": "Cliente",
+      "platform": "Piattaforma",
+      "tenant": "Tenant",
+      "manage_users": "Gestisci utenti",
+      "devices": "dispositivi",
+      "users": "utenti",
+      "acting_as_customer": "Agendo come cliente"
+    },
+    "palette": {
+      "search_ph": "Cerca o vai a…",
+      "no_matches": "Nessun risultato",
+      "navigate": "Naviga"
+    }
+  },
+  "ui": {
+    "select_placeholder": "Seleziona…",
+    "select_title": "Seleziona",
+    "apply": "Applica",
+    "search_placeholder": "Cerca…",
+    "no_matches": "Nessun risultato",
+    "table": {
+      "rows": "righe"
+    },
+    "input": {
+      "show_password": "Mostra password",
+      "hide_password": "Nascondi password"
+    },
+    "filter": {
+      "clear": "Cancella filtro"
+    },
+    "network": {
+      "offline": "Sei offline — le modifiche potrebbero non essere salvate."
+    },
+    "device_picker": {
+      "title": "Seleziona dispositivo",
+      "multi": "Scegli uno o più dispositivi",
+      "single": "Scegli un dispositivo",
+      "search_ph": "Cerca per nome, ID o posizione…"
+    },
+    "user_picker": {
+      "title": "Seleziona utente",
+      "multi": "Assegna uno o più utenti",
+      "single": "Scegli un utente",
+      "search_ph": "Cerca persone…"
+    },
+    "date_range": {
+      "last_hour": "Ultima ora",
+      "last_24h": "Ultime 24 ore",
+      "last_7d": "Ultimi 7 giorni",
+      "last_30d": "Ultimi 30 giorni",
+      "title": "Seleziona intervallo di tempo",
+      "subtitle": "Preimpostazione rapida o intervallo personalizzato",
+      "custom": "Intervallo personalizzato",
+      "period": "Periodo",
+      "custom_short": "Personalizzato"
+    }
+  },
+  "status": {
+    "online": "Online",
+    "offline": "Offline",
+    "maintenance": "Manutenzione",
+    "error": "Errore",
+    "unclaimed": "Non reclamato",
+    "pending_setup": "Configurazione in sospeso",
+    "pending": "In sospeso",
+    "running": "In esecuzione",
+    "completed": "Completato",
+    "failed": "Fallito",
+    "timeout": "Timeout",
+    "open": "Aperto",
+    "acknowledged": "Riconosciuto",
+    "resolved": "Risolto"
+  },
+  "severity": {
+    "critical": "Critico",
+    "warning": "Avviso",
+    "error": "Errore",
+    "info": "Info"
   }
 }
