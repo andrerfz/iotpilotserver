@@ -38,7 +38,8 @@
     "next": "Next",
     "last_7_days": "Last 7 Days",
     "period": "Period",
-    "all": "All"
+    "all": "All",
+    "activate": "Activate"
   },
   "errors": {
     "network": "Unable to reach the server. Check your connection and try again.",
@@ -264,7 +265,13 @@
     "failed": {
       "title": "Could not load alerts",
       "retry": "Retry"
-    }
+    },
+    "msg_deleted": "Alert deleted",
+    "msg_delete_failed": "Failed to delete alert",
+    "msg_ack_failed": "Failed to acknowledge alert",
+    "msg_resolve_failed": "Failed to resolve alert",
+    "msg_bulk_ack_failed": "Bulk acknowledge failed",
+    "msg_bulk_resolve_failed": "Bulk resolve failed"
   },
   "device_logs": {
     "search_placeholder": "Search logs",
@@ -321,7 +328,8 @@
     "reboot_desc": "Restart the device",
     "shutdown_desc": "Power off the device",
     "update_desc": "Update OS packages",
-    "restart_desc": "Restart agent services"
+    "restart_desc": "Restart agent services",
+    "msg_issue_failed": "Failed to issue command"
   },
   "device_settings": {
     "sections": {
@@ -362,7 +370,10 @@
       "button": "Delete",
       "confirm_title": "Are you sure?",
       "confirm": "Confirm Delete"
-    }
+    },
+    "msg_saved": "Settings saved",
+    "msg_save_failed": "Save failed",
+    "msg_rotate_failed": "Rotate failed"
   },
   "device_network": {
     "title": "Network",
@@ -507,7 +518,9 @@
       "saving": "Saving...",
       "first_name_ph": "Enter first name",
       "last_name_ph": "Enter last name",
-      "phone_ph": "Enter phone number"
+      "phone_ph": "Enter phone number",
+      "msg_saved": "Changes saved",
+      "msg_save_failed": "Failed to save changes"
     },
     "security": {
       "title": "Account Security",
@@ -561,7 +574,13 @@
       "rule_lowercase": "One lowercase letter",
       "rule_number": "One number",
       "rule_length": "At least 12 characters",
-      "rule_special": "One special character"
+      "rule_special": "One special character",
+      "msg_load_failed": "Failed to load security settings",
+      "msg_updated": "Security settings updated successfully",
+      "msg_password_changed": "Password changed successfully",
+      "msg_sessions_load_failed": "Failed to load sessions",
+      "msg_session_revoke_failed": "Failed to revoke session",
+      "msg_sessions_revoke_failed": "Failed to revoke sessions"
     },
     "notifications": {
       "title": "Notification Preferences",
@@ -582,7 +601,9 @@
         "desc": "Get notified when devices go offline."
       },
       "save": "Save Changes",
-      "saving": "Saving..."
+      "saving": "Saving...",
+      "msg_load_failed": "Failed to load notification settings",
+      "msg_updated": "Notification settings updated successfully"
     },
     "api_keys": {
       "title": "API Keys",
@@ -639,7 +660,10 @@
       },
       "layout_default": "Default",
       "layout_compact": "Compact",
-      "layout_expanded": "Expanded"
+      "layout_expanded": "Expanded",
+      "msg_load_failed": "Failed to load system settings",
+      "msg_display_updated": "Display settings updated successfully",
+      "msg_admin_updated": "Admin settings updated successfully"
     },
     "tabs": {
       "profile": "Profile",
@@ -795,6 +819,27 @@
       "select_customer": "Select a customer",
       "cancel": "Cancel",
       "submit": "Create User"
+    },
+    "dialogs": {
+      "customer_new": "New Customer",
+      "customer_edit": "Edit Customer",
+      "customer_deactivate": "Deactivate Customer",
+      "customer_deactivate_msg": "Deactivate \"{{name}}\"? This will suspend access for all users in this tenant.",
+      "deactivate": "Deactivate",
+      "device_restart": "Restart Device",
+      "device_restart_msg": "Restart {{hostname}}? It may be offline for a few minutes.",
+      "restart": "Restart",
+      "user_approve": "Approve User",
+      "user_approve_msg": "Approve {{email}} and grant them access?",
+      "approve": "Approve",
+      "user_reject": "Reject User",
+      "user_reject_msg": "Reject and deny access for {{email}}?",
+      "reject": "Reject",
+      "user_suspend": "Suspend User",
+      "user_suspend_msg": "Suspend {{email}}? They will lose access immediately.",
+      "suspend": "Suspend",
+      "user_activate": "Activate User",
+      "user_activate_msg": "Reactivate {{email}}?"
     }
   },
   "components": {
@@ -1016,5 +1061,10 @@
     "disk_usage": "Disk Usage",
     "battery_low": "Battery Low",
     "sensor_temp": "Sensor Temp"
+  },
+  "validation": {
+    "required": "Required",
+    "email": "Invalid email address",
+    "min8": "Minimum 8 characters"
   }
 }

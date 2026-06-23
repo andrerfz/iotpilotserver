@@ -1,7 +1,7 @@
 import {
   ChangeDetectionStrategy, Component, inject, OnInit, output, signal,
 } from '@angular/core';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { addIcons } from 'ionicons';
 import { closeOutline } from 'ionicons/icons';
@@ -37,6 +37,7 @@ export class AdminNewUserModalComponent implements OnInit {
 
   private readonly api = inject(Api);
   private readonly fb = inject(FormBuilder);
+  private readonly t = inject(TranslateService);
 
   protected readonly saving = signal(false);
   protected readonly error = signal('');
@@ -75,9 +76,9 @@ export class AdminNewUserModalComponent implements OnInit {
   protected fieldError(field: string): string {
     const ctrl = this.form.get(field);
     if (!ctrl?.invalid || !ctrl.touched) return '';
-    if (ctrl.hasError('required')) return 'Required';
-    if (ctrl.hasError('email')) return 'Invalid email address';
-    if (ctrl.hasError('minlength')) return 'Minimum 8 characters';
+    if (ctrl.hasError('required')) return this.t.instant('validation.required');
+    if (ctrl.hasError('email')) return this.t.instant('validation.email');
+    if (ctrl.hasError('minlength')) return this.t.instant('validation.min8');
     return 'Invalid';
   }
 

@@ -14,7 +14,7 @@ import {
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { Router } from '@angular/router';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { TopbarService } from '@ng/shell/topbar.service';
 import {
   IonButton,
@@ -80,6 +80,7 @@ export class SettingsSecurityPage implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly t = inject(TranslateService);
 
   readonly isLoading = signal(true);
 
@@ -125,7 +126,7 @@ export class SettingsSecurityPage implements OnInit {
         loginNotifications: data.loginNotifications === 'true',
       });
     } catch {
-      this.securityError.set('Failed to load security settings');
+      this.securityError.set(this.t.instant('settings.security.msg_load_failed'));
     } finally {
       this.isLoading.set(false);
     }
@@ -161,7 +162,7 @@ export class SettingsSecurityPage implements OnInit {
         loginNotifications: String(vals.loginNotifications) as 'true' | 'false',
       };
       await this.api.invoke(updateSecuritySettings, { body });
-      this.securitySuccess.set('Security settings updated successfully');
+      this.securitySuccess.set(this.t.instant('settings.security.msg_updated'));
       this.securityForm.markAsPristine();
     } catch (err) {
       this.securityError.set(
@@ -182,7 +183,7 @@ export class SettingsSecurityPage implements OnInit {
       const result = await this.api.invoke(changePassword, {
         body: { currentPassword, newPassword },
       });
-      this.passwordSuccess.set('Password changed successfully');
+      this.passwordSuccess.set(this.t.instant('settings.security.msg_password_changed'));
       this.passwordForm.reset();
       if (result?.wasCurrentSession) {
         await this.auth.logout();
@@ -213,7 +214,7 @@ export class SettingsSecurityPage implements OnInit {
       this.sessions.set(res.data ?? []);
       this.sessionsLoaded.set(true);
     } catch {
-      this.sessionError.set('Failed to load sessions');
+      this.sessionError.set(this.t.instant('settings.security.msg_sessions_load_failed'));
     } finally {
       this.isLoadingSessions.set(false);
     }
@@ -225,7 +226,7 @@ export class SettingsSecurityPage implements OnInit {
       await this.api.invoke(revokeSessionFn, { id });
       this.sessions.update((s) => s.filter((x) => x.id !== id));
     } catch {
-      this.sessionError.set('Failed to revoke session');
+      this.sessionError.set(this.t.instant('settings.security.msg_session_revoke_failed'));
     } finally {
       this.revokingId.set(null);
     }
@@ -242,7 +243,7 @@ export class SettingsSecurityPage implements OnInit {
       );
       await this.loadSessions();
     } catch {
-      this.sessionError.set('Failed to revoke sessions');
+      this.sessionError.set(this.t.instant('settings.security.msg_sessions_revoke_failed'));
     } finally {
       this.isRevokingAll.set(false);
     }

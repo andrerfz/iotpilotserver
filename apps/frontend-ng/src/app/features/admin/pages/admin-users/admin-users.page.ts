@@ -2,7 +2,7 @@ import {
   AfterViewInit, ChangeDetectionStrategy, Component,
   computed, inject, signal, TemplateRef, ViewChild,
 } from '@angular/core';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { skip } from 'rxjs';
 import { FormsModule } from '@angular/forms';
@@ -57,6 +57,7 @@ export class AdminUsersPage implements AfterViewInit, ViewWillEnter {
   private readonly alertCtrl = inject(AlertController);
   private readonly topbar = inject(TopbarService);
   private readonly tenantCtx = inject(TenantContextService);
+  private readonly t = inject(TranslateService);
 
   protected statusFilter = '';
   protected readonly searchQuery = signal('');
@@ -132,11 +133,11 @@ export class AdminUsersPage implements AfterViewInit, ViewWillEnter {
 
   async onApprove(user: AdminUser): Promise<void> {
     const alert = await this.alertCtrl.create({
-      header: 'Approve User',
-      message: `Approve ${user.email} and grant them access?`,
+      header: this.t.instant('admin.dialogs.user_approve'),
+      message: this.t.instant('admin.dialogs.user_approve_msg', { email: user.email }),
       buttons: [
-        { text: 'Cancel', role: 'cancel' },
-        { text: 'Approve', role: 'confirm', handler: () => void this.doApprove(user, 'approve') },
+        { text: this.t.instant('common.cancel'), role: 'cancel' },
+        { text: this.t.instant('admin.dialogs.approve'), role: 'confirm', handler: () => void this.doApprove(user, 'approve') },
       ],
     });
     await alert.present();
@@ -144,11 +145,11 @@ export class AdminUsersPage implements AfterViewInit, ViewWillEnter {
 
   async onReject(user: AdminUser): Promise<void> {
     const alert = await this.alertCtrl.create({
-      header: 'Reject User',
-      message: `Reject and deny access for ${user.email}?`,
+      header: this.t.instant('admin.dialogs.user_reject'),
+      message: this.t.instant('admin.dialogs.user_reject_msg', { email: user.email }),
       buttons: [
-        { text: 'Cancel', role: 'cancel' },
-        { text: 'Reject', role: 'destructive', handler: () => void this.doApprove(user, 'reject') },
+        { text: this.t.instant('common.cancel'), role: 'cancel' },
+        { text: this.t.instant('admin.dialogs.reject'), role: 'destructive', handler: () => void this.doApprove(user, 'reject') },
       ],
     });
     await alert.present();
@@ -156,11 +157,11 @@ export class AdminUsersPage implements AfterViewInit, ViewWillEnter {
 
   async onSuspend(user: AdminUser): Promise<void> {
     const alert = await this.alertCtrl.create({
-      header: 'Suspend User',
-      message: `Suspend ${user.email}? They will lose access immediately.`,
+      header: this.t.instant('admin.dialogs.user_suspend'),
+      message: this.t.instant('admin.dialogs.user_suspend_msg', { email: user.email }),
       buttons: [
-        { text: 'Cancel', role: 'cancel' },
-        { text: 'Suspend', role: 'destructive', handler: () => void this.doUpdateStatus(user, 'SUSPENDED') },
+        { text: this.t.instant('common.cancel'), role: 'cancel' },
+        { text: this.t.instant('admin.dialogs.suspend'), role: 'destructive', handler: () => void this.doUpdateStatus(user, 'SUSPENDED') },
       ],
     });
     await alert.present();
@@ -168,11 +169,11 @@ export class AdminUsersPage implements AfterViewInit, ViewWillEnter {
 
   async onActivate(user: AdminUser): Promise<void> {
     const alert = await this.alertCtrl.create({
-      header: 'Activate User',
-      message: `Reactivate ${user.email}?`,
+      header: this.t.instant('admin.dialogs.user_activate'),
+      message: this.t.instant('admin.dialogs.user_activate_msg', { email: user.email }),
       buttons: [
-        { text: 'Cancel', role: 'cancel' },
-        { text: 'Activate', role: 'confirm', handler: () => void this.doUpdateStatus(user, 'ACTIVE') },
+        { text: this.t.instant('common.cancel'), role: 'cancel' },
+        { text: this.t.instant('common.activate'), role: 'confirm', handler: () => void this.doUpdateStatus(user, 'ACTIVE') },
       ],
     });
     await alert.present();

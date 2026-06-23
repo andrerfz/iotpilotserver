@@ -10,7 +10,7 @@ import {
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TopbarService } from '@ng/shell/topbar.service';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
 import { copyOutline, eyeOffOutline, eyeOutline, refreshOutline, trashOutline, warningOutline } from 'ionicons/icons';
 import {
@@ -88,6 +88,7 @@ export class DeviceSettingsPage implements OnInit {
   private readonly svc = inject(DeviceDetailService);
 
   private readonly toast = inject(ToastService);
+  private readonly t = inject(TranslateService);
 
   readonly device = this.svc.device;
   readonly settings = this.svc.deviceSettings;
@@ -172,9 +173,9 @@ export class DeviceSettingsPage implements OnInit {
         apiKeyRotationDays:   this.toNum(this.formData.apiKeyRotationDays),
       };
       await this.svc.updateSettings(this.deviceId(), payload);
-      void this.toast.success('Settings saved');
+      void this.toast.success(this.t.instant('device_settings.msg_saved'));
     } catch (e) {
-      void this.toast.error(e instanceof Error ? e.message : 'Save failed');
+      void this.toast.error(e instanceof Error ? e.message : this.t.instant('device_settings.msg_save_failed'));
     } finally {
       this.saving.set(false);
     }
@@ -194,7 +195,7 @@ export class DeviceSettingsPage implements OnInit {
       this.newKey.set(res.apiKey);
       this.keyVisible.set(false);
     } catch (e) {
-      void this.toast.error(e instanceof Error ? e.message : 'Rotate failed');
+      void this.toast.error(e instanceof Error ? e.message : this.t.instant('device_settings.msg_rotate_failed'));
     } finally {
       this.rotating.set(false);
     }

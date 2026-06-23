@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import {
   IonButton,
   IonCard,
@@ -43,6 +43,7 @@ export class SettingsNotificationsPage implements OnInit {
   private readonly api = inject(Api);
   private readonly topbar = inject(TopbarService);
   private readonly fb = inject(FormBuilder);
+  private readonly t = inject(TranslateService);
 
   readonly isLoading = signal(true);
   readonly isSaving = signal(false);
@@ -68,7 +69,7 @@ export class SettingsNotificationsPage implements OnInit {
         deviceOfflineNotifications: data.deviceOfflineNotifications === 'true',
       });
     } catch {
-      this.errorMessage.set('Failed to load notification settings');
+      this.errorMessage.set(this.t.instant('settings.notifications.msg_load_failed'));
     } finally {
       this.isLoading.set(false);
     }
@@ -87,7 +88,7 @@ export class SettingsNotificationsPage implements OnInit {
         deviceOfflineNotifications: String(vals.deviceOfflineNotifications) as 'true' | 'false',
       };
       await this.api.invoke(updateNotificationSettings, { body });
-      this.successMessage.set('Notification settings updated successfully');
+      this.successMessage.set(this.t.instant('settings.notifications.msg_updated'));
       this.form.markAsPristine();
     } catch (err) {
       this.errorMessage.set(

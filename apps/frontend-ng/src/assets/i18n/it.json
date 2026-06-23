@@ -38,7 +38,8 @@
     "next": "Successivo",
     "last_7_days": "Ultimi 7 giorni",
     "period": "Periodo",
-    "all": "Tutti"
+    "all": "Tutti",
+    "activate": "Attiva"
   },
   "errors": {
     "network": "Impossibile raggiungere il server. Controlla la connessione e riprova.",
@@ -264,7 +265,13 @@
     "failed": {
       "title": "Impossibile caricare gli avvisi",
       "retry": "Riprova"
-    }
+    },
+    "msg_deleted": "Avviso eliminato",
+    "msg_delete_failed": "Impossibile eliminare l'avviso",
+    "msg_ack_failed": "Impossibile confermare l'avviso",
+    "msg_resolve_failed": "Impossibile risolvere l'avviso",
+    "msg_bulk_ack_failed": "Conferma in blocco non riuscita",
+    "msg_bulk_resolve_failed": "Risoluzione in blocco non riuscita"
   },
   "device_logs": {
     "search_placeholder": "Cerca nei log",
@@ -321,7 +328,8 @@
     "reboot_desc": "Riavvia il dispositivo",
     "shutdown_desc": "Spegne il dispositivo",
     "update_desc": "Aggiorna i pacchetti del SO",
-    "restart_desc": "Riavvia i servizi dell'agente"
+    "restart_desc": "Riavvia i servizi dell'agente",
+    "msg_issue_failed": "Impossibile inviare il comando"
   },
   "device_settings": {
     "sections": {
@@ -362,7 +370,10 @@
       "button": "Elimina",
       "confirm_title": "Sei sicuro?",
       "confirm": "Conferma eliminazione"
-    }
+    },
+    "msg_saved": "Impostazioni salvate",
+    "msg_save_failed": "Salvataggio non riuscito",
+    "msg_rotate_failed": "Rotazione non riuscita"
   },
   "device_network": {
     "title": "Rete",
@@ -507,7 +518,9 @@
       "saving": "Salvataggio...",
       "first_name_ph": "Inserisci il nome",
       "last_name_ph": "Inserisci il cognome",
-      "phone_ph": "Inserisci il telefono"
+      "phone_ph": "Inserisci il telefono",
+      "msg_saved": "Modifiche salvate",
+      "msg_save_failed": "Impossibile salvare le modifiche"
     },
     "security": {
       "title": "Sicurezza account",
@@ -561,7 +574,13 @@
       "rule_lowercase": "Una lettera minuscola",
       "rule_number": "Un numero",
       "rule_length": "Almeno 12 caratteri",
-      "rule_special": "Un carattere speciale"
+      "rule_special": "Un carattere speciale",
+      "msg_load_failed": "Impossibile caricare le impostazioni di sicurezza",
+      "msg_updated": "Impostazioni di sicurezza aggiornate",
+      "msg_password_changed": "Password modificata correttamente",
+      "msg_sessions_load_failed": "Impossibile caricare le sessioni",
+      "msg_session_revoke_failed": "Impossibile revocare la sessione",
+      "msg_sessions_revoke_failed": "Impossibile revocare le sessioni"
     },
     "notifications": {
       "title": "Preferenze notifiche",
@@ -582,7 +601,9 @@
         "desc": "Ricevi una notifica quando i dispositivi vanno offline."
       },
       "save": "Salva modifiche",
-      "saving": "Salvataggio..."
+      "saving": "Salvataggio...",
+      "msg_load_failed": "Impossibile caricare le impostazioni di notifica",
+      "msg_updated": "Impostazioni di notifica aggiornate"
     },
     "api_keys": {
       "title": "Chiavi API",
@@ -639,7 +660,10 @@
       },
       "layout_default": "Predefinito",
       "layout_compact": "Compatto",
-      "layout_expanded": "Espanso"
+      "layout_expanded": "Espanso",
+      "msg_load_failed": "Impossibile caricare le impostazioni di sistema",
+      "msg_display_updated": "Impostazioni di visualizzazione aggiornate",
+      "msg_admin_updated": "Impostazioni di amministrazione aggiornate"
     },
     "tabs": {
       "profile": "Profilo",
@@ -795,6 +819,27 @@
       "select_customer": "Seleziona un cliente",
       "cancel": "Annulla",
       "submit": "Crea utente"
+    },
+    "dialogs": {
+      "customer_new": "Nuovo cliente",
+      "customer_edit": "Modifica cliente",
+      "customer_deactivate": "Disattiva cliente",
+      "customer_deactivate_msg": "Disattivare \"{{name}}\"? Ciò sospenderà l'accesso a tutti gli utenti di questo tenant.",
+      "deactivate": "Disattiva",
+      "device_restart": "Riavvia dispositivo",
+      "device_restart_msg": "Riavviare {{hostname}}? Potrebbe essere offline per alcuni minuti.",
+      "restart": "Riavvia",
+      "user_approve": "Approva utente",
+      "user_approve_msg": "Approvare {{email}} e concedere l'accesso?",
+      "approve": "Approva",
+      "user_reject": "Rifiuta utente",
+      "user_reject_msg": "Rifiutare e negare l'accesso a {{email}}?",
+      "reject": "Rifiuta",
+      "user_suspend": "Sospendi utente",
+      "user_suspend_msg": "Sospendere {{email}}? Perderà subito l'accesso.",
+      "suspend": "Sospendi",
+      "user_activate": "Attiva utente",
+      "user_activate_msg": "Riattivare {{email}}?"
     }
   },
   "components": {
@@ -1016,5 +1061,10 @@
     "disk_usage": "Utilizzo disco",
     "battery_low": "Batteria scarica",
     "sensor_temp": "Temp. sensore"
+  },
+  "validation": {
+    "required": "Obbligatorio",
+    "email": "E-mail non valida",
+    "min8": "Minimo 8 caratteri"
   }
 }

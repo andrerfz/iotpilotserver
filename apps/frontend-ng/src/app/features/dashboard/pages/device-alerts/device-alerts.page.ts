@@ -17,7 +17,7 @@ import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { filter } from 'rxjs';
 import { addIcons } from 'ionicons';
 import { refreshOutline, settingsOutline, trashOutline } from 'ionicons/icons';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import {
   IonButton,
   IonCard,
@@ -100,6 +100,7 @@ export class DeviceAlertsPage implements OnInit, AfterViewInit {
   private readonly alertsStream = inject(AlertsStream);
   private readonly toast = inject(ToastService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly t = inject(TranslateService);
   private readonly thresholdSheet = viewChild(ThresholdConfigSheetComponent);
 
   protected readonly deviceId = signal('');
@@ -208,7 +209,7 @@ export class DeviceAlertsPage implements OnInit, AfterViewInit {
       );
       void this.toast.success('Alert acknowledged');
     } catch (e) {
-      void this.toast.error(e instanceof Error ? e.message : 'Failed to acknowledge alert');
+      void this.toast.error(e instanceof Error ? e.message : this.t.instant('device_alerts.msg_ack_failed'));
     } finally {
       this.actionLoading.set(null);
     }
@@ -224,7 +225,7 @@ export class DeviceAlertsPage implements OnInit, AfterViewInit {
       );
       void this.toast.success('Alert resolved');
     } catch (e) {
-      void this.toast.error(e instanceof Error ? e.message : 'Failed to resolve alert');
+      void this.toast.error(e instanceof Error ? e.message : this.t.instant('device_alerts.msg_resolve_failed'));
     } finally {
       this.actionLoading.set(null);
     }
@@ -236,9 +237,9 @@ export class DeviceAlertsPage implements OnInit, AfterViewInit {
     try {
       await this.svc.deleteAlert(this.deviceId(), alert.id);
       this.localAlerts.update(list => list.filter(a => a.id !== alert.id));
-      void this.toast.success('Alert deleted');
+      void this.toast.success(this.t.instant('device_alerts.msg_deleted'));
     } catch (e) {
-      void this.toast.error(e instanceof Error ? e.message : 'Failed to delete alert');
+      void this.toast.error(e instanceof Error ? e.message : this.t.instant('device_alerts.msg_delete_failed'));
     } finally {
       this.actionLoading.set(null);
     }
@@ -257,7 +258,7 @@ export class DeviceAlertsPage implements OnInit, AfterViewInit {
       this.selectedAlerts.set([]);
       void this.toast.success(`${targets.length} alerts acknowledged`);
     } catch (e) {
-      void this.toast.error(e instanceof Error ? e.message : 'Bulk acknowledge failed');
+      void this.toast.error(e instanceof Error ? e.message : this.t.instant('device_alerts.msg_bulk_ack_failed'));
     }
   }
 
@@ -274,7 +275,7 @@ export class DeviceAlertsPage implements OnInit, AfterViewInit {
       this.selectedAlerts.set([]);
       void this.toast.success(`${targets.length} alerts resolved`);
     } catch (e) {
-      void this.toast.error(e instanceof Error ? e.message : 'Bulk resolve failed');
+      void this.toast.error(e instanceof Error ? e.message : this.t.instant('device_alerts.msg_bulk_resolve_failed'));
     }
   }
 

@@ -38,7 +38,8 @@
     "next": "Suivant",
     "last_7_days": "7 derniers jours",
     "period": "Période",
-    "all": "Tous"
+    "all": "Tous",
+    "activate": "Activer"
   },
   "errors": {
     "network": "Impossible de joindre le serveur. Vérifiez votre connexion et réessayez.",
@@ -264,7 +265,13 @@
     "failed": {
       "title": "Impossible de charger les alertes",
       "retry": "Réessayer"
-    }
+    },
+    "msg_deleted": "Alerte supprimée",
+    "msg_delete_failed": "Échec de la suppression de l'alerte",
+    "msg_ack_failed": "Échec de l'acquittement de l'alerte",
+    "msg_resolve_failed": "Échec de la résolution de l'alerte",
+    "msg_bulk_ack_failed": "Échec de l'acquittement groupé",
+    "msg_bulk_resolve_failed": "Échec de la résolution groupée"
   },
   "device_logs": {
     "search_placeholder": "Rechercher dans les journaux",
@@ -321,7 +328,8 @@
     "reboot_desc": "Redémarre l'appareil",
     "shutdown_desc": "Met hors tension",
     "update_desc": "Met à jour les paquets de l'OS",
-    "restart_desc": "Redémarre les services de l'agent"
+    "restart_desc": "Redémarre les services de l'agent",
+    "msg_issue_failed": "Échec de l'envoi de la commande"
   },
   "device_settings": {
     "sections": {
@@ -362,7 +370,10 @@
       "button": "Supprimer",
       "confirm_title": "Êtes-vous sûr ?",
       "confirm": "Confirmer la suppression"
-    }
+    },
+    "msg_saved": "Paramètres enregistrés",
+    "msg_save_failed": "Échec de l'enregistrement",
+    "msg_rotate_failed": "Échec de la rotation"
   },
   "device_network": {
     "title": "Réseau",
@@ -507,7 +518,9 @@
       "saving": "Enregistrement...",
       "first_name_ph": "Saisir le prénom",
       "last_name_ph": "Saisir le nom",
-      "phone_ph": "Saisir le téléphone"
+      "phone_ph": "Saisir le téléphone",
+      "msg_saved": "Modifications enregistrées",
+      "msg_save_failed": "Échec de l'enregistrement des modifications"
     },
     "security": {
       "title": "Sécurité du compte",
@@ -561,7 +574,13 @@
       "rule_lowercase": "Une lettre minuscule",
       "rule_number": "Un chiffre",
       "rule_length": "Au moins 12 caractères",
-      "rule_special": "Un caractère spécial"
+      "rule_special": "Un caractère spécial",
+      "msg_load_failed": "Échec du chargement des paramètres de sécurité",
+      "msg_updated": "Paramètres de sécurité mis à jour",
+      "msg_password_changed": "Mot de passe modifié avec succès",
+      "msg_sessions_load_failed": "Échec du chargement des sessions",
+      "msg_session_revoke_failed": "Échec de la révocation de la session",
+      "msg_sessions_revoke_failed": "Échec de la révocation des sessions"
     },
     "notifications": {
       "title": "Préférences de notification",
@@ -582,7 +601,9 @@
         "desc": "Soyez notifié lorsque des appareils passent hors ligne."
       },
       "save": "Enregistrer les modifications",
-      "saving": "Enregistrement..."
+      "saving": "Enregistrement...",
+      "msg_load_failed": "Échec du chargement des paramètres de notification",
+      "msg_updated": "Paramètres de notification mis à jour"
     },
     "api_keys": {
       "title": "Clés API",
@@ -639,7 +660,10 @@
       },
       "layout_default": "Par défaut",
       "layout_compact": "Compact",
-      "layout_expanded": "Étendu"
+      "layout_expanded": "Étendu",
+      "msg_load_failed": "Échec du chargement des paramètres système",
+      "msg_display_updated": "Paramètres d'affichage mis à jour",
+      "msg_admin_updated": "Paramètres d'administration mis à jour"
     },
     "tabs": {
       "profile": "Profil",
@@ -795,6 +819,27 @@
       "select_customer": "Sélectionner un client",
       "cancel": "Annuler",
       "submit": "Créer l'utilisateur"
+    },
+    "dialogs": {
+      "customer_new": "Nouveau client",
+      "customer_edit": "Modifier le client",
+      "customer_deactivate": "Désactiver le client",
+      "customer_deactivate_msg": "Désactiver « {{name}} » ? Cela suspendra l'accès de tous les utilisateurs de ce locataire.",
+      "deactivate": "Désactiver",
+      "device_restart": "Redémarrer l'appareil",
+      "device_restart_msg": "Redémarrer {{hostname}} ? Il peut être hors ligne quelques minutes.",
+      "restart": "Redémarrer",
+      "user_approve": "Approuver l'utilisateur",
+      "user_approve_msg": "Approuver {{email}} et lui accorder l'accès ?",
+      "approve": "Approuver",
+      "user_reject": "Rejeter l'utilisateur",
+      "user_reject_msg": "Rejeter et refuser l'accès à {{email}} ?",
+      "reject": "Rejeter",
+      "user_suspend": "Suspendre l'utilisateur",
+      "user_suspend_msg": "Suspendre {{email}} ? Il perdra l'accès immédiatement.",
+      "suspend": "Suspendre",
+      "user_activate": "Activer l'utilisateur",
+      "user_activate_msg": "Réactiver {{email}} ?"
     }
   },
   "components": {
@@ -1016,5 +1061,10 @@
     "disk_usage": "Utilisation disque",
     "battery_low": "Batterie faible",
     "sensor_temp": "Temp. capteur"
+  },
+  "validation": {
+    "required": "Requis",
+    "email": "E-mail invalide",
+    "min8": "Minimum 8 caractères"
   }
 }

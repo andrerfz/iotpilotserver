@@ -1,7 +1,44 @@
-# i18n — Phase 2 backlog (frontend-ng)
+# i18n — Phase 2 (frontend-ng)
 
-Status: **Phase 1 done & deployed** (commit `f4dbfed`). This doc tracks what
-remains.
+Status: **Phase 1 + Phase 2 done & deployed.** Phase 1 (`f4dbfed`) = shared
+chrome. Phase 2 wave 1 (`7a892e4`) = page titles, table columns, select options,
+device tabs, command labels, metric labels, password rules. Phase 2 wave 2 =
+admin AlertController dialogs + toast/success/error + form validation messages.
+
+The whole UI now renders in the active language. The leverage points
+(`data-table`, `ui-select`, `topbar`) apply `| translate` to label/title, so
+feature arrays just carry translation keys.
+
+## Remaining residuals (deliberately left — low value)
+
+- `device-export.service.ts` export column headers + PDF title — file/data
+  content, conventionally kept in the source language.
+- `device-capabilities.ts` `'Unknown'` device-type fallback.
+- `admin-new-user.modal.ts` role option labels (`User`/`Admin`/`Readonly`) and
+  `'Failed to create user'` error; admin-customers dialog input placeholders.
+- A few interpolated success toasts (e.g. `Command "${id}" issued`,
+  `Alert acknowledged`).
+- **Bug:** `date-range-picker.component.ts` builds the month label with
+  `toLocaleString('en-US', …)` → month names always English. Pass the active
+  locale instead.
+
+## Conventions used (for any future i18n work)
+
+- New keys go in all 5 locale files; keep them in sync via a Node deep-merge
+  script that never clobbers existing leaves.
+- Reuse `common.*`, `nav.*`, `fields.*`, `metrics.*`, `status.*`, `severity.*`.
+- Prefer the `translate` pipe in templates; use `TranslateService.instant('key', { param })`
+  for imperative strings (AlertController, toasts) — interpolation via `{{param}}`.
+- Standalone components must add `TranslatePipe` to `imports` when a template
+  starts using the pipe.
+- The global test mock resolves keys to `en.json` values, so specs asserting the
+  English text keep passing.
+- Verify with `npm run lint && npm run type-check && npx vitest run` in the
+  `iotpilot-server-ng` container before committing.
+
+---
+
+## Original Phase 2 plan (for reference)
 
 ## Background
 

@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { LangService, SUPPORTED_LANGS, LANG_LABELS } from '@ng/core/i18n/lang.service';
 import {
   IonButton,
@@ -72,6 +72,7 @@ export class SettingsProfilePage implements OnInit {
   private readonly topbar = inject(TopbarService);
   private readonly fb = inject(FormBuilder);
   private readonly lang = inject(LangService);
+  private readonly t = inject(TranslateService);
 
   readonly isLoading = signal(true);
   readonly email = signal('');
@@ -95,7 +96,7 @@ export class SettingsProfilePage implements OnInit {
   readonly dateFormatOptions = DATE_FORMAT_OPTIONS;
 
   async ngOnInit(): Promise<void> {
-    this.topbar.set('Profile');
+    this.topbar.set('settings.tabs.profile');
     try {
       const res = await this.api.invoke(getProfileSettings, {});
       const data = (res as unknown as { data?: typeof res }).data ?? res;
@@ -132,10 +133,10 @@ export class SettingsProfilePage implements OnInit {
       });
       const lang = this.form.getRawValue().language;
       if (lang) await this.lang.use(lang as Parameters<typeof this.lang.use>[0]);
-      this.success.set('Changes saved');
+      this.success.set(this.t.instant('settings.profile.msg_saved'));
       this.form.markAsPristine();
     } catch (err) {
-      this.error.set(err instanceof Error ? err.message : 'Failed to save changes');
+      this.error.set(err instanceof Error ? err.message : this.t.instant('settings.profile.msg_save_failed'));
     } finally {
       this.isSaving.set(false);
     }

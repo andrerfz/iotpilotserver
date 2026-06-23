@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import {
   IonButton,
   IonCard,
@@ -72,6 +72,7 @@ export class SettingsSystemPage implements OnInit {
   private readonly topbar = inject(TopbarService);
   private readonly fb = inject(FormBuilder);
   private readonly themeService = inject(ThemeService);
+  private readonly t = inject(TranslateService);
 
   readonly isLoading = signal(true);
   private readonly systemData = signal<SystemSettings | null>(null);
@@ -121,7 +122,7 @@ export class SettingsSystemPage implements OnInit {
         });
       }
     } catch {
-      this.displayError.set('Failed to load system settings');
+      this.displayError.set(this.t.instant('settings.system.msg_load_failed'));
     } finally {
       this.isLoading.set(false);
     }
@@ -151,7 +152,7 @@ export class SettingsSystemPage implements OnInit {
         itemsPerPage,
       };
       await this.api.invoke(updateSystemSettings, { body });
-      this.displaySuccess.set('Display settings updated successfully');
+      this.displaySuccess.set(this.t.instant('settings.system.msg_display_updated'));
       this.displayForm.markAsPristine();
     } catch (err) {
       this.displayError.set(
@@ -174,7 +175,7 @@ export class SettingsSystemPage implements OnInit {
         logLevel: vals.logLevel as SystemSettings['logLevel'],
       };
       await this.api.invoke(updateSystemSettings, { body });
-      this.adminSuccess.set('Admin settings updated successfully');
+      this.adminSuccess.set(this.t.instant('settings.system.msg_admin_updated'));
       this.adminForm.markAsPristine();
     } catch (err) {
       this.adminError.set(

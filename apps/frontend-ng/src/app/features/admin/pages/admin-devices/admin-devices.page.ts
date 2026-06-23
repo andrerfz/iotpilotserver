@@ -2,7 +2,7 @@ import {
   AfterViewInit, ChangeDetectionStrategy, Component,
   computed, inject, signal, TemplateRef, ViewChild,
 } from '@angular/core';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { skip } from 'rxjs';
 import { RouterLink } from '@angular/router';
@@ -52,6 +52,7 @@ export class AdminDevicesPage implements AfterViewInit, ViewWillEnter {
   private readonly alertCtrl = inject(AlertController);
   private readonly topbar = inject(TopbarService);
   private readonly tenantCtx = inject(TenantContextService);
+  private readonly t = inject(TranslateService);
 
   protected statusFilter = '';
   protected readonly searchQuery = signal('');
@@ -128,11 +129,11 @@ export class AdminDevicesPage implements AfterViewInit, ViewWillEnter {
 
   async onRestart(device: AdminDevice): Promise<void> {
     const alert = await this.alertCtrl.create({
-      header: 'Restart Device',
-      message: `Restart ${device.hostname}? It may be offline for a few minutes.`,
+      header: this.t.instant('admin.dialogs.device_restart'),
+      message: this.t.instant('admin.dialogs.device_restart_msg', { hostname: device.hostname }),
       buttons: [
-        { text: 'Cancel', role: 'cancel' },
-        { text: 'Restart', role: 'confirm', handler: () => void this.doCommand(device, 'REBOOT') },
+        { text: this.t.instant('common.cancel'), role: 'cancel' },
+        { text: this.t.instant('admin.dialogs.restart'), role: 'confirm', handler: () => void this.doCommand(device, 'REBOOT') },
       ],
     });
     await alert.present();

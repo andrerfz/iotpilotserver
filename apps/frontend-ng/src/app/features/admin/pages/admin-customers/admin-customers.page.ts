@@ -2,7 +2,7 @@ import {
   AfterViewInit, ChangeDetectionStrategy, Component,
   computed, DestroyRef, inject, signal, TemplateRef, ViewChild,
 } from '@angular/core';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { FormsModule } from '@angular/forms';
 import { addIcons } from 'ionicons';
 import {
@@ -46,6 +46,7 @@ export class AdminCustomersPage implements AfterViewInit, ViewWillEnter {
   private readonly alertCtrl = inject(AlertController);
   private readonly topbar = inject(TopbarService);
   private readonly destroy = inject(DestroyRef);
+  private readonly t = inject(TranslateService);
 
   protected statusFilter = '';
   protected readonly searchQuery = signal('');
@@ -97,15 +98,15 @@ export class AdminCustomersPage implements AfterViewInit, ViewWillEnter {
 
   protected async onAdd(): Promise<void> {
     const alert = await this.alertCtrl.create({
-      header: 'New Customer',
+      header: this.t.instant('admin.dialogs.customer_new'),
       inputs: [
         { name: 'name',         type: 'text',  placeholder: 'Name *' },
         { name: 'contactEmail', type: 'email', placeholder: 'Contact email' },
       ],
       buttons: [
-        { text: 'Cancel', role: 'cancel' },
+        { text: this.t.instant('common.cancel'), role: 'cancel' },
         {
-          text: 'Create',
+          text: this.t.instant('common.create'),
           handler: async (data: { name: string; contactEmail: string }) => {
             if (!data.name?.trim()) return false;
             this.actionLoading.set(true);
@@ -124,14 +125,14 @@ export class AdminCustomersPage implements AfterViewInit, ViewWillEnter {
 
   protected async onEdit(customer: AdminCustomer): Promise<void> {
     const alert = await this.alertCtrl.create({
-      header: 'Edit Customer',
+      header: this.t.instant('admin.dialogs.customer_edit'),
       inputs: [
         { name: 'name', type: 'text', placeholder: 'Name', value: customer.name },
       ],
       buttons: [
-        { text: 'Cancel', role: 'cancel' },
+        { text: this.t.instant('common.cancel'), role: 'cancel' },
         {
-          text: 'Save',
+          text: this.t.instant('common.save'),
           handler: async (data: { name: string }) => {
             if (!data.name?.trim()) return false;
             this.actionLoading.set(true);
@@ -150,12 +151,12 @@ export class AdminCustomersPage implements AfterViewInit, ViewWillEnter {
 
   protected async onDeactivate(customer: AdminCustomer): Promise<void> {
     const confirm = await this.alertCtrl.create({
-      header: 'Deactivate Customer',
-      message: `Deactivate "${customer.name}"? This will suspend access for all users in this tenant.`,
+      header: this.t.instant('admin.dialogs.customer_deactivate'),
+      message: this.t.instant('admin.dialogs.customer_deactivate_msg', { name: customer.name }),
       buttons: [
-        { text: 'Cancel', role: 'cancel' },
+        { text: this.t.instant('common.cancel'), role: 'cancel' },
         {
-          text: 'Deactivate',
+          text: this.t.instant('admin.dialogs.deactivate'),
           role: 'destructive',
           handler: async () => {
             this.actionLoading.set(true);

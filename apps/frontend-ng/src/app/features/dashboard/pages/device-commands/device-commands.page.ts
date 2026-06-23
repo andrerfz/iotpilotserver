@@ -10,7 +10,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ActivatedRoute } from '@angular/router';
 import { TopbarService } from '@ng/shell/topbar.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -87,6 +87,7 @@ export class DeviceCommandsPage implements OnInit, AfterViewInit {
   private readonly svc = inject(DeviceDetailService);
   private readonly toast = inject(ToastService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly t = inject(TranslateService);
 
   private readonly deviceId = signal('');
   readonly device = this.svc.device;
@@ -146,7 +147,7 @@ export class DeviceCommandsPage implements OnInit, AfterViewInit {
       await this.svc.sendCommand(this.deviceId(), id);
       void this.toast.success(`Command "${id}" issued`);
     } catch (e) {
-      void this.toast.error(e instanceof Error ? e.message : 'Failed to issue command');
+      void this.toast.error(e instanceof Error ? e.message : this.t.instant('device_commands.msg_issue_failed'));
     } finally {
       this.executing.set(false);
     }
