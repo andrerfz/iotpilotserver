@@ -128,7 +128,7 @@ export class DeviceSettingsPage implements OnInit {
   }
 
   ngOnInit(): void {
-    this.topbar.set('Settings');
+    this.topbar.set('nav.settings');
     void this.settings.load({ id: this.deviceId() });
   }
 

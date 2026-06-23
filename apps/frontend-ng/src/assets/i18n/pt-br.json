@@ -106,7 +106,8 @@
     "customers": "Clientes",
     "system": "Sistema",
     "operate": "Operar",
-    "administer": "Administrar"
+    "administer": "Administrar",
+    "monitor": "Monitorar"
   },
   "dashboard": {
     "title": "Visão geral da frota",
@@ -215,7 +216,9 @@
       "memory": "Memória",
       "disk": "Uso de disco",
       "temperature": "Temperatura",
-      "battery": "Bateria"
+      "battery": "Bateria",
+      "cpu_temp": "Temp. CPU",
+      "sensor_temp": "Temp. sensor"
     },
     "charts": {
       "cpu": "Uso de CPU",
@@ -303,7 +306,22 @@
     "empty": {
       "title": "Nenhum comando ainda",
       "desc": "Use Ações rápidas ou Enviar comando para começar."
-    }
+    },
+    "reboot": "Reiniciar",
+    "restart": "Reiniciar",
+    "shutdown": "Desligar",
+    "update_system": "Atualizar sistema",
+    "restart_services": "Reiniciar serviços",
+    "monitor": "Monitorar",
+    "reboot_opt": "Reiniciar — reinicia o dispositivo",
+    "restart_opt": "Reiniciar — reinicia os serviços do agente",
+    "shutdown_opt": "Desligar — desliga o equipamento",
+    "custom_opt": "Personalizado — executa um comando",
+    "update_opt": "Atualizar — atualiza os pacotes do SO",
+    "reboot_desc": "Reinicia o dispositivo",
+    "shutdown_desc": "Desliga o equipamento",
+    "update_desc": "Atualiza os pacotes do SO",
+    "restart_desc": "Reinicia os serviços do agente"
   },
   "device_settings": {
     "sections": {
@@ -466,7 +484,11 @@
       "retry": "Tentar novamente"
     },
     "empty": "Nenhum registro encontrado",
-    "entries": "registros"
+    "entries": "registros",
+    "level_debug": "Depuração (detalhado)",
+    "level_info": "Info (padrão)",
+    "level_warning": "Aviso (mínimo)",
+    "level_error": "Erro (apenas críticos)"
   },
   "settings": {
     "profile": {
@@ -534,7 +556,12 @@
         "enable_2fa_desc": "Adicione uma camada extra de segurança.",
         "review_sessions": "Revise as sessões ativas",
         "review_sessions_desc": "Verifique e encerre regularmente quaisquer sessões suspeitas."
-      }
+      },
+      "rule_uppercase": "Uma letra maiúscula",
+      "rule_lowercase": "Uma letra minúscula",
+      "rule_number": "Um número",
+      "rule_length": "Pelo menos 12 caracteres",
+      "rule_special": "Um caractere especial"
     },
     "notifications": {
       "title": "Preferências de notificação",
@@ -609,7 +636,10 @@
           "desc": "Definir a verbosidade do registro do sistema."
         },
         "save": "Salvar configurações de administrador"
-      }
+      },
+      "layout_default": "Padrão",
+      "layout_compact": "Compacto",
+      "layout_expanded": "Expandido"
     },
     "tabs": {
       "profile": "Perfil",
@@ -928,5 +958,63 @@
     "warning": "Aviso",
     "error": "Erro",
     "info": "Informação"
+  },
+  "topbar": {
+    "metrics": "Métricas",
+    "terminal": "Terminal",
+    "storage": "Armazenamento",
+    "commands": "Comandos",
+    "alerts": "Alertas"
+  },
+  "fields": {
+    "status": "Status",
+    "name": "Nome",
+    "device": "Dispositivo",
+    "devices": "Dispositivos",
+    "type": "Tipo",
+    "location": "Localização",
+    "last_seen": "Visto por último",
+    "created": "Criado",
+    "updated": "Atualizado",
+    "triggered": "Disparado",
+    "when": "Quando",
+    "severity": "Severidade",
+    "state": "Estado",
+    "message": "Mensagem",
+    "source": "Origem",
+    "level": "Nível",
+    "user": "Usuário",
+    "email": "E-mail",
+    "role": "Função",
+    "hostname": "Nome do host",
+    "ip_address": "Endereço IP",
+    "device_id": "ID do dispositivo",
+    "key": "Chave",
+    "slug": "Slug",
+    "last_used": "Último uso",
+    "joined": "Entrou",
+    "command": "Comando",
+    "alert": "Alerta",
+    "alerts": "Alertas",
+    "action": "Ação",
+    "actions": "Ações",
+    "active": "Ativo",
+    "inactive": "Inativo",
+    "suspended": "Suspenso",
+    "all_statuses": "Todos os status",
+    "all_levels": "Todos os níveis",
+    "all_sources": "Todas as origens",
+    "all_devices": "Todos os dispositivos"
+  },
+  "metrics": {
+    "cpu": "CPU",
+    "memory": "Memória",
+    "temperature": "Temperatura",
+    "disk": "Disco",
+    "cpu_usage": "Uso de CPU",
+    "memory_usage": "Uso de memória",
+    "disk_usage": "Uso de disco",
+    "battery_low": "Bateria baixa",
+    "sensor_temp": "Temp. sensor"
   }
 }

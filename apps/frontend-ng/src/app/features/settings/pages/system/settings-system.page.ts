@@ -24,9 +24,9 @@ import { updateSystemSettings } from '@ng/core/api/generated/fn/settings/update-
 import type { SystemSettings } from '@ng/core/api/generated/models/system-settings';
 
 const DASHBOARD_LAYOUT_OPTIONS: SelectOption[] = [
-  { label: 'Default', value: 'default' },
-  { label: 'Compact', value: 'compact' },
-  { label: 'Expanded', value: 'expanded' },
+  { label: 'settings.system.layout_default', value: 'default' },
+  { label: 'settings.system.layout_compact', value: 'compact' },
+  { label: 'settings.system.layout_expanded', value: 'expanded' },
 ];
 
 const ITEMS_PER_PAGE_OPTIONS: SelectOption[] = [
@@ -38,10 +38,10 @@ const ITEMS_PER_PAGE_OPTIONS: SelectOption[] = [
 ];
 
 const LOG_LEVEL_OPTIONS: SelectOption[] = [
-  { label: 'Debug (Verbose)', value: 'debug' },
-  { label: 'Info (Standard)', value: 'info' },
-  { label: 'Warning (Minimal)', value: 'warn' },
-  { label: 'Error (Critical Only)', value: 'error' },
+  { label: 'logs.level_debug', value: 'debug' },
+  { label: 'logs.level_info', value: 'info' },
+  { label: 'logs.level_warning', value: 'warn' },
+  { label: 'logs.level_error', value: 'error' },
 ];
 
 @Component({
@@ -104,7 +104,7 @@ export class SettingsSystemPage implements OnInit {
   readonly logLevelOptions = LOG_LEVEL_OPTIONS;
 
   async ngOnInit(): Promise<void> {
-    this.topbar.set('System');
+    this.topbar.set('nav.system');
     try {
       const res = await this.api.invoke(getSystemSettings, {});
       const data = (res as unknown as { data?: typeof res }).data ?? res;

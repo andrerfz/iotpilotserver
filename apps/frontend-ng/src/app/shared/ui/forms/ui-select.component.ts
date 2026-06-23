@@ -45,7 +45,7 @@ export interface SelectOption<T = string> {
         <button type="button" class="ui-select" [disabled]="isDisabled()"
           (click)="sheet.open()" (blur)="onTouched()">
           <span class="ui-select__value" [class.ui-select__value--placeholder]="!selectedLabel()">
-            {{ selectedLabel() || placeholder() || ('ui.select_placeholder' | translate) }}
+            {{ (selectedLabel() | translate) || placeholder() || ('ui.select_placeholder' | translate) }}
           </span>
           <ion-icon name="chevron-down" class="ui-select__chev"></ion-icon>
         </button>
@@ -67,7 +67,7 @@ export interface SelectOption<T = string> {
               (click)="draft.set(opt.value)"
               (keydown.enter)="draft.set(opt.value)"
               (keydown.space)="draft.set(opt.value)">
-              <div class="opt__main"><div class="opt__title">{{ opt.label }}</div></div>
+              <div class="opt__main"><div class="opt__title">{{ opt.label | translate }}</div></div>
               <div class="opt__check">
                 <ion-icon name="checkmark"></ion-icon>
               </div>

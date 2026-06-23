@@ -83,7 +83,7 @@ export class DeviceNetworkPage implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.topbar.set('Network');
+    this.topbar.set('device_network.title');
     void this.svc.device.load({ id: this.deviceId() });
   }
 

@@ -37,7 +37,7 @@ export class AdminSystemPage implements OnDestroy, ViewWillEnter {
   private readonly topbar = inject(TopbarService);
 
   ionViewWillEnter(): void {
-    this.topbar.set('System');
+    this.topbar.set('nav.system');
     void this.svc.load();
     this.svc.startAutoRefresh(30_000);
   }

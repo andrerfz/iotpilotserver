@@ -8,7 +8,7 @@
     >
       @for (group of groups(); track group.key) {
         <ion-segment-button [value]="group.key" class="device-nav__seg-btn">
-          <ion-label>{{ group.label }}</ion-label>
+          <ion-label>{{ group.label | translate }}</ion-label>
         </ion-segment-button>
       }
     </ion-segment>
@@ -23,7 +23,7 @@
         routerLinkActive="device-tabs__tab--active"
         [routerLinkActiveOptions]="{ exact: tab.path === '' }"
       >
-        {{ tab.label }}
+        {{ tab.label | translate }}
         @if (tab.alertsBadge && openAlertCount() > 0) {
           <span class="device-tabs__badge">{{ openAlertCount() }}</span>
         }

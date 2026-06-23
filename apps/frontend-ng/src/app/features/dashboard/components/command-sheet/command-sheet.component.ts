@@ -31,11 +31,11 @@ import { ToastService } from '@ng/core/errors/toast.service';
 addIcons({ terminalOutline });
 
 const COMMAND_OPTIONS: SelectOption[] = [
-  { value: 'REBOOT', label: 'Reboot — restart the device' },
-  { value: 'SHUTDOWN', label: 'Shutdown — power off' },
-  { value: 'UPDATE', label: 'Update — update OS packages' },
-  { value: 'RESTART', label: 'Restart — restart agent services' },
-  { value: 'CUSTOM', label: 'Custom — run a shell command' },
+  { value: 'REBOOT', label: 'device_commands.reboot_opt' },
+  { value: 'SHUTDOWN', label: 'device_commands.shutdown_opt' },
+  { value: 'UPDATE', label: 'device_commands.update_opt' },
+  { value: 'RESTART', label: 'device_commands.restart_opt' },
+  { value: 'CUSTOM', label: 'device_commands.custom_opt' },
 ];
 
 @Component({

@@ -33,7 +33,7 @@ addIcons({ chevronForward, search });
       </nav>
 
       @if (topbar.title()) {
-        <span class="topbar__title">{{ topbar.title() }}</span>
+        <span class="topbar__title">{{ topbar.title() | translate }}</span>
       }
 
       <button class="searchbtn" (click)="openSearch.emit()">

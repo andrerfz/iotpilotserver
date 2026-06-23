@@ -53,16 +53,16 @@ import { TenantContextService } from '@ng/core/auth/tenant-context.service';
 addIcons({ alertCircleOutline, checkmarkCircleOutline, settingsOutline });
 
 const SEVERITY_OPTIONS: PickerOption[] = [
-  { value: 'CRITICAL', label: 'Critical' },
-  { value: 'ERROR', label: 'Error' },
-  { value: 'WARNING', label: 'Warning' },
-  { value: 'INFO', label: 'Info' },
+  { value: 'CRITICAL', label: 'severity.critical' },
+  { value: 'ERROR', label: 'severity.error' },
+  { value: 'WARNING', label: 'severity.warning' },
+  { value: 'INFO', label: 'severity.info' },
 ];
 
 const STATE_OPTIONS: PickerOption[] = [
-  { value: 'active', label: 'Active' },
-  { value: 'acknowledged', label: 'Acknowledged' },
-  { value: 'resolved', label: 'Resolved' },
+  { value: 'active', label: 'fields.active' },
+  { value: 'acknowledged', label: 'status.acknowledged' },
+  { value: 'resolved', label: 'status.resolved' },
 ];
 
 type TrendPoint = { date?: string; count?: number };
@@ -195,7 +195,7 @@ export class MonitoringPage implements AfterViewInit, ViewWillEnter {
   }
 
   ionViewWillEnter(): void {
-    this.topbar.set('Monitoring');
+    this.topbar.set('nav.monitoring');
     void this.loadData();
   }
 
@@ -215,11 +215,11 @@ export class MonitoringPage implements AfterViewInit, ViewWillEnter {
 
   ngAfterViewInit(): void {
     this.columns.set([
-      { key: 'severity', label: 'Severity', sortable: true, cellTemplate: this.severityCellTpl },
-      { key: 'title', label: 'Alert', sortable: true },
-      { key: 'deviceId', label: 'Device', cellTemplate: this.deviceCellTpl },
-      { key: 'status', label: 'State', cellTemplate: this.stateCellTpl },
-      { key: 'createdAt', label: 'Triggered', sortable: true },
+      { key: 'severity', label: 'fields.severity', sortable: true, cellTemplate: this.severityCellTpl },
+      { key: 'title', label: 'fields.alert', sortable: true },
+      { key: 'deviceId', label: 'fields.device', cellTemplate: this.deviceCellTpl },
+      { key: 'status', label: 'fields.state', cellTemplate: this.stateCellTpl },
+      { key: 'createdAt', label: 'fields.triggered', sortable: true },
     ]);
   }
 

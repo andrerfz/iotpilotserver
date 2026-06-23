@@ -64,11 +64,11 @@ export class AdminDevicesPage implements AfterViewInit, ViewWillEnter {
   @ViewChild('actionsCell') private actionsCellTpl!: TemplateRef<{ $implicit: AdminDevice }>;
 
   protected readonly statusOptions: SelectOption[] = [
-    { label: 'All Statuses', value: '' },
-    { label: 'Online',       value: 'ONLINE' },
-    { label: 'Offline',      value: 'OFFLINE' },
-    { label: 'Maintenance',  value: 'MAINTENANCE' },
-    { label: 'Error',        value: 'ERROR' },
+    { label: 'fields.all_statuses', value: '' },
+    { label: 'status.online',       value: 'ONLINE' },
+    { label: 'status.offline',      value: 'OFFLINE' },
+    { label: 'status.maintenance',  value: 'MAINTENANCE' },
+    { label: 'severity.error',        value: 'ERROR' },
   ];
 
   protected readonly filtered = computed(() => {
@@ -88,7 +88,7 @@ export class AdminDevicesPage implements AfterViewInit, ViewWillEnter {
   }
 
   ionViewWillEnter(): void {
-    this.topbar.set('Devices');
+    this.topbar.set('nav.devices');
     void this.svc.load();
   }
 
@@ -100,13 +100,13 @@ export class AdminDevicesPage implements AfterViewInit, ViewWillEnter {
 
   ngAfterViewInit(): void {
     this.cols.set([
-      { key: 'hostname',   label: 'Hostname',   sortable: true },
-      { key: 'deviceId',   label: 'Device ID' },
-      { key: 'deviceType', label: 'Type',       cellTemplate: this.typeCellTpl },
-      { key: 'status',     label: 'Status',     cellTemplate: this.statusCellTpl },
-      { key: 'ipAddress',  label: 'IP Address' },
-      { key: 'lastSeen',   label: 'Last Seen',  sortable: true },
-      { key: 'alertCount', label: 'Alerts',     sortable: true },
+      { key: 'hostname',   label: 'fields.hostname',   sortable: true },
+      { key: 'deviceId',   label: 'fields.device_id' },
+      { key: 'deviceType', label: 'fields.type',       cellTemplate: this.typeCellTpl },
+      { key: 'status',     label: 'fields.status',     cellTemplate: this.statusCellTpl },
+      { key: 'ipAddress',  label: 'fields.ip_address' },
+      { key: 'lastSeen',   label: 'fields.last_seen',  sortable: true },
+      { key: 'alertCount', label: 'fields.alerts',     sortable: true },
       { key: 'actions',    label: '',           cellTemplate: this.actionsCellTpl },
     ]);
   }

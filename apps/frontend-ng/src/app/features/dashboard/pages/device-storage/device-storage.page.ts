@@ -92,7 +92,7 @@ export class DeviceStoragePage implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.topbar.set('Storage');
+    this.topbar.set('topbar.storage');
     void this.svc.device.load({ id: this.deviceId() });
   }
 

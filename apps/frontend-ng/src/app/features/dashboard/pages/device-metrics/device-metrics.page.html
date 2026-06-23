@@ -33,7 +33,7 @@
         <ui-metric-card [label]="'device_metrics.labels.memory' | translate"     [value]="formatMetric(memLast(), 'memory') + '%'"  [iconColor]="memIconColor()"  [iconBg]="memIconBg()"></ui-metric-card>
         <ui-metric-card [label]="'device_metrics.labels.disk' | translate" [value]="formatMetric(diskLast(), 'disk') + '%'" [iconColor]="diskIconColor()" [iconBg]="diskIconBg()"></ui-metric-card>
       }
-      <ui-metric-card [label]="tempLabel()" [value]="formatMetric(tempLast(), 'temperature') + '°C'" [iconColor]="tempIconColor()" [iconBg]="tempIconBg()"></ui-metric-card>
+      <ui-metric-card [label]="tempLabel() | translate" [value]="formatMetric(tempLast(), 'temperature') + '°C'" [iconColor]="tempIconColor()" [iconBg]="tempIconBg()"></ui-metric-card>
       @if (showSensor()) {
         <ui-metric-card [label]="'device_metrics.labels.battery' | translate" [value]="formatMetric(batteryLast(), 'battery_level') + '%'" [iconColor]="batteryIconColor()" [iconBg]="batteryIconBg()"></ui-metric-card>
       }
@@ -64,7 +64,7 @@
       <!-- Temperature — shown for all device types -->
       <ion-card class="chart-card">
         <ion-card-header>
-          <ion-card-title class="chart-card__title">{{ tempLabel() }}</ion-card-title>
+          <ion-card-title class="chart-card__title">{{ tempLabel() | translate }}</ion-card-title>
         </ion-card-header>
         <ion-card-content>
           @if (tempChart()) {

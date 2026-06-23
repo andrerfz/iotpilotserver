@@ -56,10 +56,10 @@ export class AdminCustomersPage implements AfterViewInit, ViewWillEnter {
   @ViewChild('actionsCell') private actionsCellTpl!: TemplateRef<{ $implicit: AdminCustomer }>;
 
   protected readonly statusOptions: SelectOption[] = [
-    { label: 'All Statuses', value: '' },
-    { label: 'Active',       value: 'ACTIVE' },
-    { label: 'Inactive',     value: 'INACTIVE' },
-    { label: 'Suspended',    value: 'SUSPENDED' },
+    { label: 'fields.all_statuses', value: '' },
+    { label: 'fields.active',       value: 'ACTIVE' },
+    { label: 'fields.inactive',     value: 'INACTIVE' },
+    { label: 'fields.suspended',    value: 'SUSPENDED' },
   ];
 
   protected readonly filtered = computed(() => {
@@ -71,17 +71,17 @@ export class AdminCustomersPage implements AfterViewInit, ViewWillEnter {
   });
 
   ionViewWillEnter(): void {
-    this.topbar.set('Customers', { icon: 'add-outline', handler: () => void this.onAdd() });
+    this.topbar.set('nav.customers', { icon: 'add-outline', handler: () => void this.onAdd() });
     this.destroy.onDestroy(() => this.topbar.clear());
     void this.svc.load('', this.statusFilter || undefined);
   }
 
   ngAfterViewInit(): void {
     this.cols.set([
-      { key: 'name',      label: 'Name',    sortable: true },
-      { key: 'slug',      label: 'Slug',    sortable: true },
-      { key: 'createdAt', label: 'Created', sortable: true },
-      { key: 'status',    label: 'Status',  cellTemplate: this.statusCellTpl },
+      { key: 'name',      label: 'fields.name',    sortable: true },
+      { key: 'slug',      label: 'fields.slug',    sortable: true },
+      { key: 'createdAt', label: 'fields.created', sortable: true },
+      { key: 'status',    label: 'fields.status',  cellTemplate: this.statusCellTpl },
       { key: '__actions', label: '',        cellTemplate: this.actionsCellTpl },
     ]);
   }

@@ -69,11 +69,11 @@ addIcons({
 });
 
 const STATUS_OPTIONS: PickerOption[] = [
-  { value: 'ONLINE', label: 'Online', dot: 'ONLINE' },
-  { value: 'OFFLINE', label: 'Offline', dot: 'OFFLINE' },
-  { value: 'MAINTENANCE', label: 'Maintenance', dot: 'MAINTENANCE' },
-  { value: 'ERROR', label: 'Error', dot: 'ERROR' },
-  { value: 'UNCLAIMED', label: 'Unclaimed', dot: 'UNCLAIMED' },
+  { value: 'ONLINE', label: 'status.online', dot: 'ONLINE' },
+  { value: 'OFFLINE', label: 'status.offline', dot: 'OFFLINE' },
+  { value: 'MAINTENANCE', label: 'status.maintenance', dot: 'MAINTENANCE' },
+  { value: 'ERROR', label: 'severity.error', dot: 'ERROR' },
+  { value: 'UNCLAIMED', label: 'status.unclaimed', dot: 'UNCLAIMED' },
 ];
 
 @Component({
@@ -183,7 +183,7 @@ export class DevicesPage implements AfterViewInit, ViewWillEnter {
   }
 
   ionViewWillEnter(): void {
-    this.topbar.set('Devices', { icon: 'add-outline', handler: () => this.onRegisterDevice() });
+    this.topbar.set('nav.devices', { icon: 'add-outline', handler: () => this.onRegisterDevice() });
     void this.dashService.devices.load({ limit: 50 });
   }
 
@@ -195,12 +195,12 @@ export class DevicesPage implements AfterViewInit, ViewWillEnter {
 
   ngAfterViewInit(): void {
     this.columns.set([
-      { key: 'hostname', label: 'Device', sortable: true, cellTemplate: this.deviceCellTpl },
-      { key: 'status', label: 'Status', sortable: true, cellTemplate: this.statusCellTpl },
-      { key: 'location', label: 'Location' },
-      { key: 'cpuUsage', label: 'CPU', sortable: true },
-      { key: 'memoryUsage', label: 'Memory', sortable: true },
-      { key: 'lastSeen', label: 'Last seen' },
+      { key: 'hostname', label: 'fields.device', sortable: true, cellTemplate: this.deviceCellTpl },
+      { key: 'status', label: 'fields.status', sortable: true, cellTemplate: this.statusCellTpl },
+      { key: 'location', label: 'fields.location' },
+      { key: 'cpuUsage', label: 'metrics.cpu', sortable: true },
+      { key: 'memoryUsage', label: 'metrics.memory', sortable: true },
+      { key: 'lastSeen', label: 'fields.last_seen' },
     ]);
   }
 

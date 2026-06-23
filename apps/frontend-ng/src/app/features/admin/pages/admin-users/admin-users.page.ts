@@ -70,10 +70,10 @@ export class AdminUsersPage implements AfterViewInit, ViewWillEnter {
   protected readonly isSuperAdmin = computed(() => hasRole(this.auth.role(), 'SUPERADMIN'));
 
   protected readonly statusOptions: SelectOption[] = [
-    { label: 'All Statuses', value: '' },
-    { label: 'Pending',      value: 'PENDING' },
-    { label: 'Active',       value: 'ACTIVE' },
-    { label: 'Suspended',    value: 'SUSPENDED' },
+    { label: 'fields.all_statuses', value: '' },
+    { label: 'status.pending',      value: 'PENDING' },
+    { label: 'fields.active',       value: 'ACTIVE' },
+    { label: 'fields.suspended',    value: 'SUSPENDED' },
   ];
 
   protected readonly filtered = computed(() => {
@@ -92,7 +92,7 @@ export class AdminUsersPage implements AfterViewInit, ViewWillEnter {
   }
 
   ionViewWillEnter(): void {
-    this.topbar.set('Users', { icon: 'add-outline', handler: () => this.openNewUserModal() });
+    this.topbar.set('nav.users', { icon: 'add-outline', handler: () => this.openNewUserModal() });
     void this.svc.load();
   }
 
@@ -104,11 +104,11 @@ export class AdminUsersPage implements AfterViewInit, ViewWillEnter {
 
   ngAfterViewInit(): void {
     this.cols.set([
-      { key: 'name',     label: 'Name',    sortable: true },
-      { key: 'email',    label: 'Email',   sortable: true },
-      { key: 'role',     label: 'Role' },
-      { key: 'status',   label: 'Status',  cellTemplate: this.statusCellTpl },
-      { key: 'createdAt', label: 'Joined', sortable: true },
+      { key: 'name',     label: 'fields.name',    sortable: true },
+      { key: 'email',    label: 'fields.email',   sortable: true },
+      { key: 'role',     label: 'fields.role' },
+      { key: 'status',   label: 'fields.status',  cellTemplate: this.statusCellTpl },
+      { key: 'createdAt', label: 'fields.joined', sortable: true },
       { key: 'actions',  label: '',        cellTemplate: this.actionsCellTpl },
     ]);
   }

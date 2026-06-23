@@ -116,15 +116,15 @@ export class DeviceOverviewPage implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
-    this.topbar.set('Overview');
+    this.topbar.set('nav.overview');
     void this.svc.deviceCommands.load({ id: this.deviceId(), limit: 5 });
   }
 
   ngAfterViewInit(): void {
     this.commandColumns.set([
-      { key: 'command', label: 'Command' },
-      { key: 'status', label: 'Status', cellTemplate: this.statusCellTpl },
-      { key: 'createdAt', label: 'When' },
+      { key: 'command', label: 'fields.command' },
+      { key: 'status', label: 'fields.status', cellTemplate: this.statusCellTpl },
+      { key: 'createdAt', label: 'fields.when' },
     ]);
   }
 

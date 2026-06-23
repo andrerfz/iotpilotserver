@@ -1,4 +1,5 @@
 import { Component, computed, input } from '@angular/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { IonIcon } from '@ng/shared/ui';
 import { addIcons } from 'ionicons';
 import { checkmarkCircleOutline, closeCircleOutline } from 'ionicons/icons';
@@ -14,7 +15,7 @@ interface Rule {
   selector: 'app-password-strength',
   templateUrl: 'password-strength.component.html',
   styleUrls: ['password-strength.component.scss'],
-  imports: [IonIcon],
+  imports: [IonIcon, TranslatePipe],
 })
 export class PasswordStrengthComponent {
   readonly password = input<string>('');
@@ -22,12 +23,12 @@ export class PasswordStrengthComponent {
   readonly rules = computed<Rule[]>(() => {
     const pwd = this.password();
     return [
-      { label: 'At least 12 characters', valid: pwd.length >= 12 },
-      { label: 'One uppercase letter', valid: /[A-Z]/.test(pwd) },
-      { label: 'One lowercase letter', valid: /[a-z]/.test(pwd) },
-      { label: 'One number', valid: /\d/.test(pwd) },
+      { label: 'settings.security.rule_length', valid: pwd.length >= 12 },
+      { label: 'settings.security.rule_uppercase', valid: /[A-Z]/.test(pwd) },
+      { label: 'settings.security.rule_lowercase', valid: /[a-z]/.test(pwd) },
+      { label: 'settings.security.rule_number', valid: /\d/.test(pwd) },
       {
-        label: 'One special character',
+        label: 'settings.security.rule_special',
         valid: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(pwd),
       },
     ];

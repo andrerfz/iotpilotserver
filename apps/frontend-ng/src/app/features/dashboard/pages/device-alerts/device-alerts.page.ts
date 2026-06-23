@@ -54,16 +54,16 @@ function alertState(a: Alert): AlertState {
 }
 
 const SEVERITY_OPTIONS: PickerOption[] = [
-  { value: 'CRITICAL', label: 'Critical', severity: 'CRITICAL' },
-  { value: 'ERROR', label: 'Error', severity: 'ERROR' },
-  { value: 'WARNING', label: 'Warning', severity: 'WARNING' },
-  { value: 'INFO', label: 'Info', severity: 'INFO' },
+  { value: 'CRITICAL', label: 'severity.critical', severity: 'CRITICAL' },
+  { value: 'ERROR', label: 'severity.error', severity: 'ERROR' },
+  { value: 'WARNING', label: 'severity.warning', severity: 'WARNING' },
+  { value: 'INFO', label: 'severity.info', severity: 'INFO' },
 ];
 
 const STATE_OPTIONS: PickerOption[] = [
-  { value: 'OPEN', label: 'Open' },
-  { value: 'ACK', label: 'Acknowledged' },
-  { value: 'RESOLVED', label: 'Resolved' },
+  { value: 'OPEN', label: 'status.open' },
+  { value: 'ACK', label: 'status.acknowledged' },
+  { value: 'RESOLVED', label: 'status.resolved' },
 ];
 
 @Component({
@@ -170,18 +170,18 @@ export class DeviceAlertsPage implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
-    this.topbar.set('Alerts');
+    this.topbar.set('topbar.alerts');
     void this.svc.deviceAlerts.load({ id: this.deviceId() });
     void this.dashSvc.alertsTrend.load({ deviceId: this.deviceId(), period: '7d' });
   }
 
   ngAfterViewInit(): void {
     this.columns.set([
-      { key: 'severity', label: 'Severity', sortable: true, cellTemplate: this.severityCellTpl },
-      { key: 'title', label: 'Alert', cellTemplate: this.titleCellTpl },
-      { key: 'type', label: 'Type' },
-      { key: 'resolved', label: 'State', cellTemplate: this.stateCellTpl },
-      { key: 'createdAt', label: 'Triggered', cellTemplate: this.triggeredCellTpl },
+      { key: 'severity', label: 'fields.severity', sortable: true, cellTemplate: this.severityCellTpl },
+      { key: 'title', label: 'fields.alert', cellTemplate: this.titleCellTpl },
+      { key: 'type', label: 'fields.type' },
+      { key: 'resolved', label: 'fields.state', cellTemplate: this.stateCellTpl },
+      { key: 'createdAt', label: 'fields.triggered', cellTemplate: this.triggeredCellTpl },
       { key: 'id', label: '', cellTemplate: this.actionsCellTpl },
     ]);
   }

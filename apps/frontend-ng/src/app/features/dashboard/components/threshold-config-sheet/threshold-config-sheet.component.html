@@ -36,7 +36,7 @@
       @for (m of activeMetrics(); track m.metricName) {
         <div class="metric-row">
           <div class="metric-row__head">
-            <span class="metric-row__label">{{ m.label }}</span>
+            <span class="metric-row__label">{{ m.labelKey | translate }}</span>
             <span class="metric-row__val">{{ getValue(m.metricName) }}{{ m.unit }}</span>
           </div>
           <ion-range

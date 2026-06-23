@@ -69,7 +69,7 @@ interface SortState { key: string; dir: 1 | -1; }
                   (keydown.enter)="col.sortable ? doSort(col.key) : null"
                   [attr.tabindex]="col.sortable ? 0 : null">
                   <span class="th-sort">
-                    {{ col.label }}
+                    {{ col.label | translate }}
                     @if (col.sortable && sort().key === col.key) {
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round"

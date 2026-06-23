@@ -125,19 +125,19 @@ export class SettingsApiKeysPage implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
-    this.topbar.set('API Keys', { icon: 'add-outline', handler: () => this.openCreateModal() });
+    this.topbar.set('settings.tabs.api_keys', { icon: 'add-outline', handler: () => this.openCreateModal() });
     this.destroy.onDestroy(() => this.topbar.clear());
     void this.loadKeys();
   }
 
   ngAfterViewInit(): void {
     this.cols.set([
-      { key: 'name',       label: 'Name',     sortable: true },
-      { key: 'maskedKey',  label: 'Key',      cellTemplate: this.maskedKeyCellTpl },
-      { key: 'createdAt',  label: 'Created',  sortable: true },
-      { key: 'lastUsedAt', label: 'Last used' },
-      { key: 'isActive',   label: 'Status',   cellTemplate: this.statusCellTpl },
-      { key: 'actions',    label: '',         cellTemplate: this.actionsCellTpl },
+      { key: 'name',       label: 'fields.name',      sortable: true },
+      { key: 'maskedKey',  label: 'fields.key',       cellTemplate: this.maskedKeyCellTpl },
+      { key: 'createdAt',  label: 'fields.created',   sortable: true },
+      { key: 'lastUsedAt', label: 'fields.last_used' },
+      { key: 'isActive',   label: 'fields.status',    cellTemplate: this.statusCellTpl },
+      { key: 'actions',    label: '',                 cellTemplate: this.actionsCellTpl },
     ]);
   }
 

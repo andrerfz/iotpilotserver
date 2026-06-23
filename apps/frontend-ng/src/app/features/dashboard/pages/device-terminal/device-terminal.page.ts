@@ -56,7 +56,7 @@ export class DeviceTerminalPage implements OnInit {
   }
 
   ngOnInit(): void {
-    this.topbar.set('Terminal');
+    this.topbar.set('topbar.terminal');
     if (!this.device.data()) {
       void this.device.load({ id: this.deviceId() });
     }

@@ -141,7 +141,7 @@ export class DeviceMetricsPage implements OnInit {
 
   readonly showSystem = computed(() => hasSystemMetrics(this.svc.device.data()?.deviceType));
   readonly showSensor = computed(() => hasSensorMetrics(this.svc.device.data()?.deviceType));
-  readonly tempLabel  = computed(() => this.showSystem() ? 'CPU Temp' : 'Sensor Temp');
+  readonly tempLabel  = computed(() => this.showSystem() ? 'device_metrics.labels.cpu_temp' : 'device_metrics.labels.sensor_temp');
 
   readonly metricData = computed(() => this.metrics.data()?.metrics ?? {});
 
@@ -185,7 +185,7 @@ export class DeviceMetricsPage implements OnInit {
   }
 
   ngOnInit(): void {
-    this.topbar.set('Metrics');
+    this.topbar.set('topbar.metrics');
     void this.metrics.load({ id: this.deviceId(), period: this.period() });
   }
 

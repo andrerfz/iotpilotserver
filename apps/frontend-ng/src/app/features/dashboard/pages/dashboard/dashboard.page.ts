@@ -64,11 +64,11 @@ addIcons({
 });
 
 const STATUS_OPTIONS: PickerOption[] = [
-  { value: 'ONLINE', label: 'Online', dot: 'ONLINE' },
-  { value: 'OFFLINE', label: 'Offline', dot: 'OFFLINE' },
-  { value: 'MAINTENANCE', label: 'Maintenance', dot: 'MAINTENANCE' },
-  { value: 'ERROR', label: 'Error', dot: 'ERROR' },
-  { value: 'UNCLAIMED', label: 'Unclaimed', dot: 'UNCLAIMED' },
+  { value: 'ONLINE', label: 'status.online', dot: 'ONLINE' },
+  { value: 'OFFLINE', label: 'status.offline', dot: 'OFFLINE' },
+  { value: 'MAINTENANCE', label: 'status.maintenance', dot: 'MAINTENANCE' },
+  { value: 'ERROR', label: 'severity.error', dot: 'ERROR' },
+  { value: 'UNCLAIMED', label: 'status.unclaimed', dot: 'UNCLAIMED' },
 ];
 
 @Component({
@@ -208,7 +208,7 @@ export class DashboardPage implements AfterViewInit, ViewWillEnter {
   }
 
   ionViewWillEnter(): void {
-    this.topbar.set('Dashboard', { icon: 'add-outline', handler: () => this.onRegisterDevice() });
+    this.topbar.set('nav.dashboard', { icon: 'add-outline', handler: () => this.onRegisterDevice() });
     void this.loadData();
   }
 
@@ -228,11 +228,11 @@ export class DashboardPage implements AfterViewInit, ViewWillEnter {
 
   ngAfterViewInit(): void {
     this.columns.set([
-      { key: 'hostname', label: 'Device', sortable: true, cellTemplate: this.deviceCellTpl },
-      { key: 'status', label: 'Status', sortable: true, cellTemplate: this.statusCellTpl },
-      { key: 'location', label: 'Location' },
-      { key: 'cpuUsage', label: 'CPU', sortable: true },
-      { key: 'lastSeen', label: 'Last seen' },
+      { key: 'hostname', label: 'fields.device', sortable: true, cellTemplate: this.deviceCellTpl },
+      { key: 'status', label: 'fields.status', sortable: true, cellTemplate: this.statusCellTpl },
+      { key: 'location', label: 'fields.location' },
+      { key: 'cpuUsage', label: 'metrics.cpu', sortable: true },
+      { key: 'lastSeen', label: 'fields.last_seen' },
       { key: '_nav', label: '', width: '40px' },
     ]);
   }

@@ -116,7 +116,7 @@ export class SettingsSecurityPage implements OnInit {
   readonly isRevokingAll = signal(false);
 
   async ngOnInit(): Promise<void> {
-    this.topbar.set('Security');
+    this.topbar.set('settings.tabs.security');
     try {
       const data = await this.api.invoke(getSecuritySettings, {});
       this.securityForm.patchValue({

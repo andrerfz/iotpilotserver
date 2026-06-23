@@ -106,7 +106,8 @@
     "customers": "Customers",
     "system": "System",
     "operate": "Operate",
-    "administer": "Administer"
+    "administer": "Administer",
+    "monitor": "Monitor"
   },
   "dashboard": {
     "title": "Fleet overview",
@@ -215,7 +216,9 @@
       "memory": "Memory",
       "disk": "Disk Usage",
       "temperature": "Temperature",
-      "battery": "Battery"
+      "battery": "Battery",
+      "cpu_temp": "CPU Temp",
+      "sensor_temp": "Sensor Temp"
     },
     "charts": {
       "cpu": "CPU Usage",
@@ -303,7 +306,22 @@
     "empty": {
       "title": "No commands yet",
       "desc": "Use Quick Actions or Issue Command to get started."
-    }
+    },
+    "reboot": "Reboot",
+    "restart": "Restart",
+    "shutdown": "Shutdown",
+    "update_system": "Update System",
+    "restart_services": "Restart Services",
+    "monitor": "Monitor",
+    "reboot_opt": "Reboot — restart the device",
+    "restart_opt": "Restart — restart agent services",
+    "shutdown_opt": "Shutdown — power off",
+    "custom_opt": "Custom — run a shell command",
+    "update_opt": "Update — update OS packages",
+    "reboot_desc": "Restart the device",
+    "shutdown_desc": "Power off the device",
+    "update_desc": "Update OS packages",
+    "restart_desc": "Restart agent services"
   },
   "device_settings": {
     "sections": {
@@ -466,7 +484,11 @@
       "retry": "Retry"
     },
     "empty": "No logs found",
-    "entries": "entries"
+    "entries": "entries",
+    "level_debug": "Debug (Verbose)",
+    "level_info": "Info (Standard)",
+    "level_warning": "Warning (Minimal)",
+    "level_error": "Error (Critical Only)"
   },
   "settings": {
     "profile": {
@@ -534,7 +556,12 @@
         "enable_2fa_desc": "Add an extra layer of security.",
         "review_sessions": "Review active sessions",
         "review_sessions_desc": "Regularly check and terminate any suspicious sessions."
-      }
+      },
+      "rule_uppercase": "One uppercase letter",
+      "rule_lowercase": "One lowercase letter",
+      "rule_number": "One number",
+      "rule_length": "At least 12 characters",
+      "rule_special": "One special character"
     },
     "notifications": {
       "title": "Notification Preferences",
@@ -609,7 +636,10 @@
           "desc": "Set the system logging verbosity."
         },
         "save": "Save Admin Settings"
-      }
+      },
+      "layout_default": "Default",
+      "layout_compact": "Compact",
+      "layout_expanded": "Expanded"
     },
     "tabs": {
       "profile": "Profile",
@@ -928,5 +958,63 @@
     "warning": "Warning",
     "error": "Error",
     "info": "Info"
+  },
+  "topbar": {
+    "metrics": "Metrics",
+    "terminal": "Terminal",
+    "storage": "Storage",
+    "commands": "Commands",
+    "alerts": "Alerts"
+  },
+  "fields": {
+    "status": "Status",
+    "name": "Name",
+    "device": "Device",
+    "devices": "Devices",
+    "type": "Type",
+    "location": "Location",
+    "last_seen": "Last seen",
+    "created": "Created",
+    "updated": "Updated",
+    "triggered": "Triggered",
+    "when": "When",
+    "severity": "Severity",
+    "state": "State",
+    "message": "Message",
+    "source": "Source",
+    "level": "Level",
+    "user": "User",
+    "email": "Email",
+    "role": "Role",
+    "hostname": "Hostname",
+    "ip_address": "IP Address",
+    "device_id": "Device ID",
+    "key": "Key",
+    "slug": "Slug",
+    "last_used": "Last used",
+    "joined": "Joined",
+    "command": "Command",
+    "alert": "Alert",
+    "alerts": "Alerts",
+    "action": "Action",
+    "actions": "Actions",
+    "active": "Active",
+    "inactive": "Inactive",
+    "suspended": "Suspended",
+    "all_statuses": "All Statuses",
+    "all_levels": "All Levels",
+    "all_sources": "All Sources",
+    "all_devices": "All Devices"
+  },
+  "metrics": {
+    "cpu": "CPU",
+    "memory": "Memory",
+    "temperature": "Temperature",
+    "disk": "Disk",
+    "cpu_usage": "CPU Usage",
+    "memory_usage": "Memory Usage",
+    "disk_usage": "Disk Usage",
+    "battery_low": "Battery Low",
+    "sensor_temp": "Sensor Temp"
   }
 }

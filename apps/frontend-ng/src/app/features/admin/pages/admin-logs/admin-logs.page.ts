@@ -68,7 +68,7 @@ export class AdminLogsPage implements ViewWillEnter {
   private readonly searchInput$ = new Subject<string>();
 
   protected readonly levelOptions: SelectOption[] = [
-    { label: 'All Levels', value: '' },
+    { label: 'fields.all_levels', value: '' },
     { label: 'Debug',   value: 'DEBUG' },
     { label: 'Info',    value: 'INFO' },
     { label: 'Warning', value: 'WARN' },
@@ -77,12 +77,12 @@ export class AdminLogsPage implements ViewWillEnter {
   ];
 
   protected readonly deviceOptions = computed<SelectOption[]>(() => [
-    { label: 'All Devices', value: '' },
+    { label: 'fields.all_devices', value: '' },
     ...this.svc.filterOptions().devices.map(d => ({ label: d.hostname, value: d.id })),
   ]);
 
   protected readonly sourceOptions = computed<SelectOption[]>(() => [
-    { label: 'All Sources', value: '' },
+    { label: 'fields.all_sources', value: '' },
     ...this.svc.filterOptions().sources.map(s => ({ label: s, value: s })),
   ]);
 
@@ -103,7 +103,7 @@ export class AdminLogsPage implements ViewWillEnter {
   }
 
   ionViewWillEnter(): void {
-    this.topbar.set('Logs');
+    this.topbar.set('nav.logs');
     void this.load();
   }
 

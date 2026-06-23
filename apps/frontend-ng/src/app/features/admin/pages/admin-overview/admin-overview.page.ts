@@ -49,7 +49,7 @@ export class AdminOverviewPage implements ViewWillEnter {
   }
 
   ionViewWillEnter(): void {
-    this.topbar.set('Admin');
+    this.topbar.set('nav.admin');
     void this.svc.load();
   }
 

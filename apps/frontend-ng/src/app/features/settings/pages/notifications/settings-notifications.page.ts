@@ -57,7 +57,7 @@ export class SettingsNotificationsPage implements OnInit {
   });
 
   async ngOnInit(): Promise<void> {
-    this.topbar.set('Notifications');
+    this.topbar.set('settings.tabs.notifications');
     try {
       const res = await this.api.invoke(getNotificationSettings, {});
       const data = (res as unknown as { data?: typeof res }).data ?? res;

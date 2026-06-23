@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, input } from '@an
 import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, startWith } from 'rxjs';
+import { TranslatePipe } from '@ngx-translate/core';
 import { IonSegment, IonSegmentButton, IonLabel } from '@ng/shared/ui';
 import { hasSSH, hasSystemInfo, hasCommands } from '../../device-capabilities';
 
@@ -23,7 +24,7 @@ interface Group {
   styleUrls: ['device-tab-nav.component.scss'],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, RouterLinkActive, IonSegment, IonSegmentButton, IonLabel],
+  imports: [RouterLink, RouterLinkActive, IonSegment, IonSegmentButton, IonLabel, TranslatePipe],
 })
 export class DeviceTabNavComponent {
   readonly deviceId = input.required<string>();
@@ -49,31 +50,31 @@ export class DeviceTabNavComponent {
     return [
       {
         key: 'monitor',
-        label: 'Monitor',
+        label: 'nav.monitor',
         tabs: [
-          { path: '', label: 'Overview' },
-          { path: 'metrics', label: 'Metrics' },
-          { path: 'alerts', label: 'Alerts', alertsBadge: true },
+          { path: '', label: 'nav.overview' },
+          { path: 'metrics', label: 'topbar.metrics' },
+          { path: 'alerts', label: 'topbar.alerts', alertsBadge: true },
         ],
       },
       {
         key: 'operate',
-        label: 'Operate',
+        label: 'nav.operate',
         tabs: [
-          ...(cmds ? [{ path: 'commands', label: 'Commands' }] : []),
-          { path: 'logs', label: 'Logs' },
-          ...(ssh ? [{ path: 'terminal', label: 'Terminal' }] : []),
+          ...(cmds ? [{ path: 'commands', label: 'topbar.commands' }] : []),
+          { path: 'logs', label: 'nav.logs' },
+          ...(ssh ? [{ path: 'terminal', label: 'topbar.terminal' }] : []),
         ],
       },
       {
         key: 'system',
-        label: 'System',
+        label: 'nav.system',
         tabs: [
           ...(sysInfo ? [
-            { path: 'network', label: 'Network' },
-            { path: 'storage', label: 'Storage' },
+            { path: 'network', label: 'device_network.title' },
+            { path: 'storage', label: 'topbar.storage' },
           ] : []),
-          { path: 'settings', label: 'Settings' },
+          { path: 'settings', label: 'nav.settings' },
         ],
       },
     ];

@@ -40,7 +40,7 @@ addIcons({ closeOutline, refreshOutline, optionsOutline, syncOutline });
 type LogLevel = 'ALL' | 'DEBUG' | 'INFO' | 'WARN' | 'ERROR' | 'FATAL';
 
 const LEVEL_OPTIONS: SelectOption[] = [
-  { value: 'ALL', label: 'All levels' },
+  { value: 'ALL', label: 'fields.all_levels' },
   { value: 'DEBUG', label: 'DEBUG' },
   { value: 'INFO', label: 'INFO' },
   { value: 'WARN', label: 'WARN' },
@@ -103,7 +103,7 @@ export class DeviceLogsPage implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
-    this.topbar.set('Logs');
+    this.topbar.set('nav.logs');
     void this.svc.deviceLogs.load({ id: this.deviceId(), limit: 100 });
     interval(10000)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -114,10 +114,10 @@ export class DeviceLogsPage implements OnInit, AfterViewInit {
 
   ngAfterViewInit(): void {
     this.columns.set([
-      { key: 'timestamp', label: 'When', cellTemplate: this.tsCellTpl },
-      { key: 'level', label: 'Level', cellTemplate: this.levelCellTpl },
-      { key: 'source', label: 'Source', cellTemplate: this.sourceCellTpl },
-      { key: 'message', label: 'Message', cellTemplate: this.messageCellTpl },
+      { key: 'timestamp', label: 'fields.when', cellTemplate: this.tsCellTpl },
+      { key: 'level', label: 'fields.level', cellTemplate: this.levelCellTpl },
+      { key: 'source', label: 'fields.source', cellTemplate: this.sourceCellTpl },
+      { key: 'message', label: 'fields.message', cellTemplate: this.messageCellTpl },
     ]);
   }
 

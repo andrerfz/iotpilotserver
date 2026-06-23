@@ -54,10 +54,10 @@ interface QuickAction {
 }
 
 const QUICK_ACTIONS: QuickAction[] = [
-  { id: 'REBOOT', label: 'Reboot', description: 'Restart the device', icon: 'reload-outline', color: 'warning', requiresConfirmation: true },
-  { id: 'SHUTDOWN', label: 'Shutdown', description: 'Power off the device', icon: 'power-outline', color: 'danger', requiresConfirmation: true },
-  { id: 'UPDATE', label: 'Update System', description: 'Update OS packages', icon: 'cloud-download-outline', color: 'primary', requiresConfirmation: true },
-  { id: 'RESTART', label: 'Restart Services', description: 'Restart agent services', icon: 'refresh-outline', color: 'secondary', requiresConfirmation: false },
+  { id: 'REBOOT', label: 'device_commands.reboot', description: 'device_commands.reboot_desc', icon: 'reload-outline', color: 'warning', requiresConfirmation: true },
+  { id: 'SHUTDOWN', label: 'device_commands.shutdown', description: 'device_commands.shutdown_desc', icon: 'power-outline', color: 'danger', requiresConfirmation: true },
+  { id: 'UPDATE', label: 'device_commands.update_system', description: 'device_commands.update_desc', icon: 'cloud-download-outline', color: 'primary', requiresConfirmation: true },
+  { id: 'RESTART', label: 'device_commands.restart_services', description: 'device_commands.restart_desc', icon: 'refresh-outline', color: 'secondary', requiresConfirmation: false },
 ];
 
 @Component({
@@ -108,7 +108,7 @@ export class DeviceCommandsPage implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
-    this.topbar.set('Commands');
+    this.topbar.set('topbar.commands');
     void this.svc.deviceCommands.load({ id: this.deviceId(), limit: 50 });
     interval(5000)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -117,9 +117,9 @@ export class DeviceCommandsPage implements OnInit, AfterViewInit {
 
   ngAfterViewInit(): void {
     this.columns.set([
-      { key: 'command', label: 'Command', sortable: true, cellTemplate: this.commandCellTpl },
-      { key: 'status', label: 'Status', sortable: true, cellTemplate: this.statusCellTpl },
-      { key: 'createdAt', label: 'When' },
+      { key: 'command', label: 'fields.command', sortable: true, cellTemplate: this.commandCellTpl },
+      { key: 'status', label: 'fields.status', sortable: true, cellTemplate: this.statusCellTpl },
+      { key: 'createdAt', label: 'fields.when' },
     ]);
   }
 

@@ -12,8 +12,8 @@
   @if (pendingAction(); as pending) {
     <div class="confirm-banner">
       <div class="confirm-banner__body">
-        <strong>{{ pending.label }}</strong>
-        <span>{{ pending.description }}</span>
+        <strong>{{ pending.label | translate }}</strong>
+        <span>{{ pending.description | translate }}</span>
         @if (pending.id === 'SHUTDOWN') {
           <ion-text color="danger" class="confirm-banner__warn">
             Warning: Device must be powered on manually to restart.
@@ -47,8 +47,8 @@
                 (click)="onQuickAction(action)">
                 <ion-icon slot="start" [name]="action.icon"></ion-icon>
                 <div class="quick-action__text">
-                  <span class="quick-action__label">{{ action.label }}</span>
-                  <span class="quick-action__desc">{{ action.description }}</span>
+                  <span class="quick-action__label">{{ action.label | translate }}</span>
+                  <span class="quick-action__desc">{{ action.description | translate }}</span>
                 </div>
               </ion-button>
             }

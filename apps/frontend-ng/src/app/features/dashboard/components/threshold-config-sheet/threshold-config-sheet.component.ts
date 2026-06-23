@@ -31,6 +31,8 @@ addIcons({ alertCircleOutline });
 interface MetricConfig {
   metricName: string;
   label: string;
+  /** Translation key for the display label (the plain `label` is reused as backend threshold name/description). */
+  labelKey: string;
   unit: string;
   min: number;
   max: number;
@@ -40,15 +42,15 @@ interface MetricConfig {
 }
 
 const SYSTEM_METRICS: MetricConfig[] = [
-  { metricName: 'cpu_usage',     label: 'CPU Usage',     unit: '%',  min: 0,   max: 100, step: 5, defaultValue: 80, operator: 'GREATER_THAN' },
-  { metricName: 'memory_usage',  label: 'Memory Usage',  unit: '%',  min: 0,   max: 100, step: 5, defaultValue: 85, operator: 'GREATER_THAN' },
-  { metricName: 'temperature',   label: 'Temperature',   unit: '°C', min: 0,   max: 100, step: 5, defaultValue: 70, operator: 'GREATER_THAN' },
-  { metricName: 'disk_usage',    label: 'Disk Usage',    unit: '%',  min: 0,   max: 100, step: 5, defaultValue: 90, operator: 'GREATER_THAN' },
+  { metricName: 'cpu_usage',     label: 'CPU Usage',     labelKey: 'metrics.cpu_usage',    unit: '%',  min: 0,   max: 100, step: 5, defaultValue: 80, operator: 'GREATER_THAN' },
+  { metricName: 'memory_usage',  label: 'Memory Usage',  labelKey: 'metrics.memory_usage', unit: '%',  min: 0,   max: 100, step: 5, defaultValue: 85, operator: 'GREATER_THAN' },
+  { metricName: 'temperature',   label: 'Temperature',   labelKey: 'metrics.temperature',  unit: '°C', min: 0,   max: 100, step: 5, defaultValue: 70, operator: 'GREATER_THAN' },
+  { metricName: 'disk_usage',    label: 'Disk Usage',    labelKey: 'metrics.disk_usage',   unit: '%',  min: 0,   max: 100, step: 5, defaultValue: 90, operator: 'GREATER_THAN' },
 ];
 
 const SENSOR_METRICS: MetricConfig[] = [
-  { metricName: 'sensor_temp',   label: 'Sensor Temp',   unit: '°C', min: -20, max: 80,  step: 1, defaultValue: 50, operator: 'GREATER_THAN' },
-  { metricName: 'battery',       label: 'Battery Low',   unit: '%',  min: 0,   max: 100, step: 5, defaultValue: 20, operator: 'LESS_THAN' },
+  { metricName: 'sensor_temp',   label: 'Sensor Temp',   labelKey: 'metrics.sensor_temp',  unit: '°C', min: -20, max: 80,  step: 1, defaultValue: 50, operator: 'GREATER_THAN' },
+  { metricName: 'battery',       label: 'Battery Low',   labelKey: 'metrics.battery_low',  unit: '%',  min: 0,   max: 100, step: 5, defaultValue: 20, operator: 'LESS_THAN' },
 ];
 
 @Component({
