@@ -1,3 +1,8 @@
+> ⚠️ **OBSOLETO / ARCHIVADO.** Registro puntual del trabajo de provisioning
+> (abril 2026), con rutas pre-monorepo (`app/src/lib/`, `app/prisma/`). Las
+> tareas descritas están completadas. Se conserva como historial.
+> Diseño vigente del provisioning: [`docs/iot-provisioning-architecture.md`](../iot-provisioning-architecture.md).
+
 # Device Provisioning Task Log
 
 ## Context

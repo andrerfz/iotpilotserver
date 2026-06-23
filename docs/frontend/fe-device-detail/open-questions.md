@@ -112,7 +112,7 @@ threshold configuration belong here or in fe-device-advanced?
 
 ---
 
-## Q5 _pending_ — alertsTrend reuse from DashboardService vs DeviceDetailService
+## Q5 _resolved_ — alertsTrend reuse from DashboardService vs DeviceDetailService
 
 **Question:** T5 (alerts page) needs a 7-day trend chart filtered by `deviceId`. The
 `DashboardService.alertsTrend` query in fe-dashboard serves the fleet-wide trend (no
@@ -129,5 +129,14 @@ injection) or only `DeviceDetailService`.
 - **Option B:** Reuse `DashboardService.alertsTrend` which already accepts a `deviceId`
   param — check if it does. If yes, inject `DashboardService` in the alerts page.
 
-If `DashboardService.alertsTrend` already accepts `deviceId` as a param, Option B
-avoids duplication. If it does not, Option A is correct.
+**Decision:** Option B. The generated `GetAlertsTrend$Params` interface accepts both
+`deviceId?: string` and `period?: '7d' | '30d'`
+(`apps/frontend-ng/src/app/core/api/generated/fn/monitoring/get-alerts-trend.ts`), so
+the existing surface serves a device-scoped trend without duplication. `DeviceAlertsPage`
+injects `DashboardService` and calls
+`alertsTrend.load({ deviceId: this.deviceId(), period: '7d' })`
+(`apps/frontend-ng/src/app/features/dashboard/pages/device-alerts/device-alerts.page.ts`).
+No `DeviceDetailService.alertsTrend` was added.
+
+**Resolved:** 2026-06-23
+**Applies to:** T5 (alerts page trend chart)

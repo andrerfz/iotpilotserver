@@ -58,16 +58,18 @@ Device-side algorithm (fw-device-esp):
 - *Pull:* the agent calls `GET /catalog/target?board=linux-{arch}&channel=…` (direct or proxied), compares to its `agentVersion`, downloads + verifies + installs the package, restarts.
 - *Push:* iotpilotserver issues the existing `UPDATE` device command over Tailscale SSH (command queue) instructing the agent to update now.
 
-## Seam 3 — changes inside iotpilotserver (module fw-integration)
+## Seam 3 — changes inside iotpilotserver (module fw-integration) — ✅ shipped
 
-Small, lands in `packages/core` + `apps/backend`, mirrors existing DDD:
+The iotpilotserver-side thin layer is implemented. It landed in `packages/core` + `apps/backend`, mirroring existing DDD:
 
-1. **Persist firmware version (fix the long-standing gap).** Today `firmwareVersion` is logged, never stored. Persist it on the device record from the heartbeat/report path, plus a `targetFirmwareVersion`. Value objects `FirmwareVersion` (semver) in the device BC.
-2. **`RequestFirmwareUpdate` command** (device BC, ADMIN-gated like the SSH/command endpoints) → calls the firmware service ACL client to start/target a rollout; sets `targetFirmwareVersion`.
-3. **OTA directive assembly** (only if Seam 2 option A/proxy): the report handler asks the ACL client whether a target exists for the device's board and, if so, injects `config.firmware` into the response it already returns.
-4. **Admin UI status** (frontend): show current vs target version per device and rollout progress. (Frontend lands via the `docs/frontend/` pipeline once those modules exist; data comes from the device aggregate + rollout status.)
+1. **Persist firmware version — ✅ shipped.** The device record now carries `firmwareVersion` (current, reported by the device) and `targetFirmwareVersion` (desired, set by an admin) — both `String?` columns on `Device` in `apps/backend/prisma/schema.prisma`. The heartbeat path persists the reported `firmwareVersion` (`packages/core/src/device/application/commands/process-heartbeat/process-heartbeat.handler.ts`). _Note:_ the value is stored as a plain string; a dedicated `FirmwareVersion` (semver) VO in the device BC was **not** introduced — it remains optional future hardening.
+2. **`RequestFirmwareUpdate` command — ✅ shipped.** `RequestFirmwareUpdateCommand` + handler in `packages/core/src/device/application/commands/request-firmware-update/` set `targetFirmwareVersion` on the device. Exposed as `POST /api/devices/:id/request-ota`, ADMIN/SUPERADMIN-gated (`requireAuth('ADMIN')`), tenant-scoped. It does **not yet** call an external firmware-service ACL client to start a rollout — that wiring is future work (Seam 1).
+3. **OTA directive assembly (proxy / Seam 2 option A) — ✅ shipped.** The heartbeat handler injects `result.firmware = { targetVersion }` into the response when `targetFirmwareVersion` is set, so the device learns its target on the next heartbeat. The signed-`url`/`sha256`/`minBattery` fields described in Seam 2 are not yet populated — they depend on the external firmware service.
+4. **Admin UI status** (frontend): show current vs target version per device and rollout progress. (Frontend lands via the `docs/frontend/` pipeline once those modules exist; data comes from the device aggregate + rollout status.) — still pending.
 
 What does **not** change in iotpilotserver: no binaries, no build, no signing keys, no artifact storage.
+
+> The external OTA service (Seam 1) and the device-side OTA protocol details (Seam 2 — signed artifact URLs, slot switching) remain future design. Only the iotpilotserver seam above is built.
 
 ## Security notes
 

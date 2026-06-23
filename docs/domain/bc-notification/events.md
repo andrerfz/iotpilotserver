@@ -1,12 +1,14 @@
 # bc-notification — Domain Events
 
+> **Status: ✅ Implemented.** Event classes live in `packages/core/src/notification/domain/events/`. The inbound subscriptions and outbound publishers described below match the wiring in `packages/core/src/shared/infrastructure/container/service-container.ts`.
+
 ## NotificationDispatchedEvent
 
-**Emitted by:** `DispatchNotificationHandler`
+**Emitted by:** `DispatchNotificationHandler` (initial dispatch) and `RetryNotificationHandler` (re-queue of a FAILED/DEAD record).
 
-**When:** A `NotificationRecord` is created and its delivery job enqueued. Fires once per record, which means once per (channel, recipient) pair for a given source event.
+**When:** A `NotificationRecord` is created (or retried) and its delivery job enqueued. Fires once per record, which means once per (channel, recipient) pair for a given source event.
 
-**Payload:**
+**Payload** (`notification-dispatched.event.ts`):
 ```typescript
 {
   notificationRecordId: string;   // NotificationRecordId
@@ -14,16 +16,17 @@
   userId: string | null;          // UserId — null for system notifications
   type: string;                   // NotificationType value
   channel: string;                // NotificationChannel value
-  recipient: string;              // NotificationRecipient value (obfuscated in logs)
   sourceEventId: string;          // UUID of the triggering domain event
   sourceEntityId: string | null;  // UUID of the source entity (alert, device, etc.)
-  occurredAt: string;             // ISO 8601 UTC
+  occurredAt: string;             // ISO 8601 UTC (from DomainEventBase)
 }
 ```
 
+`recipient` is deliberately **not** on the payload — it can carry PII (email/phone/token) and is read from the persisted `NotificationRecord` by the channel processor instead.
+
 **Consumed by:**
+- `OnNotificationDispatchedHandler` (in this BC) — enqueues the `dispatch-notification-channel` job onto the `JobQueue` for actual channel delivery.
 - Audit logging infrastructure
-- Analytics BC (future — notification funnel metrics)
 
 ---
 
@@ -110,7 +113,7 @@
 
 ## Events consumed by bc-notification (inbound)
 
-These are domain events emitted by other BCs that trigger notification dispatch. The notification BC subscribes to each via its event handlers in `application/event-handlers/`.
+These are domain events emitted by other BCs that trigger notification dispatch. The notification BC subscribes to each via its event handlers in `packages/core/src/notification/application/event-handlers/`. Subscriptions are registered in `packages/core/src/shared/infrastructure/container/service-container.ts`.
 
 | Event | Source BC | Handler | NotificationType used |
 |---|---|---|---|
@@ -118,7 +121,8 @@ These are domain events emitted by other BCs that trigger notification dispatch.
 | `AlertResolvedEvent` | monitoring | `OnAlertResolvedHandler` | `ALERT_RESOLVED` |
 | `DeviceDisconnectedEvent` | device | `OnDeviceOfflineHandler` | `DEVICE_OFFLINE` |
 | `DeviceConnectedEvent` | device | `OnDeviceOnlineHandler` | `DEVICE_ONLINE` |
+| `UserAuthenticatedEvent` | user | `OnUserAuthenticatedHandler` | `USER_LOGIN_ALERT` |
 
-Each handler calls `NotificationRoutingService` to resolve active preferences for the affected user(s), then issues one `DispatchNotification` command per active channel.
+The tenant-level handlers (`OnAlertTriggeredHandler`, `OnAlertResolvedHandler`, `OnDeviceOfflineHandler`, `OnDeviceOnlineHandler`) call `NotificationRoutingService.resolveRoutesForTenant` to fan out to the tenant's ADMIN/SUPERADMIN users. `OnUserAuthenticatedHandler` calls `resolveRoutes` for the single authenticated user. Each then issues one `DispatchNotification` command per resolved route/channel.
 
-**Migration note:** `monitoring` BC currently owns `OnAlertTriggeredHandler` and dispatches Slack jobs directly. That handler must be removed from `monitoring` and re-implemented here once this BC is materialized. See **Q3** in open-questions.md.
+**Handler ownership:** `OnAlertTriggeredHandler` lives in this BC (`notification/application/event-handlers/on-alert-triggered.handler.ts`) and dispatches via `DispatchNotificationCommand` — it does **not** enqueue Slack jobs directly. The `monitoring` BC no longer owns an alert-triggered notification handler; a grep of `packages/core/src/monitoring` finds no `OnAlertTriggeredHandler`. Q3 (the migration of this handler out of monitoring) is resolved.

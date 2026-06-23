@@ -11,7 +11,7 @@ IoT Pilot Server implements a comprehensive **event-driven architecture** that e
 Domain events represent significant business occurrences within bounded contexts. They are immutable facts that have happened in the past.
 
 ```typescript
-// app/src/lib/shared/domain/events/domain-event.base.ts
+// packages/core/src/shared/domain/events/domain-event.base.ts
 export interface DomainEvent {
   readonly eventType: string;
   readonly aggregateId: string;
@@ -25,7 +25,7 @@ export interface DomainEvent {
 Aggregates publish events when their state changes:
 
 ```typescript
-// app/src/lib/device/domain/entities/device.entity.ts
+// packages/core/src/device/domain/entities/device.entity.ts
 export class Device extends TenantScopedEntity {
   static create(params: DeviceCreationParams): Device {
     const device = new Device(
@@ -67,7 +67,7 @@ export class Device extends TenantScopedEntity {
 Event handlers process events asynchronously and perform side effects:
 
 ```typescript
-// app/src/lib/monitoring/application/handlers/device-registered.handler.ts
+// packages/core/src/monitoring/application/handlers/device-registered.handler.ts
 export class DeviceRegisteredEventHandler implements EventHandler<DeviceRegisteredEvent> {
   constructor(
     private monitoringService: MonitoringService,
@@ -98,7 +98,7 @@ export class DeviceRegisteredEventHandler implements EventHandler<DeviceRegister
 The event bus is the central component for event routing and delivery:
 
 ```typescript
-// app/src/lib/shared/application/bus/event-bus.ts
+// packages/core/src/shared/application/bus/event-bus.ts
 export class EventBus {
   private handlers = new Map<string, EventHandler[]>();
   private middlewares: EventMiddleware[] = [];

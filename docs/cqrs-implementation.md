@@ -36,7 +36,7 @@ IoT Pilot Server implements the **Command Query Responsibility Segregation (CQRS
 Commands are immutable data transfer objects that represent write operations:
 
 ```typescript
-// app/src/lib/device/application/commands/register-device.command.ts
+// packages/core/src/device/application/commands/register-device.command.ts
 export class RegisterDeviceCommand implements Command {
   private constructor(
     public readonly deviceId: string,
@@ -78,7 +78,7 @@ export class RegisterDeviceCommand implements Command {
 Handlers contain the business logic for executing commands:
 
 ```typescript
-// app/src/lib/device/application/commands/register-device.handler.ts
+// packages/core/src/device/application/commands/register-device.handler.ts
 export class RegisterDeviceHandler implements CommandHandler<RegisterDeviceCommand> {
   constructor(
     private deviceRepository: DeviceRepository,
@@ -110,7 +110,7 @@ export class RegisterDeviceHandler implements CommandHandler<RegisterDeviceComma
 Routes commands to appropriate handlers:
 
 ```typescript
-// app/src/lib/shared/application/bus/command-bus.ts
+// packages/core/src/shared/application/bus/command-bus.ts
 export class CommandBus {
   private handlers = new Map<string, CommandHandler>();
 
@@ -140,7 +140,7 @@ export class CommandBus {
 Queries define read operations and parameters:
 
 ```typescript
-// app/src/lib/device/application/queries/list-devices.query.ts
+// packages/core/src/device/application/queries/list-devices.query.ts
 export class ListDevicesQuery implements Query {
   private constructor(
     public readonly offset: number = 0,
@@ -176,7 +176,7 @@ export class ListDevicesQuery implements Query {
 Handlers execute read operations and return DTOs:
 
 ```typescript
-// app/src/lib/device/application/queries/list-devices.handler.ts
+// packages/core/src/device/application/queries/list-devices.handler.ts
 export class ListDevicesHandler implements QueryHandler<ListDevicesQuery, DeviceDTO[]> {
   constructor(
     private deviceRepository: DeviceRepository,
@@ -221,7 +221,7 @@ export class ListDevicesHandler implements QueryHandler<ListDevicesQuery, Device
 Routes queries to handlers:
 
 ```typescript
-// app/src/lib/shared/application/bus/query-bus.ts
+// packages/core/src/shared/application/bus/query-bus.ts
 export class QueryBus {
   private handlers = new Map<string, QueryHandler>();
 

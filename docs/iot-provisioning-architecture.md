@@ -12,7 +12,7 @@ This document consolidates the complete device onboarding ecosystem for IoT Pilo
 | **Network** | WiFi only | WiFi/Ethernet/LTE |
 | **Provisioning** | QR + WiFi captive portal | API key / OAuth / QR token |
 | **Power** | Battery (deep sleep) | Always-on (USB/PoE) |
-| **Firmware** | Arduino (`esp8266-claiming-firmware.ino`) | Linux (iotpilot service) |
+| **Firmware** | Arduino (`firmware/esp8266-claiming-firmware/`) | Linux (iotpilot service) |
 
 ---
 
@@ -107,46 +107,45 @@ Three options, implemented in phases:
 
 ---
 
-## 3. Mobile App Plan (Expo React Native)
+## 3. Mobile App Plan (Angular/Ionic + Capacitor)
 
-### Architecture: Monorepo with npm workspaces
+> The original Expo React Native + `apps/web`/`apps/mobile` plan was superseded. The
+> frontend is now an Angular 20 / Ionic 8 app at `apps/frontend-ng/`, and mobile is
+> delivered by wrapping that same web app with **Capacitor** — one codebase, native
+> iOS/Android shells. The detailed module spec lives at
+> [`docs/frontend/fe-mobile/`](frontend/fe-mobile/).
+
+### Architecture: single Angular/Ionic app wrapped by Capacitor
 ```
 iotpilotserver/
-  apps/web/           # Next.js (current app/)
-  apps/mobile/        # Expo React Native
-  packages/shared/    # Shared types, API client, domain logic
+  apps/backend/       # Express API
+  apps/frontend-ng/   # Angular 20 + Ionic 8 (web + iOS/Android via Capacitor)
+  apps/worker/        # BullMQ worker
+  packages/core/      # DDD bounded contexts (shared types/domain)
 ```
 
+There is no separate React Native app and no `apps/web`/`apps/mobile` split — the
+Ionic web app and the native apps are the same project. `@capacitor/core@8.4.0` is
+already pinned in `apps/frontend-ng/package.json`; fe-mobile adds the CLI and the
+`@capacitor/ios` / `@capacitor/android` platform packages.
+
 ### Core Screens
-- **Login** - JWT authentication
-- **Device List** - All devices with status, temperature, battery
-- **QR Scanner** - Camera-based QR scanning for device claiming
-- **Claim Device** - Enter name, execute claim, display claiming token + instructions
-- **Device Detail** - Live temperature, metrics, device info
+The provisioning-relevant screens (device list, QR scanner for claiming, claim flow,
+device detail) are built as Ionic pages in `apps/frontend-ng/` and reused verbatim on
+mobile. Camera/QR scanning uses a Capacitor plugin rather than `expo-camera`.
 
-### Key Dependencies
-`@react-navigation/native`, `expo-camera`, `@tanstack/react-query`, `zustand`, `axios`
-
-### Estimated Effort: 5-7 hours
-1. Monorepo restructure (1h)
-2. Initialize Expo app (1h)
-3. Implement claiming flow (2-3h)
-4. Dev workflow + Makefile (30min)
-5. Documentation (30min)
-6. Testing + polish (1h)
-
-### Impact on Current Project
-Moving `app/` to `apps/web/` requires updating:
-- Docker compose volume mounts
-- Dockerfile WORKDIR/COPY paths
-- Makefile paths
-- Root `package.json` (add workspaces config)
+### fe-mobile module scope
+Per [`docs/frontend/fe-mobile/scope.md`](frontend/fe-mobile/scope.md): Capacitor project
+scaffold + `capacitor.config.ts`, `SecureStorage` adapter for the session token, push
+notifications (FCM + APNs via `@capacitor/push-notifications`), status-bar/splash polish,
+touch-UX hardening, and a signed-build CI pipeline (GitHub Actions) producing `.ipa` /
+`.aab` artifacts.
 
 ---
 
 ## 4. Firmware Reference
 
-The ESP8266 firmware lives at `docs/esp8266-claiming-firmware.ino` and implements:
+The ESP8266 firmware lives at [`firmware/esp8266-claiming-firmware/`](../firmware/esp8266-claiming-firmware/) (sketch `esp8266-claiming-firmware.ino`) and implements:
 
 - **EEPROM storage** for device config, API key, webhook URL
 - **WiFiManager** captive portal with custom claiming token parameter
@@ -200,4 +199,4 @@ iotp_device_[32 chars]    # Generic device keys
 1. Test sensor claiming flow end-to-end with real ESP8266
 2. Build frontend "Add Device" page with QR scanner (web)
 3. Implement `POST /api/auth/hub-login` for hub self-service onboarding
-4. Evaluate mobile app monorepo restructure when ready to start mobile development
+4. Execute the [fe-mobile](frontend/fe-mobile/) module (Capacitor wrap of `apps/frontend-ng/`) when ready to ship native iOS/Android apps

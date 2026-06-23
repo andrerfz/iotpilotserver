@@ -247,9 +247,9 @@ IoT Pilot Server is organized into several bounded contexts that represent disti
 
 ---
 
-### 6. Notification Context
+### 6. Notification Context _(✅ implemented)_
 
-**Primary Responsibility**: Delivering alerts and system notifications across multiple channels. Owns the full delivery lifecycle — dispatch, retry, status tracking — and per-user channel preferences.
+**Primary Responsibility**: Delivering alerts and system notifications across multiple channels. Owns the full delivery lifecycle — dispatch, retry, status tracking — and per-user channel preferences. Implemented under `packages/core/src/notification/`.
 
 **Design docs:** [`docs/domain/bc-notification/`](domain/bc-notification/)
 
@@ -262,7 +262,7 @@ IoT Pilot Server is organized into several bounded contexts that represent disti
 - Delivery status tracking and automatic retry with configurable max attempts
 - Per-user notification preferences (channel + type → enabled/disabled + custom destination)
 - Audit trail of all notification attempts and outcomes
-- Fan-out from domain events: subscribes to `AlertTriggeredEvent`, `AlertResolvedEvent`, `DeviceDisconnectedEvent`, `DeviceConnectedEvent`
+- Fan-out from domain events: subscribes to `AlertTriggeredEvent`, `AlertResolvedEvent`, `DeviceDisconnectedEvent`, `DeviceConnectedEvent`, `UserAuthenticatedEvent` (login alerts)
 
 #### Value Objects
 - `NotificationRecordId` — UUID
@@ -278,14 +278,13 @@ IoT Pilot Server is organized into several bounded contexts that represent disti
 - Shared: `NotificationChannel`, `NotificationType` (from `shared/domain/value-objects/`)
 
 #### Integration Points
-- **Monitoring Context**: consumes `AlertTriggeredEvent`, `AlertResolvedEvent` — replaces the direct Slack dispatch currently in `monitoring/on-alert-triggered.handler.ts`
+- **Monitoring Context**: consumes `AlertTriggeredEvent`, `AlertResolvedEvent`. The alert-triggered notification handler now lives here (`notification/application/event-handlers/on-alert-triggered.handler.ts`); monitoring no longer dispatches Slack jobs directly.
 - **Device Context**: consumes `DeviceConnectedEvent`, `DeviceDisconnectedEvent`
-- **User Context**: reads user email/phone to resolve `destination` when `NotificationPreference.destination` is null
+- **User Context**: consumes `UserAuthenticatedEvent` for login alerts; reads user email to resolve `destination` when `NotificationPreference.destination` is null
 - **External Services**: SMTP provider (email), Twilio (SMS), Slack webhooks, Pusher (push)
 
-#### Open questions (blocking)
-- **Q1**: Push token storage model — gates PUSH channel
-- **Q3**: Migration of `monitoring/on-alert-triggered.handler.ts` — must be removed atomically when this BC goes live
+#### Status
+All six commands, three queries, and six event handlers are implemented; HTTP routes live in `apps/backend/src/routes/notifications.router.ts` and `users.router.ts`. Resolved design questions: **Q1** (PUSH channel — `push-channel-dispatcher.ts` shipped) and **Q3** (alert-triggered handler migrated out of monitoring). Only **Q2** (admin-configurable templates, see ADR-008) remains as future work and does not block the current dispatch path.
 
 ---
 

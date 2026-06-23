@@ -41,17 +41,10 @@ rectangle "Shared Kernel" as SharedKernel {
     rectangle "Value Objects" as ValueObjects
 }
 
-' Supporting Contexts
-rectangle "Analytics Context" as AnalyticsContext {
-    rectangle "Reports" as Reports
-    rectangle "Dashboards" as Dashboards
-    rectangle "Data Export" as DataExport
-}
-
 rectangle "Notification Context" as NotificationContext {
-    rectangle "Email Service" as Email
-    rectangle "SMS Service" as SMS
-    rectangle "Webhook Service" as Webhook
+    rectangle "Notification Record" as NotificationRecord
+    rectangle "Notification Preference" as NotificationPreference
+    rectangle "Channel Dispatchers\n(Email/SMS/Slack/Webhook/Push)" as ChannelDispatchers
 }
 
 ' Infrastructure Services
@@ -77,9 +70,8 @@ MonitoringContext --> CustomerContext : Customer-specific\nthresholds
 MonitoringContext --> NotificationContext : Sends alerts
 MonitoringContext --> SharedKernel : Uses shared\nevents
 
-AnalyticsContext --> MonitoringContext : Analyzes\nmetrics data
-AnalyticsContext --> DeviceContext : Device\nusage analytics
-AnalyticsContext --> CustomerContext : Customer\nusage reports
+DeviceContext --> NotificationContext : Device online/offline\nevents
+UserContext --> NotificationContext : Login-alert\nevents
 
 NotificationContext --> UserContext : Notifies\nusers of events
 NotificationContext --> CustomerContext : Customer-specific\nnotifications
@@ -100,8 +92,7 @@ legend right
     | User | Authentication & authorization |
     | Customer | Multi-tenant management |
     | Monitoring | Metrics & alerting |
-    | Analytics | Reporting & insights |
-    | Notification | Alert delivery |
+    | Notification | Multi-channel delivery |
     | Shared Kernel | Cross-cutting concerns |
     | Infrastructure | External services |
 endlegend
@@ -112,6 +103,6 @@ note right of UserContext : User Management\n- Authentication\n- Authorization\n
 note right of CustomerContext : Customer Management\n- Multi-tenancy\n- Subscriptions\n- Resource quotas\n- Billing
 note right of MonitoringContext : Monitoring & Alerting\n- Metrics collection\n- Threshold evaluation\n- Alert management\n- Health monitoring
 note right of SharedKernel : Shared Kernel\n- Tenant isolation\n- Domain events\n- Common value objects\n- Base classes
-note right of AnalyticsContext : Analytics & Reporting\n- Data aggregation\n- Report generation\n- Dashboard creation\n- Data export
+note right of NotificationContext : Notification\n- Dispatch & retry lifecycle\n- Per-user preferences\n- Multi-channel dispatchers\n- Delivery status tracking
 
 @enduml

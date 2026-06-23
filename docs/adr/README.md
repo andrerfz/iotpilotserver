@@ -13,27 +13,27 @@ Decisiones que afectan la estructura del proyecto. Cada ADR documenta el context
 
 ---
 
-## ADR-001 _aceptado — implementación pendiente_ — Monorepo con pnpm workspaces + Turborepo
+## ADR-001 _aceptado — implementado_ — Monorepo con pnpm workspaces + Turborepo
 
 [ADR-001](ADR-001-monorepo-pnpm-workspaces.md)
 
-Convertir el repositorio en un monorepo `apps/frontend` + `apps/backend` + `apps/worker` + `packages/core` gestionado por pnpm workspaces y Turborepo. Decisión aprobada; migración no iniciada.
+Convertir el repositorio en un monorepo `apps/backend` + `apps/frontend-ng` + `apps/worker` + `packages/core` gestionado por workspaces. Migración completada; el monorepo está en vigor.
 
 ---
 
-## ADR-002 _aceptado — implementación pendiente_ — Separación frontend (Next.js) / backend (Express)
+## ADR-002 _aceptado — implementado_ — Separación frontend / backend (Express)
 
 [ADR-002](ADR-002-frontend-backend-separation.md)
 
-Mover las 53 rutas API de Next.js a un servidor Express puro en `apps/backend/`. Prerequisito de ADR-001. Decisión aprobada; migración no iniciada.
+Las rutas API viven en un servidor Express puro en `apps/backend/`. Prerequisito de ADR-001. Migración completada.
 
 ---
 
-## ADR-003 _aceptado — implementación pendiente_ — Bounded contexts como paquete `packages/core`
+## ADR-003 _aceptado — implementado_ — Bounded contexts como paquete `packages/core`
 
 [ADR-003](ADR-003-packages-core-ddd-boundaries.md)
 
-Extraer los bounded contexts DDD a `@iotpilot/core` compartido entre backend y worker. Prerequisito de ADR-001. Decisión aprobada; migración no iniciada.
+Los bounded contexts DDD viven en `@iotpilot/core` (`packages/core/src/`), compartido entre backend y worker. Prerequisito de ADR-001. Migración completada.
 
 ---
 
@@ -41,7 +41,7 @@ Extraer los bounded contexts DDD a `@iotpilot/core` compartido entre backend y w
 
 [ADR-004](ADR-004-ddd-bounded-contexts.md)
 
-Adopción de Domain-Driven Design con 5 bounded contexts (`device`, `user`, `customer`, `monitoring`, `notification`) bajo `app/src/lib/`. Capa `domain/` sin dependencias externas, `application/` sobre interfaces, `infrastructure/` con Prisma/HTTP. Implementado.
+Adopción de Domain-Driven Design con 5 bounded contexts (`device`, `user`, `customer`, `monitoring`, `notification`) bajo `packages/core/src/`. Capa `domain/` sin dependencias externas, `application/` sobre interfaces, `infrastructure/` con Prisma/HTTP. Implementado.
 
 ---
 
@@ -57,7 +57,7 @@ Adopción de Domain-Driven Design con 5 bounded contexts (`device`, `user`, `cus
 
 [ADR-006](ADR-006-manual-sql-migrations.md)
 
-Migraciones numeradas en `app/prisma/migration/*.sql`. Sin tabla `_prisma_migrations`. `prisma generate` para regenerar el cliente tras cada cambio de schema. Implementado.
+Migraciones numeradas en `apps/backend/prisma/migration/*.sql`. Sin tabla `_prisma_migrations`. `prisma generate` para regenerar el cliente tras cada cambio de schema. Implementado.
 
 ---
 
@@ -77,11 +77,11 @@ Option A adoptada: `subject`/`body` hardcodeados en los event handlers para el M
 
 ---
 
-## ADR-009 _aceptado — implementación pendiente_ — Comportamiento por defecto sin preferencias de notificación
+## ADR-009 _aceptado — implementado_ — Comportamiento por defecto sin preferencias de notificación
 
 [ADR-009](ADR-009-notification-tenant-defaults.md)
 
-Option B adoptada: `ALERT_TRIGGERED` y `DEVICE_OFFLINE` habilitados por EMAIL para todos los usuarios activos sin preferencia explícita. Implementación pendiente en `NotificationRoutingService.resolveRoutes()`.
+Option B adoptada: `ALERT_TRIGGERED` y `DEVICE_OFFLINE` habilitados por EMAIL para todos los usuarios activos sin preferencia explícita. Implementado en `NotificationRoutingService.resolveRoutes()` (`packages/core/src/notification/domain/services/`).
 
 ---
 

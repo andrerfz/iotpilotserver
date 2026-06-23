@@ -1,5 +1,7 @@
 # bc-notification — Aggregates
 
+> **Status: ✅ Implemented.** This BC is materialized under `packages/core/src/notification/`. The sections below describe the design as built; file paths point at the live code.
+
 ## Overview
 
 The notification BC owns two aggregate roots:
@@ -7,7 +9,7 @@ The notification BC owns two aggregate roots:
 1. **NotificationRecord** — an individual notification attempt (the central aggregate)
 2. **NotificationPreference** — a user's per-channel, per-type delivery setting
 
-Notification delivery infrastructure currently scattered across `monitoring/infrastructure/services/` (SlackNotificationService, SMSNotificationService) moves here during materialization.
+Notification delivery infrastructure that was historically scattered across `monitoring/infrastructure/services/` (Slack/SMS senders) now lives in this BC under `packages/core/src/notification/infrastructure/services/` as channel dispatchers.
 
 ---
 
@@ -76,12 +78,12 @@ No `is_*` boolean fields. Status is always the typed `NotificationDeliveryStatus
 
 ### Domain services
 
-- `NotificationRoutingService` — given a `NotificationType`, `CustomerId`, and optional `UserId`, resolves the set of active `NotificationPreference` entries to fan out dispatch across enabled channels. Called by event handlers before issuing `DispatchNotification` commands.
+- `NotificationRoutingService` (`domain/services/notification-routing.service.ts`) — resolves the set of `RoutingEntry` records (userId + channel + destination) to fan out dispatch across enabled channels. Two entry points: `resolveRoutes(type, customerId, userId, userEmail)` for a known single user, and `resolveRoutesForTenant(type, customerId)` for tenant-level events with no specific target user (fans out to ADMIN/SUPERADMIN users). It honours coarse-grained `user_preferences` toggles and applies the ADR-009 synthetic-EMAIL fallback for critical types (`ALERT_TRIGGERED`, `DEVICE_OFFLINE`). Called by event handlers before issuing `DispatchNotification` commands.
 
-### BC layout (target)
+### BC layout (as implemented)
 
 ```
-app/src/lib/notification/
+packages/core/src/notification/
 ├── domain/
 │   ├── entities/
 │   │   ├── notification-record.entity.ts
@@ -101,6 +103,7 @@ app/src/lib/notification/
 │   ├── interfaces/
 │   │   ├── notification-record.repository.ts
 │   │   ├── notification-preference.repository.ts
+│   │   ├── notification-target.repository.ts
 │   │   └── channel-dispatcher.interface.ts
 │   ├── services/
 │   │   └── notification-routing.service.ts
@@ -126,23 +129,28 @@ app/src/lib/notification/
 │   │   ├── get-notification-preferences/
 │   │   └── get-notification-record/
 │   └── event-handlers/
-│       ├── on-alert-triggered.handler.ts       (migrated from monitoring BC)
+│       ├── on-alert-triggered.handler.ts        (reimplemented from monitoring BC)
 │       ├── on-alert-resolved.handler.ts
 │       ├── on-device-offline.handler.ts
-│       └── on-device-online.handler.ts
+│       ├── on-device-online.handler.ts
+│       ├── on-user-authenticated.handler.ts     (login-alert notifications)
+│       └── on-notification-dispatched.handler.ts (enqueues the channel delivery job)
 └── infrastructure/
     ├── repositories/
     │   ├── prisma-notification-record.repository.ts
-    │   └── prisma-notification-preference.repository.ts
+    │   ├── prisma-notification-preference.repository.ts
+    │   └── prisma-notification-target.repository.ts
     ├── mappers/
     │   ├── notification-record.mapper.ts
     │   └── notification-preference.mapper.ts
     ├── services/
     │   ├── email-channel-dispatcher.ts
-    │   ├── slack-channel-dispatcher.ts          (migrated from monitoring BC)
-    │   ├── sms-channel-dispatcher.ts            (migrated from monitoring BC)
+    │   ├── slack-channel-dispatcher.ts          (reimplemented from monitoring BC)
+    │   ├── sms-channel-dispatcher.ts            (reimplemented from monitoring BC)
     │   ├── webhook-channel-dispatcher.ts
     │   └── push-channel-dispatcher.ts
+    ├── jobs/
+    │   └── dispatch-notification-channel.processor.ts
     └── providers/
         └── notification.provider.ts
 ```

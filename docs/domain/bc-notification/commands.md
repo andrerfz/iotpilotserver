@@ -1,5 +1,7 @@
 # bc-notification — Commands and Queries
 
+> **Status: ✅ Implemented.** All six commands and three queries below exist under `packages/core/src/notification/application/`. Each has its `{action}.command.ts` / `{query}.query.ts` plus a co-located `*.handler.ts`. HTTP routes are wired in `apps/backend/src/routes/notifications.router.ts` (notification records) and `apps/backend/src/routes/users.router.ts` (preferences).
+
 ## Commands (write operations)
 
 ### DispatchNotification
@@ -157,10 +159,12 @@ Returns a single `NotificationRecord` by ID.
 
 ---
 
-## Blocked commands
+## Remaining design questions
 
-| Command | Blocked by |
+All commands and queries are implemented and shipped. The only open item is non-blocking:
+
+| Area | Open question |
 |---|---|
-| `DispatchNotification` (template rendering) | **Q2** — Non-blocking for MVP; event handlers pre-render English templates. Blocks multi-language / admin-configurable templates. |
+| `DispatchNotification` (template rendering) | **Q2** — Event handlers pre-render English subject/body strings; this BC does not own templates. Multi-language / admin-configurable templates remain future work and do not block the current dispatch path. |
 
-_Q1 (PUSH channel) and Q3 (monitoring handler migration) are now resolved — no commands blocked by them._
+_Q1 (PUSH channel) and Q3 (monitoring handler migration) are resolved: PUSH has a `push-channel-dispatcher.ts`, and `OnAlertTriggeredHandler` now lives in this BC (see events.md)._

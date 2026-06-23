@@ -15,10 +15,10 @@ Los síntomas concretos:
 
 ## Decisión
 
-Adoptar **Domain-Driven Design (DDD)** como patrón arquitectónico principal, organizando el código en **bounded contexts** bajo `app/src/lib/`:
+Adoptar **Domain-Driven Design (DDD)** como patrón arquitectónico principal, organizando el código en **bounded contexts** bajo `packages/core/src/`:
 
 ```
-app/src/lib/
+packages/core/src/
 ├── device/      — registro, métricas, SSH, comandos
 ├── user/        — autenticación, sesiones, API keys
 ├── customer/    — gestión de tenants, onboarding

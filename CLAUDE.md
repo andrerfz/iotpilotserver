@@ -143,10 +143,14 @@ TypeScript/Vitest path alias: `@` maps to `apps/frontend/src/` (configured in `v
 
 ## Design Documentation
 
-When planning or implementing DDD work, always consult these docs first — they are the authoritative design contract:
+Start at [`docs/README.md`](docs/README.md) — the documentation index and agent
+operating guide (doc map, per-module conventions, "where to start by task type",
+status legend). When planning or implementing DDD work, always consult these docs
+first — they are the authoritative design contract:
 
 | Path | When to read |
 |---|---|
+| `docs/README.md` | First — index + conventions + where to start for any task |
 | `docs/adr/` | Before any architectural decision — ADR-001 (monorepo), ADR-002 (frontend/backend), ADR-003 (packages/core migration) |
 | `docs/domain/` | Before implementing any bounded context — contains `aggregates.md`, `commands.md`, `events.md`, `open-questions.md` per BC |
 | `docs/bounded-contexts.md` | When a task touches cross-BC dependencies |

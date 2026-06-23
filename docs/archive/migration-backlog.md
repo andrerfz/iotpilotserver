@@ -1,3 +1,9 @@
+> ⚠️ **OBSOLETO / ARCHIVADO.** La migración a monorepo descrita aquí **ya está
+> completada**: `apps/backend`, `apps/frontend-ng`, `apps/worker` y `packages/core`
+> existen y están en producción. Los estados 🔴 de este documento NO reflejan la
+> realidad. Se conserva solo como registro histórico del plan original.
+> Para el estado actual de tareas ver [`docs/README.md`](../README.md).
+
 # Migration Backlog — Monorepo Restructuring
 
 Tracking list para la migración de monolito Next.js → monorepo pnpm + Turborepo.  

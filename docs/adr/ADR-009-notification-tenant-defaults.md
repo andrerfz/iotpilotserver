@@ -1,6 +1,6 @@
 # ADR-009: Comportamiento por defecto cuando un usuario no tiene preferencias de notificación
 
-**Estado:** Aceptado — implementación pendiente  
+**Estado:** Aceptado — implementado  
 **Fecha:** 2026-06-03  
 **Relacionado con:** bc-notification Q4, `NotificationRoutingService`
 
@@ -34,11 +34,11 @@ Un nuevo agregado `TenantNotificationDefault (channel, type, enabled)`. Los admi
 
 **Option B adoptada.** `ALERT_TRIGGERED` y `DEVICE_OFFLINE` se habilitan por EMAIL por defecto para todos los usuarios activos. Decisión 2026-06-03.
 
-### Implementación pendiente en `NotificationRoutingService`
+### Implementación en `NotificationRoutingService`
 
-`resolveRoutes()` debe generar una ruta sintética cuando:
-1. No existe `NotificationPreference` activa para el usuario + tipo + canal.
-2. El tipo está en la lista de tipos críticos: `['ALERT_TRIGGERED', 'DEVICE_OFFLINE']`.
-3. El usuario tiene email confirmado.
+Implementado en `packages/core/src/notification/domain/services/notification-routing.service.ts`. `resolveRoutes()` genera una ruta sintética cuando:
+1. No existe `NotificationPreference` activa para el usuario + tipo.
+2. El tipo está en el conjunto `CRITICAL_TYPES` (`ALERT_TRIGGERED`, `DEVICE_OFFLINE`).
+3. El usuario tiene email (`userEmail !== null`).
 
-La ruta sintética usa `channel: 'EMAIL'` con las credenciales del usuario. El usuario puede desactivarla creando una preferencia explícita con `enabled: false`.
+La ruta sintética usa `channel: 'EMAIL'` con el email del usuario. El usuario puede desactivarla creando una preferencia explícita con `enabled: false`. El comportamiento está cubierto por `notification-routing.service.test.ts`.
