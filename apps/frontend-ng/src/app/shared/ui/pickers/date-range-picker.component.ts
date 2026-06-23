@@ -92,14 +92,19 @@ export class DateRangePickerComponent {
 
   // Static current-month grid (read-only visual).
   protected readonly dow = DOW;
-  protected readonly monthLabel: string;
   protected readonly today: number;
   protected readonly cells: (number | null)[];
+
+  /** Month + year header, localized to the active UI language (Intl accepts
+   *  ngx-translate's lang codes, incl. 'pt-br'). Getter so it follows a runtime
+   *  language switch. */
+  protected get monthLabel(): string {
+    return new Date().toLocaleString(this.t.getCurrentLang() || 'en', { month: 'long', year: 'numeric' });
+  }
 
   constructor() {
     const now = new Date();
     this.today = now.getDate();
-    this.monthLabel = now.toLocaleString('en-US', { month: 'long', year: 'numeric' });
     const year = now.getFullYear();
     const month = now.getMonth();
     const leading = (new Date(year, month, 1).getDay() + 6) % 7; // Monday-first
