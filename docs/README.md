@@ -75,7 +75,8 @@ per-module status table. Update the status there **and** in the module's
 See [`frontend/README.md`](frontend/README.md) "Backlog" for the live list. As of
 this writing the real remainders are:
 **dependency upgrades** (separate PR), **zoneless change detection** (optional),
-and **macOS Capacitor app + BLE device claiming** (fe-mobile #6, not started).
+and **macOS Capacitor app + BLE device claiming** — planned, full design in
+[`frontend/fe-ble-claiming/`](frontend/fe-ble-claiming/).
 
 ## Reference material (historical-by-nature, fine as-is)
 
