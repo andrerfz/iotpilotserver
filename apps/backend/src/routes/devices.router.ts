@@ -1858,7 +1858,7 @@ devicesRouter.get('/:id/settings', requireAuth(), async (req: AuthenticatedReque
                 let value: any = pref.value;
                 if (['metricsEnabled', 'networkMonitoring', 'autoUpdate', 'sshEnabled'].includes(settingKey)) {
                     value = value === 'true';
-                } else if (['heartbeatInterval', 'cpuThreshold', 'memoryThreshold', 'temperatureThreshold', 'diskThreshold', 'apiKeyRotationDays'].includes(settingKey)) {
+                } else if (['heartbeatInterval', 'cpuThreshold', 'memoryThreshold', 'temperatureThreshold', 'diskThreshold', 'sensorTempThreshold', 'batteryThreshold', 'reportingInterval', 'apiKeyRotationDays'].includes(settingKey)) {
                     value = parseInt(value);
                 } else if (settingKey === 'tags') {
                     value = JSON.parse(value);
