@@ -10,9 +10,9 @@ once Phase 0 is resolved; claim UI (C) needs A's GATT contract + B's runtime; E2
 | # | Task | Phase | Status |
 |---|---|---|---|
 | P0.1 | Decide macOS runtime (Catalyst vs Electron) — spike both BLE paths | 0 | 🔴 pending |
-| P0.2 | C3 flash-budget spike: does NimBLE fit? partition options? | 0 | 🔴 pending |
-| A1 | Define the BLE setup GATT contract (service + characteristics + status codes) | A | 🔴 pending |
-| A2 | ESP32-C3: advertise setup service + GATT server in setup mode | A | 🔴 pending — gated on P0.2 |
+| P0.2 | C3 flash-budget spike: does NimBLE fit? partition options? | 0 | ✅ done — NimBLE fits on `min_spiffs` (75%), not on `default` (112%). C3 in scope; see Q2 |
+| A1 | Define the BLE setup GATT contract (service + characteristics + status codes) | A | ✅ done — [`gatt-contract.md`](gatt-contract.md) |
+| A2 | ESP32-C3: advertise setup service + GATT server in setup mode (build with `PartitionScheme=min_spiffs` — see Q2) | A | 🔴 pending |
 | A3 | ESP32-C3: receive `{ssid,password,claimingToken}`, run `activateDevice()`, report status over BLE | A | 🔴 pending |
 | A4 | Heltec LoRa32 V3: port A2+A3 | A | 🔴 pending |
 | A5 | BLE↔WiFi coexistence + deep-sleep/timeout handling | A | 🔴 pending |
@@ -50,14 +50,12 @@ once Phase 0 is resolved; claim UI (C) needs A's GATT contract + B's runtime; E2
 
 ## Phase A — Firmware BLE
 
-### A1 — GATT contract
-- Define one custom **service UUID** and characteristics (proposal — finalize in PR):
-  - `device-info` (read): `{deviceId, model, firmwareVersion}`
-  - `provision` (write, encrypted): `{ssid, password, claimingToken}` (single JSON write, or chunked if >MTU)
-  - `command` (write): `activate`
-  - `status` (read + notify): enum `IDLE|RECEIVED|WIFI_CONNECTING|ACTIVATING|ACTIVATED|ERROR_<reason>`
-- Advertisement includes `deviceId` (or a short hash) so the app lists devices without connecting.
-- Document the contract in this folder and reference it from both firmware READMEs.
+### A1 — GATT contract ✅
+Defined in [`gatt-contract.md`](gatt-contract.md): setup service + `device-info` /
+`provision` (encrypted) / `command` / `status` characteristics, payload shapes,
+the `status` enum, advertisement format, and the happy-path sequence. That doc is
+the single source of truth — keep firmware and `BleProvisioningService` in sync
+with it, and reference it from both firmware READMEs when A2/A4 land.
 
 ### A2 — C3 advertiser + GATT server (setup mode only)
 - On boot-with-no-config (or factory-reset), start BLE advertising + GATT server

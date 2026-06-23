@@ -23,15 +23,25 @@ with BLE?
 **Decide via P0.1 spike.** Leaning A (Catalyst) for code reuse; fall back to B
 (Electron) if Catalyst BLE is unreliable.
 
-## Q2 — ESP32-C3 flash budget for a BLE stack _(pending — gating, CRITICAL)_
+## Q2 — ESP32-C3 flash budget for a BLE stack _(resolved 2026-06-24)_
 
 **Question:** The C3 sketch already uses ~95% of program flash (1256059 / 1310720
 bytes). NimBLE adds tens of KB. Does it fit?
 
-- Measure with the P0.2 spike. Mitigations if tight: switch partition scheme
-  (`min_spiffs` / `huge_app` frees program space), trim unused libs, or drop a
-  feature. **If it cannot fit**, v1 ships **Heltec-only** BLE claiming (ESP32-S3 has
-  ample flash) and the C3 keeps the AP/portal flow until a slimmer BLE build exists.
+**Resolution: fits with a partition-scheme change — C3 stays in scope for v1.**
+Measured (P0.2 spike, NimBLE-Arduino 2.5.0 + minimal GATT server linked into the
+real firmware):
+
+| Partition | Size with NimBLE | Fits? |
+|---|---|---|
+| `default` (1.25 MB app) | 1 477 273 B = **112%** | ❌ no |
+| `min_spiffs` (1.875 MB app) | 1 477 313 B = **75%** | ✅ yes, ~490 KB headroom |
+
+NimBLE costs ~216 KB. The C3 (T-OI Plus, 4 MB flash) **does not fit on the default
+partition** but fits comfortably on `min_spiffs`. **Action:** A2 must build/flash
+the C3 with `PartitionScheme=min_spiffs`. Switching the partition table requires a
+full erase + reflash — already part of the claim/setup reflash (`ERASE=1`), so no
+extra friction. No need to drop features or go Heltec-only.
 
 ## Q3 — Securing WiFi credentials over BLE _(pending)_
 
