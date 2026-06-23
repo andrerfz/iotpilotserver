@@ -12,8 +12,8 @@ T4 gates T5, T5 gates T6–T7. T8 (zoneless evaluation) is independent and non-b
 | T3 | Local compose: add `iotpilot-ng` Traefik labels, run parity QA locally | ✅ done |
 | T4 | Local compose: remove `iotpilot-app` frontend routing (keep backend), verify locally | ✅ done |
 | T5 | Prod compose: uncomment `iotpilot-ng` block, disable `iotpilot-app`, deploy to staging | ✅ done |
-| T6 | Production cutover: deploy prod compose, verify with smoke tests, monitor for 24 h | pending |
-| T7 | Remove `apps/frontend` from the repo | 🔴 pending — `apps/frontend/` still on disk; gated on T6 |
+| T6 | Production cutover: deploy prod compose, verify with smoke tests, monitor for 24 h | ✅ done — prod serves `iotpilot-ng` on the dashboard host; stable for days, legacy `iotpilot-app` disabled |
+| T7 | Remove `apps/frontend` from the repo | ✅ done — `apps/frontend/` deleted (was already untracked in git); commented `iotpilot-app` block removed from prod compose, dead prometheus scrape removed, Makefile legacy refs repointed to `iotpilot-server-ng` |
 | T8 | Zoneless change-detection evaluation and migration (optional, non-blocking) | pending |
 
 ---

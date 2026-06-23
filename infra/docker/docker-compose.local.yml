@@ -19,10 +19,6 @@ services:
       - TS_USERSPACE=false
     restart: unless-stopped
 
-  # Legacy Next.js app — REMOVED (fe-cutover complete; apps/frontend deleted).
-  # Rollback: checkout a pre-cutover commit and restore this service.
-  # iotpilot-app: ...
-
   # Ionic + Angular dev server (frontend-ng) — now the primary frontend.
   # Accessible at:
   #   https://iotpilotserver.test        (main hostname, cutover from legacy)

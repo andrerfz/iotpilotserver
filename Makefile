@@ -279,14 +279,14 @@ apply-seeds:
 wait-for-app:
 	@echo "⏳ Waiting for app container to be ready..."
 	@for i in 1 2 3 4 5 6 7 8 9 10; do \
-		if docker exec iotpilot-server-app echo "ready" >/dev/null 2>&1; then \
+		if docker exec iotpilot-server-ng echo "ready" >/dev/null 2>&1; then \
 			echo "✅ App container is ready!"; \
 			break; \
 		fi; \
 		echo "Waiting... ($$i/10)"; \
 		sleep 3; \
 	done
-	@if ! docker exec iotpilot-server-app echo "ready" >/dev/null 2>&1; then \
+	@if ! docker exec iotpilot-server-ng echo "ready" >/dev/null 2>&1; then \
 		echo "❌ App container failed to start"; \
 		exit 1; \
 	fi
@@ -533,16 +533,16 @@ dev-stop:
 
 dev-restart:
 	@echo "🔄 Restarting development mode..."
-	@docker compose -f infra/docker/docker-compose.local.yml -f infra/docker/docker-compose.dev.yml --env-file .env.local restart iotpilot-app
+	@docker compose -f infra/docker/docker-compose.local.yml -f infra/docker/docker-compose.dev.yml --env-file .env.local restart iotpilot-ng
 	@echo "✅ Development mode restarted!"
 
 dev-logs:
 	@echo "📋 Development logs (Ctrl+C to exit):"
-	@docker logs -f iotpilot-server-app
+	@docker logs -f iotpilot-server-ng
 
 dev-shell:
 	@echo "🐚 Opening development shell..."
-	@docker exec -it iotpilot-server-app /bin/sh
+	@docker exec -it iotpilot-server-ng /bin/sh
 
 local-logs-app:
 	@echo "📋 Local logs for $(SERVICE):"
@@ -935,7 +935,7 @@ delete-superadmin:
 
 queue-status:
 	@echo "📊 Queue Status:"
-	@docker exec iotpilot-server-app node -e " \
+	@docker exec iotpilot-server-ng node -e " \
 		const { Queue } = require('bullmq'); \
 		const IORedis = require('ioredis'); \
 		(async () => { \
@@ -954,7 +954,7 @@ queue-status:
 
 queue-failed:
 	@echo "❌ Failed Jobs:"
-	@docker exec iotpilot-server-app node -e " \
+	@docker exec iotpilot-server-ng node -e " \
 		const { Queue } = require('bullmq'); \
 		const IORedis = require('ioredis'); \
 		(async () => { \
@@ -970,7 +970,7 @@ queue-failed:
 
 queue-retry:
 	@echo "🔄 Retrying all failed jobs..."
-	@docker exec iotpilot-server-app node -e " \
+	@docker exec iotpilot-server-ng node -e " \
 		const { Queue } = require('bullmq'); \
 		const IORedis = require('ioredis'); \
 		(async () => { \
@@ -986,7 +986,7 @@ queue-retry:
 
 queue-clean:
 	@echo "🧹 Cleaning completed and failed jobs..."
-	@docker exec iotpilot-server-app node -e " \
+	@docker exec iotpilot-server-ng node -e " \
 		const { Queue } = require('bullmq'); \
 		const IORedis = require('ioredis'); \
 		(async () => { \
@@ -1002,7 +1002,7 @@ queue-clean:
 
 queue-drain:
 	@echo "⚠️  Draining queue (removing all waiting jobs)..."
-	@docker exec iotpilot-server-app node -e " \
+	@docker exec iotpilot-server-ng node -e " \
 		const { Queue } = require('bullmq'); \
 		const IORedis = require('ioredis'); \
 		(async () => { \
@@ -1065,8 +1065,8 @@ ifdef API_URL
 		-H "Content-Type: application/json" \
 		-d '{"count":$(COUNT)}' | python3 -m json.tool
 else
-	@docker cp scripts/preregister-devices.ts iotpilot-server-app:/tmp/preregister-devices.ts
-	@docker exec iotpilot-server-app npx tsx /tmp/preregister-devices.ts --count=$(COUNT)
+	@docker cp scripts/preregister-devices.ts iotpilot-server-ng:/tmp/preregister-devices.ts
+	@docker exec iotpilot-server-ng npx tsx /tmp/preregister-devices.ts --count=$(COUNT)
 endif
 
 device-flash:
@@ -1154,7 +1154,7 @@ device-toolchain-install-heltec32v3:
 
 queue-worker:
 	@echo "⏰ Starting queue worker..."
-	@docker exec -it iotpilot-server-app npm run worker
+	@docker exec -it iotpilot-server-ng npm run worker
 
 schedule-list:
 	@echo "⏰ Scheduled Tasks (BullMQ Repeatable Jobs)"

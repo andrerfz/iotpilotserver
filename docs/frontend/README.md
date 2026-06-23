@@ -67,7 +67,7 @@ reach **done**. Estimates are dev-days for one senior dev.
 | fe-device-advanced | Real-time metrics charts, SSH terminal (xterm), device settings (split the 1,011-line page) | fe-device-detail | 6–9 | ✅ | ✅ done |
 | [fe-admin](fe-admin/) | Admin stats, devices, users, users/new, logs, system | fe-ui-kit | 4–6 | ✅ | ✅ done |
 | fe-mobile | Capacitor iOS/Android, push (FCM/APNs), touch UX, signed builds | all page modules | 6–9 | ✅ | ✅ done |
-| [fe-cutover](fe-cutover/) | Test migration, parity QA, Traefik switch, remove `apps/frontend` | all | 8–12 | ✅ | pending |
+| [fe-cutover](fe-cutover/) | Test migration, parity QA, Traefik switch, remove `apps/frontend` | all | 8–12 | ✅ | ✅ done |
 
 **Total: 64–93 dev-days.** (fe-ui-kit grew 6–9 → 9–12 after adopting the design
 prototype's larger component inventory — see below.)
@@ -137,7 +137,7 @@ Tasks scoped but not yet assigned to a module sprint.
 |---|---|---|---|
 | 1 | ~~**Settings → API Keys page**~~ | fe-settings | ✅ Done — `SettingsApiKeysPage`, 3 unit tests, backend bugs fixed. |
 | 2 | ~~**Export xlsx/pdf**~~ | fe-dashboard / fe-admin | ✅ Done — XLSX/CSV/PDF bottom sheet in devices + admin-logs. |
-| 3 | **Production cutover** | fe-cutover | SSH to prod: `git pull && docker compose pull && up -d`. Blocked on deployment decision. |
+| 3 | ~~**Production cutover**~~ | fe-cutover | ✅ Done — prod serves `iotpilot-ng`; legacy `apps/frontend` removed (T6/T7 closed). |
 | 4 | **Dependency upgrades** | fe-foundation | `xterm` → `@xterm/xterm`, `eslint` v8 → v9 flat config, `rimraf` v3 → v5, `glob` v7 → v10. Separate PR. |
 | 5 | **Zoneless change detection** | fe-foundation | Optional: `provideExperimentalZonelessChangeDetection`. Non-blocking. |
 | 6 | **macOS Capacitor app + BLE device claiming** | fe-mobile | Add `ng-cap-build-macos` make target. Use `@capacitor-community/bluetooth-le` to scan for C3/Heltec sensors in setup mode — replaces manual Device ID entry. Requires firmware changes on both sensor types. |

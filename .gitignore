@@ -161,8 +161,6 @@ dist
 
 # Gatsby files
 .cache/
-# Note: apps/frontend/public is tracked (contains favicon, logo, manifest)
-# Only ignore build-generated public dirs
 .next/static/
 
 # Storybook build outputs

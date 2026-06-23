@@ -73,7 +73,7 @@ per-module status table. Update the status there **and** in the module's
 ## Genuinely open work
 
 See [`frontend/README.md`](frontend/README.md) "Backlog" for the live list. As of
-this writing the real remainders are: **production cutover** (fe-cutover),
+this writing the real remainders are:
 **dependency upgrades** (separate PR), **zoneless change detection** (optional),
 and **macOS Capacitor app + BLE device claiming** (fe-mobile #6, not started).
 

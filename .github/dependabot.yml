@@ -1,11 +1,9 @@
 version: 2
 updates:
   # npm — active workspace packages (pnpm monorepo).
-  # NOTE: /app was renamed to apps/* in the monorepo migration; the old path
-  # produced 10 orphaned PRs. apps/frontend (legacy Next.js) is intentionally
-  # NOT watched here — it is being replaced by the Ionic/Angular frontend and
-  # removed at fe-cutover. Dependabot SECURITY updates still fire for it
-  # regardless of this config; only version-bump noise is suppressed.
+  # NOTE: /app was renamed to apps/* in the monorepo migration. The legacy
+  # apps/frontend (Next.js) was removed at fe-cutover; the active frontend is
+  # apps/frontend-ng (Ionic/Angular).
   - package-ecosystem: "npm"
     directories:
       - "/"
