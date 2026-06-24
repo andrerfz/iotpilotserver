@@ -9,15 +9,15 @@ once Phase 0 is resolved; claim UI (C) needs A's GATT contract + B's runtime; E2
 
 | # | Task | Phase | Status |
 |---|---|---|---|
-| P0.1 | Decide macOS runtime (Catalyst vs Electron) — spike both BLE paths | 0 | 🔴 pending |
+| P0.1 | Decide macOS runtime (Catalyst vs Electron) — spike both BLE paths | 0 | ✅ done — **Electron** (cross-OS); see Q1 |
 | P0.2 | C3 flash-budget spike: does NimBLE fit? partition options? | 0 | ✅ done — NimBLE fits on `min_spiffs` (75%), not on `default` (112%). C3 in scope; see Q2 |
 | A1 | Define the BLE setup GATT contract (service + characteristics + status codes) | A | ✅ done — [`gatt-contract.md`](gatt-contract.md) |
 | A2 | ESP32-C3: advertise setup service + GATT server in setup mode (build with `PartitionScheme=min_spiffs` — see Q2) | A | 🟡 code complete — compiles at 75% on min_spiffs; **pending hardware validation** |
 | A3 | ESP32-C3: receive `{ssid,password,claimingToken}`, run `activateDevice()`, report status over BLE | A | 🟡 code complete — **pending hardware validation** (BLE↔WiFi teardown/retry = A5) |
 | A4 | Heltec LoRa32 V3: port A2+A3 | A | 🟡 code complete — compiles at 41% (8MB flash, no partition change); **pending hardware validation** |
 | A5 | BLE↔WiFi coexistence + deep-sleep/timeout handling | A | 🔴 pending |
-| B1 | Add macOS app target + `make ng-cap-build-macos` | B | 🔴 pending — gated on P0.1 |
-| B2 | Install `@capacitor-community/bluetooth-le`; permissions/entitlements/Info.plist | B | 🔴 pending |
+| B1 | Electron desktop shell + `make ng-cap-build-macos`/`ng-electron-dev` | B | 🟡 scaffolded (`electron/main.js`+`preload.js`, `electron-builder.json`, README). **Pending: run/sign on a Mac** (`npm i -D electron electron-builder`) |
+| B2 | Web Bluetooth BLE path (adapter + permissions) | B | ✅ `WebBluetoothBlePort` + `provideBle()` runtime selection + 6 unit tests; Electron grants the Bluetooth permission + handles `select-bluetooth-device` in main.js |
 | C1 | `BleProvisioningService` in core: scan / connect / write creds / read status | C | 🟡 service + `BlePort` abstraction + 5 fake-port unit tests done; concrete adapter deferred to P0.1 |
 | C2 | Backend: issue a claiming token for a scanned deviceId to an authed operator | C | ✅ done — no change needed; reuse `POST /devices/claim` (see Q4) |
 | C3 | Register-device flow: "Scan via Bluetooth" → pick → provision | C | 🟡 `BleClaimSheetComponent` (scan→pick→wifi→provision→done/error) + 5 tests + `provideBle()` (web no-op) wired in main.ts. Remaining: entry button from the register flow + real adapter (P0.1) |

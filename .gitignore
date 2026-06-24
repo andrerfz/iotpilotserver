@@ -291,3 +291,6 @@ yarn-debug.log*
 .opencode.json
 apps/node_modules
 Makefile.local
+
+# Electron desktop build output
+apps/frontend-ng/dist-electron/

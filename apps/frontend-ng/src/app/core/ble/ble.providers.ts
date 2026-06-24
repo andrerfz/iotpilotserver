@@ -1,5 +1,6 @@
 import { Provider } from '@angular/core';
 import { BlePort } from './ble.port';
+import { WebBluetoothBlePort } from './web-bluetooth.adapter';
 
 /**
  * Default web `BlePort`: reports BLE unavailable and refuses operations. The web
@@ -33,7 +34,18 @@ export class UnavailableBlePort extends BlePort {
   }
 }
 
-/** Default (web) BLE provider. Desktop runtimes override `BlePort` with a real adapter. */
+/**
+ * BLE provider. Uses the Web Bluetooth adapter when `navigator.bluetooth` exists
+ * (the Electron desktop build — and desktop Chrome for dev), otherwise the no-op
+ * port so plain browsers/WKWebView degrade to manual entry.
+ */
 export function provideBle(): Provider {
-  return { provide: BlePort, useClass: UnavailableBlePort };
+  return {
+    provide: BlePort,
+    useFactory: (): BlePort => {
+      const hasWebBluetooth =
+        typeof navigator !== 'undefined' && 'bluetooth' in navigator;
+      return hasWebBluetooth ? new WebBluetoothBlePort() : new UnavailableBlePort();
+    },
+  };
 }

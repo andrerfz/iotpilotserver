@@ -2,10 +2,16 @@
 
 Resolve Q1 and Q2 (Phase 0) before building. Record the decision + date when closed.
 
-## Q1 — macOS runtime: Mac Catalyst vs Electron _(pending — gating)_
+## Q1 — macOS runtime: Mac Catalyst vs Electron _(resolved 2026-06-25 → Electron)_
 
-**Question:** Capacitor has no native macOS platform. How do we ship a macOS app
-with BLE?
+**Decision: Electron**, for cross-OS reach (one codebase → macOS + Windows + Linux),
+accepting the trade-offs vs Catalyst (heavier app, Web Bluetooth instead of
+CoreBluetooth, a second runtime, BLE validated per-OS). Catalyst stays a fallback if
+Electron's Web Bluetooth proves unreliable on macOS. Implemented: `WebBluetoothBlePort`
+adapter + `provideBle()` runtime selection + a minimal Electron shell
+(`apps/frontend-ng/electron/`, `electron-builder.json`, `make ng-cap-build-macos`).
+
+Original analysis kept for reference:
 
 - **Option A — Mac Catalyst** (recommended): build the existing iOS Capacitor target
   for Mac. `@capacitor-community/bluetooth-le` uses CoreBluetooth on iOS, which
@@ -52,6 +58,14 @@ sniffable.
   characteristic is writable, or app-layer encrypt the payload with a key derived
   from the claiming token. At minimum, gate the `provision` char behind an encrypted
   link. Decide the exact scheme in A1.
+- **Electron auto-pick (must fix before real use):** the v1 `select-bluetooth-device`
+  handler in `electron/main.js` auto-selects the first `IotPilot-Setup-*` peripheral
+  with no operator consent — a rogue device advertising that name would receive the
+  WiFi credentials. Two required hardenings: (1) an operator-confirmed device chooser
+  (forward the discovered list to the renderer over an IPC bridge in `preload.js`
+  rather than auto-picking), and (2) the link encryption above so the WiFi password
+  is never written in the clear. Until both land, treat the desktop build as a lab
+  tool on a trusted network only.
 
 ## Q4 — Token issuance for a scanned device _(resolved 2026-06-24)_
 

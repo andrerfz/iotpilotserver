@@ -717,6 +717,19 @@ ng-cap-build-android:
 	@cd apps/frontend-ng/android && ./gradlew bundleRelease
 	@echo "✅ Android .aab at apps/frontend-ng/android/app/build/outputs/bundle/release/"
 
+# Electron desktop build (BLE device-claiming app — fe-ble-claiming B1/B2).
+# Requires devDeps: cd apps/frontend-ng && npm i -D electron electron-builder
+# Pass TARGET=--mac|--win|--linux (default --mac). Signing/notarization on the host.
+ng-cap-build-macos:
+	@echo "🖥️  Building Electron desktop app ($(or $(TARGET),--mac))..."
+	@cd apps/frontend-ng && npm run build
+	@cd apps/frontend-ng && npx electron-builder --config electron-builder.json $(or $(TARGET),--mac)
+	@echo "✅ Desktop build at apps/frontend-ng/dist-electron/  — copy the .app to /Applications to test"
+
+ng-electron-dev:
+	@echo "🖥️  Running Electron desktop app (dev)..."
+	@cd apps/frontend-ng && npm run build && npx electron electron/main.js
+
 # =============================================================================
 # FAKE DEVICE — local IoT device emulator (Alpine + sshd)
 # =============================================================================
