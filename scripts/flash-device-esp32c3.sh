@@ -14,7 +14,9 @@
 set -euo pipefail
 
 FIRMWARE="firmware/esp32c3-claiming-firmware"
-BOARD="esp32:esp32:esp32c3"
+# min_spiffs partition: NimBLE (BLE setup-mode provisioning) does not fit the
+# default partition — see docs/frontend/fe-ble-claiming/open-questions.md Q2.
+BOARD="esp32:esp32:esp32c3:PartitionScheme=min_spiffs"
 BAUD="921600"
 FLASH_LOG="scripts/.flash-log-esp32c3.csv"
 SERVER_URL="${SERVER_URL:-https://dashboarddev.iotpilot.app}"

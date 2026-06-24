@@ -12,8 +12,8 @@ once Phase 0 is resolved; claim UI (C) needs A's GATT contract + B's runtime; E2
 | P0.1 | Decide macOS runtime (Catalyst vs Electron) — spike both BLE paths | 0 | 🔴 pending |
 | P0.2 | C3 flash-budget spike: does NimBLE fit? partition options? | 0 | ✅ done — NimBLE fits on `min_spiffs` (75%), not on `default` (112%). C3 in scope; see Q2 |
 | A1 | Define the BLE setup GATT contract (service + characteristics + status codes) | A | ✅ done — [`gatt-contract.md`](gatt-contract.md) |
-| A2 | ESP32-C3: advertise setup service + GATT server in setup mode (build with `PartitionScheme=min_spiffs` — see Q2) | A | 🔴 pending |
-| A3 | ESP32-C3: receive `{ssid,password,claimingToken}`, run `activateDevice()`, report status over BLE | A | 🔴 pending |
+| A2 | ESP32-C3: advertise setup service + GATT server in setup mode (build with `PartitionScheme=min_spiffs` — see Q2) | A | 🟡 code complete — compiles at 75% on min_spiffs; **pending hardware validation** |
+| A3 | ESP32-C3: receive `{ssid,password,claimingToken}`, run `activateDevice()`, report status over BLE | A | 🟡 code complete — **pending hardware validation** (BLE↔WiFi teardown/retry = A5) |
 | A4 | Heltec LoRa32 V3: port A2+A3 | A | 🔴 pending |
 | A5 | BLE↔WiFi coexistence + deep-sleep/timeout handling | A | 🔴 pending |
 | B1 | Add macOS app target + `make ng-cap-build-macos` | B | 🔴 pending — gated on P0.1 |

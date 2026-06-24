@@ -1107,7 +1107,7 @@ device-toolchain-install-esp32c3:
 	@arduino-cli core update-index --additional-urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
 	@arduino-cli core install esp32:esp32 --additional-urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
 	@echo "Installing required libraries..."
-	@arduino-cli lib install "OneWire" "DallasTemperature" "ArduinoJson" "WiFiManager"
+	@arduino-cli lib install "OneWire" "DallasTemperature" "ArduinoJson" "WiFiManager" "NimBLE-Arduino"
 	@echo ""
 	@echo "✅ Toolchain ready! Manufacturing workflow (T-OI Plus):"
 	@echo "   1. make device-preregister COUNT=10             # Generate device IDs"
