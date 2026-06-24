@@ -39,6 +39,7 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <ArduinoJson.h>
+#include <NimBLEDevice.h>   // BLE setup-mode provisioning (fe-ble-claiming A4)
 #include <SPI.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
@@ -82,7 +83,7 @@
 
 #define NVS_NAMESPACE          "iotpilot"
 #define WIFI_AP_PASSWORD       "iotpilot123"
-#define FIRMWARE_VERSION       "1.1.0"
+#define FIRMWARE_VERSION       "1.2.0"
 #define SLEEP_HOLD_MS          2000    // PRG hold 2s → sleep
 #define FACTORY_RESET_HOLD_MS  5000   // PRG hold 5s → factory reset
 #define DISPLAY_ON_SECONDS     5      // seconds to show display before sleeping
@@ -379,6 +380,29 @@ bool connectWiFi() {
   return false;
 }
 
+// Connect using credentials supplied at runtime (BLE provisioning).
+bool connectWiFiWith(const char* ssid, const char* pass) {
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid, pass);
+  Serial.printf("[WiFi] Connecting to: %s\n", ssid);
+
+  int attempts = 0;
+  while (WiFi.status() != WL_CONNECTED && attempts < 20) {
+    delay(500);
+    Serial.print(".");
+    attempts++;
+  }
+
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.printf("\n[WiFi] IP: %s  RSSI: %d dBm\n",
+      WiFi.localIP().toString().c_str(), WiFi.RSSI());
+    return true;
+  }
+
+  Serial.println("\n[WiFi] Connection failed");
+  return false;
+}
+
 // ====================
 // ACTIVATION
 // ====================
@@ -531,6 +555,151 @@ bool sendDataWithRetry(float temperature, float batteryPct, float batteryV, bool
     if (attempt < 3) delay(2000);
   }
   Serial.println("[SEND] All attempts failed");
+  return false;
+}
+
+// ====================
+// BLE SETUP MODE (first-claim provisioning)
+// Contract: docs/frontend/fe-ble-claiming/gatt-contract.md
+// ====================
+#define BLE_SVC_UUID    "8e9a0001-1b2c-4f3d-9a6b-1f2e3d4c5b6a"
+#define BLE_INFO_UUID   "8e9a0002-1b2c-4f3d-9a6b-1f2e3d4c5b6a"
+#define BLE_PROV_UUID   "8e9a0003-1b2c-4f3d-9a6b-1f2e3d4c5b6a"
+#define BLE_CMD_UUID    "8e9a0004-1b2c-4f3d-9a6b-1f2e3d4c5b6a"
+#define BLE_STAT_UUID   "8e9a0005-1b2c-4f3d-9a6b-1f2e3d4c5b6a"
+#define BLE_SETUP_TIMEOUT_MS  300000UL   // 5 min, then fall back to the AP portal
+
+static NimBLECharacteristic* bleStatusChar = nullptr;
+static String bleProvBuf = "";
+static char bleSsid[64]  = "";
+static char blePass[64]  = "";
+static char bleToken[16] = "";
+static volatile bool bleProvReceived = false;
+static volatile bool bleActivateReq  = false;
+
+static void bleSetStatus(const char* s) {
+  if (bleStatusChar) {
+    bleStatusChar->setValue((const uint8_t*)s, strlen(s));
+    bleStatusChar->notify();
+  }
+  Serial.printf("[BLE] status=%s\n", s);
+}
+
+class ProvCallbacks : public NimBLECharacteristicCallbacks {
+  void onWrite(NimBLECharacteristic* c, NimBLEConnInfo&) override {
+    bleProvBuf += String(c->getValue().c_str());
+    DynamicJsonDocument doc(512);
+    if (deserializeJson(doc, bleProvBuf) == DeserializationError::Ok) {
+      const char* ssid  = doc["ssid"]          | "";
+      const char* pass  = doc["password"]      | "";
+      const char* token = doc["claimingToken"] | "";
+      if (strlen(ssid) > 0 && strlen(token) > 0) {
+        strncpy(bleSsid,  ssid,  sizeof(bleSsid)  - 1);
+        strncpy(blePass,  pass,  sizeof(blePass)  - 1);
+        strncpy(bleToken, token, sizeof(bleToken) - 1);
+        bleProvBuf = "";
+        bleProvReceived = true;
+        bleSetStatus("RECEIVED");
+      }
+    }
+  }
+};
+
+class CmdCallbacks : public NimBLECharacteristicCallbacks {
+  void onWrite(NimBLECharacteristic* c, NimBLEConnInfo&) override {
+    String cmd = String(c->getValue().c_str());
+    if (cmd == "activate" && bleProvReceived) {
+      bleActivateReq = true;
+    } else if (cmd == "cancel") {
+      bleProvBuf = "";
+      bleProvReceived = false;
+      bleSetStatus("IDLE");
+    }
+  }
+};
+
+static void bleStart(const char* apName) {
+  NimBLEDevice::init(apName);
+  NimBLEServer* server = NimBLEDevice::createServer();
+  NimBLEService* svc = server->createService(BLE_SVC_UUID);
+
+  NimBLECharacteristic* info = svc->createCharacteristic(BLE_INFO_UUID, NIMBLE_PROPERTY::READ);
+  DynamicJsonDocument idoc(192);
+  idoc["deviceId"] = config.deviceId;
+  idoc["model"]    = "HELTEC-WIFI-LORA-32-V3";
+  idoc["fw"]       = FIRMWARE_VERSION;
+  String ijson;
+  serializeJson(idoc, ijson);
+  info->setValue(ijson.c_str());
+
+  NimBLECharacteristic* prov = svc->createCharacteristic(BLE_PROV_UUID, NIMBLE_PROPERTY::WRITE);
+  prov->setCallbacks(new ProvCallbacks());
+
+  NimBLECharacteristic* cmd = svc->createCharacteristic(BLE_CMD_UUID, NIMBLE_PROPERTY::WRITE);
+  cmd->setCallbacks(new CmdCallbacks());
+
+  bleStatusChar = svc->createCharacteristic(
+    BLE_STAT_UUID, NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::NOTIFY);
+  bleStatusChar->setValue("IDLE");
+
+  svc->start();
+  NimBLEAdvertising* adv = NimBLEDevice::getAdvertising();
+  adv->addServiceUUID(BLE_SVC_UUID);
+  adv->setName(apName);
+  adv->start();
+  Serial.printf("[BLE] Advertising as %s\n", apName);
+}
+
+static void bleStop() {
+  NimBLEDevice::stopAdvertising();
+  NimBLEDevice::deinit(true);
+  bleStatusChar = nullptr;
+}
+
+// First-claim provisioning over BLE. Returns true when activated (device reboots),
+// false on timeout (caller falls back to the AP portal). See the C3 firmware for the
+// single-radio teardown rationale; the S3 shares the 2.4 GHz radio too.
+bool setupBLE() {
+  char apName[32];
+  uint64_t chipId = ESP.getEfuseMac();
+  snprintf(apName, sizeof(apName), "IotPilot-Setup-%04X", (uint16_t)(chipId & 0xFFFF));
+
+  bleProvReceived = false;
+  bleActivateReq  = false;
+  bleProvBuf      = "";
+  bleStart(apName);
+
+  unsigned long deadline = millis() + BLE_SETUP_TIMEOUT_MS;
+  while (millis() < deadline) {
+    delay(50);
+
+    if (bleActivateReq) {
+      bleActivateReq = false;
+      bleSetStatus("WIFI_CONNECTING");
+      bleStop();   // free the radio for WiFi
+
+      bool wifiOk = connectWiFiWith(bleSsid, blePass);
+      bool ok = wifiOk && activateDevice(bleToken);
+
+      if (ok) {
+        Serial.println("[BLE] Activation complete — rebooting into normal operation");
+        delay(1500);
+        ESP.restart();
+        return true;   // not reached
+      }
+
+      WiFi.disconnect(true);
+      WiFi.mode(WIFI_OFF);
+      bleStart(apName);
+      bleSetStatus(wifiOk ? "ERR_TOKEN" : "ERR_WIFI");
+      bleProvReceived = false;
+      bleProvBuf = "";
+      deadline = millis() + BLE_SETUP_TIMEOUT_MS;
+    }
+  }
+
+  Serial.println("[BLE] Setup timeout — falling back to AP portal");
+  bleStop();
   return false;
 }
 
@@ -716,7 +885,11 @@ void setup() {
     }
     return;
 #else
-    setupWiFiManager();
+    // Primary path: BLE provisioning from the app. Falls back to the AP portal on
+    // timeout so a device is never stranded.
+    if (!setupBLE()) {
+      setupWiFiManager();
+    }
     return;
 #endif
   }

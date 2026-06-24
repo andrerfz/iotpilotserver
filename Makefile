@@ -1138,7 +1138,7 @@ device-toolchain-install-heltec32v3:
 	@arduino-cli core update-index --additional-urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
 	@arduino-cli core install esp32:esp32 --additional-urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
 	@echo "Installing required libraries..."
-	@arduino-cli lib install "OneWire" "DallasTemperature" "ArduinoJson" "WiFiManager" "U8g2"
+	@arduino-cli lib install "OneWire" "DallasTemperature" "ArduinoJson" "WiFiManager" "U8g2" "NimBLE-Arduino"
 	@echo ""
 	@echo "✅ Toolchain ready! Manufacturing workflow (Heltec WiFi LoRa 32 V3):"
 	@echo "   1. make device-preregister COUNT=10                  # Generate device IDs"
