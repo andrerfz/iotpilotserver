@@ -886,6 +886,28 @@
       "scope_device": "Questo dispositivo",
       "scope_global": "Globale",
       "failed": "Caricamento soglie non riuscito."
+    },
+    "ble_claim": {
+      "title": "Rivendica via Bluetooth",
+      "intro": "Accendi il sensore e sceglilo dall’elenco.",
+      "scanning": "Ricerca…",
+      "no_sensors": "Nessun sensore trovato. Assicurati che uno sia acceso in modalità setup.",
+      "rescan": "Cerca di nuovo",
+      "wifi_intro": "Inserisci il WiFi che il sensore deve usare.",
+      "wifi_ssid": "Rete WiFi",
+      "wifi_password": "Password WiFi",
+      "claim": "Rivendica dispositivo",
+      "claiming": "Rivendicazione…",
+      "done_title": "Configurazione avviata",
+      "done_desc": "Il sensore si sta connettendo al WiFi e sarà presto online.",
+      "unavailable": "Bluetooth non disponibile qui. Usa l’inserimento manuale.",
+      "error_title": "Provisioning non riuscito",
+      "retry": "Riprova",
+      "st_wifi": "Connessione al WiFi…",
+      "st_activating": "Attivazione…",
+      "err_wifi": "Connessione WiFi non riuscita — controlla rete e password.",
+      "err_token": "Attivazione rifiutata — il token di rivendicazione potrebbe essere scaduto.",
+      "err_other": "Qualcosa è andato storto. Riprova."
     }
   },
   "shell": {

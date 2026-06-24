@@ -886,6 +886,28 @@
       "scope_device": "Este dispositivo",
       "scope_global": "Global",
       "failed": "Error al cargar los umbrales."
+    },
+    "ble_claim": {
+      "title": "Reclamar por Bluetooth",
+      "intro": "Enciende el sensor y elígelo de la lista.",
+      "scanning": "Buscando…",
+      "no_sensors": "No se encontraron sensores. Asegúrate de que uno esté encendido en modo setup.",
+      "rescan": "Buscar de nuevo",
+      "wifi_intro": "Introduce la WiFi que usará el sensor.",
+      "wifi_ssid": "Red WiFi",
+      "wifi_password": "Contraseña WiFi",
+      "claim": "Reclamar dispositivo",
+      "claiming": "Reclamando…",
+      "done_title": "Configuración iniciada",
+      "done_desc": "El sensor se está conectando a la WiFi y aparecerá en línea en breve.",
+      "unavailable": "Bluetooth no está disponible aquí. Usa la entrada manual.",
+      "error_title": "Fallo en el aprovisionamiento",
+      "retry": "Reintentar",
+      "st_wifi": "Conectando a la WiFi…",
+      "st_activating": "Activando…",
+      "err_wifi": "Fallo de conexión WiFi — revisa la red y la contraseña.",
+      "err_token": "Activación rechazada — el token de claim puede haber caducado.",
+      "err_other": "Algo salió mal. Inténtalo de nuevo."
     }
   },
   "shell": {

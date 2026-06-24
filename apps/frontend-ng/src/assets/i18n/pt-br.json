@@ -886,6 +886,28 @@
       "scope_device": "Este dispositivo",
       "scope_global": "Global",
       "failed": "Falha ao carregar os limites."
+    },
+    "ble_claim": {
+      "title": "Reivindicar por Bluetooth",
+      "intro": "Ligue o sensor e escolha-o na lista.",
+      "scanning": "Procurando…",
+      "no_sensors": "Nenhum sensor encontrado. Verifique se há um ligado em modo de configuração.",
+      "rescan": "Procurar novamente",
+      "wifi_intro": "Informe o WiFi que o sensor deve usar.",
+      "wifi_ssid": "Rede WiFi",
+      "wifi_password": "Senha WiFi",
+      "claim": "Reivindicar dispositivo",
+      "claiming": "Reivindicando…",
+      "done_title": "Configuração iniciada",
+      "done_desc": "O sensor está se conectando ao WiFi e ficará online em breve.",
+      "unavailable": "Bluetooth não está disponível aqui. Use a entrada manual.",
+      "error_title": "Falha no provisionamento",
+      "retry": "Tentar novamente",
+      "st_wifi": "Conectando ao WiFi…",
+      "st_activating": "Ativando…",
+      "err_wifi": "Falha na conexão WiFi — verifique a rede e a senha.",
+      "err_token": "Ativação rejeitada — o token de reivindicação pode ter expirado.",
+      "err_other": "Algo deu errado. Tente novamente."
     }
   },
   "shell": {

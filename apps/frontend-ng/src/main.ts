@@ -23,6 +23,7 @@ import { authInterceptor } from './app/core/auth/auth.interceptor';
 import { AuthService } from './app/core/auth/auth.service';
 import { provideTokenStorage } from './app/core/auth/token.storage';
 import { provideNativeTokenStorage } from './app/core/native/native.providers';
+import { provideBle } from './app/core/ble/ble.providers';
 import { provideQueryHandler } from './app/core/cqrs/query-bus';
 import { GetHealthHandler } from './app/core/cqrs/example/get-health.handler';
 import { ThemeService } from './app/shared/ui/theme/theme.service';
@@ -36,6 +37,7 @@ bootstrapApplication(AppComponent, {
     provideHttpClient(withInterceptors([authInterceptor])),
     provideApi(),
     ...(Capacitor.isNativePlatform() ? provideNativeTokenStorage() : [provideTokenStorage()]),
+    provideBle(),
     provideQueryHandler(GetHealthHandler),
     provideAppInitializer(() => { inject(ThemeService); }),
     provideAppInitializer(() => inject(AuthService).restoreSession()),

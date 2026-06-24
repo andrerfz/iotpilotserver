@@ -1,0 +1,59 @@
+.ble-step {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ble-step__intro {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.ble-sensor {
+  --background: var(--surface);
+  border-radius: 10px;
+}
+
+.ble-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 24px 12px;
+  color: var(--text-dim);
+  text-align: center;
+}
+
+.ble-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 32px 12px;
+  color: var(--text);
+}
+
+.ble-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 24px 12px;
+  text-align: center;
+}
+
+.ble-result__icon {
+  font-size: 48px;
+}
+
+.ble-result__title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.ble-result__desc {
+  font-size: 14px;
+  color: var(--text-muted);
+}

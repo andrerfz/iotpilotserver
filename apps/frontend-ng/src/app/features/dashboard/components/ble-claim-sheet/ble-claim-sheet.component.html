@@ -1,0 +1,92 @@
+<ui-bottom-sheet
+  [title]="'components.ble_claim.title' | translate"
+  saveLabel=""
+  (dismiss)="onSheetDismiss()">
+
+  <!-- ── Scan: discovered sensors ─────────────────────────────────────────── -->
+  @if (step() === 'scan') {
+    <div class="ble-step">
+      <p class="ble-step__intro">{{ 'components.ble_claim.intro' | translate }}</p>
+
+      @for (s of sensors(); track s.peripheralId) {
+        <ion-item button detail class="ble-sensor" (click)="selectSensor(s)">
+          <ion-icon name="hardware-chip-outline" slot="start" color="primary"></ion-icon>
+          <ion-label>{{ s.name }}</ion-label>
+          @if (s.rssi !== undefined) {
+            <ion-note slot="end">{{ s.rssi }} dBm</ion-note>
+          }
+        </ion-item>
+      } @empty {
+        <div class="ble-empty">
+          @if (scanning()) {
+            <ion-spinner name="crescent"></ion-spinner>
+            <span>{{ 'components.ble_claim.scanning' | translate }}</span>
+          } @else {
+            <span>{{ 'components.ble_claim.no_sensors' | translate }}</span>
+          }
+        </div>
+      }
+
+      <ion-button expand="block" fill="outline" (click)="rescan()">
+        <ion-icon name="bluetooth-outline" slot="start"></ion-icon>
+        {{ 'components.ble_claim.rescan' | translate }}
+      </ion-button>
+    </div>
+  }
+
+  <!-- ── WiFi credentials for the picked sensor ───────────────────────────── -->
+  @if (step() === 'wifi') {
+    <div class="ble-step">
+      <p class="ble-step__intro">{{ 'components.ble_claim.wifi_intro' | translate }}</p>
+
+      <ion-item class="form-item">
+        <ion-label position="stacked">{{ 'components.ble_claim.wifi_ssid' | translate }}</ion-label>
+        <ion-input
+          [value]="ssid()"
+          (ionInput)="ssid.set($any($event).detail.value ?? '')"
+          autocomplete="off" autocorrect="off" spellcheck="false"></ion-input>
+      </ion-item>
+
+      <ion-item class="form-item">
+        <ion-label position="stacked">{{ 'components.ble_claim.wifi_password' | translate }}</ion-label>
+        <ion-input
+          type="password"
+          [value]="password()"
+          (ionInput)="password.set($any($event).detail.value ?? '')"></ion-input>
+      </ion-item>
+
+      <ion-button expand="block" color="primary" [disabled]="!ssid().trim()" (click)="claim()">
+        {{ 'components.ble_claim.claim' | translate }}
+      </ion-button>
+    </div>
+  }
+
+  <!-- ── Provisioning in progress ─────────────────────────────────────────── -->
+  @if (step() === 'provisioning') {
+    <div class="ble-status">
+      <ion-spinner name="crescent"></ion-spinner>
+      <span>{{ statusKey() | translate }}</span>
+    </div>
+  }
+
+  <!-- ── Handed off (device connecting) ───────────────────────────────────── -->
+  @if (step() === 'done') {
+    <div class="ble-result">
+      <ion-icon name="checkmark-outline" color="success" class="ble-result__icon"></ion-icon>
+      <div class="ble-result__title">{{ 'components.ble_claim.done_title' | translate }}</div>
+      <div class="ble-result__desc">{{ 'components.ble_claim.done_desc' | translate }}</div>
+    </div>
+  }
+
+  <!-- ── Error / unavailable ──────────────────────────────────────────────── -->
+  @if (step() === 'error') {
+    <div class="ble-result">
+      <div class="ble-result__title">{{ 'components.ble_claim.error_title' | translate }}</div>
+      <div class="ble-result__desc">{{ errorKey() | translate }}</div>
+      <ion-button expand="block" fill="outline" (click)="rescan()">
+        {{ 'components.ble_claim.retry' | translate }}
+      </ion-button>
+    </div>
+  }
+
+</ui-bottom-sheet>

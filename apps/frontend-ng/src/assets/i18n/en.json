@@ -886,6 +886,28 @@
       "scope_device": "This device",
       "scope_global": "Global",
       "failed": "Failed to load thresholds."
+    },
+    "ble_claim": {
+      "title": "Claim via Bluetooth",
+      "intro": "Power on the sensor and pick it from the list.",
+      "scanning": "Scanning…",
+      "no_sensors": "No sensors found. Make sure one is powered on in setup mode.",
+      "rescan": "Scan again",
+      "wifi_intro": "Enter the WiFi the sensor should use.",
+      "wifi_ssid": "WiFi network",
+      "wifi_password": "WiFi password",
+      "claim": "Claim device",
+      "claiming": "Claiming…",
+      "done_title": "Setup started",
+      "done_desc": "The sensor is connecting to WiFi and will appear online shortly.",
+      "unavailable": "Bluetooth is not available here. Use manual entry instead.",
+      "error_title": "Provisioning failed",
+      "retry": "Try again",
+      "st_wifi": "Connecting to WiFi…",
+      "st_activating": "Activating…",
+      "err_wifi": "WiFi connection failed — check the network and password.",
+      "err_token": "Activation was rejected — the claiming token may have expired.",
+      "err_other": "Something went wrong. Try again."
     }
   },
   "shell": {

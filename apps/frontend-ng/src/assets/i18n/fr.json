@@ -886,6 +886,28 @@
       "scope_device": "Cet appareil",
       "scope_global": "Global",
       "failed": "Échec du chargement des seuils."
+    },
+    "ble_claim": {
+      "title": "Revendiquer via Bluetooth",
+      "intro": "Allumez le capteur et choisissez-le dans la liste.",
+      "scanning": "Recherche…",
+      "no_sensors": "Aucun capteur trouvé. Vérifiez qu’un capteur est allumé en mode configuration.",
+      "rescan": "Rechercher à nouveau",
+      "wifi_intro": "Saisissez le WiFi que le capteur doit utiliser.",
+      "wifi_ssid": "Réseau WiFi",
+      "wifi_password": "Mot de passe WiFi",
+      "claim": "Revendiquer l’appareil",
+      "claiming": "Revendication…",
+      "done_title": "Configuration lancée",
+      "done_desc": "Le capteur se connecte au WiFi et apparaîtra en ligne sous peu.",
+      "unavailable": "Bluetooth non disponible ici. Utilisez la saisie manuelle.",
+      "error_title": "Échec du provisionnement",
+      "retry": "Réessayer",
+      "st_wifi": "Connexion au WiFi…",
+      "st_activating": "Activation…",
+      "err_wifi": "Échec de la connexion WiFi — vérifiez le réseau et le mot de passe.",
+      "err_token": "Activation refusée — le jeton de revendication a peut-être expiré.",
+      "err_other": "Une erreur est survenue. Réessayez."
     }
   },
   "shell": {

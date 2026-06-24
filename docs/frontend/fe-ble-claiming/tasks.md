@@ -20,7 +20,7 @@ once Phase 0 is resolved; claim UI (C) needs A's GATT contract + B's runtime; E2
 | B2 | Install `@capacitor-community/bluetooth-le`; permissions/entitlements/Info.plist | B | 🔴 pending |
 | C1 | `BleProvisioningService` in core: scan / connect / write creds / read status | C | 🟡 service + `BlePort` abstraction + 5 fake-port unit tests done; concrete adapter deferred to P0.1 |
 | C2 | Backend: issue a claiming token for a scanned deviceId to an authed operator | C | ✅ done — no change needed; reuse `POST /devices/claim` (see Q4) |
-| C3 | Register-device flow: "Scan via Bluetooth" → pick → provision | C | 🔴 pending |
+| C3 | Register-device flow: "Scan via Bluetooth" → pick → provision | C | 🟡 `BleClaimSheetComponent` (scan→pick→wifi→provision→done/error) + 5 tests + `provideBle()` (web no-op) wired in main.ts. Remaining: entry button from the register flow + real adapter (P0.1) |
 | C4 | Provisioning progress UI + reconcile to ONLINE via device list/socket | C | 🔴 pending |
 | D1 | End-to-end claim on real C3 + Heltec hardware; failure-mode QA | D | 🔴 pending |
 | D2 | macOS signed/notarized build in CI | D | 🔴 pending |
