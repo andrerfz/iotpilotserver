@@ -1,0 +1,25 @@
+{
+  "name": "IoT Pilot",
+  "short_name": "IoT Pilot",
+  "description": "IoT device management platform",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#111218",
+  "theme_color": "#111218",
+  "icons": [
+    {
+      "src": "assets/icon/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icon/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

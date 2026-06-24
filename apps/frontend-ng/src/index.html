@@ -16,9 +16,17 @@
 
     <link rel="icon" type="image/svg+xml" href="assets/icon/favicon.svg" />
     <link rel="icon" type="image/png" href="assets/icon/favicon.png" />
+    <link rel="apple-touch-icon" href="assets/icon/favicon.png" />
+
+    <!-- Web app manifest — display:standalone + scope:"/" keep every route in
+         app mode. Without it iOS treats sibling routes (e.g. /app/devices) as
+         out of scope and bounces them into a Safari tab with browser chrome. -->
+    <link rel="manifest" href="manifest.webmanifest" />
 
     <!-- add to homescreen for ios -->
     <meta name="mobile-web-app-capable" content="yes" />
+    <!-- Legacy iOS flag (pre-16.4 Safari ignores mobile-web-app-capable). -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="IoT Pilot" />
     <!-- "default" auto-adapts to light/dark system preference at launch time -->
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
