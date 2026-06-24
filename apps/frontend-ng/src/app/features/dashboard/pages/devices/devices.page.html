@@ -5,11 +5,11 @@
 
   <!-- Loading skeletons -->
   @if (devicesLoading()) {
-    <div class="metrics">
+    <ui-metric-grid>
       @for (_ of [1,2,3,4]; track $index) {
         <div class="metric-skeleton sk"></div>
       }
-    </div>
+    </ui-metric-grid>
   }
 
   <!-- Error state -->
@@ -25,7 +25,7 @@
   @if (!devicesLoading() && !devicesError()) {
 
     <!-- KPI row -->
-    <div class="metrics">
+    <ui-metric-grid>
       <ui-metric-card [label]="'devices.kpi.online' | translate" [value]="onlineCount() + '/' + totalCount()" iconColor="var(--ion-color-success)">
         <ion-icon icon name="wifi-outline"></ion-icon>
       </ui-metric-card>
@@ -38,7 +38,7 @@
       <ui-metric-card [label]="'devices.kpi.firmware_ok' | translate" [value]="firmwareCurrentCount()" iconColor="var(--ion-color-success)">
         <ion-icon icon name="checkmark-circle-outline"></ion-icon>
       </ui-metric-card>
-    </div>
+    </ui-metric-grid>
 
     <!-- Filter bar + create button -->
     <ion-card class="filter-bar">

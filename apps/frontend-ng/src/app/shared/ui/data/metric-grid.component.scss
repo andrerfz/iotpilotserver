@@ -1,0 +1,9 @@
+:host {
+  display: grid;
+  /* auto-fit: cards stretch to fill the row, then wrap once a column can no
+     longer hold its `min` width. No fixed column count — works on every width. */
+  grid-template-columns: repeat(auto-fit, minmax(var(--ui-metric-min, 150px), 1fr));
+  gap: var(--ui-metric-gap, 12px);
+  width: 100%;
+  margin-bottom: 16px;
+}

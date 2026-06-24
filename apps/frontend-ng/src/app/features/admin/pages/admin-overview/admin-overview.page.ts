@@ -10,7 +10,7 @@ import {
 } from 'ionicons/icons';
 import {
   IonContent, IonCard, IonCardContent, IonIcon, IonButton, IonSkeletonText,
-  MetricCardComponent, EmptyStateComponent,
+  MetricCardComponent, MetricGridComponent, EmptyStateComponent,
   ViewWillEnter,
   IonRefresher,
   IonRefresherContent,
@@ -31,7 +31,7 @@ addIcons({ hardwareChipOutline, peopleOutline, documentTextOutline, serverOutlin
   imports: [
     RouterLink,
     IonContent, IonCard, IonCardContent, IonIcon, IonButton, IonSkeletonText,
-    MetricCardComponent, EmptyStateComponent,
+    MetricCardComponent, MetricGridComponent, EmptyStateComponent,
     AdminTabsComponent,
     IonRefresher, IonRefresherContent,
     TranslatePipe,

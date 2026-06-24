@@ -15,11 +15,11 @@
   </div>
 
   @if (metrics.loading() && !metrics.data()) {
-    <div class="metrics-cards">
+    <ui-metric-grid>
       @for (_ of [1,2,3,4]; track $index) {
         <ion-skeleton-text [animated]="true" style="height: 80px; border-radius: 8px;"></ion-skeleton-text>
       }
-    </div>
+    </ui-metric-grid>
   } @else if (metrics.error() && !metrics.data()) {
     <ui-empty-state [title]="'device_metrics.failed.title' | translate" [hasAction]="true">
       <ion-button action fill="outline" size="small" (click)="onRefresh()">{{ 'device_metrics.failed.retry' | translate }}</ion-button>
@@ -27,7 +27,7 @@
   } @else {
 
     <!-- Current-value KPI cards -->
-    <div class="metrics-cards">
+    <ui-metric-grid>
       @if (showSystem()) {
         <ui-metric-card [label]="'device_metrics.labels.cpu' | translate"  [value]="formatMetric(cpuLast(), 'cpu') + '%'"  [iconColor]="cpuIconColor()"  [iconBg]="cpuIconBg()"></ui-metric-card>
         <ui-metric-card [label]="'device_metrics.labels.memory' | translate"     [value]="formatMetric(memLast(), 'memory') + '%'"  [iconColor]="memIconColor()"  [iconBg]="memIconBg()"></ui-metric-card>
@@ -37,7 +37,7 @@
       @if (showSensor()) {
         <ui-metric-card [label]="'device_metrics.labels.battery' | translate" [value]="formatMetric(batteryLast(), 'battery_level') + '%'" [iconColor]="batteryIconColor()" [iconBg]="batteryIconBg()"></ui-metric-card>
       }
-    </div>
+    </ui-metric-grid>
 
     <!-- Line charts -->
     <div class="metrics-charts">

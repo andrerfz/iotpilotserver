@@ -24,7 +24,7 @@
   }
 
   <!-- KPI row — skeleton while loading, real data once available -->
-  <div class="metrics">
+  <ui-metric-grid>
     <ui-metric-card
       [loading]="devicesLoading() || alertsLoading()"
       [label]="'dashboard.online' | translate" [value]="onlineCount() + '/' + totalCount()" iconColor="var(--ion-color-success)">
@@ -51,7 +51,7 @@
       [label]="'dashboard.ingest_rate' | translate" value="—" unit="pts/s" iconColor="var(--ion-color-tertiary)">
       <ion-icon icon name="flash-outline"></ion-icon>
     </ui-metric-card>
-  </div>
+  </ui-metric-grid>
 
   <!-- Main content -->
   @if (!devicesLoading() && !devicesError()) {

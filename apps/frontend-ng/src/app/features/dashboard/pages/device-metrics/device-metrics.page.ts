@@ -28,6 +28,7 @@ import {
   IonIcon,
   IonSkeletonText,
   MetricCardComponent,
+  MetricGridComponent,
   EmptyStateComponent,
 } from '@ng/shared/ui';
 import type { MetricPoint } from '@ng/core/api/generated/models/metric-point';
@@ -125,6 +126,7 @@ function batteryColor(v: number | null): string {
     IonIcon,
     IonSkeletonText,
     MetricCardComponent,
+    MetricGridComponent,
     EmptyStateComponent,
   ],
 })

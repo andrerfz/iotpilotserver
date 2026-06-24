@@ -1,11 +1,11 @@
 <ion-content class="ion-padding">
 
   <!-- Stats row -->
-  <div class="stats-row">
+  <ui-metric-grid>
     <ui-metric-card [label]="'device_alerts.states.open' | translate" [value]="openCount()" color="danger"></ui-metric-card>
     <ui-metric-card [label]="'device_alerts.states.acknowledged' | translate" [value]="ackCount()" color="warning"></ui-metric-card>
     <ui-metric-card [label]="'device_alerts.states.resolved' | translate" [value]="resolvedCount()" color="success"></ui-metric-card>
-  </div>
+  </ui-metric-grid>
 
   <!-- Top actions -->
   <div class="top-actions">

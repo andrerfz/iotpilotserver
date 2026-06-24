@@ -8,7 +8,7 @@
   }
 
   <!-- Metric cards — filtered by device capability -->
-  <div class="metrics">
+  <ui-metric-grid>
     @if (showSystemMetrics()) {
       <ui-metric-card
         [loading]="device.loading() && !device.data()"
@@ -65,7 +65,7 @@
         <ion-icon name="battery-half-outline" icon></ion-icon>
       </ui-metric-card>
     }
-  </div>
+  </ui-metric-grid>
 
   @if (device.data(); as d) {
 

@@ -6,7 +6,7 @@
   <app-admin-tabs></app-admin-tabs>
 
   <!-- Stat cards -->
-  <div class="admin-stats">
+  <ui-metric-grid>
     <ui-metric-card [label]="'admin.devices.kpi.total' | translate"    [value]="svc.stats().total"       [loading]="svc.loading() && !svc.devices().length">
       <ion-icon icon name="hardware-chip-outline"></ion-icon>
     </ui-metric-card>
@@ -21,7 +21,7 @@
       iconColor="var(--danger)" iconBg="var(--danger-weak)">
       <ion-icon icon name="warning-outline"></ion-icon>
     </ui-metric-card>
-  </div>
+  </ui-metric-grid>
 
   <!-- Filters -->
   <ion-card class="filter-bar">

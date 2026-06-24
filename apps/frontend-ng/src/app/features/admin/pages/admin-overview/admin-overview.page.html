@@ -6,17 +6,17 @@
   <app-admin-tabs></app-admin-tabs>
 
   @if (svc.loading() && !svc.data()) {
-    <div class="overview-stats">
+    <ui-metric-grid>
       @for (_ of [1,2,3,4]; track $index) {
         <ion-skeleton-text [animated]="true" style="height: 88px; border-radius: 12px;"></ion-skeleton-text>
       }
-    </div>
+    </ui-metric-grid>
   } @else if (svc.error() && !svc.data()) {
     <ui-empty-state [title]="'admin.overview.failed.title' | translate" [hasAction]="true">
       <ion-button action fill="outline" size="small" (click)="svc.load()">{{ 'admin.overview.failed.retry' | translate }}</ion-button>
     </ui-empty-state>
   } @else {
-    <div class="overview-stats">
+    <ui-metric-grid>
       <ui-metric-card [label]="'admin.overview.kpi.users' | translate" [value]="svc.data()?.userCount ?? 0">
         <ion-icon icon name="people-outline"></ion-icon>
       </ui-metric-card>
@@ -31,7 +31,7 @@
         iconColor="var(--danger)" iconBg="var(--danger-weak)">
         <ion-icon icon name="document-text-outline"></ion-icon>
       </ui-metric-card>
-    </div>
+    </ui-metric-grid>
   }
 
   <h3 class="overview-section">{{ 'admin.overview.quick_access' | translate }}</h3>

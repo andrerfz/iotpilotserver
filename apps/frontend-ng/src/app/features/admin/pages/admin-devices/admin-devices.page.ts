@@ -15,7 +15,7 @@ import {
 import {
   IonContent, IonCard, IonCardContent, IonButton, IonIcon, IonSkeletonText,
   AlertController,
-  MetricCardComponent, DataTableComponent, EmptyStateComponent,
+  MetricCardComponent, MetricGridComponent, DataTableComponent, EmptyStateComponent,
   StatusBadgeComponent, DeviceTypeBadgeComponent,
   UiSearchFieldComponent, UiSelectComponent,
   ViewWillEnter,
@@ -39,7 +39,7 @@ addIcons({ refreshOutline, eyeOutline, reloadOutline, hardwareChipOutline, check
   imports: [
     RouterLink, FormsModule,
     IonContent, IonCard, IonCardContent, IonButton, IonIcon, IonSkeletonText,
-    MetricCardComponent, DataTableComponent, EmptyStateComponent,
+    MetricCardComponent, MetricGridComponent, DataTableComponent, EmptyStateComponent,
     StatusBadgeComponent, DeviceTypeBadgeComponent,
     UiSearchFieldComponent, UiSelectComponent,
     AdminTabsComponent,

@@ -13,7 +13,7 @@
 
   <!-- Loading skeletons -->
   @if (alertsLoading()) {
-    <div class="metrics">
+    <ui-metric-grid>
       @for (_ of [1,2,3]; track $index) {
         <ion-card class="metric-skeleton">
           <ion-card-content>
@@ -22,7 +22,7 @@
           </ion-card-content>
         </ion-card>
       }
-    </div>
+    </ui-metric-grid>
   }
 
   <!-- Error state -->
@@ -38,7 +38,7 @@
   @if (!alertsLoading() && !alertsError()) {
 
     <!-- KPI row -->
-    <div class="metrics">
+    <ui-metric-grid>
       <ui-metric-card [label]="'monitoring.states.open' | translate" [value]="openCount().toString()" iconColor="var(--ion-color-danger)">
         <ion-icon icon name="alert-circle-outline"></ion-icon>
       </ui-metric-card>
@@ -48,7 +48,7 @@
       <ui-metric-card [label]="'monitoring.states.resolved' | translate" [value]="resolvedCount().toString()" iconColor="var(--ion-color-success)">
         <ion-icon icon name="checkmark-circle-outline"></ion-icon>
       </ui-metric-card>
-    </div>
+    </ui-metric-grid>
 
     <!-- Filter bar -->
     <ion-card class="filter-bar">

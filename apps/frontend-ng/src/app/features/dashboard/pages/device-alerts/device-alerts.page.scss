@@ -3,13 +3,6 @@
   height: 100%;
 }
 
-.stats-row {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
 .top-actions {
   display: flex;
   flex-wrap: wrap;
