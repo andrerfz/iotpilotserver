@@ -18,8 +18,8 @@ once Phase 0 is resolved; claim UI (C) needs A's GATT contract + B's runtime; E2
 | A5 | BLE↔WiFi coexistence + deep-sleep/timeout handling | A | 🔴 pending |
 | B1 | Add macOS app target + `make ng-cap-build-macos` | B | 🔴 pending — gated on P0.1 |
 | B2 | Install `@capacitor-community/bluetooth-le`; permissions/entitlements/Info.plist | B | 🔴 pending |
-| C1 | `BleProvisioningService` in core: scan / connect / write creds / read status | C | 🔴 pending |
-| C2 | Backend: issue a claiming token for a scanned deviceId to an authed operator | C | 🔴 pending |
+| C1 | `BleProvisioningService` in core: scan / connect / write creds / read status | C | 🟡 service + `BlePort` abstraction + 5 fake-port unit tests done; concrete adapter deferred to P0.1 |
+| C2 | Backend: issue a claiming token for a scanned deviceId to an authed operator | C | ✅ done — no change needed; reuse `POST /devices/claim` (see Q4) |
 | C3 | Register-device flow: "Scan via Bluetooth" → pick → provision | C | 🔴 pending |
 | C4 | Provisioning progress UI + reconcile to ONLINE via device list/socket | C | 🔴 pending |
 | D1 | End-to-end claim on real C3 + Heltec hardware; failure-mode QA | D | 🔴 pending |
@@ -90,10 +90,18 @@ with it, and reference it from both firmware READMEs when A2/A4 land.
 
 ## Phase C — Claim UI
 
-### C1 — BleProvisioningService
-- Angular service in `core/`: `scan()` (filter by the A1 service UUID), `connect()`,
-  `writeProvision()`, `observeStatus()`. Mockable; unit-tested with a fake plugin
-  (mirror the SocketService spec pattern).
+### C1 — BleProvisioningService ✅ (service) / 🟡 (adapter pending P0.1)
+- Done: `apps/frontend-ng/src/app/core/ble/` — `ble.port.ts` (runtime-agnostic
+  `BlePort` abstraction + GATT constants + types, mirroring the `SecureStoragePort`
+  pattern) and `ble-provisioning.service.ts` (`startScan`/`stopScan`/`readInfo`/
+  `provision`). `provision` reads device-info, claims a token via
+  `DashboardService.claimDevice` (C2), writes `provision` + `activate`, and resolves
+  "handed off" on `WIFI_CONNECTING` (the C3 drops BLE for WiFi — final ONLINE comes
+  from the dashboard reconcile, C4) or fails on `ERR_*`. 5 unit tests with a fake
+  port (`ble-provisioning.service.spec.ts`).
+- **Remaining (gated on P0.1):** a concrete `BlePort` adapter — Catalyst →
+  `@capacitor-community/bluetooth-le`; Electron → Web Bluetooth — wired via a
+  `provideBle()` provider in the chosen runtime, like fe-mobile wires SecureStorage.
 
 ### C2 — Backend token issuance
 - Verify whether `POST /api/devices/claim` already returns a claiming token for a

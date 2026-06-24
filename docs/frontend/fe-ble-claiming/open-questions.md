@@ -53,15 +53,26 @@ sniffable.
   from the claiming token. At minimum, gate the `provision` char behind an encrypted
   link. Decide the exact scheme in A1.
 
-## Q4 — Token issuance for a scanned device _(pending)_
+## Q4 — Token issuance for a scanned device _(resolved 2026-06-24)_
 
 **Question:** The app has a scanned `deviceId` and an authenticated operator. How
 does it get a valid `claimingToken` to push?
 
-- Verify `POST /api/devices/claim` (authenticated) returns/creates a claiming token
-  for a given deviceId. If it does, reuse it; if not, add a minimal endpoint. The
-  device must be pre-registered (UNCLAIMED/PENDING_SETUP) — define what the app shows
-  when a scanned device isn't registered to this tenant.
+**Resolution: reuse the existing `POST /api/devices/claim` — no backend change.**
+`ClaimDeviceCommand` finds the device by string `deviceId`, requires it to be
+UNCLAIMED (or PENDING_SETUP with an expired/unused token), associates it with the
+operator's tenant, mints a one-time `XXXX-YYYY` token (15-min TTL), and returns
+`{ deviceId, claimingToken, expiresAt, instructions }`. That is exactly the BLE
+app's need (scan → claim → push token). C2 is therefore a no-op on the backend.
+
+Edge cases for the app (C2/C3) to handle:
+- Device not found / not in this tenant's inventory → `/claim` throws "Device not
+  found" → app shows "unknown device, register it first".
+- Device already PENDING_SETUP with a **valid unused** token (factory pre-registered,
+  e.g. `make device-preregister`) → `/claim` rejects ("already claimed or not
+  available"); read the existing token from `GET /api/devices/:id`
+  → `pendingSetup.claimingToken` instead. The common BLE case (a fresh UNCLAIMED
+  sensor) uses `/claim` directly.
 
 ## Q5 — BLE↔WiFi coexistence on the single-radio C3 _(pending)_
 
