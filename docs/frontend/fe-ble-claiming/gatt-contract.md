@@ -52,8 +52,8 @@ device record.
 ```
 - Carries the operator's WiFi credentials + the claiming token the app fetched from
   the backend for this `deviceId`.
-- **Must only be writable over an encrypted/bonded link** (see open-questions Q3) —
-  it contains the WiFi password.
+- **Writable only over an encrypted/bonded link** — `WRITE_ENC` + Just Works pairing
+  (implemented, Q3); it contains the WiFi password.
 - If the JSON exceeds the negotiated ATT MTU, the app chunks it; the firmware
   buffers writes until it parses as complete JSON (or use a length-prefixed first
   write). Finalize the chunking detail in A3.

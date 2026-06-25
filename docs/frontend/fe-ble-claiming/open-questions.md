@@ -49,7 +49,21 @@ the C3 with `PartitionScheme=min_spiffs`. Switching the partition table requires
 full erase + reflash — already part of the claim/setup reflash (`ERASE=1`), so no
 extra friction. No need to drop features or go Heltec-only.
 
-## Q3 — Securing WiFi credentials over BLE _(pending)_
+## Q3 — Securing WiFi credentials over BLE _(link encryption done 2026-06-25)_
+
+**Resolved (link-layer):** the firmware now requires an **encrypted BLE link** to
+write the `provision` characteristic — `NIMBLE_PROPERTY::WRITE_ENC` + Just Works
+pairing (`setSecurityAuth(bond=true, mitm=false, sc=true)`,
+IO cap `NO_INPUT_OUTPUT`). The OS (macOS/Chrome) initiates pairing transparently on
+first write to the encrypted characteristic; the WiFi password is no longer sent in
+the clear, defeating **passive** sniffing (the realistic proximity threat). No app
+change. Just Works gives no MITM protection (an active attacker within BLE range
+during setup could still MITM) — acceptable for an internal proximity tool; full
+MITM resistance would need ECDH/out-of-band, not pursued.
+**Validate on hardware:** confirm macOS Chrome auto-pairs and the provision write
+succeeds; if Web Bluetooth balks, revisit.
+
+Original note (app-layer alternative, not taken):
 
 **Question:** The operator's WiFi password crosses the BLE link. Plaintext GATT is
 sniffable.

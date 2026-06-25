@@ -588,6 +588,10 @@ static void scanWifiNetworks() {
 
 static void bleStart(const char* apName) {
   NimBLEDevice::init(apName);
+  // Encrypt the link (Just Works: bond + LE Secure Connections, no MITM) so the
+  // WiFi password written to `provision` isn't sniffable. NoInputNoOutput → no PIN.
+  NimBLEDevice::setSecurityAuth(true, false, true);
+  NimBLEDevice::setSecurityIOCap(BLE_HS_IO_NO_INPUT_OUTPUT);
   NimBLEServer* server = NimBLEDevice::createServer();
   NimBLEService* svc = server->createService(BLE_SVC_UUID);
 
@@ -600,7 +604,8 @@ static void bleStart(const char* apName) {
   serializeJson(idoc, ijson);
   info->setValue(ijson.c_str());
 
-  NimBLECharacteristic* prov = svc->createCharacteristic(BLE_PROV_UUID, NIMBLE_PROPERTY::WRITE);
+  NimBLECharacteristic* prov = svc->createCharacteristic(
+    BLE_PROV_UUID, NIMBLE_PROPERTY::WRITE | NIMBLE_PROPERTY::WRITE_ENC);
   prov->setCallbacks(new ProvCallbacks());
 
   NimBLECharacteristic* cmd = svc->createCharacteristic(BLE_CMD_UUID, NIMBLE_PROPERTY::WRITE);
