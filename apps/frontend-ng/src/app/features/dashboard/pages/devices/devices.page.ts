@@ -53,6 +53,7 @@ import { SocketService } from '@ng/core/realtime/socket.service';
 import { DashboardService } from '../../services/dashboard.service';
 import { applyDeviceFilters } from '../../filters/device-filters';
 import { RegisterDeviceSheetComponent } from '../../components/register-device-sheet/register-device-sheet.component';
+import { BleClaimSheetComponent } from '../../components/ble-claim-sheet/ble-claim-sheet.component';
 import { TopbarService } from '../../../../shell/topbar.service';
 import { TenantContextService } from '@ng/core/auth/tenant-context.service';
 import { DeviceExportService } from '../../services/device-export.service';
@@ -99,6 +100,7 @@ const STATUS_OPTIONS: PickerOption[] = [
     DevicePickerComponent,
     MultiSelectPickerComponent,
     RegisterDeviceSheetComponent,
+    BleClaimSheetComponent,
     BottomSheetComponent,
     IonRefresher, IonRefresherContent,
     TranslatePipe,
@@ -162,6 +164,7 @@ export class DevicesPage implements AfterViewInit, ViewWillEnter {
   @ViewChild('statusCell') private statusCellTpl!: TemplateRef<{ $implicit: Device }>;
 
   private readonly registerSheet = viewChild(RegisterDeviceSheetComponent);
+  private readonly bleClaimSheet = viewChild(BleClaimSheetComponent);
   readonly columns = signal<ColumnDef<Device>[]>([]);
 
   constructor() {
@@ -232,6 +235,10 @@ export class DevicesPage implements AfterViewInit, ViewWillEnter {
 
   onRegisterDevice(): void {
     this.registerSheet()?.open();
+  }
+
+  onScanBle(): void {
+    void this.bleClaimSheet()?.open();
   }
 
   onDeviceClaimed(): void {

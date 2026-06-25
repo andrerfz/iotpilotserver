@@ -135,7 +135,10 @@
   <ui-status-badge [status]="row.status ?? 'OFFLINE'"></ui-status-badge>
 </ng-template>
 
-<app-register-device-sheet (deviceClaimed)="onDeviceClaimed()"></app-register-device-sheet>
+<app-register-device-sheet
+  (deviceClaimed)="onDeviceClaimed()"
+  (scanBle)="onScanBle()"></app-register-device-sheet>
+<app-ble-claim-sheet></app-ble-claim-sheet>
 
 <ui-bottom-sheet #exportSheet [title]="'devices.export_sheet.title' | translate">
   <div class="opt-list">

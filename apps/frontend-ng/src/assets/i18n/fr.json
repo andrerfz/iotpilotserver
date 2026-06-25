@@ -862,7 +862,8 @@
         "minutes": "minutes",
         "copy": "Copier le jeton"
       },
-      "instructions": "Instructions de configuration"
+      "instructions": "Instructions de configuration",
+      "scan_ble": "Scanner via Bluetooth"
     },
     "command_sheet": {
       "command_label": "Commande",

@@ -646,6 +646,8 @@ static void bleStart(const char* apName) {
   NimBLEAdvertising* adv = NimBLEDevice::getAdvertising();
   adv->addServiceUUID(BLE_SVC_UUID);
   adv->setName(apName);
+  // Name in scan response so it isn't dropped by the 31B adv packet (128-bit UUID).
+  adv->enableScanResponse(true);
   adv->start();
   Serial.printf("[BLE] Advertising as %s\n", apName);
 }

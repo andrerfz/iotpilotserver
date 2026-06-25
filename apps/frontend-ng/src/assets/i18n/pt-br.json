@@ -862,7 +862,8 @@
         "minutes": "minutos",
         "copy": "Copiar token"
       },
-      "instructions": "Instruções de configuração"
+      "instructions": "Instruções de configuração",
+      "scan_ble": "Escanear por Bluetooth"
     },
     "command_sheet": {
       "command_label": "Comando",

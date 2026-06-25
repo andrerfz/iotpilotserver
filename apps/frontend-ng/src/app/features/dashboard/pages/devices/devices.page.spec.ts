@@ -7,6 +7,7 @@ import { signal } from '@angular/core';
 import { render, screen } from '@testing-library/angular';
 import { DevicesPage } from './devices.page';
 import { DashboardService } from '../../services/dashboard.service';
+import { provideBle } from '@ng/core/ble/ble.providers';
 import { SocketService } from '@ng/core/realtime/socket.service';
 import type { Device } from '@ng/core/api/generated/models/device';
 
@@ -41,6 +42,7 @@ function buildProviders(overrides: {
       },
     },
     { provide: SocketService, useValue: { on: socketOn } },
+    provideBle(),
   ];
 }
 

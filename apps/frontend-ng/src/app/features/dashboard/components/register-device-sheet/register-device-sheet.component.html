@@ -53,6 +53,17 @@
         }
       </ion-button>
 
+      @if (bleAvailable) {
+        <ion-button
+          expand="block"
+          fill="outline"
+          class="claim-btn"
+          (click)="scanBle.emit()">
+          <ion-icon name="bluetooth-outline" slot="start"></ion-icon>
+          {{ 'components.register_device.scan_ble' | translate }}
+        </ion-button>
+      }
+
     </div>
   }
 

@@ -8,7 +8,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { addIcons } from 'ionicons';
-import { copyOutline, checkmarkOutline, qrCodeOutline } from 'ionicons/icons';
+import { copyOutline, checkmarkOutline, qrCodeOutline, bluetoothOutline } from 'ionicons/icons';
 
 import { TranslatePipe } from '@ngx-translate/core';
 import {
@@ -25,7 +25,7 @@ import {
 import type { ClaimResult } from '@ng/core/api/generated/models/claim-result';
 import { DashboardService } from '../../services/dashboard.service';
 
-addIcons({ copyOutline, checkmarkOutline, qrCodeOutline });
+addIcons({ copyOutline, checkmarkOutline, qrCodeOutline, bluetoothOutline });
 
 @Component({
   selector: 'app-register-device-sheet',
@@ -67,6 +67,10 @@ export class RegisterDeviceSheetComponent {
   });
 
   readonly deviceClaimed = output<ClaimResult>();
+  readonly scanBle = output<void>();
+
+  /** Whether this platform exposes Web Bluetooth (Electron/desktop Chrome). */
+  protected readonly bleAvailable = typeof navigator !== 'undefined' && 'bluetooth' in navigator;
 
   open(): void {
     this.reset();
