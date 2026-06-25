@@ -908,7 +908,8 @@
       "st_activating": "Activating…",
       "err_wifi": "WiFi connection failed — check the network and password.",
       "err_token": "Activation was rejected — the claiming token may have expired.",
-      "err_other": "Something went wrong. Try again."
+      "err_other": "Something went wrong. Try again.",
+      "ssid_not_listed": "My network isn’t listed"
     }
   },
   "shell": {

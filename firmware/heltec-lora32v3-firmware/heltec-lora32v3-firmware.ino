@@ -567,9 +567,11 @@ bool sendDataWithRetry(float temperature, float batteryPct, float batteryV, bool
 #define BLE_PROV_UUID   "8e9a0003-1b2c-4f3d-9a6b-1f2e3d4c5b6a"
 #define BLE_CMD_UUID    "8e9a0004-1b2c-4f3d-9a6b-1f2e3d4c5b6a"
 #define BLE_STAT_UUID   "8e9a0005-1b2c-4f3d-9a6b-1f2e3d4c5b6a"
+#define BLE_NET_UUID    "8e9a0006-1b2c-4f3d-9a6b-1f2e3d4c5b6a"  // WiFi networks the sensor sees
 #define BLE_SETUP_TIMEOUT_MS  300000UL   // 5 min, then fall back to the AP portal
 
 static NimBLECharacteristic* bleStatusChar = nullptr;
+static String bleNetworksJson = "[]";
 static String bleProvBuf = "";
 static char bleSsid[64]  = "";
 static char blePass[64]  = "";
@@ -618,6 +620,30 @@ class CmdCallbacks : public NimBLECharacteristicCallbacks {
   }
 };
 
+// Scan nearby WiFi (before NimBLE) and cache SSIDs so the app offers a pick-list.
+static void scanWifiNetworks() {
+  WiFi.mode(WIFI_STA);
+  int n = WiFi.scanNetworks();
+  DynamicJsonDocument doc(1024);
+  JsonArray arr = doc.to<JsonArray>();
+  String seen = "";
+  for (int i = 0; i < n && arr.size() < 15; i++) {
+    String ssid = WiFi.SSID(i);
+    if (ssid.length() == 0) continue;
+    String key = "\n" + ssid + "\n";
+    if (seen.indexOf(key) >= 0) continue;
+    seen += key;
+    JsonObject o = arr.createNestedObject();
+    o["ssid"] = ssid;
+    o["rssi"] = WiFi.RSSI(i);
+  }
+  bleNetworksJson = "";
+  serializeJson(doc, bleNetworksJson);
+  WiFi.scanDelete();
+  WiFi.mode(WIFI_OFF);
+  Serial.printf("[WiFi] Scanned %d networks (%d unique)\n", n, arr.size());
+}
+
 static void bleStart(const char* apName) {
   NimBLEDevice::init(apName);
   NimBLEServer* server = NimBLEDevice::createServer();
@@ -641,6 +667,9 @@ static void bleStart(const char* apName) {
   bleStatusChar = svc->createCharacteristic(
     BLE_STAT_UUID, NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::NOTIFY);
   bleStatusChar->setValue("IDLE");
+
+  NimBLECharacteristic* nets = svc->createCharacteristic(BLE_NET_UUID, NIMBLE_PROPERTY::READ);
+  nets->setValue(bleNetworksJson.c_str());
 
   svc->start();
   NimBLEAdvertising* adv = NimBLEDevice::getAdvertising();
@@ -671,6 +700,7 @@ bool setupBLE() {
   bleProvReceived = false;
   bleActivateReq  = false;
   bleProvBuf      = "";
+  scanWifiNetworks();   // cache nearby SSIDs (WiFi radio) before bringing up BLE
   bleStart(apName);
 
   unsigned long deadline = millis() + BLE_SETUP_TIMEOUT_MS;

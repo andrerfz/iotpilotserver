@@ -908,7 +908,8 @@
       "st_activating": "Attivazione…",
       "err_wifi": "Connessione WiFi non riuscita — controlla rete e password.",
       "err_token": "Attivazione rifiutata — il token di rivendicazione potrebbe essere scaduto.",
-      "err_other": "Qualcosa è andato storto. Riprova."
+      "err_other": "Qualcosa è andato storto. Riprova.",
+      "ssid_not_listed": "La mia rete non compare"
     }
   },
   "shell": {

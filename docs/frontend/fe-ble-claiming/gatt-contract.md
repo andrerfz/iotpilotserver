@@ -15,6 +15,18 @@ Custom 128-bit UUIDs (base `8e9aXXXX-1b2c-4f3d-9a6b-1f2e3d4c5b6a`):
 | `provision` | `8e9a0003-1b2c-4f3d-9a6b-1f2e3d4c5b6a` | Write (encrypted link required) |
 | `command` | `8e9a0004-1b2c-4f3d-9a6b-1f2e3d4c5b6a` | Write |
 | `status` | `8e9a0005-1b2c-4f3d-9a6b-1f2e3d4c5b6a` | Read + Notify |
+| `networks` | `8e9a0006-1b2c-4f3d-9a6b-1f2e3d4c5b6a` | Read |
+
+### `networks` (Read) — JSON
+WiFi SSIDs the sensor scanned at setup boot, so the app offers a pick-list instead
+of free-text SSID entry (avoids typos like `YUREST` vs `Yurest`). De-duped on the
+device, capped at 15.
+```json
+[ { "ssid": "YUREST", "rssi": -52 }, { "ssid": "Guest", "rssi": -77 } ]
+```
+Single-radio note: the scan runs **before** BLE starts (WiFi and BLE can't run
+together on the C3), so the list is from boot time. Empty `[]` → the app falls back
+to manual SSID entry.
 
 ## Advertisement
 

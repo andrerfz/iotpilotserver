@@ -908,7 +908,8 @@
       "st_activating": "Activando…",
       "err_wifi": "Fallo de conexión WiFi — revisa la red y la contraseña.",
       "err_token": "Activación rechazada — el token de claim puede haber caducado.",
-      "err_other": "Algo salió mal. Inténtalo de nuevo."
+      "err_other": "Algo salió mal. Inténtalo de nuevo.",
+      "ssid_not_listed": "Mi red no aparece"
     }
   },
   "shell": {

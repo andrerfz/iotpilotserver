@@ -908,7 +908,8 @@
       "st_activating": "Ativando…",
       "err_wifi": "Falha na conexão WiFi — verifique a rede e a senha.",
       "err_token": "Ativação rejeitada — o token de reivindicação pode ter expirado.",
-      "err_other": "Algo deu errado. Tente novamente."
+      "err_other": "Algo deu errado. Tente novamente.",
+      "ssid_not_listed": "Minha rede não aparece"
     }
   },
   "shell": {

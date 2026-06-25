@@ -17,6 +17,7 @@ export const BLE_SETUP = {
   provisionChar: '8e9a0003-1b2c-4f3d-9a6b-1f2e3d4c5b6a',
   commandChar: '8e9a0004-1b2c-4f3d-9a6b-1f2e3d4c5b6a',
   statusChar: '8e9a0005-1b2c-4f3d-9a6b-1f2e3d4c5b6a',
+  networksChar: '8e9a0006-1b2c-4f3d-9a6b-1f2e3d4c5b6a',
 } as const;
 
 /** `status` characteristic values (the firmware notifies on every transition). */
@@ -50,6 +51,12 @@ export interface DeviceInfo {
 export interface WifiCredentials {
   ssid: string;
   password: string;
+}
+
+/** A WiFi network the sensor sees, read from the `networks` characteristic. */
+export interface WifiNetwork {
+  ssid: string;
+  rssi?: number;
 }
 
 /**

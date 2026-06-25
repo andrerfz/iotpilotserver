@@ -7,6 +7,7 @@ import {
   ProvisioningStatus,
   ScanResultLite,
   WifiCredentials,
+  WifiNetwork,
 } from './ble.port';
 
 /** A discovered setup-mode sensor shown in the scan list. */
@@ -74,6 +75,28 @@ export class BleProvisioningService {
     await this.ble.connect(peripheralId);
     const raw = await this.ble.read(peripheralId, BLE_SETUP.serviceUuid, BLE_SETUP.infoChar);
     return JSON.parse(raw) as DeviceInfo;
+  }
+
+  /**
+   * Read the WiFi networks the sensor scanned at boot, so the operator picks the
+   * exact SSID from a list (no typos). De-dupes by SSID, strongest signal first.
+   * Returns [] if unreadable (the UI falls back to manual SSID entry).
+   */
+  async readNetworks(peripheralId: string): Promise<WifiNetwork[]> {
+    try {
+      await this.ble.connect(peripheralId);
+      const raw = await this.ble.read(peripheralId, BLE_SETUP.serviceUuid, BLE_SETUP.networksChar);
+      const list = JSON.parse(raw) as WifiNetwork[];
+      const bySsid = new Map<string, WifiNetwork>();
+      for (const n of list) {
+        if (!n?.ssid) continue;
+        const prev = bySsid.get(n.ssid);
+        if (!prev || (n.rssi ?? -999) > (prev.rssi ?? -999)) bySsid.set(n.ssid, n);
+      }
+      return [...bySsid.values()].sort((a, b) => (b.rssi ?? -999) - (a.rssi ?? -999));
+    } catch {
+      return [];
+    }
   }
 
   /**

@@ -39,13 +39,23 @@
     <div class="ble-step">
       <p class="ble-step__intro">{{ 'components.ble_claim.wifi_intro' | translate }}</p>
 
-      <ion-item class="form-item">
-        <ion-label position="stacked">{{ 'components.ble_claim.wifi_ssid' | translate }}</ion-label>
-        <ion-input
-          [value]="ssid()"
-          (ionInput)="ssid.set($any($event).detail.value ?? '')"
-          autocomplete="off" autocorrect="off" spellcheck="false"></ion-input>
-      </ion-item>
+      @if (usePicker()) {
+        <ui-select
+          [label]="'components.ble_claim.wifi_ssid' | translate"
+          [options]="ssidOptions()"
+          [formControl]="ssidCtrl"></ui-select>
+        <ion-button fill="clear" size="small" (click)="enableManualSsid()">
+          {{ 'components.ble_claim.ssid_not_listed' | translate }}
+        </ion-button>
+      } @else {
+        <ion-item class="form-item">
+          <ion-label position="stacked">{{ 'components.ble_claim.wifi_ssid' | translate }}</ion-label>
+          <ion-input
+            [value]="ssid()"
+            (ionInput)="ssid.set($any($event).detail.value ?? '')"
+            autocomplete="off" autocorrect="off" spellcheck="false"></ion-input>
+        </ion-item>
+      }
 
       <ion-item class="form-item">
         <ion-label position="stacked">{{ 'components.ble_claim.wifi_password' | translate }}</ion-label>
@@ -55,7 +65,7 @@
           (ionInput)="password.set($any($event).detail.value ?? '')"></ion-input>
       </ion-item>
 
-      <ion-button expand="block" color="primary" [disabled]="!ssid().trim()" (click)="claim()">
+      <ion-button expand="block" color="primary" [disabled]="!effectiveSsid()" (click)="claim()">
         {{ 'components.ble_claim.claim' | translate }}
       </ion-button>
     </div>
