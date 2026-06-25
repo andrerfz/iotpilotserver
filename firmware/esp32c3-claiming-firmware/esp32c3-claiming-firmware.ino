@@ -607,9 +607,12 @@ static void bleStop() {
 // final result is not sent back over BLE). On failure we re-advertise and report
 // ERR_* so the operator can retry. (Coexistence/retry hardening = task A5.)
 bool setupBLE() {
+  // Advertise with the last 4 chars of the deviceId (e.g. IotPilot-Setup-MP99)
+  // so the name matches the device label — not the chip MAC. (gatt-contract.md)
   char apName[32];
-  uint64_t chipId = ESP.getEfuseMac();
-  snprintf(apName, sizeof(apName), "IotPilot-Setup-%04X", (uint16_t)(chipId & 0xFFFF));
+  size_t idLen = strlen(config.deviceId);
+  const char* idTail = idLen >= 4 ? config.deviceId + idLen - 4 : config.deviceId;
+  snprintf(apName, sizeof(apName), "IotPilot-Setup-%s", idTail);
 
   bleProvReceived = false;
   bleActivateReq  = false;

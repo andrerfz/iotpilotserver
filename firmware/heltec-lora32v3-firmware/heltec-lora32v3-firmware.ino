@@ -660,9 +660,11 @@ static void bleStop() {
 // false on timeout (caller falls back to the AP portal). See the C3 firmware for the
 // single-radio teardown rationale; the S3 shares the 2.4 GHz radio too.
 bool setupBLE() {
+  // Advertise with the last 4 chars of the deviceId (matches the device label).
   char apName[32];
-  uint64_t chipId = ESP.getEfuseMac();
-  snprintf(apName, sizeof(apName), "IotPilot-Setup-%04X", (uint16_t)(chipId & 0xFFFF));
+  size_t idLen = strlen(config.deviceId);
+  const char* idTail = idLen >= 4 ? config.deviceId + idLen - 4 : config.deviceId;
+  snprintf(apName, sizeof(apName), "IotPilot-Setup-%s", idTail);
 
   bleProvReceived = false;
   bleActivateReq  = false;
