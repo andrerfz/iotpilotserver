@@ -47,13 +47,11 @@ import {
   ViewWillEnter,
   IonRefresher,
   IonRefresherContent,
-  IonItem,
-  IonLabel,
-  IonNote,
+  ActionSheetController,
 } from '@ng/shared/ui';
 import type { ColumnDef, DevicePickerItem, PickerOption } from '@ng/shared/ui';
 import type { Device } from '@ng/core/api/generated/models/device';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { SocketService } from '@ng/core/realtime/socket.service';
 import { DashboardService } from '../../services/dashboard.service';
 import { applyDeviceFilters } from '../../filters/device-filters';
@@ -110,7 +108,6 @@ const STATUS_OPTIONS: PickerOption[] = [
     BleClaimSheetComponent,
     BottomSheetComponent,
     IonRefresher, IonRefresherContent,
-    IonItem, IonLabel, IonNote,
     TranslatePipe,
   ],
 })
@@ -119,6 +116,8 @@ export class DevicesPage implements AfterViewInit, ViewWillEnter {
   private readonly socketService = inject(SocketService);
   private readonly router = inject(Router);
   private readonly topbar = inject(TopbarService);
+  private readonly actionSheet = inject(ActionSheetController);
+  private readonly t = inject(TranslateService);
   private readonly tenantCtx = inject(TenantContextService);
   private readonly exportService = inject(DeviceExportService);
 
@@ -173,13 +172,10 @@ export class DevicesPage implements AfterViewInit, ViewWillEnter {
 
   private readonly registerSheet = viewChild(RegisterDeviceSheetComponent);
   private readonly bleClaimSheet = viewChild(BleClaimSheetComponent);
-  private readonly addSheet = viewChild<BottomSheetComponent>('addSheet');
   readonly columns = signal<ColumnDef<Device>[]>([]);
 
   /** Web Bluetooth present (desktop Chrome/Edge / Electron) → offer the BLE option. */
   protected readonly bleAvailable = typeof navigator !== 'undefined' && 'bluetooth' in navigator;
-  /** Which add-flow the operator picked in the chooser; opened after it dismisses. */
-  private readonly pendingAdd = signal<'manual' | 'ble' | null>(null);
 
   constructor() {
     effect(() => {
@@ -247,32 +243,29 @@ export class DevicesPage implements AfterViewInit, ViewWillEnter {
     void this.exportService.exportPdf(this.selectedDevices(), 'devices');
   }
 
-  onRegisterDevice(): void {
-    // No BLE on this platform → go straight to manual entry; else offer the chooser.
+  async onRegisterDevice(): Promise<void> {
+    // No BLE on this platform → straight to manual entry; else a short action sheet.
     if (!this.bleAvailable) {
       this.registerSheet()?.open();
       return;
     }
-    this.pendingAdd.set(null);
-    this.addSheet()?.open();
-  }
-
-  protected chooseManual(): void {
-    this.pendingAdd.set('manual');
-    this.addSheet()?.close();
-  }
-
-  protected chooseBle(): void {
-    this.pendingAdd.set('ble');
-    this.addSheet()?.close();
-  }
-
-  /** After the chooser dismisses, open the picked flow (avoids stacked modals). */
-  protected onAddSheetDismiss(): void {
-    const choice = this.pendingAdd();
-    this.pendingAdd.set(null);
-    if (choice === 'manual') this.registerSheet()?.open();
-    else if (choice === 'ble') void this.bleClaimSheet()?.open();
+    const sheet = await this.actionSheet.create({
+      header: this.t.instant('components.add_device.title'),
+      buttons: [
+        {
+          text: this.t.instant('components.add_device.manual'),
+          icon: 'qr-code-outline',
+          handler: () => { this.registerSheet()?.open(); },
+        },
+        {
+          text: this.t.instant('components.add_device.bluetooth'),
+          icon: 'bluetooth-outline',
+          handler: () => { void this.bleClaimSheet()?.open(); },
+        },
+        { text: this.t.instant('common.cancel'), role: 'cancel' },
+      ],
+    });
+    await sheet.present();
   }
 
   onDeviceClaimed(): void {
