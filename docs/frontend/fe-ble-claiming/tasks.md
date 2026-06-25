@@ -22,6 +22,7 @@ once Phase 0 is resolved; claim UI (C) needs A's GATT contract + B's runtime; E2
 | C2 | Backend: issue a claiming token for a scanned deviceId to an authed operator | C | ✅ done — no change needed; reuse `POST /devices/claim` (see Q4) |
 | C3 | Register-device flow: "Scan via Bluetooth" → pick → provision | C | 🟡 `BleClaimSheetComponent` (scan→pick→wifi→provision→done/error) + 5 tests + `provideBle()` (web no-op) wired in main.ts. Remaining: entry button from the register flow + real adapter (P0.1) |
 | C4 | Provisioning progress UI + reconcile to ONLINE via device list/socket | C | 🔴 pending |
+| C5 | Native `BlePort` adapter for mobile (`@capacitor-community/bluetooth-le`) | C | 🔴 pending — **do with the mobile build** (see below) |
 | D1 | End-to-end claim on real C3 + Heltec hardware; failure-mode QA | D | 🔴 pending |
 | D2 | macOS signed/notarized build in CI | D | 🔴 pending |
 
@@ -116,6 +117,29 @@ with it, and reference it from both firmware READMEs when A2/A4 land.
 ### C4 — Progress + reconcile
 - Show provisioning progress from the BLE `status` notifications; on `ACTIVATED`,
   reconcile against the device list (reuse the `device:update` socket) until ONLINE.
+
+### C5 — Native BlePort adapter (mobile) — do alongside the mobile build
+The web/Electron path uses `WebBluetoothBlePort` (navigator.bluetooth). iOS WKWebView
+has no Web Bluetooth, so the `.ipa`/`.apk` need a native adapter. The `BlePort`
+abstraction makes this a drop-in — no service/UI changes.
+
+- **Design:** `CapacitorBlePort implements BlePort` over `@capacitor-community/bluetooth-le`'s
+  `BleClient`:
+  - `initialize` → `BleClient.initialize()`; `isAvailable` → `BleClient.isEnabled()`.
+  - `scan` → `BleClient.requestLEScan({ services:[serviceUuid] }, cb)` — native gives a
+    **live multi-device list** (better than the web's single-device chooser); `stopScan` → `stopLEScan()`.
+  - `connect`/`disconnect`/`read`/`write`/`startNotifications` map 1:1 to `BleClient`;
+    use `textToDataView`/`dataViewToText` for payloads.
+  - `provideBle()` selection: `Capacitor.isNativePlatform()` → `CapacitorBlePort`;
+    web/Electron (`navigator.bluetooth`) → `WebBluetoothBlePort`; else `UnavailableBlePort`.
+- **Why deferred (not done now):** adding `@capacitor-community/bluetooth-le` touches the
+  build infra — the repo is a **pnpm workspace** (Docker `pnpm install --frozen-lockfile`,
+  `pnpm-lock.yaml` is the source of truth) while host `apps/frontend-ng` is npm-managed;
+  the root lockfile isn't mounted into the test container. Install it as part of standing
+  up the mobile build (pnpm add at the workspace + `npx cap sync` for the native pods/gradle)
+  so package.json + pnpm-lock stay consistent and it can be **validated on a real device**.
+- **Link encryption (Q3):** native CoreBluetooth/Android handle the Just Works pairing
+  for the `WRITE_ENC` provision characteristic the same as the desktop path.
 
 ---
 
