@@ -25,9 +25,14 @@ of truth is the pnpm workspace; this npm path is for host-side desktop builds.)
 
 ## Run (dev)
 
+The shell loads the **deployed site** (`https://dashboard.iotpilot.app`) in
+Electron's Chromium — no local Angular build needed, and it avoids the file://
+problems an SPA has (base href, path routing, relative /api).
+
 ```bash
-npm run build                 # produces www/
-npx electron electron/main.js # opens the desktop app
+npx electron electron/main.js                                   # prod site
+IOTPILOT_URL=https://dashboarddev.iotpilot.app npx electron electron/main.js  # dev site
+# or: make ng-electron-dev
 ```
 
 On a Mac, the system Bluetooth permission prompt appears on first scan. Power a

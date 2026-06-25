@@ -727,8 +727,9 @@ ng-cap-build-macos:
 	@echo "✅ Desktop build at apps/frontend-ng/dist-electron/  — copy the .app to /Applications to test"
 
 ng-electron-dev:
-	@echo "🖥️  Running Electron desktop app (dev)..."
-	@cd apps/frontend-ng && npm run build && npx electron electron/main.js
+	@echo "🖥️  Running Electron desktop app (loads the deployed site)..."
+	@echo "   Override target with: IOTPILOT_URL=https://dashboarddev.iotpilot.app"
+	@cd apps/frontend-ng && npx electron electron/main.js
 
 # =============================================================================
 # FAKE DEVICE — local IoT device emulator (Alpine + sshd)

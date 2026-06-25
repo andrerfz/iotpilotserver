@@ -3,17 +3,13 @@
 // This is the desktop runtime chosen for P0.1 (Electron, for cross-OS reach).
 const { app, BrowserWindow, session } = require('electron');
 const path = require('path');
-const fs = require('fs');
 
-// Angular's application builder may emit at www/ or www/browser/ depending on the
-// outputPath config — support both.
-function resolveIndex() {
-  const candidates = [
-    path.join(__dirname, '..', 'www', 'index.html'),
-    path.join(__dirname, '..', 'www', 'browser', 'index.html'),
-  ];
-  return candidates.find((p) => fs.existsSync(p)) || candidates[0];
-}
+// Load the deployed HTTPS site rather than the local build over file://.
+// An Angular SPA does not load under file:// (base href, path routing, and the
+// relative /api base all break). Pointing Electron at the live site gives the
+// real app + API + routing + Web Bluetooth (Electron's Chromium) with no bundling.
+// Override for staging/dev with IOTPILOT_URL.
+const APP_URL = process.env.IOTPILOT_URL || 'https://dashboard.iotpilot.app';
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -50,7 +46,7 @@ function createWindow() {
   session.defaultSession.setPermissionCheckHandler((_wc, permission) => permission === 'bluetooth');
   session.defaultSession.setPermissionRequestHandler((_wc, permission, cb) => cb(permission === 'bluetooth'));
 
-  win.loadFile(resolveIndex());
+  win.loadURL(APP_URL);
 }
 
 app.whenReady().then(createWindow);
