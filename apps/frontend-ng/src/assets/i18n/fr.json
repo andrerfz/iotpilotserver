@@ -909,7 +909,15 @@
       "err_wifi": "Échec de la connexion WiFi — vérifiez le réseau et le mot de passe.",
       "err_token": "Activation refusée — le jeton de revendication a peut-être expiré.",
       "err_other": "Une erreur est survenue. Réessayez.",
-      "ssid_not_listed": "Mon réseau n’apparaît pas"
+      "ssid_not_listed": "Mon réseau n’apparaît pas",
+      "loading_networks": "Recherche des réseaux WiFi…"
+    },
+    "add_device": {
+      "title": "Ajouter un appareil",
+      "manual": "Saisir l’ID de l’appareil",
+      "manual_desc": "Tapez l’ID de l’étiquette de l’appareil",
+      "bluetooth": "Scanner via Bluetooth",
+      "bluetooth_desc": "Trouvez un capteur à proximité en mode configuration"
     }
   },
   "shell": {

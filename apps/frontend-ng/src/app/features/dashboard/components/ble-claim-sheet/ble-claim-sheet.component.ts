@@ -78,6 +78,8 @@ export class BleClaimSheetComponent {
   protected readonly ssidCtrl = new FormControl('', { nonNullable: true });
   /** Manual SSID entry (hidden network, or nothing scanned). */
   protected readonly manualSsid = signal(false);
+  /** True while reading the sensor's WiFi scan (avoids the input→picker flip). */
+  protected readonly loadingNetworks = signal(false);
   protected readonly ssid = signal('');
   protected readonly password = signal('');
 
@@ -111,16 +113,21 @@ export class BleClaimSheetComponent {
     this.step.set('wifi');
     void this.ble.stopScan();
     this.password.set(rememberedPassword);
-    const nets = await this.ble.readNetworks(s.peripheralId);
-    this.networks.set(nets);
-    // Pre-select the last-used SSID if the sensor can see it.
-    const last = localStorage.getItem(LAST_SSID_KEY) ?? '';
-    if (last && nets.some((n) => n.ssid === last)) {
-      this.ssidCtrl.setValue(last);
-    } else if (last) {
-      this.ssid.set(last);
+    this.loadingNetworks.set(true);
+    try {
+      const nets = await this.ble.readNetworks(s.peripheralId);
+      this.networks.set(nets);
+      // Pre-select the last-used SSID if the sensor can see it.
+      const last = localStorage.getItem(LAST_SSID_KEY) ?? '';
+      if (last && nets.some((n) => n.ssid === last)) {
+        this.ssidCtrl.setValue(last);
+      } else if (last) {
+        this.ssid.set(last);
+      }
+      this.manualSsid.set(nets.length === 0);
+    } finally {
+      this.loadingNetworks.set(false);
     }
-    this.manualSsid.set(nets.length === 0);
   }
 
   protected effectiveSsid(): string {
@@ -190,6 +197,7 @@ export class BleClaimSheetComponent {
     this.picked.set(null);
     this.networks.set([]);
     this.manualSsid.set(false);
+    this.loadingNetworks.set(false);
     this.ssidCtrl.setValue('');
     this.ssid.set('');
     this.password.set('');

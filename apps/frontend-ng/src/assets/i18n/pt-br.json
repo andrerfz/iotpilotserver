@@ -909,7 +909,15 @@
       "err_wifi": "Falha na conexão WiFi — verifique a rede e a senha.",
       "err_token": "Ativação rejeitada — o token de reivindicação pode ter expirado.",
       "err_other": "Algo deu errado. Tente novamente.",
-      "ssid_not_listed": "Minha rede não aparece"
+      "ssid_not_listed": "Minha rede não aparece",
+      "loading_networks": "Procurando redes WiFi…"
+    },
+    "add_device": {
+      "title": "Adicionar um dispositivo",
+      "manual": "Inserir ID do dispositivo",
+      "manual_desc": "Digite o ID da etiqueta do dispositivo",
+      "bluetooth": "Escanear por Bluetooth",
+      "bluetooth_desc": "Encontre um sensor próximo em modo de configuração"
     }
   },
   "shell": {

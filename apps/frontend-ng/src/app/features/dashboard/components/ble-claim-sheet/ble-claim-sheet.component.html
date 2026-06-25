@@ -39,6 +39,12 @@
     <div class="ble-step">
       <p class="ble-step__intro">{{ 'components.ble_claim.wifi_intro' | translate }}</p>
 
+      @if (loadingNetworks()) {
+        <div class="ble-status">
+          <ion-spinner name="crescent"></ion-spinner>
+          <span>{{ 'components.ble_claim.loading_networks' | translate }}</span>
+        </div>
+      } @else {
       @if (usePicker()) {
         <ui-select
           [label]="'components.ble_claim.wifi_ssid' | translate"
@@ -68,6 +74,7 @@
       <ion-button expand="block" color="primary" [disabled]="!effectiveSsid()" (click)="claim()">
         {{ 'components.ble_claim.claim' | translate }}
       </ion-button>
+      }
     </div>
   }
 

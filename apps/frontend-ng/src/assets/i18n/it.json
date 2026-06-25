@@ -909,7 +909,15 @@
       "err_wifi": "Connessione WiFi non riuscita — controlla rete e password.",
       "err_token": "Attivazione rifiutata — il token di rivendicazione potrebbe essere scaduto.",
       "err_other": "Qualcosa è andato storto. Riprova.",
-      "ssid_not_listed": "La mia rete non compare"
+      "ssid_not_listed": "La mia rete non compare",
+      "loading_networks": "Ricerca reti WiFi…"
+    },
+    "add_device": {
+      "title": "Aggiungi un dispositivo",
+      "manual": "Inserisci ID dispositivo",
+      "manual_desc": "Digita l’ID dall’etichetta del dispositivo",
+      "bluetooth": "Scansiona via Bluetooth",
+      "bluetooth_desc": "Trova un sensore vicino in modalità setup"
     }
   },
   "shell": {

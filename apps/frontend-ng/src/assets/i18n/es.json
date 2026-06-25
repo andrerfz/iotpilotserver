@@ -909,7 +909,15 @@
       "err_wifi": "Fallo de conexión WiFi — revisa la red y la contraseña.",
       "err_token": "Activación rechazada — el token de claim puede haber caducado.",
       "err_other": "Algo salió mal. Inténtalo de nuevo.",
-      "ssid_not_listed": "Mi red no aparece"
+      "ssid_not_listed": "Mi red no aparece",
+      "loading_networks": "Buscando redes WiFi…"
+    },
+    "add_device": {
+      "title": "Añadir un dispositivo",
+      "manual": "Introducir ID del dispositivo",
+      "manual_desc": "Escribe el ID de la etiqueta del dispositivo",
+      "bluetooth": "Escanear por Bluetooth",
+      "bluetooth_desc": "Busca un sensor cercano en modo setup"
     }
   },
   "shell": {

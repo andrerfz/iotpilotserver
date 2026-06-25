@@ -909,7 +909,15 @@
       "err_wifi": "WiFi connection failed — check the network and password.",
       "err_token": "Activation was rejected — the claiming token may have expired.",
       "err_other": "Something went wrong. Try again.",
-      "ssid_not_listed": "My network isn’t listed"
+      "ssid_not_listed": "My network isn’t listed",
+      "loading_networks": "Looking for WiFi networks…"
+    },
+    "add_device": {
+      "title": "Add a device",
+      "manual": "Enter device ID",
+      "manual_desc": "Type the ID from the device label",
+      "bluetooth": "Scan via Bluetooth",
+      "bluetooth_desc": "Find a nearby sensor in setup mode"
     }
   },
   "shell": {
