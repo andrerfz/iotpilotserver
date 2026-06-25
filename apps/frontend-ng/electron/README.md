@@ -19,6 +19,10 @@ cd apps/frontend-ng
 npm i -D electron electron-builder
 ```
 
+(`apps/frontend-ng/.npmrc` sets `legacy-peer-deps=true`, so this resolves cleanly
+despite the benign `@angular/build` ↔ `vitest@4` peer mismatch. The repo's source
+of truth is the pnpm workspace; this npm path is for host-side desktop builds.)
+
 ## Run (dev)
 
 ```bash
