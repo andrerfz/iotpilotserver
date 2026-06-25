@@ -135,6 +135,31 @@
   <ui-status-badge [status]="row.status ?? 'OFFLINE'"></ui-status-badge>
 </ng-template>
 
+<!-- "+" chooser: manual entry vs BLE scan (short sheet, our design tokens) -->
+<ui-bottom-sheet
+  #addSheet
+  [title]="'components.add_device.title' | translate"
+  [breakpoint]="0.42"
+  [showSave]="false"
+  (dismiss)="onAddSheetDismiss()">
+  <div class="add-chooser">
+    <button type="button" class="add-chooser__opt" (click)="chooseManual()">
+      <ion-icon name="qr-code-outline" class="add-chooser__icon"></ion-icon>
+      <span class="add-chooser__text">
+        <span class="add-chooser__title">{{ 'components.add_device.manual' | translate }}</span>
+        <span class="add-chooser__desc">{{ 'components.add_device.manual_desc' | translate }}</span>
+      </span>
+    </button>
+    <button type="button" class="add-chooser__opt" (click)="chooseBle()">
+      <ion-icon name="bluetooth-outline" class="add-chooser__icon"></ion-icon>
+      <span class="add-chooser__text">
+        <span class="add-chooser__title">{{ 'components.add_device.bluetooth' | translate }}</span>
+        <span class="add-chooser__desc">{{ 'components.add_device.bluetooth_desc' | translate }}</span>
+      </span>
+    </button>
+  </div>
+</ui-bottom-sheet>
+
 <app-register-device-sheet (deviceClaimed)="onDeviceClaimed()"></app-register-device-sheet>
 <app-ble-claim-sheet></app-ble-claim-sheet>
 

@@ -33,8 +33,8 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
   template: `
     <ion-modal #modalEl class="ui-sheet" [class.ui-sheet--card]="isCard()"
       [mode]="isCard() ? 'ios' : undefined"
-      [breakpoints]="isCard() ? undefined : [0, 0.92]"
-      [initialBreakpoint]="isCard() ? undefined : 0.92"
+      [breakpoints]="isCard() ? undefined : [0, breakpoint()]"
+      [initialBreakpoint]="isCard() ? undefined : breakpoint()"
       [handle]="!isCard()"
       (ionModalWillPresent)="willOpen.emit()"
       (ionModalDidDismiss)="dismiss.emit()">
@@ -48,10 +48,14 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
                 <div class="sheet__sub">{{ subline() }}</div>
               }
             </div>
-            <button type="button" class="sheet__act sheet__act--save"
-              [disabled]="saveDisabled()" (click)="save.emit(); modalEl.dismiss()">
-              {{ saveLabel() || ('ui.apply' | translate) }}
-            </button>
+            @if (showSave()) {
+              <button type="button" class="sheet__act sheet__act--save"
+                [disabled]="saveDisabled()" (click)="save.emit(); modalEl.dismiss()">
+                {{ saveLabel() || ('ui.apply' | translate) }}
+              </button>
+            } @else {
+              <span class="sheet__act sheet__act--save" aria-hidden="true"></span>
+            }
           </div>
         </ion-header>
 
@@ -75,6 +79,10 @@ export class BottomSheetComponent {
   readonly sub = input('');
   readonly saveLabel = input('');
   readonly saveDisabled = input(false);
+  /** Sheet height as a viewport fraction (default near-full). Use a small value for short choosers. */
+  readonly breakpoint = input(0.92);
+  /** Show the header "Apply" action. Set false for choosers/lists with no save step. */
+  readonly showSave = input(true);
   /** Selected count shown under the title; null/undefined falls back to `sub`. */
   readonly count = input<number | null>(null);
   /** `'sheet'` (bottom sheet, default) or `'card'` (iOS card modal that cascades when nested). */
