@@ -31,6 +31,12 @@ export const PaginationParamsSchema = z.object({
     limit: z.coerce.number().int().min(1).max(100).default(20),
 });
 
+// Generic acknowledgement payload returned by mutation endpoints that have no
+// richer body (deletes, logout, retries, etc.).
+export const MessageResponseSchema = z.object({
+    message: z.string(),
+});
+
 // ── Inferred types (for frontend) ───────────────────────────
 
 export type DeviceStatus = z.infer<typeof DeviceStatusEnum>;

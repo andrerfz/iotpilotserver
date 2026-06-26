@@ -25,6 +25,18 @@
             }
         },
         "schemas": {
+            "MessageResponse": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "message"
+                ],
+                "additionalProperties": false
+            },
             "DeviceResponse": {
                 "type": "object",
                 "properties": {
@@ -1783,7 +1795,31 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Logged out"
+                        "description": "Logged out",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/MessageResponse"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -1919,7 +1955,31 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Sessions revoked"
+                        "description": "Sessions revoked",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/MessageResponse"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -1948,7 +2008,31 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Session revoked"
+                        "description": "Session revoked",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/MessageResponse"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -1976,7 +2060,31 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Password changed"
+                        "description": "Password changed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/MessageResponse"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -2036,7 +2144,31 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "API key revoked"
+                        "description": "API key revoked",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/MessageResponse"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -2592,7 +2724,31 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Device deleted"
+                        "description": "Device deleted",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/MessageResponse"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -2907,7 +3063,31 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Alert deleted"
+                        "description": "Alert deleted",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/MessageResponse"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -3261,7 +3441,31 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OTA requested"
+                        "description": "OTA requested",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/MessageResponse"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -3898,7 +4102,31 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Alert deleted"
+                        "description": "Alert deleted",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/MessageResponse"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -4044,7 +4272,31 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Threshold deleted"
+                        "description": "Threshold deleted",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/MessageResponse"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -4555,7 +4807,31 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "User deleted"
+                        "description": "User deleted",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/MessageResponse"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -4731,7 +5007,31 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Token removed"
+                        "description": "Token removed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/MessageResponse"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -5012,7 +5312,31 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Deleted"
+                        "description": "Deleted",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/MessageResponse"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -5041,7 +5365,31 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Retried"
+                        "description": "Retried",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/MessageResponse"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
