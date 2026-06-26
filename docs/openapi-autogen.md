@@ -130,9 +130,14 @@ missing today). ✅ = already has a DTO/generator entry; 🔴 = needs one.
 DTO files today: `device.schemas.ts` (10), `alert.schemas.ts` (2), `user.schemas.ts`
 (4), `common.schemas.ts` (1). Everything not in that set needs a schema exposed.
 
-### T7 — Serve + publish + drift guard 🟡
+### T7 — Serve + publish + drift guard ✅ (safe scope)
 - ✅ Served at `GET /api/openapi.json` (`routes/index.ts` → `generateOpenApiSpec()`).
-- 🔴 `make openapi` writes the generated spec to a tracked file + CI drift guard.
+- ✅ `make openapi` writes the generated spec to the tracked `docs/openapi.generated.json`
+  (deterministic — regenerating produces no diff).
+- ✅ `make openapi-gen-check` fails if the committed artifact drifts from the served
+  spec (CI/pre-push guard; requires the dev backend running with current source).
+- Note: this is a **separate artifact** from `docs/openapi.yml` (the FE client source).
+  Replacing `openapi.yml` is gated on T8 (see below).
 
 **Blocker for "replace `openapi.yml`":** `docs/openapi.yml` is the INPUT to
 `ng-openapi-gen` (`make ng-api-generate` → the typed FE client under
