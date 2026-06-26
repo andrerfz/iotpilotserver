@@ -74,7 +74,7 @@
     "eslint-plugin-import": "2.32.0",
     "eslint-plugin-jsdoc": "48.2.1",
     "eslint-plugin-prefer-arrow": "1.2.3",
-    "jsdom": "26.1.0",
+    "jsdom": "29.1.1",
     "ng-openapi-gen": "1.0.5",
     "postcss": "8.5.15",
     "prettier": "3.8.4",
