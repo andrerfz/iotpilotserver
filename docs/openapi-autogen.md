@@ -147,11 +147,29 @@ schema), so regenerating the client from it would drop response types and break 
 code. **Do not replace `openapi.yml` until T8.** Safe now: publish the generated spec
 as a separate tracked artifact + drift guard; keep `openapi.yml` feeding the client.
 
-### T8 — Response DTO schemas for all endpoints 🔴 (new, gates the replace)
+### T8 — Response DTO schemas for all endpoints 🟡 (gates the replace)
 Author response DTOs (or register inline response schemas) for the endpoints that lack
 them, so the generated spec matches the hand spec's response coverage. Only then can
 `make openapi` overwrite `docs/openapi.yml`, regenerate the FE client safely, and the
 hand spec be retired.
+
+**Progress:** 66 → 52 endpoints still missing a response schema.
+- ✅ Batch 1: shared `MessageResponse` for 14 acknowledgement endpoints (deletes,
+  logout, password, retry, request-ota).
+
+**Remaining 52, by shape (each needs a real response DTO ported from the hand
+`openapi.yml` or read from the handler's `send.ok` payload):**
+- Entity GETs/PUTs returning existing DTOs — wire to `DeviceResponse` / `UserResponse`
+  / `AlertResponse` where applicable (e.g. PUT /devices/{id}/settings, approve, user
+  CRUD responses).
+- New response DTOs needed: heartbeat (config+commands+firmware), iot register
+  (credentials), rotate-key ({apiKey}), bulk/batch (counts), ssh (output), device
+  settings object, metrics/logs/status, monitoring trend/metrics/reports, thresholds,
+  admin stats/system/logs/customers, notifications, sessions, api-keys list, profile,
+  notification-preferences.
+
+This is mostly mechanical but ~50 shapes; do it in batches, regenerating
+`docs/openapi.generated.json` (`make openapi`) each time.
 - CI check: regenerate and fail if it differs from the committed file (so drift can't
   reappear). Optionally a contract test asserting the documented webhook body matches
   the validator, like the alert-pipeline test.
