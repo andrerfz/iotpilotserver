@@ -132,7 +132,21 @@ DTO files today: `device.schemas.ts` (10), `alert.schemas.ts` (2), `user.schemas
 
 ### T7 — Serve + publish + drift guard 🟡
 - ✅ Served at `GET /api/openapi.json` (`routes/index.ts` → `generateOpenApiSpec()`).
-- 🔴 `make openapi` writes `docs/openapi.yml` from the generator.
+- 🔴 `make openapi` writes the generated spec to a tracked file + CI drift guard.
+
+**Blocker for "replace `openapi.yml`":** `docs/openapi.yml` is the INPUT to
+`ng-openapi-gen` (`make ng-api-generate` → the typed FE client under
+`apps/frontend-ng/src/app/core/api/generated`, imported by ~63 files). The generated
+spec is request-accurate but **thin on responses** (~half the GETs have no response
+schema), so regenerating the client from it would drop response types and break FE
+code. **Do not replace `openapi.yml` until T8.** Safe now: publish the generated spec
+as a separate tracked artifact + drift guard; keep `openapi.yml` feeding the client.
+
+### T8 — Response DTO schemas for all endpoints 🔴 (new, gates the replace)
+Author response DTOs (or register inline response schemas) for the endpoints that lack
+them, so the generated spec matches the hand spec's response coverage. Only then can
+`make openapi` overwrite `docs/openapi.yml`, regenerate the FE client safely, and the
+hand spec be retired.
 - CI check: regenerate and fail if it differs from the committed file (so drift can't
   reappear). Optionally a contract test asserting the documented webhook body matches
   the validator, like the alert-pipeline test.
