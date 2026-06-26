@@ -5,6 +5,7 @@ import {
     ValidationService
 } from '../../domain/interfaces/validation-service.interface';
 import {z, ZodError, ZodSchema} from 'zod';
+import {zodToJsonSchema} from 'zod-to-json-schema';
 
 /**
  * Zod-based implementation of ValidationService
@@ -215,6 +216,11 @@ export class ZodValidationService implements ValidationService {
             errors: this.mapZodErrors(result.error)
           };
         }
+      },
+      toJsonSchema: (): Record<string, unknown> => {
+        const jsonSchema = zodToJsonSchema(zodSchema as any, {target: 'openApi3'}) as Record<string, unknown>;
+        const {$schema, ...rest} = jsonSchema;
+        return rest;
       }
     };
 

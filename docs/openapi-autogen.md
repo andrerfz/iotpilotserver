@@ -55,36 +55,57 @@ Everything below assumes **Option A** unless decided otherwise.
 
 ## Tasks
 
-### T1 — Expose JSON Schema from the validation abstraction 🔴
-- Add `toJsonSchema(): Record<string, unknown>` to `Schema<T>` and `ValidationService`.
-- Implement in `zod-validation.service.ts` via `zodToJsonSchema(this.zodSchema, {target:'openApi3'})`.
-- This is the unlock: without it, route `v.object` schemas can't feed the generator.
+### T1 — Expose JSON Schema from the validation abstraction ✅
+- Added `toJsonSchema(): Record<string, unknown>` to the `Schema<T>` interface and
+  implemented it in `zod-validation.service.ts` (`wrapSchema`) via
+  `zodToJsonSchema(zodSchema, {target:'openApi3'})`. Every `v.*` schema can now emit
+  its OpenAPI JSON Schema — the unlock for generating from route validators (T2/T6).
 
-### T2 — Schema/path registry 🔴
-- Replace the hardcoded `paths`/`schemas` literal in `generator.ts` with a registry
-  every router contributes to (path + method + tags + security + request/response
-  schema refs). `registry.ts` is a starting point — or roll a plain map.
-- Decide registry.ts (`@asteasolutions/zod-to-openapi`) vs the current
-  `zod-to-json-schema` approach and remove the unused one.
+### T2 — Schema/path registry ✅
+- `registry.ts` is now a self-contained `OpenApiRegistry` (no `@asteasolutions`):
+  `registerSchema()` / `registerPath()` / `buildPaths()`, storing plain JSON Schema.
+  It accepts either a raw JSON Schema **or** anything with `toJsonSchema()` — so a
+  route's own `v.*` validator can register itself (the T6 mechanism).
+- `generator.ts` is now thin: it returns `buildPaths()` + `getSchemas()` from the
+  registry. Endpoints are declared in `registrations.ts` (central for now; ~13
+  operations across 11 paths, up from 8).
 
-### T3 — Response envelope 🔴
-- Every endpoint wraps payloads in the `{ success, data, timestamp }` envelope
-  (`response.util.ts`); list endpoints add `meta.pagination`. The generator must wrap
-  response schemas accordingly (the hand spec models this as `ApiSuccessResponse` /
-  `ApiPaginatedResponse` — port that).
+### T3 — Response envelope ✅
+- `successEnvelope()` / `paginatedEnvelope()` in `registry.ts` wrap every response in
+  `{ success, data, timestamp }` (paginated lists add `meta.pagination`), matching
+  `response.util.ts`. Each registration picks `envelope: 'success' | 'paginated' |
+  'none'`.
 
-### T4 — Consolidate the duplicated webhook schema 🟡
-- `sensorWebhookSchema` (raw zod, `iot.router.ts:448`) and
-  `TemperatureWebhookInputSchema` (`device.schemas.ts:64`) define the **same** body
-  twice — the proven drift point. Make the route validate with the single canonical
-  schema (under Option A, move it into the ValidationService form).
+### T4 — Consolidate the duplicated webhook schema ✅
+- `TemperatureWebhookInputSchema` (`device.schemas.ts`) is now the single canonical
+  body and was corrected to match the real validator (readings optional;
+  `cycle`/`offsetSeconds` optional; added `batteryVoltage`/`sensorError`/`batteryLow`).
+  `iot.router.ts` imports it instead of redefining `sensorWebhookSchema`. The
+  `TemperatureWebhookResponseSchema` was also fixed to the real response payload.
+  Verified by `scripts/test-alert-pipeline.sh` (19/19, validation unchanged) and the
+  served `/api/openapi.json`.
 
-### T5 — Normalize validation usage 🔴
-- `iot.router.ts` uses **raw `z.object`** for `sensorWebhookSchema`, `logsSchema`,
-  `logEntrySchema`, while every other router uses the `v` ValidationService. Pick one
-  path so the generator has a uniform source.
+### T5 — Normalize validation usage 🟡
+- Webhook done (now validates via the canonical schema). Still raw `z.object` in
+  `iot.router.ts`: `logsSchema`, `logEntrySchema` (and `heartbeatSchema` /
+  `iotDeviceRegistrationSchema` use `v`). Converge these when T6 reaches the `/iot/*`
+  endpoints.
 
-### T6 — Cover all routers (the zod inventory) 🔴
+### T6 — Cover all routers (the zod inventory) ✅
+
+**Registration lives in the app layer** (`apps/backend/src/openapi/register-routes.ts`),
+not core — core must not depend on app routes (dependency points app → core). That
+file imports the registry + core DTO schemas + each router's exported `v.*`/zod
+validators and registers every endpoint; `generator.ts` just reads the populated
+registry. A route's own validator becomes its request schema via `toJsonSchema()`
+(`v.*`) or `zodToOpenApi()` (raw zod) — no duplicate schema, no drift.
+
+**Done — all 8 routers:** Auth 14, Devices 26, IoT 5, Admin 11, Monitoring 13,
+Users 12, Settings 9, Notifications 4 = **94 operations / 64 paths / 40 schemas**, at
+parity with the hand-maintained `openapi.yml` (66 paths). Request bodies derive from
+the route validators. Not yet registered: `/health`, `/schedule` (trivial, no body) —
+fold in with T7.
+
 Per-router request schemas that need a generator entry (and a response schema, mostly
 missing today). ✅ = already has a DTO/generator entry; 🔴 = needs one.
 
@@ -109,17 +130,43 @@ missing today). ✅ = already has a DTO/generator entry; 🔴 = needs one.
 DTO files today: `device.schemas.ts` (10), `alert.schemas.ts` (2), `user.schemas.ts`
 (4), `common.schemas.ts` (1). Everything not in that set needs a schema exposed.
 
-### T7 — Serve + publish + drift guard 🔴
-- Serve the generated spec at `GET /api/openapi.json` (and optionally Swagger UI).
-- `make openapi` writes `docs/openapi.yml` from the generator.
+### T7 — Serve + publish + drift guard ✅ (safe scope)
+- ✅ Served at `GET /api/openapi.json` (`routes/index.ts` → `generateOpenApiSpec()`).
+- ✅ `make openapi` writes the generated spec to the tracked `docs/openapi.generated.json`
+  (deterministic — regenerating produces no diff).
+- ✅ `make openapi-gen-check` fails if the committed artifact drifts from the served
+  spec (CI/pre-push guard; requires the dev backend running with current source).
+- Note: this is a **separate artifact** from `docs/openapi.yml` (the FE client source).
+  Replacing `openapi.yml` is gated on T8 (see below).
+
+**Blocker for "replace `openapi.yml`":** `docs/openapi.yml` is the INPUT to
+`ng-openapi-gen` (`make ng-api-generate` → the typed FE client under
+`apps/frontend-ng/src/app/core/api/generated`, imported by ~63 files). The generated
+spec is request-accurate but **thin on responses** (~half the GETs have no response
+schema), so regenerating the client from it would drop response types and break FE
+code. **Do not replace `openapi.yml` until T8.** Safe now: publish the generated spec
+as a separate tracked artifact + drift guard; keep `openapi.yml` feeding the client.
+
+### T8 — Response DTO schemas for all endpoints 🔴 (new, gates the replace)
+Author response DTOs (or register inline response schemas) for the endpoints that lack
+them, so the generated spec matches the hand spec's response coverage. Only then can
+`make openapi` overwrite `docs/openapi.yml`, regenerate the FE client safely, and the
+hand spec be retired.
 - CI check: regenerate and fail if it differs from the committed file (so drift can't
   reappear). Optionally a contract test asserting the documented webhook body matches
   the validator, like the alert-pipeline test.
 - Once green, **retire hand-editing** of `openapi.yml` and fix the README wording.
 
-## Suggested first cut (proves the pattern without doing all 60)
+## Progress — T1–T5 + T2/T3 done, served live
 
-T1 + T4/T5 on the **webhook endpoint** (the one already validated end-to-end) + serve
-`/api/openapi.json`. That demonstrates "route validator → generated spec" for one real
-endpoint; T6 then proceeds incrementally — wire each endpoint's schema and delete its
-hand-written `openapi.yml` section as you go.
+Done: T1 (validators emit JSON Schema), T2 (self-contained registry), T3 (response
+envelopes), T4 (canonical webhook schema), T5 (webhook normalized). The generated spec
+is served at `/api/openapi.json` with ~13 operations across 11 paths, all
+envelope-wrapped. Remaining:
+
+- **T6** — coverage of the remaining ~47 endpoints. Move registrations from the central
+  `registrations.ts` to **per-router** declarations using each route's `v.*` validator
+  (`toJsonSchema()`), exporting/relocating route schemas as needed. Delete each
+  endpoint's hand-written `openapi.yml` section as it's covered.
+- **T7 (rest)** — `make openapi` to write `docs/openapi.yml` from the generator + a CI
+  guard that fails when committed ≠ generated.

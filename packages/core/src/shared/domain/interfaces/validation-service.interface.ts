@@ -21,6 +21,12 @@ export type ValidationResult<T> =
 export interface Schema<T = any> {
   parse(data: unknown): T;
   safeParse(data: unknown): ValidationResult<T>;
+  /**
+   * Emits an OpenAPI 3 JSON Schema for this schema, so the same schema that
+   * validates a request can also generate its API documentation (single source
+   * of truth — see docs/openapi-autogen.md).
+   */
+  toJsonSchema(): Record<string, unknown>;
 }
 
 /**

@@ -146,7 +146,7 @@ const listDevicesRegistrationSchema = v.object({
     mac_address: v.optional(v.string()),
 });
 
-const deviceRegisterSchema = v.object({
+export const deviceRegisterSchema = v.object({
     deviceId: v.string({ min: 1, message: 'Device ID is required' }),
     hostname: v.string({ min: 1, message: 'Hostname is required' }),
     deviceType: v.string({ min: 1, message: 'Device type is required' }),
@@ -160,7 +160,7 @@ const deviceRegisterSchema = v.object({
     customerId: v.optional(v.string()),
 });
 
-const activateSchema = v.object({
+export const activateSchema = v.object({
     deviceId: v.string({ min: 1, message: 'deviceId is required' }),
     claimingToken: v.string({ min: 1, message: 'claimingToken is required' }),
     macAddress: v.optional(v.string()),
@@ -169,12 +169,12 @@ const activateSchema = v.object({
     deviceModel: v.optional(v.string()),
 });
 
-const claimDeviceSchema = v.object({
+export const claimDeviceSchema = v.object({
     deviceId: v.string({ min: 1, message: 'deviceId is required' }),
     name: v.optional(v.string()),
 });
 
-const bulkDeviceSchema = v.object({
+export const bulkDeviceSchema = v.object({
     name: v.string({ min: 1, message: 'Device name is required' }),
     ipAddress: v.string({ ip: true, message: 'Valid IP address is required' }),
     sshUsername: v.string({ min: 1, message: 'SSH username is required' }),
@@ -188,7 +188,7 @@ const bulkRegistrationSchemaZod = z.object({
 });
 const bulkRegistrationSchema = (v as any).fromZodSchema(bulkRegistrationSchemaZod);
 
-const tailscaleRegisterSchema = v.object({
+export const tailscaleRegisterSchema = v.object({
     device_id: v.string({ min: 1, message: 'Device ID is required' }),
     hostname: v.string({ min: 1, message: 'Hostname is required' }),
     device_type: v.default(v.optional(v.enum(['PI_ZERO', 'PI_3', 'PI_4', 'PI_5', 'ORANGE_PI', 'GENERIC', 'UNKNOWN'] as const)), 'UNKNOWN'),
@@ -201,18 +201,18 @@ const tailscaleRegisterSchema = v.object({
     capabilities: v.default(v.optional(v.record(v.string(), v.any())), {}),
 });
 
-const createCommandSchema = v.object({
+export const createCommandSchema = v.object({
     command: v.enum(['RESTART', 'SHUTDOWN', 'UPDATE', 'CUSTOM', 'REBOOT', 'INSTALL', 'UNINSTALL',
         'restart', 'shutdown', 'update', 'custom', 'reboot', 'install', 'uninstall'] as const),
     arguments: v.optional(v.string({ max: 1000, message: 'Arguments must be less than 1000 characters' })),
 });
 
-const sshCommandSchema = v.object({
+export const sshCommandSchema = v.object({
     command: v.string({ min: 1, message: 'Command cannot be empty' }),
     timeout: v.default(v.optional(v.number({ min: 1000, max: 300000 })), 30000),
 });
 
-const deviceSettingsSchema = v.object({
+export const deviceSettingsSchema = v.object({
     hostname: v.optional(v.string({ min: 1, max: 100 })),
     deviceType: v.optional(v.enum(['PI_ZERO', 'PI_3', 'PI_4', 'PI_5', 'ORANGE_PI', 'ESP8266_SENSOR', 'ESP32C3_SENSOR', 'HELTEC_LORA32V3_SENSOR', 'GENERIC', 'UNKNOWN'] as const)),
     location: v.optional(v.string({ max: 200 })),

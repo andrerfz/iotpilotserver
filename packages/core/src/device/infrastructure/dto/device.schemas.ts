@@ -58,24 +58,38 @@ export const ActivateDeviceResponseSchema = z.object({
 
 export const SensorReadingSchema = z.object({
     temperature: z.number(),
-    cycle: z.number(),
+    cycle: z.number().optional(),
+    offsetSeconds: z.number().min(0).optional(),  // seconds before arrival (buffered readings)
 });
 
+// Canonical sensor-webhook request body — the SINGLE source of truth.
+// apps/backend's iot.router.ts validates POST /api/webhook/temperature with this
+// exact schema (it must not redefine its own copy). Keep in sync with the firmware
+// payload and docs/openapi-autogen.md.
 export const TemperatureWebhookInputSchema = z.object({
     deviceId: z.string().min(1),
-    readings: z.array(SensorReadingSchema),
+    readings: z.array(SensorReadingSchema).optional(),  // optional when sensorError: true
     batteryLevel: z.number().min(0).max(100).optional(),
+    batteryVoltage: z.number().optional(),
     rssi: z.number().optional(),
     firmwareVersion: z.string().optional(),
     alertPending: z.boolean().optional(),
     alertTemp: z.number().optional(),
+    sensorError: z.boolean().optional(),
+    batteryLow: z.boolean().optional(),
 });
 
+// Response payload (the `data` field of the send.ok envelope) returned to the device.
 export const TemperatureWebhookResponseSchema = z.object({
-    status: z.string(),
-    message: z.string(),
-    alertCreated: z.boolean(),
-    alertResolved: z.boolean(),
+    success: z.boolean(),
+    deviceId: z.string(),
+    config: z.object({
+        reportingInterval: z.number(),
+        deepSleepEnabled: z.boolean(),
+    }),
+    firmware: z.object({
+        targetVersion: z.string(),
+    }).optional(),
 });
 
 // ── Pre-register devices (admin) ────────────────────────────

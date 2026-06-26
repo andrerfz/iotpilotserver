@@ -10,7 +10,7 @@
 .PHONY: local-logs-app local-logs-influxdb local-logs-loki local-logs-postgres local-logs-redis local-logs-traefik local-logs-tailscale
 .PHONY: dev shell health migrate migrate-reset migrate-dev db-push db-setup db-status db-shell apply-migration
 .PHONY: fresh-setup local-start-with-migration test-alerts
-.PHONY: test lint route-list openapi-check openapi-diff test-api test-ci test-db test-influxdb test-integration test-unit test-fresh test-file test-debug test-watch test-coverage test-env-check test-integration-full test-performance test-security test-clean test-db-with-data test-influxdb-connection test-services test-smoke test-all
+.PHONY: test lint route-list openapi-check openapi-diff openapi openapi-gen-check test-api test-ci test-db test-influxdb test-integration test-unit test-fresh test-file test-debug test-watch test-coverage test-env-check test-integration-full test-performance test-security test-clean test-db-with-data test-influxdb-connection test-services test-smoke test-all
 .PHONY: create-superadmin list-superadmins reset-superadmin-password delete-superadmin
 .PHONY: sync-node-modules clean-dev
 .PHONY: queue-status queue-failed queue-retry queue-clean queue-drain queue-dashboard
@@ -93,6 +93,8 @@ help:
 	@echo "  dev                  - Start development (alias for local-start)"
 	@echo "  openapi-check        - Check if backend routes are documented in openapi.yml"
 	@echo "  openapi-diff         - Same as openapi-check but exits 1 on missing docs (CI use)"
+	@echo "  openapi              - Write the auto-generated spec → docs/openapi.generated.json"
+	@echo "  openapi-gen-check    - Fail if docs/openapi.generated.json drifts from served spec (CI)"
 	@echo ""
 	@echo "🅰️  frontend-ng (Ionic + Angular):"
 	@echo "  ng-dev               - Start the frontend-ng dev server (HMR) on NG_PORT"
@@ -792,6 +794,26 @@ openapi-check:
 openapi-diff:
 	@echo "🔍 OpenAPI diff (exits 1 if stale)..."
 	@make ng-api-check
+
+# Write the auto-generated spec (from the route validators) to a tracked file.
+# Requires the dev backend running with current source (restart after route changes).
+# See docs/openapi-autogen.md. This is NOT yet docs/openapi.yml (the FE client source) —
+# the generated spec is request-accurate but thin on responses (T8 gates the replace).
+openapi:
+	@echo "🧬 Writing generated OpenAPI spec → docs/openapi.generated.json"
+	@docker exec iotpilot-server-backend sh -c "curl -s http://localhost:3100/api/openapi.json" | python3 -m json.tool > docs/openapi.generated.json
+	@echo "✅ Wrote docs/openapi.generated.json"
+
+# CI/pre-push guard: fail if the committed generated spec drifts from the served one.
+openapi-gen-check:
+	@echo "🔍 Checking docs/openapi.generated.json is in sync with the served spec..."
+	@docker exec iotpilot-server-backend sh -c "curl -s http://localhost:3100/api/openapi.json" | python3 -m json.tool > /tmp/openapi.generated.check.json
+	@if ! diff -q docs/openapi.generated.json /tmp/openapi.generated.check.json >/dev/null 2>&1; then \
+		echo "❌ docs/openapi.generated.json is stale. Run 'make openapi' and commit."; \
+		diff docs/openapi.generated.json /tmp/openapi.generated.check.json | head -40; \
+		exit 1; \
+	fi
+	@echo "✅ Generated spec is in sync."
 
 test-db:
 	@echo "🧪 Testing database..."

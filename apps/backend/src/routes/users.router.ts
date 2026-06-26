@@ -27,7 +27,7 @@ function isoTimestamp(): string {
 // Validation schemas
 const v = validator();
 const complexPasswordSchema = z.string().min(8).regex(/[A-Z]/).regex(/[a-z]/).regex(/\d/);
-const createUserSchema = v.object({
+export const createUserSchema = v.object({
     email: v.string({ email: true }),
     username: v.string({ min: 3, max: 50 }),
     password: (v as any).fromZodSchema(complexPasswordSchema),
@@ -35,7 +35,7 @@ const createUserSchema = v.object({
     role: v.optional(v.enum(['USER', 'ADMIN'] as const))
 });
 
-const updateUserSchema = v.object({
+export const updateUserSchema = v.object({
     email: v.optional(v.string({ email: true })),
     firstName: v.optional(v.string({ min: 1, max: 100 })),
     lastName: v.optional(v.string({ min: 1, max: 100 })),
@@ -44,13 +44,13 @@ const updateUserSchema = v.object({
     status: v.optional(v.enum(['ACTIVE', 'INACTIVE', 'PENDING'] as const))
 });
 
-const updateProfileSchema = v.object({
+export const updateProfileSchema = v.object({
     username: v.optional(v.string({ min: 3, max: 50 })),
     displayName: v.optional(v.string({ min: 1, max: 100 })),
     preferences: v.optional(v.record(v.string(), v.any()))
 });
 
-const updatePreferenceSchema = v.object({
+export const updatePreferenceSchema = v.object({
     channel: v.string({ min: 1, message: 'channel is required' }),
     notificationType: v.string({ min: 1, message: 'notificationType is required' }),
     enabled: v.boolean(),
@@ -682,7 +682,7 @@ usersRouter.put('/:id/notification-preferences', requireAuth(), async (req: Auth
 // Push token management (fe-mobile T8)
 // One token per user — POST upserts, DELETE removes.
 // ──────────────────────────────────────────────────────────────
-const pushTokenSchema = v.object({
+export const pushTokenSchema = v.object({
     token: v.string({ min: 1, message: 'token is required' }),
     platform: v.enum(['ios', 'android'] as const),
 });
