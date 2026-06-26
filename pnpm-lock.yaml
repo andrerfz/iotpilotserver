@@ -293,8 +293,8 @@ importers:
         specifier: ^8.5.0
         version: 8.5.0(zod@3.25.76)
       '@bull-board/api':
-        specifier: ^7.2.1
-        version: 7.2.1(@bull-board/ui@7.2.1)
+        specifier: ^8.0.1
+        version: 8.0.1(@bull-board/ui@8.0.1)
       '@bull-board/express':
         specifier: ^7.2.1
         version: 7.2.1
@@ -1389,11 +1389,19 @@ packages:
     peerDependencies:
       '@bull-board/ui': 7.2.1
 
+  '@bull-board/api@8.0.1':
+    resolution: {integrity: sha512-7FELJHRQPtjH9+r/DUArr4pDVU8r1yeDS9azQUzFtIbsUT5xGjyg5R1RB0I/RfwFfK5bqho/4cpzxJ/UnQjSKA==}
+    peerDependencies:
+      '@bull-board/ui': 8.0.1
+
   '@bull-board/express@7.2.1':
     resolution: {integrity: sha512-tBr/xV5letzKYPRGRkilTQZmfoCoy3mCuUo4M2dDoDKOhbrF360mK5v9/rIcSgYSyI9c7BgEgrve80LhmexNxQ==}
 
   '@bull-board/ui@7.2.1':
     resolution: {integrity: sha512-O4ykrXrl2UJNHnhJrCvJxrw1ar+DlUBgyZUeZ8Ci+Ne5Wbq6rBv1gfpQH54/eu3IFbLso0S/kjc6WUGb2HPqZw==}
+
+  '@bull-board/ui@8.0.1':
+    resolution: {integrity: sha512-gKEGSD8dlUoWFGJJ4I4Q5bDtfB7yJwGfpgA2DVn1G1TzlUSN5n4fzzcGpLf5fS+QhR7tB/niydUiFRQ2zrjVrQ==}
 
   '@capacitor/android@8.4.1':
     resolution: {integrity: sha512-igtDCJ7QQn0P2qHFD9p4KXaa6V1b2PRNt+MxjVwtjTm/BJvqmiazOJq6rPjwFSZnfHm6iFoZk8TfzHd44pyBGw==}
@@ -9746,6 +9754,11 @@ snapshots:
       '@bull-board/ui': 7.2.1
       redis-info: 3.1.0
 
+  '@bull-board/api@8.0.1(@bull-board/ui@8.0.1)':
+    dependencies:
+      '@bull-board/ui': 8.0.1
+      redis-info: 3.1.0
+
   '@bull-board/express@7.2.1':
     dependencies:
       '@bull-board/api': 7.2.1(@bull-board/ui@7.2.1)
@@ -9758,6 +9771,10 @@ snapshots:
   '@bull-board/ui@7.2.1':
     dependencies:
       '@bull-board/api': 7.2.1(@bull-board/ui@7.2.1)
+
+  '@bull-board/ui@8.0.1':
+    dependencies:
+      '@bull-board/api': 8.0.1(@bull-board/ui@8.0.1)
 
   '@capacitor/android@8.4.1(@capacitor/core@8.4.1)':
     dependencies:
