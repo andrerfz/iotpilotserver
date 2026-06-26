@@ -55,10 +55,11 @@ Everything below assumes **Option A** unless decided otherwise.
 
 ## Tasks
 
-### T1 — Expose JSON Schema from the validation abstraction 🔴
-- Add `toJsonSchema(): Record<string, unknown>` to `Schema<T>` and `ValidationService`.
-- Implement in `zod-validation.service.ts` via `zodToJsonSchema(this.zodSchema, {target:'openApi3'})`.
-- This is the unlock: without it, route `v.object` schemas can't feed the generator.
+### T1 — Expose JSON Schema from the validation abstraction ✅
+- Added `toJsonSchema(): Record<string, unknown>` to the `Schema<T>` interface and
+  implemented it in `zod-validation.service.ts` (`wrapSchema`) via
+  `zodToJsonSchema(zodSchema, {target:'openApi3'})`. Every `v.*` schema can now emit
+  its OpenAPI JSON Schema — the unlock for generating from route validators (T2/T6).
 
 ### T2 — Schema/path registry 🔴
 - Replace the hardcoded `paths`/`schemas` literal in `generator.ts` with a registry
@@ -73,16 +74,20 @@ Everything below assumes **Option A** unless decided otherwise.
   response schemas accordingly (the hand spec models this as `ApiSuccessResponse` /
   `ApiPaginatedResponse` — port that).
 
-### T4 — Consolidate the duplicated webhook schema 🟡
-- `sensorWebhookSchema` (raw zod, `iot.router.ts:448`) and
-  `TemperatureWebhookInputSchema` (`device.schemas.ts:64`) define the **same** body
-  twice — the proven drift point. Make the route validate with the single canonical
-  schema (under Option A, move it into the ValidationService form).
+### T4 — Consolidate the duplicated webhook schema ✅
+- `TemperatureWebhookInputSchema` (`device.schemas.ts`) is now the single canonical
+  body and was corrected to match the real validator (readings optional;
+  `cycle`/`offsetSeconds` optional; added `batteryVoltage`/`sensorError`/`batteryLow`).
+  `iot.router.ts` imports it instead of redefining `sensorWebhookSchema`. The
+  `TemperatureWebhookResponseSchema` was also fixed to the real response payload.
+  Verified by `scripts/test-alert-pipeline.sh` (19/19, validation unchanged) and the
+  served `/api/openapi.json`.
 
-### T5 — Normalize validation usage 🔴
-- `iot.router.ts` uses **raw `z.object`** for `sensorWebhookSchema`, `logsSchema`,
-  `logEntrySchema`, while every other router uses the `v` ValidationService. Pick one
-  path so the generator has a uniform source.
+### T5 — Normalize validation usage 🟡
+- Webhook done (now validates via the canonical schema). Still raw `z.object` in
+  `iot.router.ts`: `logsSchema`, `logEntrySchema` (and `heartbeatSchema` /
+  `iotDeviceRegistrationSchema` use `v`). Converge these when T6 reaches the `/iot/*`
+  endpoints.
 
 ### T6 — Cover all routers (the zod inventory) 🔴
 Per-router request schemas that need a generator entry (and a response schema, mostly
@@ -109,17 +114,19 @@ missing today). ✅ = already has a DTO/generator entry; 🔴 = needs one.
 DTO files today: `device.schemas.ts` (10), `alert.schemas.ts` (2), `user.schemas.ts`
 (4), `common.schemas.ts` (1). Everything not in that set needs a schema exposed.
 
-### T7 — Serve + publish + drift guard 🔴
-- Serve the generated spec at `GET /api/openapi.json` (and optionally Swagger UI).
-- `make openapi` writes `docs/openapi.yml` from the generator.
+### T7 — Serve + publish + drift guard 🟡
+- ✅ Served at `GET /api/openapi.json` (`routes/index.ts` → `generateOpenApiSpec()`).
+- 🔴 `make openapi` writes `docs/openapi.yml` from the generator.
 - CI check: regenerate and fail if it differs from the committed file (so drift can't
   reappear). Optionally a contract test asserting the documented webhook body matches
   the validator, like the alert-pipeline test.
 - Once green, **retire hand-editing** of `openapi.yml` and fix the README wording.
 
-## Suggested first cut (proves the pattern without doing all 60)
+## First cut — ✅ done
 
-T1 + T4/T5 on the **webhook endpoint** (the one already validated end-to-end) + serve
-`/api/openapi.json`. That demonstrates "route validator → generated spec" for one real
-endpoint; T6 then proceeds incrementally — wire each endpoint's schema and delete its
-hand-written `openapi.yml` section as you go.
+T1 + T4/T5 on the **webhook endpoint** + serve `/api/openapi.json`. The webhook's
+generated schema now matches the validator exactly and is served live. Next:
+**T2** (path/schema registry so routers contribute via `toJsonSchema()`) + **T3**
+(response envelope), then **T6** incrementally — wire each endpoint's schema and delete
+its hand-written `openapi.yml` section as you go, closing with **T7**'s `make openapi`
++ CI drift guard.

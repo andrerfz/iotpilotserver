@@ -6,6 +6,7 @@ import { TenantContextImpl } from '@iotpilot/core/shared/domain/tenant-context';
 import { CustomerId } from '@iotpilot/core/shared/domain/value-objects/customer-id.vo';
 import { ProcessHeartbeatCommand } from '@iotpilot/core/device/application/commands/process-heartbeat/process-heartbeat.command';
 import { RecordSensorReadingCommand } from '@iotpilot/core/device/application/commands/record-sensor-reading/record-sensor-reading.command';
+import { TemperatureWebhookInputSchema } from '@iotpilot/core/device/infrastructure/dto/device.schemas';
 import { logger } from '@iotpilot/core/shared/infrastructure/logging/logger.service';
 import {
     DeviceRegistrationData,
@@ -445,22 +446,9 @@ iotRouter.post('/register', async (req: Request, res: Response) => {
 //            alertPending, readings: [{temperature, cycle}] }
 // ---------------------------------------------------------------------------
 
-const sensorWebhookSchema = z.object({
-    deviceId: z.string().min(1),
-    readings: z.array(z.object({
-        temperature: z.number(),
-        cycle: z.number().optional(),
-        offsetSeconds: z.number().min(0).optional(),  // seconds before arrival (buffered readings)
-    })).optional(),  // optional when sensorError: true (no readings available)
-    batteryLevel: z.number().min(0).max(100).optional(),
-    batteryVoltage: z.number().optional(),
-    rssi: z.number().optional(),
-    firmwareVersion: z.string().optional(),
-    alertPending: z.boolean().optional(),
-    alertTemp: z.number().optional(),
-    sensorError: z.boolean().optional(),
-    batteryLow: z.boolean().optional(),
-});
+// Canonical schema lives in packages/core device.schemas.ts (single source of
+// truth, also feeds the OpenAPI generator) — see docs/openapi-autogen.md.
+const sensorWebhookSchema = TemperatureWebhookInputSchema;
 
 // Mounted as POST /api/webhook/temperature via router.use('/webhook', iotRouter)
 iotRouter.post('/temperature', async (req: Request, res: Response) => {

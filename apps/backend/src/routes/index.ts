@@ -7,9 +7,17 @@ import { usersRouter } from './users.router';
 import { settingsRouter } from './settings.router';
 import { iotRouter } from './iot.router';
 import { notificationsRouter } from './notifications.router';
+import { generateOpenApiSpec } from '@iotpilot/core/shared/infrastructure/openapi/generator';
 
 export function createApiRouter(): Router {
   const router = Router();
+
+  // Machine-readable API contract. Generated from the zod schemas that validate
+  // requests (see docs/openapi-autogen.md) — incrementally replacing the
+  // hand-maintained docs/openapi.yml.
+  router.get('/openapi.json', (_req: Request, res: Response) => {
+    res.json(generateOpenApiSpec());
+  });
 
   router.use('/auth', authRouter);
   router.use('/devices', devicesRouter);
