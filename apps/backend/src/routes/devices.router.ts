@@ -1121,7 +1121,7 @@ devicesRouter.get('/:id/alerts', requireAuth(), async (req: AuthenticatedRequest
 
         const deviceRecord = await prisma.getClient().device.findFirst({
             where: { publicId, ...(req.user?.role === 'SUPERADMIN' ? {} : { customerId: req.user!.customerId }) },
-            select: { id: true },
+            select: { id: true, customerId: true },
         });
         if (!deviceRecord) {
             send.notFound(res, 'Device not found');
@@ -1135,7 +1135,8 @@ devicesRouter.get('/:id/alerts', requireAuth(), async (req: AuthenticatedRequest
         const limit = parseInt(req.query.limit as string || '50');
         const offset = parseInt(req.query.offset as string || '0');
 
-        const tenantId = resolveTenantId(req);
+        // SUPERADMIN has no customerId of their own — fall back to the device's tenant.
+        const tenantId = resolveTenantId(req) ?? deviceRecord.customerId ?? undefined;
         if (!tenantId) {
             send.badRequest(res, 'Customer ID is required');
             return;
@@ -1757,8 +1758,19 @@ devicesRouter.get('/:id/metrics', requireAuth(), async (req: AuthenticatedReques
                 startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
         }
 
-        const tenantContext = req.user?.customerId
-            ? TenantContextImpl.create(CustomerId.create(req.user.customerId))
+        // A SUPERADMIN has no customerId of their own; scope the query to the
+        // device's own tenant so metrics resolve (the query requires a customerId).
+        let effectiveCustomerId = req.user?.customerId || undefined;
+        if (!effectiveCustomerId) {
+            const owner = await prisma.getClient().device.findUnique({
+                where: { id: deviceId },
+                select: { customerId: true },
+            });
+            effectiveCustomerId = owner?.customerId || undefined;
+        }
+
+        const tenantContext = effectiveCustomerId
+            ? TenantContextImpl.create(CustomerId.create(effectiveCustomerId))
             : TenantContextImpl.createSuperAdmin();
 
         const { GetDeviceMetricsQuery } = await import('@iotpilot/core/device/application/queries/get-device-metrics/get-device-metrics.query');
@@ -1769,7 +1781,7 @@ devicesRouter.get('/:id/metrics', requireAuth(), async (req: AuthenticatedReques
             metric === 'all'
                 ? ['cpu', 'memory', 'disk', 'network', 'temperature', 'battery_level', 'wifi_rssi']
                 : metric.split(','),
-            req.user?.customerId || undefined,
+            effectiveCustomerId,
             tenantContext,
         );
 
