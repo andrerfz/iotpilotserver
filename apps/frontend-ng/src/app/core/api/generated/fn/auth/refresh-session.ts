@@ -8,17 +8,16 @@ import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
 import { AuthData } from '../../models/auth-data';
-import { SuccessResponse } from '../../models/success-response';
+import { RefreshInput } from '../../models/refresh-input';
 
 export interface RefreshSession$Params {
-      body?: {
-'refreshToken'?: string;
-'remember'?: boolean;
-}
+      body?: RefreshInput
 }
 
-export function refreshSession(http: HttpClient, rootUrl: string, params?: RefreshSession$Params, context?: HttpContext): Observable<StrictHttpResponse<SuccessResponse & {
-'data'?: AuthData;
+export function refreshSession(http: HttpClient, rootUrl: string, params?: RefreshSession$Params, context?: HttpContext): Observable<StrictHttpResponse<{
+'success': boolean;
+'data': AuthData;
+'timestamp': string;
 }>> {
   const rb = new RequestBuilder(rootUrl, refreshSession.PATH, 'post');
   if (params) {
@@ -30,8 +29,10 @@ export function refreshSession(http: HttpClient, rootUrl: string, params?: Refre
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<SuccessResponse & {
-      'data'?: AuthData;
+      return r as StrictHttpResponse<{
+      'success': boolean;
+      'data': AuthData;
+      'timestamp': string;
       }>;
     })
   );

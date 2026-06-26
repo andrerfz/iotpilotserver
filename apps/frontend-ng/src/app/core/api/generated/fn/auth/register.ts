@@ -8,15 +8,16 @@ import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
 import { RegisterData } from '../../models/register-data';
-import { RegisterRequest } from '../../models/register-request';
-import { SuccessResponse } from '../../models/success-response';
+import { RegisterInput } from '../../models/register-input';
 
 export interface Register$Params {
-      body: RegisterRequest
+      body: RegisterInput
 }
 
-export function register(http: HttpClient, rootUrl: string, params: Register$Params, context?: HttpContext): Observable<StrictHttpResponse<SuccessResponse & {
-'data'?: RegisterData;
+export function register(http: HttpClient, rootUrl: string, params: Register$Params, context?: HttpContext): Observable<StrictHttpResponse<{
+'success': boolean;
+'data': RegisterData;
+'timestamp': string;
 }>> {
   const rb = new RequestBuilder(rootUrl, register.PATH, 'post');
   if (params) {
@@ -28,8 +29,10 @@ export function register(http: HttpClient, rootUrl: string, params: Register$Par
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<SuccessResponse & {
-      'data'?: RegisterData;
+      return r as StrictHttpResponse<{
+      'success': boolean;
+      'data': RegisterData;
+      'timestamp': string;
       }>;
     })
   );

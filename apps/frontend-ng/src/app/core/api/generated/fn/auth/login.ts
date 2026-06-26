@@ -7,16 +7,17 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
-import { LoginData } from '../../models/login-data';
-import { LoginRequest } from '../../models/login-request';
-import { SuccessResponse } from '../../models/success-response';
+import { AuthData } from '../../models/auth-data';
+import { LoginInput } from '../../models/login-input';
 
 export interface Login$Params {
-      body: LoginRequest
+      body: LoginInput
 }
 
-export function login(http: HttpClient, rootUrl: string, params: Login$Params, context?: HttpContext): Observable<StrictHttpResponse<SuccessResponse & {
-'data'?: LoginData;
+export function login(http: HttpClient, rootUrl: string, params: Login$Params, context?: HttpContext): Observable<StrictHttpResponse<{
+'success': boolean;
+'data': AuthData;
+'timestamp': string;
 }>> {
   const rb = new RequestBuilder(rootUrl, login.PATH, 'post');
   if (params) {
@@ -28,8 +29,10 @@ export function login(http: HttpClient, rootUrl: string, params: Login$Params, c
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<SuccessResponse & {
-      'data'?: LoginData;
+      return r as StrictHttpResponse<{
+      'success': boolean;
+      'data': AuthData;
+      'timestamp': string;
       }>;
     })
   );

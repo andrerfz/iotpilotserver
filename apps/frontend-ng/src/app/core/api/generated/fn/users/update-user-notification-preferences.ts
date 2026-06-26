@@ -7,18 +7,19 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
+import { NotificationSettings } from '../../models/notification-settings';
+import { UpdatePreferenceInput } from '../../models/update-preference-input';
 
 export interface UpdateUserNotificationPreferences$Params {
+
+/**
+ * Device public ID
+ */
   id: string;
-      body: {
-'channel'?: 'EMAIL' | 'SMS' | 'WEBHOOK' | 'SLACK' | 'PUSH';
-'notificationType'?: string;
-'enabled'?: boolean;
-'destination'?: string | null;
-}
+      body: UpdatePreferenceInput
 }
 
-export function updateUserNotificationPreferences(http: HttpClient, rootUrl: string, params: UpdateUserNotificationPreferences$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
+export function updateUserNotificationPreferences(http: HttpClient, rootUrl: string, params: UpdateUserNotificationPreferences$Params, context?: HttpContext): Observable<StrictHttpResponse<NotificationSettings>> {
   const rb = new RequestBuilder(rootUrl, updateUserNotificationPreferences.PATH, 'put');
   if (params) {
     rb.path('id', params.id, {});
@@ -26,11 +27,11 @@ export function updateUserNotificationPreferences(http: HttpClient, rootUrl: str
   }
 
   return http.request(
-    rb.build({ responseType: 'text', accept: '*/*', context })
+    rb.build({ responseType: 'json', accept: 'application/json', context })
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return (r as HttpResponse<any>).clone({ body: undefined }) as StrictHttpResponse<void>;
+      return r as StrictHttpResponse<NotificationSettings>;
     })
   );
 }

@@ -8,18 +8,16 @@ import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
 import { AuthData } from '../../models/auth-data';
-import { SuccessResponse } from '../../models/success-response';
+import { Verify2FaInput } from '../../models/verify-2-fa-input';
 
 export interface VerifyTwoFactor$Params {
-      body: {
-'code': string;
-'userId': string;
-'remember'?: boolean;
-}
+      body: Verify2FaInput
 }
 
-export function verifyTwoFactor(http: HttpClient, rootUrl: string, params: VerifyTwoFactor$Params, context?: HttpContext): Observable<StrictHttpResponse<SuccessResponse & {
-'data'?: AuthData;
+export function verifyTwoFactor(http: HttpClient, rootUrl: string, params: VerifyTwoFactor$Params, context?: HttpContext): Observable<StrictHttpResponse<{
+'success': boolean;
+'data': AuthData;
+'timestamp': string;
 }>> {
   const rb = new RequestBuilder(rootUrl, verifyTwoFactor.PATH, 'post');
   if (params) {
@@ -31,8 +29,10 @@ export function verifyTwoFactor(http: HttpClient, rootUrl: string, params: Verif
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<SuccessResponse & {
-      'data'?: AuthData;
+      return r as StrictHttpResponse<{
+      'success': boolean;
+      'data': AuthData;
+      'timestamp': string;
       }>;
     })
   );

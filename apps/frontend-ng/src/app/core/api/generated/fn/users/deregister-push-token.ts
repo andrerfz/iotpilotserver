@@ -7,13 +7,12 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
+import { MessageResponse } from '../../models/message-response';
 
 export interface DeregisterPushToken$Params {
 }
 
-export function deregisterPushToken(http: HttpClient, rootUrl: string, params?: DeregisterPushToken$Params, context?: HttpContext): Observable<StrictHttpResponse<{
-'deregistered'?: boolean;
-}>> {
+export function deregisterPushToken(http: HttpClient, rootUrl: string, params?: DeregisterPushToken$Params, context?: HttpContext): Observable<StrictHttpResponse<MessageResponse>> {
   const rb = new RequestBuilder(rootUrl, deregisterPushToken.PATH, 'delete');
   if (params) {
   }
@@ -23,9 +22,7 @@ export function deregisterPushToken(http: HttpClient, rootUrl: string, params?: 
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<{
-      'deregistered'?: boolean;
-      }>;
+      return r as StrictHttpResponse<MessageResponse>;
     })
   );
 }

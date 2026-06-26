@@ -8,26 +8,37 @@ import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
 import { Device } from '../../models/device';
-import { SuccessResponse } from '../../models/success-response';
 
 export interface ListDevices$Params {
-  status?: 'ONLINE' | 'OFFLINE' | 'MAINTENANCE' | 'ERROR' | 'UNCLAIMED';
+
+/**
+ * Page number
+ */
   page?: number;
+
+/**
+ * Page size
+ */
   limit?: number;
+
+/**
+ * status
+ */
+  status?: string;
+
+/**
+ * search
+ */
   search?: string;
-  sortBy?: string;
 }
 
-export function listDevices(http: HttpClient, rootUrl: string, params?: ListDevices$Params, context?: HttpContext): Observable<StrictHttpResponse<SuccessResponse & {
-'data'?: Array<Device>;
-}>> {
+export function listDevices(http: HttpClient, rootUrl: string, params?: ListDevices$Params, context?: HttpContext): Observable<StrictHttpResponse<Array<Device>>> {
   const rb = new RequestBuilder(rootUrl, listDevices.PATH, 'get');
   if (params) {
-    rb.query('status', params.status, {});
     rb.query('page', params.page, {});
     rb.query('limit', params.limit, {});
+    rb.query('status', params.status, {});
     rb.query('search', params.search, {});
-    rb.query('sortBy', params.sortBy, {});
   }
 
   return http.request(
@@ -35,9 +46,7 @@ export function listDevices(http: HttpClient, rootUrl: string, params?: ListDevi
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<SuccessResponse & {
-      'data'?: Array<Device>;
-      }>;
+      return r as StrictHttpResponse<Array<Device>>;
     })
   );
 }

@@ -7,14 +7,16 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
+import { CreateCommandInput } from '../../models/create-command-input';
 import { DeviceCommand } from '../../models/device-command';
 
 export interface CreateDeviceCommand$Params {
+
+/**
+ * Device public ID
+ */
   id: string;
-      body: {
-'command': 'REBOOT' | 'SHUTDOWN' | 'UPDATE' | 'RESTART' | 'CUSTOM';
-'arguments'?: string;
-}
+      body: CreateCommandInput
 }
 
 export function createDeviceCommand(http: HttpClient, rootUrl: string, params: CreateDeviceCommand$Params, context?: HttpContext): Observable<StrictHttpResponse<DeviceCommand>> {

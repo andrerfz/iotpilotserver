@@ -7,25 +7,22 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
+import { Customer } from '../../models/customer';
 
 export interface CreateAdminCustomer$Params {
-  body: {
-    name: string;
-    description?: string;
-    contactEmail?: string;
-  };
 }
 
-export function createAdminCustomer(http: HttpClient, rootUrl: string, params: CreateAdminCustomer$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
+export function createAdminCustomer(http: HttpClient, rootUrl: string, params?: CreateAdminCustomer$Params, context?: HttpContext): Observable<StrictHttpResponse<Customer>> {
   const rb = new RequestBuilder(rootUrl, createAdminCustomer.PATH, 'post');
-  rb.body(params.body, 'application/json');
+  if (params) {
+  }
 
   return http.request(
-    rb.build({ responseType: 'text', accept: '*/*', context })
+    rb.build({ responseType: 'json', accept: 'application/json', context })
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return (r as HttpResponse<any>).clone({ body: undefined }) as StrictHttpResponse<void>;
+      return r as StrictHttpResponse<Customer>;
     })
   );
 }

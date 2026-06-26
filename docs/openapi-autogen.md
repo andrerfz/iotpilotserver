@@ -163,28 +163,25 @@ hand spec be retired.
   ProfileSettings, SecuritySettings, SystemSettings, NotificationSettings, AdminStats,
   SystemInfo, Customer, HeartbeatResponse, BulkResult, etc. (71 schemas total).
 
-### T9 — Swap `openapi.yml` → generated + regenerate FE client 🔴 (cutover — attempted, reverted)
-Attempted on branch `feat/openapi-t9-cutover` and **reverted** — a drop-in swap breaks
-the FE. Findings:
-- ✅ **operationId (solved).** Extracted the 96 ids from the legacy spec into
-  `apps/backend/src/openapi/operation-ids.ts`; `registry.assignOperationIds()` applies
-  them so the generated spec carries the same names the client functions use. (Kept.)
-- 🔴 **Envelope mismatch (the real blocker).** The FE client consumes **unwrapped**
-  responses (code does `result.lastName`), i.e. the legacy spec documents the raw
-  payload and an HTTP interceptor strips `{success,data,timestamp}`. The generated spec
-  documents the **enveloped** body (T3, which is the accurate wire shape). Pointing
-  `ng-openapi-gen` at the generated JSON + regenerating produced **73 TS errors** (every
-  `result.<field>` now lives under `.data`), plus optionality/enum mismatches
-  (`dateFormat?: string` vs required; `'true'|'false'` vs `string`) and missing fields
-  the FE reads (`wasCurrentSession`, `revokedCount`). Reverted; FE left untouched (0 errors).
+### T9 — Swap `openapi.yml` → generated + regenerate FE client ✅ done
+The hand-maintained `docs/openapi.yml` has been **retired**; the Angular client is now
+generated from the spec. How it works:
+- **Two generation modes** (`registry.buildPaths({unwrap})`):
+  - `/api/openapi.json` + `docs/openapi.generated.json` — **enveloped** (accurate wire
+    shape, for external consumers).
+  - `/api/openapi-client.json` + `docs/openapi.client.json` — **unwrapped** (the HTTP
+    interceptor strips `{success,data,timestamp}`); `ng-openapi-gen` reads this.
+- **operationIds** from `operation-ids.ts` keep the generated function names stable.
+- **Response models** (`response-schemas.ts`) ported from the handlers; a few endpoints
+  the FE reads via `res.data.…` keep the envelope via `clientWrap: true` (auth
+  login/register/refresh/2FA/me, sessions). `requestOptional` marks body-less calls
+  (refresh).
+- **Two real bugs surfaced + fixed:** `createUser`/`updateUser` validators were missing
+  `READONLY` role and `SUSPENDED` status that the Prisma enums + FE already use.
 
-**What T9 actually needs:** a codegen-facing spec whose **responses are unwrapped** (the
-`data` payload only — the envelope is transport the interceptor removes), with response
-shapes/optionality/enums matched to the handlers exactly. Options: (a) a second
-"unwrapped" generation mode in the registry for the FE-client spec while
-`/api/openapi.json` stays enveloped for external consumers; (b) align per-endpoint and
-add the missing fields. Then regenerate, review diff, `make ng-api-check`. Non-trivial —
-its own task.
+**Result:** `make ng-api-generate` from `docs/openapi.client.json` → FE app + spec
+type-check **0 errors**, lint clean, **541/541 tests pass**. `make openapi-client`
+rewrites the codegen spec; `make ng-api-check` guards client drift.
 - CI check: regenerate and fail if it differs from the committed file (so drift can't
   reappear). Optionally a contract test asserting the documented webhook body matches
   the validator, like the alert-pipeline test.

@@ -7,29 +7,14 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
+import { ActivateDeviceInput } from '../../models/activate-device-input';
+import { ActivateDeviceResponse } from '../../models/activate-device-response';
 
 export interface ActivateDevice$Params {
-      body: {
-'deviceId': string;
-
-/**
- * Format: XXXX-XXXX
- */
-'claimingToken': string;
-'macAddress'?: string;
-'ipAddress'?: string;
-'firmwareVersion'?: string;
-}
+      body: ActivateDeviceInput
 }
 
-export function activateDevice(http: HttpClient, rootUrl: string, params: ActivateDevice$Params, context?: HttpContext): Observable<StrictHttpResponse<{
-'credentials'?: {
-'apiKey'?: string;
-'webhookUrl'?: string;
-};
-'config'?: {
-};
-}>> {
+export function activateDevice(http: HttpClient, rootUrl: string, params: ActivateDevice$Params, context?: HttpContext): Observable<StrictHttpResponse<ActivateDeviceResponse>> {
   const rb = new RequestBuilder(rootUrl, activateDevice.PATH, 'post');
   if (params) {
     rb.body(params.body, 'application/json');
@@ -40,14 +25,7 @@ export function activateDevice(http: HttpClient, rootUrl: string, params: Activa
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<{
-      'credentials'?: {
-      'apiKey'?: string;
-      'webhookUrl'?: string;
-      };
-      'config'?: {
-      };
-      }>;
+      return r as StrictHttpResponse<ActivateDeviceResponse>;
     })
   );
 }

@@ -7,15 +7,12 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
+import { HealthResponse } from '../../models/health-response';
 
 export interface HealthCheck$Params {
 }
 
-export function healthCheck(http: HttpClient, rootUrl: string, params?: HealthCheck$Params, context?: HttpContext): Observable<StrictHttpResponse<{
-'status'?: string;
-'uptime'?: number;
-'timestamp'?: string;
-}>> {
+export function healthCheck(http: HttpClient, rootUrl: string, params?: HealthCheck$Params, context?: HttpContext): Observable<StrictHttpResponse<HealthResponse>> {
   const rb = new RequestBuilder(rootUrl, healthCheck.PATH, 'get');
   if (params) {
   }
@@ -25,11 +22,7 @@ export function healthCheck(http: HttpClient, rootUrl: string, params?: HealthCh
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<{
-      'status'?: string;
-      'uptime'?: number;
-      'timestamp'?: string;
-      }>;
+      return r as StrictHttpResponse<HealthResponse>;
     })
   );
 }

@@ -53,10 +53,14 @@ export interface OperationDef {
     security?: Array<Record<string, string[]>>;
     params?: ParamDef[];
     request?: { $ref: string } | JsonSchema;   // request body schema (or component ref)
+    requestOptional?: boolean;    // requestBody not required (e.g. body-less refresh)
     response?: { $ref: string } | JsonSchema;  // the DATA payload, pre-envelope
     responseDescription?: string;
     /** How to wrap the response data. Default 'success'. 'none' = raw, no envelope. */
     envelope?: 'success' | 'paginated' | 'none';
+    /** Keep the envelope even in the unwrapped client spec (for endpoints the FE
+     *  reads via `res.data.…`). Default false. */
+    clientWrap?: boolean;
     status?: number;              // default 200
 }
 
@@ -125,8 +129,15 @@ class OpenApiRegistry {
         return this.schemas;
     }
 
-    /** Group registered operations by path into an OpenAPI `paths` object. */
-    buildPaths(): Record<string, Record<string, unknown>> {
+    /**
+     * Group registered operations by path into an OpenAPI `paths` object.
+     * `unwrap: true` documents responses WITHOUT the {success,data,timestamp}
+     * envelope (just the data payload) — for the FE client codegen, whose HTTP
+     * interceptor strips the envelope. Default (enveloped) is the accurate wire
+     * shape for external consumers.
+     */
+    buildPaths(opts: {unwrap?: boolean} = {}): Record<string, Record<string, unknown>> {
+        const unwrap = opts.unwrap ?? false;
         const paths: Record<string, Record<string, unknown>> = {};
 
         for (const op of this.operations) {
@@ -147,7 +158,7 @@ class OpenApiRegistry {
             }
             if (op.request) {
                 operation.requestBody = {
-                    required: true,
+                    required: !op.requestOptional,
                     content: { 'application/json': { schema: op.request } },
                 };
             }
@@ -157,7 +168,7 @@ class OpenApiRegistry {
                 ? {
                     content: {
                         'application/json': {
-                            schema: this.wrapResponse(op.response, op.envelope ?? 'success'),
+                            schema: this.wrapResponse(op.response, op.envelope ?? 'success', unwrap && !op.clientWrap),
                         },
                     },
                 }
@@ -179,7 +190,12 @@ class OpenApiRegistry {
     private wrapResponse(
         dataSchema: { $ref: string } | JsonSchema,
         envelope: 'success' | 'paginated' | 'none',
+        unwrap: boolean,
     ): { $ref: string } | JsonSchema {
+        if (unwrap) {
+            // No envelope (the FE interceptor strips it): list → array, else → data.
+            return envelope === 'paginated' ? {type: 'array', items: dataSchema} : dataSchema;
+        }
         if (envelope === 'none') return dataSchema;
         if (envelope === 'paginated') return paginatedEnvelope(dataSchema);
         return successEnvelope(dataSchema);

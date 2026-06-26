@@ -18,6 +18,8 @@ const bool = {type: 'boolean'};
 const dt = {type: 'string', format: 'date-time'};
 const dtN = {type: 'string', format: 'date-time', nullable: true};
 const obj = (properties: Record<string, unknown>): JsonSchema => ({type: 'object', properties});
+const objR = (properties: Record<string, unknown>, required: string[]): JsonSchema => ({type: 'object', properties, required});
+const boolStr = {type: 'string', enum: ['true', 'false']};
 const arr = (items: unknown): JsonSchema => ({type: 'array', items});
 
 export const RESPONSE_SCHEMAS: Record<string, JsonSchema> = {
@@ -28,7 +30,33 @@ export const RESPONSE_SCHEMAS: Record<string, JsonSchema> = {
         _count: obj({devices: int, alerts: int}),
     }),
     Session: obj({id: str, createdAt: dt, expiresAt: dt, isCurrent: bool}),
-    AuthData: obj({user: ref('User'), token: str}),
+    // Auth payload (the `data` of the envelope) — FE reads res.data.user/token.
+    AuthData: obj({
+        user: ref('User'), token: str,
+        requiresTwoFactor: bool, userId: str, message: str,
+    }),
+    MeData: obj({user: ref('User')}),
+    RegisterData: obj({requiresApproval: bool, isNewCompany: bool, message: str, user: ref('User')}),
+    RevokeSessionResult: obj({wasCurrentSession: bool}),
+    RevokeSessionsResult: obj({revokedCount: int}),
+    Device: obj({
+        id: str, deviceId: str, hostname: str, name: str, deviceType: str, deviceModel: strN,
+        status: {type: 'string', enum: ['ONLINE', 'OFFLINE', 'MAINTENANCE', 'ERROR', 'UNCLAIMED']},
+        rawStatus: {type: 'string', enum: ['ONLINE', 'OFFLINE', 'MAINTENANCE', 'ERROR', 'UNCLAIMED'], nullable: true},
+        ipAddress: strN, tailscaleIp: strN, macAddress: strN, location: strN, agentVersion: strN,
+        customerId: str, lastSeen: dtN, architecture: strN, description: strN,
+        cpuUsage: numN, cpuTemp: numN, memoryUsage: numN, memoryTotal: numN, diskUsage: numN,
+        diskTotal: strN, loadAverage: strN, appStatus: strN, lastBoot: dtN, registeredAt: dtN,
+        updatedAt: dtN, alertsCount: {type: 'integer', nullable: true},
+    }),
+    Alert: obj({
+        id: str, deviceId: str,
+        type: {type: 'string', enum: ['HIGH_CPU', 'HIGH_MEMORY', 'HIGH_TEMPERATURE', 'DISK_SPACE', 'DEVICE_OFFLINE', 'SECURITY_ALERT', 'CUSTOM']},
+        severity: {type: 'string', enum: ['INFO', 'WARNING', 'ERROR', 'CRITICAL']},
+        title: str, message: str, resolved: bool, resolvedAt: dtN, acknowledgedAt: dtN, createdAt: dt,
+        metadata: {type: 'object', additionalProperties: true},
+    }),
+    ClaimResult: obj({deviceId: str, claimingToken: str, expiresAt: dt, instructions: str}),
     ApiKey: obj({id: str, name: str, createdAt: dt, lastUsedAt: dtN, expiresAt: dtN}),
     ApiKeyCreated: obj({id: str, name: str, key: str, createdAt: dt, expiresAt: dtN}),
     DeviceCommand: obj({
@@ -73,20 +101,27 @@ export const RESPONSE_SCHEMAS: Record<string, JsonSchema> = {
         status: {type: 'string', enum: ['PENDING', 'SENDING', 'DELIVERED', 'FAILED', 'DEAD', 'CANCELLED']},
         recipient: str, subject: str, attemptCount: int, createdAt: dt,
     }),
-    ProfileSettings: obj({
+    ProfileSettings: objR({
         language: str, timezone: str, dateFormat: {type: 'string', enum: ['MM/DD/YYYY', 'DD/MM/YYYY', 'YYYY-MM-DD']},
         firstName: str, lastName: str, phoneNumber: str,
-    }),
-    SecuritySettings: obj({twoFactorAuth: str, sessionTimeout: str, loginNotifications: str}),
+    }, ['language', 'timezone', 'dateFormat']),
+    ProfileSettingsResponse: objR({
+        language: str, timezone: str, dateFormat: {type: 'string', enum: ['MM/DD/YYYY', 'DD/MM/YYYY', 'YYYY-MM-DD']},
+        firstName: str, lastName: str, phoneNumber: str,
+        email: {type: 'string', format: 'email'}, username: str,
+    }, ['language', 'timezone', 'dateFormat']),
+    SecuritySettings: objR({twoFactorAuth: boolStr, sessionTimeout: str, loginNotifications: boolStr},
+        ['twoFactorAuth', 'sessionTimeout', 'loginNotifications']),
     SystemSettings: obj({
         theme: {type: 'string', enum: ['light', 'dark', 'system']},
         dashboardLayout: {type: 'string', enum: ['default', 'compact', 'expanded']},
         itemsPerPage: str, isAdmin: str, enableAdvancedMetrics: str, enableBetaFeatures: str,
         logLevel: {type: 'string', enum: ['debug', 'info', 'warn', 'error']},
     }),
-    NotificationSettings: obj({
-        emailNotifications: str, pushNotifications: str, alertNotifications: str, deviceOfflineNotifications: str,
-    }),
+    NotificationSettings: objR({
+        emailNotifications: boolStr, pushNotifications: boolStr, alertNotifications: boolStr, deviceOfflineNotifications: boolStr,
+    }, ['emailNotifications', 'pushNotifications', 'alertNotifications', 'deviceOfflineNotifications']),
+    ChangePasswordResult: obj({message: str, wasCurrentSession: bool}),
     AdminStats: obj({
         totalDevices: int, onlineDevices: int, totalUsers: int, totalCustomers: int, openAlerts: int,
     }),

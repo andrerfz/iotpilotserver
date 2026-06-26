@@ -7,16 +7,15 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
-import { SuccessResponse } from '../../models/success-response';
-import { User } from '../../models/user';
+import { MeData } from '../../models/me-data';
 
 export interface GetMe$Params {
 }
 
-export function getMe(http: HttpClient, rootUrl: string, params?: GetMe$Params, context?: HttpContext): Observable<StrictHttpResponse<SuccessResponse & {
-'data'?: {
-'user'?: User;
-};
+export function getMe(http: HttpClient, rootUrl: string, params?: GetMe$Params, context?: HttpContext): Observable<StrictHttpResponse<{
+'success': boolean;
+'data': MeData;
+'timestamp': string;
 }>> {
   const rb = new RequestBuilder(rootUrl, getMe.PATH, 'get');
   if (params) {
@@ -27,10 +26,10 @@ export function getMe(http: HttpClient, rootUrl: string, params?: GetMe$Params, 
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<SuccessResponse & {
-      'data'?: {
-      'user'?: User;
-      };
+      return r as StrictHttpResponse<{
+      'success': boolean;
+      'data': MeData;
+      'timestamp': string;
       }>;
     })
   );

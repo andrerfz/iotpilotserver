@@ -8,22 +8,37 @@ import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
 import { Alert } from '../../models/alert';
-import { SuccessResponse } from '../../models/success-response';
 
 export interface ListDeviceAlerts$Params {
+
+/**
+ * Device public ID
+ */
   id: string;
+
+/**
+ * Page number
+ */
+  page?: number;
+
+/**
+ * Page size
+ */
+  limit?: number;
+
+/**
+ * severity
+ */
   severity?: string;
-  resolved?: boolean;
 }
 
-export function listDeviceAlerts(http: HttpClient, rootUrl: string, params: ListDeviceAlerts$Params, context?: HttpContext): Observable<StrictHttpResponse<SuccessResponse & {
-'data'?: Array<Alert>;
-}>> {
+export function listDeviceAlerts(http: HttpClient, rootUrl: string, params: ListDeviceAlerts$Params, context?: HttpContext): Observable<StrictHttpResponse<Array<Alert>>> {
   const rb = new RequestBuilder(rootUrl, listDeviceAlerts.PATH, 'get');
   if (params) {
     rb.path('id', params.id, {});
+    rb.query('page', params.page, {});
+    rb.query('limit', params.limit, {});
     rb.query('severity', params.severity, {});
-    rb.query('resolved', params.resolved, {});
   }
 
   return http.request(
@@ -31,9 +46,7 @@ export function listDeviceAlerts(http: HttpClient, rootUrl: string, params: List
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<SuccessResponse & {
-      'data'?: Array<Alert>;
-      }>;
+      return r as StrictHttpResponse<Array<Alert>>;
     })
   );
 }

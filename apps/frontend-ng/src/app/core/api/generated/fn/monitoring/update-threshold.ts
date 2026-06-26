@@ -7,24 +7,19 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
+import { Threshold } from '../../models/threshold';
+import { UpdateThresholdInput } from '../../models/update-threshold-input';
 
 export interface UpdateThreshold$Params {
+
+/**
+ * Device public ID
+ */
   id: string;
-      body: {
-'name': string;
-'description': string;
-'metricName': string;
-'operator': 'GREATER_THAN' | 'LESS_THAN' | 'EQUAL_TO' | 'NOT_EQUAL_TO' | 'GREATER_THAN_OR_EQUAL' | 'LESS_THAN_OR_EQUAL';
-'value': number;
-'unit': string;
-'severity': 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-'type': 'STATIC' | 'DYNAMIC' | 'BASELINE';
-'cooldownMinutes'?: number;
-'enabled'?: boolean;
-}
+      body: UpdateThresholdInput
 }
 
-export function updateThreshold(http: HttpClient, rootUrl: string, params: UpdateThreshold$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
+export function updateThreshold(http: HttpClient, rootUrl: string, params: UpdateThreshold$Params, context?: HttpContext): Observable<StrictHttpResponse<Threshold>> {
   const rb = new RequestBuilder(rootUrl, updateThreshold.PATH, 'put');
   if (params) {
     rb.path('id', params.id, {});
@@ -32,11 +27,11 @@ export function updateThreshold(http: HttpClient, rootUrl: string, params: Updat
   }
 
   return http.request(
-    rb.build({ responseType: 'text', accept: '*/*', context })
+    rb.build({ responseType: 'json', accept: 'application/json', context })
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return (r as HttpResponse<any>).clone({ body: undefined }) as StrictHttpResponse<void>;
+      return r as StrictHttpResponse<Threshold>;
     })
   );
 }

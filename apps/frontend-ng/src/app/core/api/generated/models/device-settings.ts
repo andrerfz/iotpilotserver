@@ -7,18 +7,10 @@ export interface DeviceSettings {
   batteryThreshold?: number;
   cpuThreshold?: number;
   diskThreshold?: number;
-
-  /**
-   * Seconds between heartbeats (system devices)
-   */
   heartbeatInterval?: number;
   memoryThreshold?: number;
   metricsEnabled?: boolean;
   networkMonitoring?: boolean;
-
-  /**
-   * Seconds between sensor readings (sensor devices)
-   */
   reportingInterval?: number;
   sensorTempThreshold?: number;
   sshEnabled?: boolean;

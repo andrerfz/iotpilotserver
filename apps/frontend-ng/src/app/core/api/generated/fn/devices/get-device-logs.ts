@@ -8,28 +8,43 @@ import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
 import { DeviceLogEntry } from '../../models/device-log-entry';
-import { SuccessResponse } from '../../models/success-response';
 
 export interface GetDeviceLogs$Params {
+
+/**
+ * Device public ID
+ */
   id: string;
-  level?: 'ALL' | 'DEBUG' | 'INFO' | 'WARN' | 'ERROR' | 'FATAL';
-  source?: string;
-  search?: string;
+
+/**
+ * limit
+ */
   limit?: number;
-  offset?: number;
+
+/**
+ * level
+ */
+  level?: string;
+
+/**
+ * source
+ */
+  source?: string;
+
+/**
+ * search
+ */
+  search?: string;
 }
 
-export function getDeviceLogs(http: HttpClient, rootUrl: string, params: GetDeviceLogs$Params, context?: HttpContext): Observable<StrictHttpResponse<SuccessResponse & {
-'data'?: Array<DeviceLogEntry>;
-}>> {
+export function getDeviceLogs(http: HttpClient, rootUrl: string, params: GetDeviceLogs$Params, context?: HttpContext): Observable<StrictHttpResponse<Array<DeviceLogEntry>>> {
   const rb = new RequestBuilder(rootUrl, getDeviceLogs.PATH, 'get');
   if (params) {
     rb.path('id', params.id, {});
+    rb.query('limit', params.limit, {});
     rb.query('level', params.level, {});
     rb.query('source', params.source, {});
     rb.query('search', params.search, {});
-    rb.query('limit', params.limit, {});
-    rb.query('offset', params.offset, {});
   }
 
   return http.request(
@@ -37,9 +52,7 @@ export function getDeviceLogs(http: HttpClient, rootUrl: string, params: GetDevi
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<SuccessResponse & {
-      'data'?: Array<DeviceLogEntry>;
-      }>;
+      return r as StrictHttpResponse<Array<DeviceLogEntry>>;
     })
   );
 }
