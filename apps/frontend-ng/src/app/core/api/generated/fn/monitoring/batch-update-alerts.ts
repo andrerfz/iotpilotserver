@@ -7,19 +7,14 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
+import { BatchAlertInput } from '../../models/batch-alert-input';
+import { BulkResult } from '../../models/bulk-result';
 
 export interface BatchUpdateAlerts$Params {
-      body: {
-'action': 'acknowledge' | 'resolve';
-'alertIds': Array<string>;
-'resolutionNote'?: string;
-}
+      body: BatchAlertInput
 }
 
-export function batchUpdateAlerts(http: HttpClient, rootUrl: string, params: BatchUpdateAlerts$Params, context?: HttpContext): Observable<StrictHttpResponse<{
-'processed'?: number;
-'skipped'?: number;
-}>> {
+export function batchUpdateAlerts(http: HttpClient, rootUrl: string, params: BatchUpdateAlerts$Params, context?: HttpContext): Observable<StrictHttpResponse<BulkResult>> {
   const rb = new RequestBuilder(rootUrl, batchUpdateAlerts.PATH, 'put');
   if (params) {
     rb.body(params.body, 'application/json');
@@ -30,10 +25,7 @@ export function batchUpdateAlerts(http: HttpClient, rootUrl: string, params: Bat
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<{
-      'processed'?: number;
-      'skipped'?: number;
-      }>;
+      return r as StrictHttpResponse<BulkResult>;
     })
   );
 }

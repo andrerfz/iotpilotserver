@@ -7,18 +7,19 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
+import { Device } from '../../models/device';
+import { DeviceSettingsInput } from '../../models/device-settings-input';
 
 export interface UpdateDevice$Params {
+
+/**
+ * Device public ID
+ */
   id: string;
-      body: {
-'hostname'?: string;
-'location'?: string;
-'description'?: string;
-'tags'?: Array<string>;
-}
+      body: DeviceSettingsInput
 }
 
-export function updateDevice(http: HttpClient, rootUrl: string, params: UpdateDevice$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
+export function updateDevice(http: HttpClient, rootUrl: string, params: UpdateDevice$Params, context?: HttpContext): Observable<StrictHttpResponse<Device>> {
   const rb = new RequestBuilder(rootUrl, updateDevice.PATH, 'put');
   if (params) {
     rb.path('id', params.id, {});
@@ -26,11 +27,11 @@ export function updateDevice(http: HttpClient, rootUrl: string, params: UpdateDe
   }
 
   return http.request(
-    rb.build({ responseType: 'text', accept: '*/*', context })
+    rb.build({ responseType: 'json', accept: 'application/json', context })
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return (r as HttpResponse<any>).clone({ body: undefined }) as StrictHttpResponse<void>;
+      return r as StrictHttpResponse<Device>;
     })
   );
 }

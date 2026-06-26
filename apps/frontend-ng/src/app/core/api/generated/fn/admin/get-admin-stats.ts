@@ -7,16 +7,12 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
+import { AdminStats } from '../../models/admin-stats';
 
 export interface GetAdminStats$Params {
 }
 
-export function getAdminStats(http: HttpClient, rootUrl: string, params?: GetAdminStats$Params, context?: HttpContext): Observable<StrictHttpResponse<{
-'userCount'?: number;
-'deviceCount'?: number;
-'alertCount'?: number;
-'activeDevices'?: number;
-}>> {
+export function getAdminStats(http: HttpClient, rootUrl: string, params?: GetAdminStats$Params, context?: HttpContext): Observable<StrictHttpResponse<AdminStats>> {
   const rb = new RequestBuilder(rootUrl, getAdminStats.PATH, 'get');
   if (params) {
   }
@@ -26,12 +22,7 @@ export function getAdminStats(http: HttpClient, rootUrl: string, params?: GetAdm
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<{
-      'userCount'?: number;
-      'deviceCount'?: number;
-      'alertCount'?: number;
-      'activeDevices'?: number;
-      }>;
+      return r as StrictHttpResponse<AdminStats>;
     })
   );
 }

@@ -7,17 +7,14 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
+import { ChangePasswordInput } from '../../models/change-password-input';
+import { ChangePasswordResult } from '../../models/change-password-result';
 
 export interface ChangePassword$Params {
-      body: {
-'currentPassword': string;
-'newPassword': string;
-}
+      body: ChangePasswordInput
 }
 
-export function changePassword(http: HttpClient, rootUrl: string, params: ChangePassword$Params, context?: HttpContext): Observable<StrictHttpResponse<{
-'wasCurrentSession'?: boolean;
-}>> {
+export function changePassword(http: HttpClient, rootUrl: string, params: ChangePassword$Params, context?: HttpContext): Observable<StrictHttpResponse<ChangePasswordResult>> {
   const rb = new RequestBuilder(rootUrl, changePassword.PATH, 'put');
   if (params) {
     rb.body(params.body, 'application/json');
@@ -28,9 +25,7 @@ export function changePassword(http: HttpClient, rootUrl: string, params: Change
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<{
-      'wasCurrentSession'?: boolean;
-      }>;
+      return r as StrictHttpResponse<ChangePasswordResult>;
     })
   );
 }

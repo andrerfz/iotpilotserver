@@ -6,7 +6,7 @@ import {registry} from './registry';
  * must not depend on app routes, so registration happens there, not here.
  * See docs/openapi-autogen.md.
  */
-export function generateOpenApiSpec() {
+function baseDoc(paths: Record<string, unknown>) {
     return {
         openapi: '3.0.0',
         info: {
@@ -22,6 +22,20 @@ export function generateOpenApiSpec() {
             },
             schemas: registry.getSchemas(),
         },
-        paths: registry.buildPaths(),
+        paths,
     };
+}
+
+/** Accurate wire contract — responses include the {success,data,timestamp} envelope. */
+export function generateOpenApiSpec() {
+    return baseDoc(registry.buildPaths());
+}
+
+/**
+ * Codegen-facing contract for the Angular client (ng-openapi-gen): responses are
+ * UNWRAPPED (the HTTP interceptor strips the envelope), so generated types match
+ * how the FE consumes them. See docs/openapi-autogen.md (T9).
+ */
+export function generateClientSpec() {
+    return baseDoc(registry.buildPaths({unwrap: true}));
 }

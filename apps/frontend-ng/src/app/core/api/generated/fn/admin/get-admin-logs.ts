@@ -7,31 +7,22 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
+import { DeviceLogEntry } from '../../models/device-log-entry';
 
 export interface GetAdminLogs$Params {
-  level?: string;
-  deviceId?: string;
-  source?: string;
-  search?: string;
-  page?: number;
 }
 
-export function getAdminLogs(http: HttpClient, rootUrl: string, params?: GetAdminLogs$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
+export function getAdminLogs(http: HttpClient, rootUrl: string, params?: GetAdminLogs$Params, context?: HttpContext): Observable<StrictHttpResponse<Array<DeviceLogEntry>>> {
   const rb = new RequestBuilder(rootUrl, getAdminLogs.PATH, 'get');
   if (params) {
-    rb.query('level', params.level, {});
-    rb.query('deviceId', params.deviceId, {});
-    rb.query('source', params.source, {});
-    rb.query('search', params.search, {});
-    rb.query('page', params.page, {});
   }
 
   return http.request(
-    rb.build({ responseType: 'text', accept: '*/*', context })
+    rb.build({ responseType: 'json', accept: 'application/json', context })
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return (r as HttpResponse<any>).clone({ body: undefined }) as StrictHttpResponse<void>;
+      return r as StrictHttpResponse<Array<DeviceLogEntry>>;
     })
   );
 }

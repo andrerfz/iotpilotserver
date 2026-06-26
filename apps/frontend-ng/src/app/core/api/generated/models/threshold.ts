@@ -6,10 +6,6 @@ export interface Threshold {
   createdAt?: string;
   customerId?: string;
   description?: string;
-
-  /**
-   * null = global tenant threshold
-   */
   deviceId?: string | null;
   id?: string;
   isEnabled?: boolean;

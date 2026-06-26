@@ -7,31 +7,34 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
+import { UserResponse } from '../../models/user-response';
 
 export interface ListUsers$Params {
+
+/**
+ * Page number
+ */
   page?: number;
+
+/**
+ * Page size
+ */
   limit?: number;
-  role?: string;
-  status?: string;
-  search?: string;
 }
 
-export function listUsers(http: HttpClient, rootUrl: string, params?: ListUsers$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
+export function listUsers(http: HttpClient, rootUrl: string, params?: ListUsers$Params, context?: HttpContext): Observable<StrictHttpResponse<Array<UserResponse>>> {
   const rb = new RequestBuilder(rootUrl, listUsers.PATH, 'get');
   if (params) {
     rb.query('page', params.page, {});
     rb.query('limit', params.limit, {});
-    rb.query('role', params.role, {});
-    rb.query('status', params.status, {});
-    rb.query('search', params.search, {});
   }
 
   return http.request(
-    rb.build({ responseType: 'text', accept: '*/*', context })
+    rb.build({ responseType: 'json', accept: 'application/json', context })
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return (r as HttpResponse<any>).clone({ body: undefined }) as StrictHttpResponse<void>;
+      return r as StrictHttpResponse<Array<UserResponse>>;
     })
   );
 }

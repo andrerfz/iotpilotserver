@@ -7,18 +7,19 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
+import { Alert } from '../../models/alert';
+import { CreateAlertInput } from '../../models/create-alert-input';
 
 export interface CreateDeviceAlert$Params {
+
+/**
+ * Device public ID
+ */
   id: string;
-      body: {
-'type': string;
-'severity': 'INFO' | 'WARNING' | 'ERROR' | 'CRITICAL';
-'title': string;
-'message': string;
-}
+      body: CreateAlertInput
 }
 
-export function createDeviceAlert(http: HttpClient, rootUrl: string, params: CreateDeviceAlert$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
+export function createDeviceAlert(http: HttpClient, rootUrl: string, params: CreateDeviceAlert$Params, context?: HttpContext): Observable<StrictHttpResponse<Alert>> {
   const rb = new RequestBuilder(rootUrl, createDeviceAlert.PATH, 'post');
   if (params) {
     rb.path('id', params.id, {});
@@ -26,11 +27,11 @@ export function createDeviceAlert(http: HttpClient, rootUrl: string, params: Cre
   }
 
   return http.request(
-    rb.build({ responseType: 'text', accept: '*/*', context })
+    rb.build({ responseType: 'json', accept: 'application/json', context })
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return (r as HttpResponse<any>).clone({ body: undefined }) as StrictHttpResponse<void>;
+      return r as StrictHttpResponse<Alert>;
     })
   );
 }

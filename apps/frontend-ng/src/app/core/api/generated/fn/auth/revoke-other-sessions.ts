@@ -7,15 +7,15 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
-import { SuccessResponse } from '../../models/success-response';
+import { RevokeSessionsResult } from '../../models/revoke-sessions-result';
 
 export interface RevokeOtherSessions$Params {
 }
 
-export function revokeOtherSessions(http: HttpClient, rootUrl: string, params?: RevokeOtherSessions$Params, context?: HttpContext): Observable<StrictHttpResponse<SuccessResponse & {
-'data'?: {
-'revokedCount'?: number;
-};
+export function revokeOtherSessions(http: HttpClient, rootUrl: string, params?: RevokeOtherSessions$Params, context?: HttpContext): Observable<StrictHttpResponse<{
+'success': boolean;
+'data': RevokeSessionsResult;
+'timestamp': string;
 }>> {
   const rb = new RequestBuilder(rootUrl, revokeOtherSessions.PATH, 'delete');
   if (params) {
@@ -26,10 +26,10 @@ export function revokeOtherSessions(http: HttpClient, rootUrl: string, params?: 
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<SuccessResponse & {
-      'data'?: {
-      'revokedCount'?: number;
-      };
+      return r as StrictHttpResponse<{
+      'success': boolean;
+      'data': RevokeSessionsResult;
+      'timestamp': string;
       }>;
     })
   );

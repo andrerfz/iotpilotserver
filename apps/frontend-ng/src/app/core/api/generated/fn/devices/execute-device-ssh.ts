@@ -7,20 +7,19 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
+import { SshCommandInput } from '../../models/ssh-command-input';
 import { SshResult } from '../../models/ssh-result';
-import { SuccessResponse } from '../../models/success-response';
 
 export interface ExecuteDeviceSsh$Params {
+
+/**
+ * Device public ID
+ */
   id: string;
-      body: {
-'command': string;
-'timeout'?: number;
-}
+      body: SshCommandInput
 }
 
-export function executeDeviceSsh(http: HttpClient, rootUrl: string, params: ExecuteDeviceSsh$Params, context?: HttpContext): Observable<StrictHttpResponse<SuccessResponse & {
-'data'?: SshResult;
-}>> {
+export function executeDeviceSsh(http: HttpClient, rootUrl: string, params: ExecuteDeviceSsh$Params, context?: HttpContext): Observable<StrictHttpResponse<SshResult>> {
   const rb = new RequestBuilder(rootUrl, executeDeviceSsh.PATH, 'post');
   if (params) {
     rb.path('id', params.id, {});
@@ -32,9 +31,7 @@ export function executeDeviceSsh(http: HttpClient, rootUrl: string, params: Exec
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<SuccessResponse & {
-      'data'?: SshResult;
-      }>;
+      return r as StrictHttpResponse<SshResult>;
     })
   );
 }

@@ -7,21 +7,28 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
+import { MessageResponse } from '../../models/message-response';
 
 export interface DeleteAdminCustomer$Params {
+
+/**
+ * Device public ID
+ */
   id: string;
 }
 
-export function deleteAdminCustomer(http: HttpClient, rootUrl: string, params: DeleteAdminCustomer$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
+export function deleteAdminCustomer(http: HttpClient, rootUrl: string, params: DeleteAdminCustomer$Params, context?: HttpContext): Observable<StrictHttpResponse<MessageResponse>> {
   const rb = new RequestBuilder(rootUrl, deleteAdminCustomer.PATH, 'delete');
-  rb.path('id', params.id, {});
+  if (params) {
+    rb.path('id', params.id, {});
+  }
 
   return http.request(
-    rb.build({ responseType: 'text', accept: '*/*', context })
+    rb.build({ responseType: 'json', accept: 'application/json', context })
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return (r as HttpResponse<any>).clone({ body: undefined }) as StrictHttpResponse<void>;
+      return r as StrictHttpResponse<MessageResponse>;
     })
   );
 }

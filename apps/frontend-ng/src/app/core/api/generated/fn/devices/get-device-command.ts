@@ -7,13 +7,22 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
+import { DeviceCommand } from '../../models/device-command';
 
 export interface GetDeviceCommand$Params {
+
+/**
+ * Device public ID
+ */
   id: string;
+
+/**
+ * Command ID
+ */
   commandId: string;
 }
 
-export function getDeviceCommand(http: HttpClient, rootUrl: string, params: GetDeviceCommand$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
+export function getDeviceCommand(http: HttpClient, rootUrl: string, params: GetDeviceCommand$Params, context?: HttpContext): Observable<StrictHttpResponse<DeviceCommand>> {
   const rb = new RequestBuilder(rootUrl, getDeviceCommand.PATH, 'get');
   if (params) {
     rb.path('id', params.id, {});
@@ -21,11 +30,11 @@ export function getDeviceCommand(http: HttpClient, rootUrl: string, params: GetD
   }
 
   return http.request(
-    rb.build({ responseType: 'text', accept: '*/*', context })
+    rb.build({ responseType: 'json', accept: 'application/json', context })
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return (r as HttpResponse<any>).clone({ body: undefined }) as StrictHttpResponse<void>;
+      return r as StrictHttpResponse<DeviceCommand>;
     })
   );
 }

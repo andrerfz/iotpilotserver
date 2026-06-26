@@ -8,16 +8,21 @@ import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
 import { DeviceCommand } from '../../models/device-command';
-import { SuccessResponse } from '../../models/success-response';
 
 export interface ListDeviceCommands$Params {
+
+/**
+ * Device public ID
+ */
   id: string;
+
+/**
+ * limit
+ */
   limit?: number;
 }
 
-export function listDeviceCommands(http: HttpClient, rootUrl: string, params: ListDeviceCommands$Params, context?: HttpContext): Observable<StrictHttpResponse<SuccessResponse & {
-'data'?: Array<DeviceCommand>;
-}>> {
+export function listDeviceCommands(http: HttpClient, rootUrl: string, params: ListDeviceCommands$Params, context?: HttpContext): Observable<StrictHttpResponse<Array<DeviceCommand>>> {
   const rb = new RequestBuilder(rootUrl, listDeviceCommands.PATH, 'get');
   if (params) {
     rb.path('id', params.id, {});
@@ -29,9 +34,7 @@ export function listDeviceCommands(http: HttpClient, rootUrl: string, params: Li
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<SuccessResponse & {
-      'data'?: Array<DeviceCommand>;
-      }>;
+      return r as StrictHttpResponse<Array<DeviceCommand>>;
     })
   );
 }

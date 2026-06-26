@@ -8,13 +8,21 @@ import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
 import { Session } from '../../models/session';
-import { SuccessResponse } from '../../models/success-response';
 
 export interface ListSessions$Params {
 }
 
-export function listSessions(http: HttpClient, rootUrl: string, params?: ListSessions$Params, context?: HttpContext): Observable<StrictHttpResponse<SuccessResponse & {
-'data'?: Array<Session>;
+export function listSessions(http: HttpClient, rootUrl: string, params?: ListSessions$Params, context?: HttpContext): Observable<StrictHttpResponse<{
+'success': boolean;
+'data': Array<Session>;
+'timestamp': string;
+'meta'?: {
+'pagination'?: {
+'page'?: number;
+'limit'?: number;
+'total'?: number;
+};
+};
 }>> {
   const rb = new RequestBuilder(rootUrl, listSessions.PATH, 'get');
   if (params) {
@@ -25,8 +33,17 @@ export function listSessions(http: HttpClient, rootUrl: string, params?: ListSes
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<SuccessResponse & {
-      'data'?: Array<Session>;
+      return r as StrictHttpResponse<{
+      'success': boolean;
+      'data': Array<Session>;
+      'timestamp': string;
+      'meta'?: {
+      'pagination'?: {
+      'page'?: number;
+      'limit'?: number;
+      'total'?: number;
+      };
+      };
       }>;
     })
   );

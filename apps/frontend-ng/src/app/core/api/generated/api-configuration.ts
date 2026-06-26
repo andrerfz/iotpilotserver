@@ -22,6 +22,6 @@ export function provideApiConfiguration(rootUrl: string) {
   providedIn: 'root',
 })
 export class ApiConfiguration {
-  rootUrl: string = 'https://dashboarddev.iotpilot.app/api';
+  rootUrl: string = '/api';
 }
 

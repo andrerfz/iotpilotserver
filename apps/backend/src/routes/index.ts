@@ -7,17 +7,22 @@ import { usersRouter } from './users.router';
 import { settingsRouter } from './settings.router';
 import { iotRouter } from './iot.router';
 import { notificationsRouter } from './notifications.router';
-import { generateOpenApiSpec } from '@iotpilot/core/shared/infrastructure/openapi/generator';
+import { generateOpenApiSpec, generateClientSpec } from '@iotpilot/core/shared/infrastructure/openapi/generator';
 import '../openapi/register-routes';  // side effect: populates the OpenAPI registry
 
 export function createApiRouter(): Router {
   const router = Router();
 
-  // Machine-readable API contract. Generated from the zod schemas that validate
-  // requests (see docs/openapi-autogen.md) — incrementally replacing the
-  // hand-maintained docs/openapi.yml.
+  // Machine-readable API contract, generated from the zod schemas that validate
+  // requests (see docs/openapi-autogen.md). This is the single source of truth —
+  // the hand-maintained docs/openapi.yml has been retired.
+  // Enveloped (accurate wire shape) for external consumers:
   router.get('/openapi.json', (_req: Request, res: Response) => {
     res.json(generateOpenApiSpec());
+  });
+  // Unwrapped (envelope stripped by the HTTP interceptor) — drives the Angular client.
+  router.get('/openapi-client.json', (_req: Request, res: Response) => {
+    res.json(generateClientSpec());
   });
 
   router.use('/auth', authRouter);

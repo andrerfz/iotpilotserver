@@ -3,13 +3,9 @@
 
 export interface SystemSettings {
   dashboardLayout?: 'default' | 'compact' | 'expanded';
-  enableAdvancedMetrics?: 'true' | 'false';
-  enableBetaFeatures?: 'true' | 'false';
-  isAdmin?: 'true' | 'false';
-
-  /**
-   * Numeric string (5-100)
-   */
+  enableAdvancedMetrics?: string;
+  enableBetaFeatures?: string;
+  isAdmin?: string;
   itemsPerPage?: string;
   logLevel?: 'debug' | 'info' | 'warn' | 'error';
   theme?: 'light' | 'dark' | 'system';

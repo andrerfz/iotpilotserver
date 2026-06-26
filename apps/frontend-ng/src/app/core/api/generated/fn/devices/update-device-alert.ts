@@ -7,30 +7,34 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
+import { Alert } from '../../models/alert';
 
 export interface UpdateDeviceAlert$Params {
+
+/**
+ * Device public ID
+ */
   id: string;
+
+/**
+ * Alert ID
+ */
   alertId: string;
-      body: {
-'action': 'acknowledge' | 'resolve';
-'note'?: string;
-}
 }
 
-export function updateDeviceAlert(http: HttpClient, rootUrl: string, params: UpdateDeviceAlert$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
+export function updateDeviceAlert(http: HttpClient, rootUrl: string, params: UpdateDeviceAlert$Params, context?: HttpContext): Observable<StrictHttpResponse<Alert>> {
   const rb = new RequestBuilder(rootUrl, updateDeviceAlert.PATH, 'patch');
   if (params) {
     rb.path('id', params.id, {});
     rb.path('alertId', params.alertId, {});
-    rb.body(params.body, 'application/json');
   }
 
   return http.request(
-    rb.build({ responseType: 'text', accept: '*/*', context })
+    rb.build({ responseType: 'json', accept: 'application/json', context })
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return (r as HttpResponse<any>).clone({ body: undefined }) as StrictHttpResponse<void>;
+      return r as StrictHttpResponse<Alert>;
     })
   );
 }

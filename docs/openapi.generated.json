@@ -37,88 +37,6 @@
                 ],
                 "additionalProperties": false
             },
-            "DeviceResponse": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "string"
-                    },
-                    "deviceId": {
-                        "type": "string"
-                    },
-                    "name": {
-                        "type": "string"
-                    },
-                    "status": {
-                        "type": "string",
-                        "enum": [
-                            "ONLINE",
-                            "OFFLINE",
-                            "MAINTENANCE",
-                            "ERROR",
-                            "UNCLAIMED",
-                            "PENDING_SETUP"
-                        ]
-                    },
-                    "deviceType": {
-                        "type": "string",
-                        "enum": [
-                            "PI_ZERO",
-                            "PI_3",
-                            "PI_4",
-                            "PI_5",
-                            "ORANGE_PI",
-                            "ESP8266_SENSOR",
-                            "ESP32C3_SENSOR",
-                            "HELTEC_LORA32V3_SENSOR",
-                            "GENERIC",
-                            "UNKNOWN"
-                        ]
-                    },
-                    "deviceModel": {
-                        "type": "string",
-                        "nullable": true
-                    },
-                    "ipAddress": {
-                        "type": "string",
-                        "nullable": true
-                    },
-                    "macAddress": {
-                        "type": "string",
-                        "nullable": true
-                    },
-                    "lastSeen": {
-                        "type": "string",
-                        "nullable": true
-                    },
-                    "agentVersion": {
-                        "type": "string",
-                        "nullable": true
-                    },
-                    "customerId": {
-                        "type": "string",
-                        "nullable": true
-                    },
-                    "registeredAt": {
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "id",
-                    "deviceId",
-                    "name",
-                    "status",
-                    "deviceType",
-                    "deviceModel",
-                    "ipAddress",
-                    "macAddress",
-                    "lastSeen",
-                    "agentVersion",
-                    "customerId",
-                    "registeredAt"
-                ],
-                "additionalProperties": false
-            },
             "ClaimDeviceInput": {
                 "type": "object",
                 "properties": {
@@ -132,30 +50,6 @@
                 },
                 "required": [
                     "deviceId"
-                ],
-                "additionalProperties": false
-            },
-            "ClaimDeviceResponse": {
-                "type": "object",
-                "properties": {
-                    "deviceId": {
-                        "type": "string"
-                    },
-                    "claimingToken": {
-                        "type": "string"
-                    },
-                    "expiresAt": {
-                        "type": "string"
-                    },
-                    "instructions": {
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "deviceId",
-                    "claimingToken",
-                    "expiresAt",
-                    "instructions"
                 ],
                 "additionalProperties": false
             },
@@ -827,54 +721,6 @@
                 ],
                 "additionalProperties": false
             },
-            "LoginResponse": {
-                "type": "object",
-                "properties": {
-                    "user": {
-                        "type": "object",
-                        "properties": {
-                            "id": {
-                                "type": "string"
-                            },
-                            "email": {
-                                "type": "string",
-                                "format": "email"
-                            },
-                            "username": {
-                                "type": "string"
-                            },
-                            "role": {
-                                "type": "string",
-                                "enum": [
-                                    "USER",
-                                    "ADMIN",
-                                    "SUPERADMIN"
-                                ]
-                            },
-                            "customerId": {
-                                "type": "string",
-                                "nullable": true
-                            }
-                        },
-                        "required": [
-                            "id",
-                            "email",
-                            "username",
-                            "role",
-                            "customerId"
-                        ],
-                        "additionalProperties": false
-                    },
-                    "token": {
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "user",
-                    "token"
-                ],
-                "additionalProperties": false
-            },
             "UserResponse": {
                 "type": "object",
                 "properties": {
@@ -907,73 +753,6 @@
                     "username",
                     "role",
                     "customerId"
-                ],
-                "additionalProperties": false
-            },
-            "AlertResponse": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "string"
-                    },
-                    "deviceId": {
-                        "type": "string"
-                    },
-                    "customerId": {
-                        "type": "string"
-                    },
-                    "type": {
-                        "type": "string",
-                        "enum": [
-                            "DEVICE_OFFLINE",
-                            "DEVICE_REGISTERED",
-                            "HIGH_CPU",
-                            "HIGH_MEMORY",
-                            "HIGH_TEMPERATURE",
-                            "LOW_DISK_SPACE",
-                            "LOW_BATTERY",
-                            "APPLICATION_ERROR",
-                            "SYSTEM_ERROR",
-                            "SECURITY_ALERT",
-                            "CUSTOM"
-                        ]
-                    },
-                    "severity": {
-                        "type": "string",
-                        "enum": [
-                            "INFO",
-                            "WARNING",
-                            "CRITICAL"
-                        ]
-                    },
-                    "title": {
-                        "type": "string"
-                    },
-                    "message": {
-                        "type": "string"
-                    },
-                    "resolved": {
-                        "type": "boolean"
-                    },
-                    "resolvedAt": {
-                        "type": "string",
-                        "nullable": true
-                    },
-                    "createdAt": {
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "id",
-                    "deviceId",
-                    "customerId",
-                    "type",
-                    "severity",
-                    "title",
-                    "message",
-                    "resolved",
-                    "resolvedAt",
-                    "createdAt"
                 ],
                 "additionalProperties": false
             },
@@ -1248,7 +1027,8 @@
                         "type": "string",
                         "enum": [
                             "USER",
-                            "ADMIN"
+                            "ADMIN",
+                            "READONLY"
                         ]
                     }
                 },
@@ -1285,7 +1065,8 @@
                         "type": "string",
                         "enum": [
                             "USER",
-                            "ADMIN"
+                            "ADMIN",
+                            "READONLY"
                         ]
                     },
                     "status": {
@@ -1293,7 +1074,8 @@
                         "enum": [
                             "ACTIVE",
                             "INACTIVE",
-                            "PENDING"
+                            "PENDING",
+                            "SUSPENDED"
                         ]
                     }
                 },
@@ -1733,6 +1515,265 @@
                         "$ref": "#/components/schemas/User"
                     },
                     "token": {
+                        "type": "string"
+                    },
+                    "requiresTwoFactor": {
+                        "type": "boolean"
+                    },
+                    "userId": {
+                        "type": "string"
+                    },
+                    "message": {
+                        "type": "string"
+                    }
+                }
+            },
+            "MeData": {
+                "type": "object",
+                "properties": {
+                    "user": {
+                        "$ref": "#/components/schemas/User"
+                    }
+                }
+            },
+            "RegisterData": {
+                "type": "object",
+                "properties": {
+                    "requiresApproval": {
+                        "type": "boolean"
+                    },
+                    "isNewCompany": {
+                        "type": "boolean"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "user": {
+                        "$ref": "#/components/schemas/User"
+                    }
+                }
+            },
+            "RevokeSessionResult": {
+                "type": "object",
+                "properties": {
+                    "wasCurrentSession": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "RevokeSessionsResult": {
+                "type": "object",
+                "properties": {
+                    "revokedCount": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "Device": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "deviceId": {
+                        "type": "string"
+                    },
+                    "hostname": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "deviceType": {
+                        "type": "string"
+                    },
+                    "deviceModel": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "ONLINE",
+                            "OFFLINE",
+                            "MAINTENANCE",
+                            "ERROR",
+                            "UNCLAIMED"
+                        ]
+                    },
+                    "rawStatus": {
+                        "type": "string",
+                        "enum": [
+                            "ONLINE",
+                            "OFFLINE",
+                            "MAINTENANCE",
+                            "ERROR",
+                            "UNCLAIMED"
+                        ],
+                        "nullable": true
+                    },
+                    "ipAddress": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "tailscaleIp": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "macAddress": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "location": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "agentVersion": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "customerId": {
+                        "type": "string"
+                    },
+                    "lastSeen": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "architecture": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "description": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "cpuUsage": {
+                        "type": "number",
+                        "nullable": true
+                    },
+                    "cpuTemp": {
+                        "type": "number",
+                        "nullable": true
+                    },
+                    "memoryUsage": {
+                        "type": "number",
+                        "nullable": true
+                    },
+                    "memoryTotal": {
+                        "type": "number",
+                        "nullable": true
+                    },
+                    "diskUsage": {
+                        "type": "number",
+                        "nullable": true
+                    },
+                    "diskTotal": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "loadAverage": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "appStatus": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "lastBoot": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "registeredAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "updatedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "alertsCount": {
+                        "type": "integer",
+                        "nullable": true
+                    }
+                }
+            },
+            "Alert": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "deviceId": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "HIGH_CPU",
+                            "HIGH_MEMORY",
+                            "HIGH_TEMPERATURE",
+                            "DISK_SPACE",
+                            "DEVICE_OFFLINE",
+                            "SECURITY_ALERT",
+                            "CUSTOM"
+                        ]
+                    },
+                    "severity": {
+                        "type": "string",
+                        "enum": [
+                            "INFO",
+                            "WARNING",
+                            "ERROR",
+                            "CRITICAL"
+                        ]
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "resolved": {
+                        "type": "boolean"
+                    },
+                    "resolvedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "acknowledgedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "metadata": {
+                        "type": "object",
+                        "additionalProperties": true
+                    }
+                }
+            },
+            "ClaimResult": {
+                "type": "object",
+                "properties": {
+                    "deviceId": {
+                        "type": "string"
+                    },
+                    "claimingToken": {
+                        "type": "string"
+                    },
+                    "expiresAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "instructions": {
                         "type": "string"
                     }
                 }
@@ -2230,21 +2271,79 @@
                     "phoneNumber": {
                         "type": "string"
                     }
-                }
+                },
+                "required": [
+                    "language",
+                    "timezone",
+                    "dateFormat"
+                ]
+            },
+            "ProfileSettingsResponse": {
+                "type": "object",
+                "properties": {
+                    "language": {
+                        "type": "string"
+                    },
+                    "timezone": {
+                        "type": "string"
+                    },
+                    "dateFormat": {
+                        "type": "string",
+                        "enum": [
+                            "MM/DD/YYYY",
+                            "DD/MM/YYYY",
+                            "YYYY-MM-DD"
+                        ]
+                    },
+                    "firstName": {
+                        "type": "string"
+                    },
+                    "lastName": {
+                        "type": "string"
+                    },
+                    "phoneNumber": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email"
+                    },
+                    "username": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "language",
+                    "timezone",
+                    "dateFormat"
+                ]
             },
             "SecuritySettings": {
                 "type": "object",
                 "properties": {
                     "twoFactorAuth": {
-                        "type": "string"
+                        "type": "string",
+                        "enum": [
+                            "true",
+                            "false"
+                        ]
                     },
                     "sessionTimeout": {
                         "type": "string"
                     },
                     "loginNotifications": {
-                        "type": "string"
+                        "type": "string",
+                        "enum": [
+                            "true",
+                            "false"
+                        ]
                     }
-                }
+                },
+                "required": [
+                    "twoFactorAuth",
+                    "sessionTimeout",
+                    "loginNotifications"
+                ]
             },
             "SystemSettings": {
                 "type": "object",
@@ -2292,16 +2391,49 @@
                 "type": "object",
                 "properties": {
                     "emailNotifications": {
-                        "type": "string"
+                        "type": "string",
+                        "enum": [
+                            "true",
+                            "false"
+                        ]
                     },
                     "pushNotifications": {
-                        "type": "string"
+                        "type": "string",
+                        "enum": [
+                            "true",
+                            "false"
+                        ]
                     },
                     "alertNotifications": {
-                        "type": "string"
+                        "type": "string",
+                        "enum": [
+                            "true",
+                            "false"
+                        ]
                     },
                     "deviceOfflineNotifications": {
+                        "type": "string",
+                        "enum": [
+                            "true",
+                            "false"
+                        ]
+                    }
+                },
+                "required": [
+                    "emailNotifications",
+                    "pushNotifications",
+                    "alertNotifications",
+                    "deviceOfflineNotifications"
+                ]
+            },
+            "ChangePasswordResult": {
+                "type": "object",
+                "properties": {
+                    "message": {
                         "type": "string"
+                    },
+                    "wasCurrentSession": {
+                        "type": "boolean"
                     }
                 }
             },
@@ -2542,7 +2674,7 @@
                                             "type": "boolean"
                                         },
                                         "data": {
-                                            "$ref": "#/components/schemas/LoginResponse"
+                                            "$ref": "#/components/schemas/AuthData"
                                         },
                                         "timestamp": {
                                             "type": "string",
@@ -2590,7 +2722,7 @@
                                             "type": "boolean"
                                         },
                                         "data": {
-                                            "$ref": "#/components/schemas/LoginResponse"
+                                            "$ref": "#/components/schemas/RegisterData"
                                         },
                                         "timestamp": {
                                             "type": "string",
@@ -2671,7 +2803,7 @@
                                             "type": "boolean"
                                         },
                                         "data": {
-                                            "$ref": "#/components/schemas/UserResponse"
+                                            "$ref": "#/components/schemas/MeData"
                                         },
                                         "timestamp": {
                                             "type": "string",
@@ -2698,7 +2830,7 @@
                 ],
                 "operationId": "refreshSession",
                 "requestBody": {
-                    "required": true,
+                    "required": false,
                     "content": {
                         "application/json": {
                             "schema": {
@@ -2719,7 +2851,7 @@
                                             "type": "boolean"
                                         },
                                         "data": {
-                                            "$ref": "#/components/schemas/LoginResponse"
+                                            "$ref": "#/components/schemas/AuthData"
                                         },
                                         "timestamp": {
                                             "type": "string",
@@ -2863,7 +2995,7 @@
                                             "type": "boolean"
                                         },
                                         "data": {
-                                            "$ref": "#/components/schemas/MessageResponse"
+                                            "$ref": "#/components/schemas/RevokeSessionsResult"
                                         },
                                         "timestamp": {
                                             "type": "string",
@@ -2917,7 +3049,7 @@
                                             "type": "boolean"
                                         },
                                         "data": {
-                                            "$ref": "#/components/schemas/MessageResponse"
+                                            "$ref": "#/components/schemas/RevokeSessionResult"
                                         },
                                         "timestamp": {
                                             "type": "string",
@@ -2970,7 +3102,7 @@
                                             "type": "boolean"
                                         },
                                         "data": {
-                                            "$ref": "#/components/schemas/MessageResponse"
+                                            "$ref": "#/components/schemas/ChangePasswordResult"
                                         },
                                         "timestamp": {
                                             "type": "string",
@@ -3175,7 +3307,7 @@
                                             "type": "boolean"
                                         },
                                         "data": {
-                                            "$ref": "#/components/schemas/LoginResponse"
+                                            "$ref": "#/components/schemas/AuthData"
                                         },
                                         "timestamp": {
                                             "type": "string",
@@ -3227,6 +3359,24 @@
                             "maximum": 100
                         },
                         "description": "Page size"
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "status"
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "search"
                     }
                 ],
                 "responses": {
@@ -3243,7 +3393,7 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/components/schemas/DeviceResponse"
+                                                "$ref": "#/components/schemas/Device"
                                             }
                                         },
                                         "timestamp": {
@@ -3314,7 +3464,7 @@
                                             "type": "boolean"
                                         },
                                         "data": {
-                                            "$ref": "#/components/schemas/DeviceResponse"
+                                            "$ref": "#/components/schemas/Device"
                                         },
                                         "timestamp": {
                                             "type": "string",
@@ -3367,7 +3517,7 @@
                                             "type": "boolean"
                                         },
                                         "data": {
-                                            "$ref": "#/components/schemas/DeviceResponse"
+                                            "$ref": "#/components/schemas/Device"
                                         },
                                         "timestamp": {
                                             "type": "string",
@@ -3468,7 +3618,7 @@
                                             "type": "boolean"
                                         },
                                         "data": {
-                                            "$ref": "#/components/schemas/ClaimDeviceResponse"
+                                            "$ref": "#/components/schemas/ClaimResult"
                                         },
                                         "timestamp": {
                                             "type": "string",
@@ -3574,7 +3724,7 @@
                                             "type": "boolean"
                                         },
                                         "data": {
-                                            "$ref": "#/components/schemas/DeviceResponse"
+                                            "$ref": "#/components/schemas/Device"
                                         },
                                         "timestamp": {
                                             "type": "string",
@@ -3628,7 +3778,7 @@
                                             "type": "boolean"
                                         },
                                         "data": {
-                                            "$ref": "#/components/schemas/DeviceResponse"
+                                            "$ref": "#/components/schemas/Device"
                                         },
                                         "timestamp": {
                                             "type": "string",
@@ -3690,7 +3840,7 @@
                                             "type": "boolean"
                                         },
                                         "data": {
-                                            "$ref": "#/components/schemas/DeviceResponse"
+                                            "$ref": "#/components/schemas/Device"
                                         },
                                         "timestamp": {
                                             "type": "string",
@@ -3803,6 +3953,15 @@
                             "maximum": 100
                         },
                         "description": "Page size"
+                    },
+                    {
+                        "name": "severity",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "severity"
                     }
                 ],
                 "responses": {
@@ -3819,7 +3978,7 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/components/schemas/AlertResponse"
+                                                "$ref": "#/components/schemas/Alert"
                                             }
                                         },
                                         "timestamp": {
@@ -3901,7 +4060,7 @@
                                             "type": "boolean"
                                         },
                                         "data": {
-                                            "$ref": "#/components/schemas/AlertResponse"
+                                            "$ref": "#/components/schemas/Alert"
                                         },
                                         "timestamp": {
                                             "type": "string",
@@ -3964,7 +4123,7 @@
                                             "type": "boolean"
                                         },
                                         "data": {
-                                            "$ref": "#/components/schemas/AlertResponse"
+                                            "$ref": "#/components/schemas/Alert"
                                         },
                                         "timestamp": {
                                             "type": "string",
@@ -4025,7 +4184,7 @@
                                             "type": "boolean"
                                         },
                                         "data": {
-                                            "$ref": "#/components/schemas/AlertResponse"
+                                            "$ref": "#/components/schemas/Alert"
                                         },
                                         "timestamp": {
                                             "type": "string",
@@ -4126,6 +4285,15 @@
                             "type": "string"
                         },
                         "description": "Device public ID"
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "limit"
                     }
                 ],
                 "responses": {
@@ -4327,6 +4495,42 @@
                             "type": "string"
                         },
                         "description": "Device public ID"
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "limit"
+                    },
+                    {
+                        "name": "level",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "level"
+                    },
+                    {
+                        "name": "source",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "source"
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "search"
                     }
                 ],
                 "responses": {
@@ -4403,6 +4607,15 @@
                             "type": "string"
                         },
                         "description": "Device public ID"
+                    },
+                    {
+                        "name": "period",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "period"
                     }
                 ],
                 "responses": {
@@ -5080,7 +5293,7 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/components/schemas/DeviceResponse"
+                                                "$ref": "#/components/schemas/Device"
                                             }
                                         },
                                         "timestamp": {
@@ -5203,6 +5416,33 @@
                             "maximum": 100
                         },
                         "description": "Page size"
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "status"
+                    },
+                    {
+                        "name": "startTime",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "startTime"
+                    },
+                    {
+                        "name": "endTime",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "endTime"
                     }
                 ],
                 "responses": {
@@ -5219,7 +5459,7 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/components/schemas/AlertResponse"
+                                                "$ref": "#/components/schemas/Alert"
                                             }
                                         },
                                         "timestamp": {
@@ -5290,7 +5530,7 @@
                                             "type": "boolean"
                                         },
                                         "data": {
-                                            "$ref": "#/components/schemas/AlertResponse"
+                                            "$ref": "#/components/schemas/Alert"
                                         },
                                         "timestamp": {
                                             "type": "string",
@@ -5462,7 +5702,7 @@
                                             "type": "boolean"
                                         },
                                         "data": {
-                                            "$ref": "#/components/schemas/AlertResponse"
+                                            "$ref": "#/components/schemas/Alert"
                                         },
                                         "timestamp": {
                                             "type": "string",
@@ -5524,7 +5764,7 @@
                                             "type": "boolean"
                                         },
                                         "data": {
-                                            "$ref": "#/components/schemas/AlertResponse"
+                                            "$ref": "#/components/schemas/Alert"
                                         },
                                         "timestamp": {
                                             "type": "string",
@@ -6780,7 +7020,7 @@
                                             "type": "boolean"
                                         },
                                         "data": {
-                                            "$ref": "#/components/schemas/ProfileSettings"
+                                            "$ref": "#/components/schemas/ProfileSettingsResponse"
                                         },
                                         "timestamp": {
                                             "type": "string",
@@ -7138,7 +7378,7 @@
                                             "type": "boolean"
                                         },
                                         "data": {
-                                            "$ref": "#/components/schemas/ProfileSettings"
+                                            "$ref": "#/components/schemas/ProfileSettingsResponse"
                                         },
                                         "timestamp": {
                                             "type": "string",

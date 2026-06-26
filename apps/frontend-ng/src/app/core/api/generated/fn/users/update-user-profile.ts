@@ -7,16 +7,19 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
+import { ProfileSettings } from '../../models/profile-settings';
+import { UpdateProfileInput } from '../../models/update-profile-input';
 
 export interface UpdateUserProfile$Params {
+
+/**
+ * Device public ID
+ */
   id: string;
-      body: {
-'username'?: string;
-'displayName'?: string;
-}
+      body: UpdateProfileInput
 }
 
-export function updateUserProfile(http: HttpClient, rootUrl: string, params: UpdateUserProfile$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
+export function updateUserProfile(http: HttpClient, rootUrl: string, params: UpdateUserProfile$Params, context?: HttpContext): Observable<StrictHttpResponse<ProfileSettings>> {
   const rb = new RequestBuilder(rootUrl, updateUserProfile.PATH, 'put');
   if (params) {
     rb.path('id', params.id, {});
@@ -24,11 +27,11 @@ export function updateUserProfile(http: HttpClient, rootUrl: string, params: Upd
   }
 
   return http.request(
-    rb.build({ responseType: 'text', accept: '*/*', context })
+    rb.build({ responseType: 'json', accept: 'application/json', context })
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return (r as HttpResponse<any>).clone({ body: undefined }) as StrictHttpResponse<void>;
+      return r as StrictHttpResponse<ProfileSettings>;
     })
   );
 }

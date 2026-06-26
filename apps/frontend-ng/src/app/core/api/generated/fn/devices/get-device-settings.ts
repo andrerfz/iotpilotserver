@@ -10,6 +10,10 @@ import { RequestBuilder } from '../../request-builder';
 import { DeviceSettings } from '../../models/device-settings';
 
 export interface GetDeviceSettings$Params {
+
+/**
+ * Device public ID
+ */
   id: string;
 }
 

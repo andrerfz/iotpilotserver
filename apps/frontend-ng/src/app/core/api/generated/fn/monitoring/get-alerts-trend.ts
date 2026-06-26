@@ -7,23 +7,14 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
+import { AlertTrendPoint } from '../../models/alert-trend-point';
 
 export interface GetAlertsTrend$Params {
-  deviceId?: string;
-  period?: '7d' | '30d';
 }
 
-export function getAlertsTrend(http: HttpClient, rootUrl: string, params?: GetAlertsTrend$Params, context?: HttpContext): Observable<StrictHttpResponse<Array<{
-'date'?: string;
-'count'?: number;
-'bySeverity'?: {
-[key: string]: number;
-};
-}>>> {
+export function getAlertsTrend(http: HttpClient, rootUrl: string, params?: GetAlertsTrend$Params, context?: HttpContext): Observable<StrictHttpResponse<Array<AlertTrendPoint>>> {
   const rb = new RequestBuilder(rootUrl, getAlertsTrend.PATH, 'get');
   if (params) {
-    rb.query('deviceId', params.deviceId, {});
-    rb.query('period', params.period, {});
   }
 
   return http.request(
@@ -31,13 +22,7 @@ export function getAlertsTrend(http: HttpClient, rootUrl: string, params?: GetAl
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<Array<{
-      'date'?: string;
-      'count'?: number;
-      'bySeverity'?: {
-      [key: string]: number;
-      };
-      }>>;
+      return r as StrictHttpResponse<Array<AlertTrendPoint>>;
     })
   );
 }

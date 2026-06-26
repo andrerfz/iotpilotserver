@@ -7,27 +7,28 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
+import { User } from '../../models/user';
 
 export interface ApproveAdminUser$Params {
+
+/**
+ * Device public ID
+ */
   id: string;
-      body: {
-'action': 'approve' | 'reject';
-}
 }
 
-export function approveAdminUser(http: HttpClient, rootUrl: string, params: ApproveAdminUser$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
+export function approveAdminUser(http: HttpClient, rootUrl: string, params: ApproveAdminUser$Params, context?: HttpContext): Observable<StrictHttpResponse<User>> {
   const rb = new RequestBuilder(rootUrl, approveAdminUser.PATH, 'post');
   if (params) {
     rb.path('id', params.id, {});
-    rb.body(params.body, 'application/json');
   }
 
   return http.request(
-    rb.build({ responseType: 'text', accept: '*/*', context })
+    rb.build({ responseType: 'json', accept: 'application/json', context })
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return (r as HttpResponse<any>).clone({ body: undefined }) as StrictHttpResponse<void>;
+      return r as StrictHttpResponse<User>;
     })
   );
 }

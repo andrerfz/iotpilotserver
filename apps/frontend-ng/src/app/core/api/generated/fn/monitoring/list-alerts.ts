@@ -8,30 +8,43 @@ import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
 import { Alert } from '../../models/alert';
-import { SuccessResponse } from '../../models/success-response';
 
 export interface ListAlerts$Params {
-  deviceId?: string;
-  severity?: 'INFO' | 'WARNING' | 'ERROR' | 'CRITICAL';
-  status?: 'active' | 'resolved' | 'acknowledged';
-  startTime?: string;
-  endTime?: string;
+
+/**
+ * Page number
+ */
+  page?: number;
+
+/**
+ * Page size
+ */
   limit?: number;
-  offset?: number;
+
+/**
+ * status
+ */
+  status?: string;
+
+/**
+ * startTime
+ */
+  startTime?: string;
+
+/**
+ * endTime
+ */
+  endTime?: string;
 }
 
-export function listAlerts(http: HttpClient, rootUrl: string, params?: ListAlerts$Params, context?: HttpContext): Observable<StrictHttpResponse<SuccessResponse & {
-'data'?: Array<Alert>;
-}>> {
+export function listAlerts(http: HttpClient, rootUrl: string, params?: ListAlerts$Params, context?: HttpContext): Observable<StrictHttpResponse<Array<Alert>>> {
   const rb = new RequestBuilder(rootUrl, listAlerts.PATH, 'get');
   if (params) {
-    rb.query('deviceId', params.deviceId, {});
-    rb.query('severity', params.severity, {});
+    rb.query('page', params.page, {});
+    rb.query('limit', params.limit, {});
     rb.query('status', params.status, {});
     rb.query('startTime', params.startTime, {});
     rb.query('endTime', params.endTime, {});
-    rb.query('limit', params.limit, {});
-    rb.query('offset', params.offset, {});
   }
 
   return http.request(
@@ -39,9 +52,7 @@ export function listAlerts(http: HttpClient, rootUrl: string, params?: ListAlert
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<SuccessResponse & {
-      'data'?: Array<Alert>;
-      }>;
+      return r as StrictHttpResponse<Array<Alert>>;
     })
   );
 }

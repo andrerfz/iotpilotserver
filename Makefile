@@ -9,7 +9,7 @@
 .PHONY: dev-start dev-stop dev-restart dev-logs dev-shell
 .PHONY: local-logs-app local-logs-influxdb local-logs-loki local-logs-postgres local-logs-redis local-logs-traefik local-logs-tailscale
 .PHONY: dev shell health migrate migrate-reset migrate-dev db-push db-setup db-status db-shell apply-migration
-.PHONY: fresh-setup local-start-with-migration test-alerts
+.PHONY: fresh-setup local-start-with-migration test-alerts openapi-client
 .PHONY: test lint route-list openapi-check openapi-diff openapi openapi-gen-check test-api test-ci test-db test-influxdb test-integration test-unit test-fresh test-file test-debug test-watch test-coverage test-env-check test-integration-full test-performance test-security test-clean test-db-with-data test-influxdb-connection test-services test-smoke test-all
 .PHONY: create-superadmin list-superadmins reset-superadmin-password delete-superadmin
 .PHONY: sync-node-modules clean-dev
@@ -91,7 +91,7 @@ help:
 	@echo ""
 	@echo "🔧 Development:"
 	@echo "  dev                  - Start development (alias for local-start)"
-	@echo "  openapi-check        - Check if backend routes are documented in openapi.yml"
+	@echo "  openapi-check        - (legacy no-op) route coverage check"
 	@echo "  openapi-diff         - Same as openapi-check but exits 1 on missing docs (CI use)"
 	@echo "  openapi              - Write the auto-generated spec → docs/openapi.generated.json"
 	@echo "  openapi-gen-check    - Fail if docs/openapi.generated.json drifts from served spec (CI)"
@@ -103,7 +103,7 @@ help:
 	@echo "  ng-test              - Run frontend-ng Vitest suite (in container)"
 	@echo "  ng-build             - Build frontend-ng (in container, dev verification)"
 	@echo "  ng-image             - Build frontend-ng production Docker image (nginx)"
-	@echo "  ng-api-generate      - Regenerate typed API client from docs/openapi.yml (host)"
+	@echo "  ng-api-generate      - Regenerate typed API client from docs/openapi.client.json (host)"
 	@echo "  ng-api-check         - Fail if the committed API client is stale (CI guard)"
 	@echo "  ng-parity            - Smoke-test Angular app routes (HTTP 200 check)"
 	@echo "  ng-logs              - Follow frontend-ng dev server logs"
@@ -672,13 +672,13 @@ ng-logs:
 # Codegen runs on the host (Node), mirroring route-list/openapi-check which also
 # run host-side. The generated client under core/api/generated is committed.
 ng-api-generate:
-	@echo "🧬 Generating typed API client from docs/openapi.yml..."
+	@echo "🧬 Generating typed API client from docs/openapi.client.json..."
 	@pnpm --filter frontend-ng api:generate
 	@echo "✅ API client generated → apps/frontend-ng/src/app/core/api/generated"
 
 # CI guard (mirrors openapi-diff): regenerate, fail if the committed client drifts.
 ng-api-check:
-	@echo "🔍 Checking generated API client is in sync with docs/openapi.yml..."
+	@echo "🔍 Checking generated API client is in sync with docs/openapi.client.json..."
 	@pnpm --filter frontend-ng api:generate >/dev/null 2>&1
 	@if ! git diff --quiet -- apps/frontend-ng/src/app/core/api/generated; then \
 		echo "❌ Generated API client is stale. Run 'make ng-api-generate' and commit."; \
@@ -803,6 +803,13 @@ openapi:
 	@echo "🧬 Writing generated OpenAPI spec → docs/openapi.generated.json"
 	@docker exec iotpilot-server-backend sh -c "curl -s http://localhost:3100/api/openapi.json" | python3 -m json.tool > docs/openapi.generated.json
 	@echo "✅ Wrote docs/openapi.generated.json"
+
+# Write the UNWRAPPED codegen spec (responses without the envelope) that the Angular
+# client generator consumes. Regenerate after route changes, then `make ng-api-generate`.
+openapi-client:
+	@echo "🧬 Writing codegen spec → docs/openapi.client.json"
+	@docker exec iotpilot-server-backend sh -c "curl -s http://localhost:3100/api/openapi-client.json" | python3 -m json.tool > docs/openapi.client.json
+	@echo "✅ Wrote docs/openapi.client.json (run 'make ng-api-generate' to refresh the client)"
 
 # CI/pre-push guard: fail if the committed generated spec drifts from the served one.
 openapi-gen-check:

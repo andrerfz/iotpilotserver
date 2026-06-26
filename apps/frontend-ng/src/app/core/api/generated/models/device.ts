@@ -10,42 +10,22 @@ export interface Device {
   cpuUsage?: number | null;
   customerId?: string;
   description?: string | null;
-
-  /**
-   * Hardware identifier
-   */
   deviceId?: string;
   deviceModel?: string | null;
   deviceType?: string;
-
-  /**
-   * Human-readable total disk (e.g. "16GB")
-   */
   diskTotal?: string | null;
   diskUsage?: number | null;
   hostname?: string;
-
-  /**
-   * Public ID (UUID)
-   */
   id?: string;
   ipAddress?: string | null;
   lastBoot?: string | null;
   lastSeen?: string | null;
-
-  /**
-   * Space-separated 1/5/15-minute load averages
-   */
   loadAverage?: string | null;
   location?: string | null;
   macAddress?: string | null;
   memoryTotal?: number | null;
   memoryUsage?: number | null;
   name?: string;
-
-  /**
-   * Connectivity status enum returned by the detail endpoint. There the `status` field carries a lifecycle value (e.g. "active") instead, so clients should prefer `rawStatus` when present. The list endpoint already returns the enum directly in `status`.
-   */
   rawStatus?: ('ONLINE' | 'OFFLINE' | 'MAINTENANCE' | 'ERROR' | 'UNCLAIMED') | null;
   registeredAt?: string | null;
   status?: 'ONLINE' | 'OFFLINE' | 'MAINTENANCE' | 'ERROR' | 'UNCLAIMED';

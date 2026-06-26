@@ -8,13 +8,18 @@ import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
 import { DeviceSettings } from '../../models/device-settings';
+import { DeviceSettingsInput } from '../../models/device-settings-input';
 
 export interface UpdateDeviceSettings$Params {
+
+/**
+ * Device public ID
+ */
   id: string;
-      body: DeviceSettings
+      body: DeviceSettingsInput
 }
 
-export function updateDeviceSettings(http: HttpClient, rootUrl: string, params: UpdateDeviceSettings$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
+export function updateDeviceSettings(http: HttpClient, rootUrl: string, params: UpdateDeviceSettings$Params, context?: HttpContext): Observable<StrictHttpResponse<DeviceSettings>> {
   const rb = new RequestBuilder(rootUrl, updateDeviceSettings.PATH, 'put');
   if (params) {
     rb.path('id', params.id, {});
@@ -22,11 +27,11 @@ export function updateDeviceSettings(http: HttpClient, rootUrl: string, params: 
   }
 
   return http.request(
-    rb.build({ responseType: 'text', accept: '*/*', context })
+    rb.build({ responseType: 'json', accept: 'application/json', context })
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return (r as HttpResponse<any>).clone({ body: undefined }) as StrictHttpResponse<void>;
+      return r as StrictHttpResponse<DeviceSettings>;
     })
   );
 }

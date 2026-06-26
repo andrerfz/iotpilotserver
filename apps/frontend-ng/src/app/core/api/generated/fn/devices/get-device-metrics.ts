@@ -8,16 +8,21 @@ import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
 import { DeviceMetrics } from '../../models/device-metrics';
-import { SuccessResponse } from '../../models/success-response';
 
 export interface GetDeviceMetrics$Params {
+
+/**
+ * Device public ID
+ */
   id: string;
-  period?: '1h' | '6h' | '24h' | '7d';
+
+/**
+ * period
+ */
+  period?: string;
 }
 
-export function getDeviceMetrics(http: HttpClient, rootUrl: string, params: GetDeviceMetrics$Params, context?: HttpContext): Observable<StrictHttpResponse<SuccessResponse & {
-'data'?: DeviceMetrics;
-}>> {
+export function getDeviceMetrics(http: HttpClient, rootUrl: string, params: GetDeviceMetrics$Params, context?: HttpContext): Observable<StrictHttpResponse<DeviceMetrics>> {
   const rb = new RequestBuilder(rootUrl, getDeviceMetrics.PATH, 'get');
   if (params) {
     rb.path('id', params.id, {});
@@ -29,9 +34,7 @@ export function getDeviceMetrics(http: HttpClient, rootUrl: string, params: GetD
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<SuccessResponse & {
-      'data'?: DeviceMetrics;
-      }>;
+      return r as StrictHttpResponse<DeviceMetrics>;
     })
   );
 }

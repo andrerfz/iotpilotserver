@@ -7,21 +7,14 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
+import { MessageResponse } from '../../models/message-response';
+import { PushTokenInput } from '../../models/push-token-input';
 
 export interface RegisterPushToken$Params {
-      body: {
-
-/**
- * FCM or APNs device token
- */
-'token': string;
-'platform': 'ios' | 'android';
-}
+      body: PushTokenInput
 }
 
-export function registerPushToken(http: HttpClient, rootUrl: string, params: RegisterPushToken$Params, context?: HttpContext): Observable<StrictHttpResponse<{
-'registered'?: boolean;
-}>> {
+export function registerPushToken(http: HttpClient, rootUrl: string, params: RegisterPushToken$Params, context?: HttpContext): Observable<StrictHttpResponse<MessageResponse>> {
   const rb = new RequestBuilder(rootUrl, registerPushToken.PATH, 'post');
   if (params) {
     rb.body(params.body, 'application/json');
@@ -32,9 +25,7 @@ export function registerPushToken(http: HttpClient, rootUrl: string, params: Reg
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<{
-      'registered'?: boolean;
-      }>;
+      return r as StrictHttpResponse<MessageResponse>;
     })
   );
 }

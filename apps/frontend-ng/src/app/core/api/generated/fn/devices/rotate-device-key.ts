@@ -7,16 +7,17 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
+import { RotateKeyResult } from '../../models/rotate-key-result';
 
 export interface RotateDeviceKey$Params {
+
+/**
+ * Device public ID
+ */
   id: string;
 }
 
-export function rotateDeviceKey(http: HttpClient, rootUrl: string, params: RotateDeviceKey$Params, context?: HttpContext): Observable<StrictHttpResponse<{
-'apiKey'?: string;
-'deviceId'?: string;
-'rotatedAt'?: string;
-}>> {
+export function rotateDeviceKey(http: HttpClient, rootUrl: string, params: RotateDeviceKey$Params, context?: HttpContext): Observable<StrictHttpResponse<RotateKeyResult>> {
   const rb = new RequestBuilder(rootUrl, rotateDeviceKey.PATH, 'post');
   if (params) {
     rb.path('id', params.id, {});
@@ -27,11 +28,7 @@ export function rotateDeviceKey(http: HttpClient, rootUrl: string, params: Rotat
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<{
-      'apiKey'?: string;
-      'deviceId'?: string;
-      'rotatedAt'?: string;
-      }>;
+      return r as StrictHttpResponse<RotateKeyResult>;
     })
   );
 }

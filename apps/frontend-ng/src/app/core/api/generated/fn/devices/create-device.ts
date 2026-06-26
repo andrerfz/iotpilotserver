@@ -7,27 +7,25 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
+import { Device } from '../../models/device';
+import { DeviceRegisterInput } from '../../models/device-register-input';
 
 export interface CreateDevice$Params {
-      body: {
-'hostname'?: string;
-'deviceType'?: string;
-'ipAddress'?: string;
-}
+      body: DeviceRegisterInput
 }
 
-export function createDevice(http: HttpClient, rootUrl: string, params: CreateDevice$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
+export function createDevice(http: HttpClient, rootUrl: string, params: CreateDevice$Params, context?: HttpContext): Observable<StrictHttpResponse<Device>> {
   const rb = new RequestBuilder(rootUrl, createDevice.PATH, 'post');
   if (params) {
     rb.body(params.body, 'application/json');
   }
 
   return http.request(
-    rb.build({ responseType: 'text', accept: '*/*', context })
+    rb.build({ responseType: 'json', accept: 'application/json', context })
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return (r as HttpResponse<any>).clone({ body: undefined }) as StrictHttpResponse<void>;
+      return r as StrictHttpResponse<Device>;
     })
   );
 }

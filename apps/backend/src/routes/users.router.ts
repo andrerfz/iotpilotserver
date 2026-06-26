@@ -32,7 +32,7 @@ export const createUserSchema = v.object({
     username: v.string({ min: 3, max: 50 }),
     password: (v as any).fromZodSchema(complexPasswordSchema),
     customerId: v.string({ min: 1, message: 'customerId is required' }),
-    role: v.optional(v.enum(['USER', 'ADMIN'] as const))
+    role: v.optional(v.enum(['USER', 'ADMIN', 'READONLY'] as const))
 });
 
 export const updateUserSchema = v.object({
@@ -40,8 +40,8 @@ export const updateUserSchema = v.object({
     firstName: v.optional(v.string({ min: 1, max: 100 })),
     lastName: v.optional(v.string({ min: 1, max: 100 })),
     phoneNumber: v.optional(v.string({ max: 30 })),
-    role: v.optional(v.enum(['USER', 'ADMIN'] as const)),
-    status: v.optional(v.enum(['ACTIVE', 'INACTIVE', 'PENDING'] as const))
+    role: v.optional(v.enum(['USER', 'ADMIN', 'READONLY'] as const)),
+    status: v.optional(v.enum(['ACTIVE', 'INACTIVE', 'PENDING', 'SUSPENDED'] as const))
 });
 
 export const updateProfileSchema = v.object({
