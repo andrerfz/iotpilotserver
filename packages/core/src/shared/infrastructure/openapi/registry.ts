@@ -47,6 +47,7 @@ export interface ParamDef {
 export interface OperationDef {
     method: Method;
     path: string;                 // OpenAPI path, e.g. '/devices/{id}'
+    operationId?: string;         // stable name for client codegen (ng-openapi-gen)
     summary: string;
     tags: string[];
     security?: Array<Record<string, string[]>>;
@@ -112,6 +113,14 @@ class OpenApiRegistry {
         this.operations.push(op);
     }
 
+    /** Assign operationIds from a `${method} ${path}` → id map (for stable codegen). */
+    assignOperationIds(map: Record<string, string>): void {
+        for (const op of this.operations) {
+            const id = map[`${op.method} ${op.path}`];
+            if (id) op.operationId = id;
+        }
+    }
+
     getSchemas(): Record<string, JsonSchema> {
         return this.schemas;
     }
@@ -125,6 +134,7 @@ class OpenApiRegistry {
                 summary: op.summary,
                 tags: op.tags,
             };
+            if (op.operationId) operation.operationId = op.operationId;
             if (op.security) operation.security = op.security;
             if (op.params?.length) {
                 operation.parameters = op.params.map(p => ({
