@@ -27,7 +27,7 @@ const isoTimestamp = () => new Date().toISOString();
 
 const v = validator();
 
-const loginSchema = v.object({
+export const loginSchema = v.object({
     email: v.string({ email: true }),
     password: v.string({ min: 1 }),
     remember: v.optional(v.boolean()),
@@ -40,18 +40,18 @@ const complexPasswordSchema = z.string()
     .regex(/\d/, 'Password must contain a number')
     .regex(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/, 'Password must contain a special character');
 
-const registrationSchema = v.object({
+export const registrationSchema = v.object({
     email: v.string({ email: true }),
     username: v.string({ min: 3, max: 50 }),
     password: (v as any).fromZodSchema(complexPasswordSchema),
 });
 
-const refreshSchema = v.object({
+export const refreshSchema = v.object({
     refreshToken: v.optional(v.string()),
     remember: v.optional(v.boolean()),
 });
 
-const changePasswordSchema = z.object({
+export const changePasswordSchema = z.object({
     currentPassword: z.string().min(1, 'Current password is required'),
     newPassword: z.string()
         .min(8, 'Password must be at least 8 characters')
@@ -60,12 +60,12 @@ const changePasswordSchema = z.object({
         .regex(/\d/, 'Password must contain at least one number'),
 });
 
-const createApiKeySchema = v.object({
+export const createApiKeySchema = v.object({
     name: v.string({ min: 1, max: 100 }),
     expiresAt: v.optional(v.string({ datetime: true })),
 });
 
-const verifySchema = z.object({
+export const verifySchema = z.object({
     userId: z.string().min(1),
     code: z.string().length(6),
     remember: z.boolean().optional(),
