@@ -21,6 +21,10 @@ import {
     loginSchema, registrationSchema, refreshSchema, changePasswordSchema,
     createApiKeySchema, verifySchema,
 } from '../routes/auth.router';
+import {
+    deviceRegisterSchema, activateSchema, claimDeviceSchema, bulkDeviceSchema,
+    tailscaleRegisterSchema, createCommandSchema, sshCommandSchema, deviceSettingsSchema,
+} from '../routes/devices.router';
 
 /** Normalize a schema to OpenAPI-3 JSON Schema — accepts a `v.*` Schema or raw zod. */
 function toJson(schema: JsonSchemaSource | unknown): JsonSchema {
@@ -42,10 +46,17 @@ export function registerRoutes(): void {
 
     // ── Component schemas ───────────────────────────────────────
     const DeviceResponse = registry.registerSchema('DeviceResponse', toJson(device.DeviceResponseSchema));
-    const ClaimInput = registry.registerSchema('ClaimDeviceInput', toJson(device.ClaimDeviceInputSchema));
+    // Device request bodies from the route validators (single source).
+    const ClaimInput = registry.registerSchema('ClaimDeviceInput', toJson(claimDeviceSchema));
     const ClaimResponse = registry.registerSchema('ClaimDeviceResponse', toJson(device.ClaimDeviceResponseSchema));
-    const ActivateInput = registry.registerSchema('ActivateDeviceInput', toJson(device.ActivateDeviceInputSchema));
+    const ActivateInput = registry.registerSchema('ActivateDeviceInput', toJson(activateSchema));
     const ActivateResponse = registry.registerSchema('ActivateDeviceResponse', toJson(device.ActivateDeviceResponseSchema));
+    const DeviceRegisterInput = registry.registerSchema('DeviceRegisterInput', toJson(deviceRegisterSchema));
+    const BulkDeviceInput = registry.registerSchema('BulkDeviceInput', toJson(bulkDeviceSchema));
+    const TailscaleRegisterInput = registry.registerSchema('TailscaleRegisterInput', toJson(tailscaleRegisterSchema));
+    const CreateCommandInput = registry.registerSchema('CreateCommandInput', toJson(createCommandSchema));
+    const SshCommandInput = registry.registerSchema('SshCommandInput', toJson(sshCommandSchema));
+    const DeviceSettingsInput = registry.registerSchema('DeviceSettingsInput', toJson(deviceSettingsSchema));
     const WebhookInput = registry.registerSchema('TemperatureWebhookInput', toJson(device.TemperatureWebhookInputSchema));
     const WebhookResponse = registry.registerSchema('TemperatureWebhookResponse', toJson(device.TemperatureWebhookResponseSchema));
     const PreregisterInput = registry.registerSchema('PreregisterDevicesInput', toJson(device.PreregisterDevicesInputSchema));
@@ -105,14 +116,63 @@ export function registerRoutes(): void {
         request: Verify2faInput, response: LoginResponse, responseDescription: '2FA verified'});
 
     // ── Devices ─────────────────────────────────────────────────
+    const alertId = {name: 'alertId', in: 'path' as const, schema: {type: 'string'}, description: 'Alert ID'};
+    const commandId = {name: 'commandId', in: 'path' as const, schema: {type: 'string'}, description: 'Command ID'};
+
     registry.registerPath({method: 'get', path: '/devices', summary: 'List devices', tags: ['Devices'],
         security: bearer, params: pagination, response: DeviceResponse, envelope: 'paginated', responseDescription: 'Device list'});
-    registry.registerPath({method: 'get', path: '/devices/{id}', summary: 'Get a device', tags: ['Devices'],
-        security: bearer, params: [idParam], response: DeviceResponse, responseDescription: 'Device'});
-    registry.registerPath({method: 'post', path: '/devices/claim', summary: 'Claim an UNCLAIMED device', tags: ['Devices'],
-        security: bearer, request: ClaimInput, response: ClaimResponse, responseDescription: 'Device claimed'});
+    registry.registerPath({method: 'post', path: '/devices', summary: 'Provision/create a device', tags: ['Devices'],
+        security: bearer, request: DeviceRegisterInput, response: DeviceResponse, status: 201, responseDescription: 'Device created'});
+    registry.registerPath({method: 'post', path: '/devices/register', summary: 'Register a device', tags: ['Devices'],
+        security: bearer, request: DeviceRegisterInput, response: DeviceResponse, status: 201, responseDescription: 'Device registered'});
     registry.registerPath({method: 'post', path: '/devices/activate', summary: 'Activate a claimed device (firmware)', tags: ['Devices'],
         request: ActivateInput, response: ActivateResponse, responseDescription: 'Device activated'});
+    registry.registerPath({method: 'post', path: '/devices/claim', summary: 'Claim an UNCLAIMED device', tags: ['Devices'],
+        security: bearer, request: ClaimInput, response: ClaimResponse, responseDescription: 'Device claimed'});
+    registry.registerPath({method: 'post', path: '/devices/bulk', summary: 'Bulk device operation', tags: ['Devices'],
+        security: bearer, request: BulkDeviceInput, responseDescription: 'Bulk operation result'});
+    registry.registerPath({method: 'post', path: '/devices/tailscale-register', summary: 'Register a device via Tailscale', tags: ['Devices'],
+        security: bearer, request: TailscaleRegisterInput, response: DeviceResponse, status: 201, responseDescription: 'Device registered'});
+    registry.registerPath({method: 'get', path: '/devices/{id}', summary: 'Get a device', tags: ['Devices'],
+        security: bearer, params: [idParam], response: DeviceResponse, responseDescription: 'Device'});
+    registry.registerPath({method: 'put', path: '/devices/{id}', summary: 'Update a device', tags: ['Devices'],
+        security: bearer, params: [idParam], request: DeviceSettingsInput, response: DeviceResponse, responseDescription: 'Device updated'});
+    registry.registerPath({method: 'delete', path: '/devices/{id}', summary: 'Delete a device', tags: ['Devices'],
+        security: bearer, params: [idParam], responseDescription: 'Device deleted'});
+
+    // Device sub-resources
+    registry.registerPath({method: 'get', path: '/devices/{id}/alerts', summary: 'List a device’s alerts', tags: ['Devices'],
+        security: bearer, params: [idParam, ...pagination], response: AlertResponse, envelope: 'paginated', responseDescription: 'Alerts'});
+    registry.registerPath({method: 'post', path: '/devices/{id}/alerts', summary: 'Create an alert for a device', tags: ['Devices'],
+        security: bearer, params: [idParam], request: CreateAlertInput, response: AlertResponse, status: 201, responseDescription: 'Alert created'});
+    registry.registerPath({method: 'get', path: '/devices/{id}/alerts/{alertId}', summary: 'Get a device alert', tags: ['Devices'],
+        security: bearer, params: [idParam, alertId], response: AlertResponse, responseDescription: 'Alert'});
+    registry.registerPath({method: 'patch', path: '/devices/{id}/alerts/{alertId}', summary: 'Update/resolve a device alert', tags: ['Devices'],
+        security: bearer, params: [idParam, alertId], response: AlertResponse, responseDescription: 'Alert updated'});
+    registry.registerPath({method: 'delete', path: '/devices/{id}/alerts/{alertId}', summary: 'Delete a device alert', tags: ['Devices'],
+        security: bearer, params: [idParam, alertId], responseDescription: 'Alert deleted'});
+    registry.registerPath({method: 'get', path: '/devices/{id}/commands', summary: 'List device commands', tags: ['Devices'],
+        security: bearer, params: [idParam], responseDescription: 'Commands'});
+    registry.registerPath({method: 'post', path: '/devices/{id}/commands', summary: 'Queue a command for a device', tags: ['Devices'],
+        security: bearer, params: [idParam], request: CreateCommandInput, status: 201, responseDescription: 'Command queued'});
+    registry.registerPath({method: 'get', path: '/devices/{id}/commands/{commandId}', summary: 'Get a device command', tags: ['Devices'],
+        security: bearer, params: [idParam, commandId], responseDescription: 'Command'});
+    registry.registerPath({method: 'get', path: '/devices/{id}/logs', summary: 'Get device logs', tags: ['Devices'],
+        security: bearer, params: [idParam], responseDescription: 'Logs'});
+    registry.registerPath({method: 'get', path: '/devices/{id}/metrics', summary: 'Get device metrics', tags: ['Devices'],
+        security: bearer, params: [idParam], responseDescription: 'Metrics'});
+    registry.registerPath({method: 'get', path: '/devices/{id}/settings', summary: 'Get device settings', tags: ['Devices'],
+        security: bearer, params: [idParam], responseDescription: 'Settings'});
+    registry.registerPath({method: 'put', path: '/devices/{id}/settings', summary: 'Update device settings (incl. alert thresholds)', tags: ['Devices'],
+        security: bearer, params: [idParam], request: DeviceSettingsInput, responseDescription: 'Settings updated'});
+    registry.registerPath({method: 'post', path: '/devices/{id}/ssh', summary: 'Run an SSH command on a device', tags: ['Devices'],
+        security: bearer, params: [idParam], request: SshCommandInput, responseDescription: 'Command output'});
+    registry.registerPath({method: 'get', path: '/devices/{id}/status', summary: 'Get device status', tags: ['Devices'],
+        security: bearer, params: [idParam], responseDescription: 'Status'});
+    registry.registerPath({method: 'post', path: '/devices/{id}/rotate-key', summary: 'Rotate a device’s API key', tags: ['Devices'],
+        security: bearer, params: [idParam], responseDescription: 'Key rotated'});
+    registry.registerPath({method: 'post', path: '/devices/{id}/request-ota', summary: 'Request an OTA firmware update', tags: ['Devices'],
+        security: bearer, params: [idParam], responseDescription: 'OTA requested'});
 
     // ── IoT / webhook ───────────────────────────────────────────
     registry.registerPath({method: 'post', path: '/webhook/temperature', summary: 'ESP32/ESP8266 sensor reading webhook', tags: ['IoT'],
