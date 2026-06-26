@@ -37,6 +37,7 @@ import {
     profileSettingsSchema, securitySettingsSchema, notificationsSettingsSchema,
 } from '../routes/settings.router';
 import {RESPONSE_SCHEMAS} from './response-schemas';
+import {OPERATION_IDS} from './operation-ids';
 
 /** Normalize a schema to OpenAPI-3 JSON Schema — accepts a `v.*` Schema or raw zod. */
 function toJson(schema: JsonSchemaSource | unknown): JsonSchema {
@@ -333,6 +334,9 @@ export function registerRoutes(): void {
         security: bearer, params: [idParam], response: MessageResponse, responseDescription: 'Deleted'});
     registry.registerPath({method: 'post', path: '/notifications/{id}/retry', summary: 'Retry a failed notification', tags: ['Notifications'],
         security: bearer, params: [idParam], response: MessageResponse, responseDescription: 'Retried'});
+
+    // Stable client-codegen names (T9): match the legacy openapi.yml operationIds.
+    registry.assignOperationIds(OPERATION_IDS);
 }
 
 // Populate the registry on import.

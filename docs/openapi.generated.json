@@ -2460,6 +2460,7 @@
                 "tags": [
                     "System"
                 ],
+                "operationId": "healthCheck",
                 "responses": {
                     "200": {
                         "description": "Service health",
@@ -2480,6 +2481,7 @@
                 "tags": [
                     "System"
                 ],
+                "operationId": "listScheduledJobs",
                 "responses": {
                     "200": {
                         "description": "Schedule",
@@ -2517,6 +2519,7 @@
                 "tags": [
                     "Auth"
                 ],
+                "operationId": "login",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -2564,6 +2567,7 @@
                 "tags": [
                     "Auth"
                 ],
+                "operationId": "register",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -2611,6 +2615,7 @@
                 "tags": [
                     "Auth"
                 ],
+                "operationId": "logout",
                 "responses": {
                     "200": {
                         "description": "Logged out",
@@ -2648,6 +2653,7 @@
                 "tags": [
                     "Auth"
                 ],
+                "operationId": "getMe",
                 "security": [
                     {
                         "bearerAuth": []
@@ -2690,6 +2696,7 @@
                 "tags": [
                     "Auth"
                 ],
+                "operationId": "refreshSession",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -2737,6 +2744,7 @@
                 "tags": [
                     "Auth"
                 ],
+                "operationId": "getSession",
                 "responses": {
                     "200": {
                         "description": "Session info",
@@ -2774,6 +2782,7 @@
                 "tags": [
                     "Auth"
                 ],
+                "operationId": "listSessions",
                 "security": [
                     {
                         "bearerAuth": []
@@ -2836,6 +2845,7 @@
                 "tags": [
                     "Auth"
                 ],
+                "operationId": "revokeOtherSessions",
                 "security": [
                     {
                         "bearerAuth": []
@@ -2878,6 +2888,7 @@
                 "tags": [
                     "Auth"
                 ],
+                "operationId": "revokeSession",
                 "security": [
                     {
                         "bearerAuth": []
@@ -2931,6 +2942,7 @@
                 "tags": [
                     "Auth"
                 ],
+                "operationId": "changePassword",
                 "security": [
                     {
                         "bearerAuth": []
@@ -2983,6 +2995,7 @@
                 "tags": [
                     "Auth"
                 ],
+                "operationId": "createApiKey",
                 "security": [
                     {
                         "bearerAuth": []
@@ -3033,6 +3046,7 @@
                 "tags": [
                     "Auth"
                 ],
+                "operationId": "listApiKeys",
                 "security": [
                     {
                         "bearerAuth": []
@@ -3095,6 +3109,7 @@
                 "tags": [
                     "Auth"
                 ],
+                "operationId": "deleteApiKey",
                 "security": [
                     {
                         "bearerAuth": []
@@ -3137,6 +3152,7 @@
                 "tags": [
                     "Auth"
                 ],
+                "operationId": "verifyTwoFactor",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -3184,6 +3200,7 @@
                 "tags": [
                     "Devices"
                 ],
+                "operationId": "listDevices",
                 "security": [
                     {
                         "bearerAuth": []
@@ -3269,6 +3286,7 @@
                 "tags": [
                     "Devices"
                 ],
+                "operationId": "createDevice",
                 "security": [
                     {
                         "bearerAuth": []
@@ -3321,6 +3339,7 @@
                 "tags": [
                     "Devices"
                 ],
+                "operationId": "registerDevice",
                 "security": [
                     {
                         "bearerAuth": []
@@ -3373,6 +3392,7 @@
                 "tags": [
                     "Devices"
                 ],
+                "operationId": "activateDevice",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -3420,6 +3440,7 @@
                 "tags": [
                     "Devices"
                 ],
+                "operationId": "claimDevice",
                 "security": [
                     {
                         "bearerAuth": []
@@ -3472,6 +3493,7 @@
                 "tags": [
                     "Devices"
                 ],
+                "operationId": "bulkCreateDevices",
                 "security": [
                     {
                         "bearerAuth": []
@@ -3524,6 +3546,7 @@
                 "tags": [
                     "Devices"
                 ],
+                "operationId": "registerTailscaleDevice",
                 "security": [
                     {
                         "bearerAuth": []
@@ -3576,6 +3599,7 @@
                 "tags": [
                     "Devices"
                 ],
+                "operationId": "getDevice",
                 "security": [
                     {
                         "bearerAuth": []
@@ -3627,6 +3651,7 @@
                 "tags": [
                     "Devices"
                 ],
+                "operationId": "updateDevice",
                 "security": [
                     {
                         "bearerAuth": []
@@ -3688,6 +3713,7 @@
                 "tags": [
                     "Devices"
                 ],
+                "operationId": "deleteDevice",
                 "security": [
                     {
                         "bearerAuth": []
@@ -3741,6 +3767,7 @@
                 "tags": [
                     "Devices"
                 ],
+                "operationId": "listDeviceAlerts",
                 "security": [
                     {
                         "bearerAuth": []
@@ -3835,6 +3862,7 @@
                 "tags": [
                     "Devices"
                 ],
+                "operationId": "createDeviceAlert",
                 "security": [
                     {
                         "bearerAuth": []
@@ -3898,6 +3926,7 @@
                 "tags": [
                     "Devices"
                 ],
+                "operationId": "getDeviceAlert",
                 "security": [
                     {
                         "bearerAuth": []
@@ -3958,6 +3987,7 @@
                 "tags": [
                     "Devices"
                 ],
+                "operationId": "updateDeviceAlert",
                 "security": [
                     {
                         "bearerAuth": []
@@ -4018,6 +4048,7 @@
                 "tags": [
                     "Devices"
                 ],
+                "operationId": "deleteDeviceAlert",
                 "security": [
                     {
                         "bearerAuth": []
@@ -4080,6 +4111,7 @@
                 "tags": [
                     "Devices"
                 ],
+                "operationId": "listDeviceCommands",
                 "security": [
                     {
                         "bearerAuth": []
@@ -4153,6 +4185,7 @@
                 "tags": [
                     "Devices"
                 ],
+                "operationId": "createDeviceCommand",
                 "security": [
                     {
                         "bearerAuth": []
@@ -4216,6 +4249,7 @@
                 "tags": [
                     "Devices"
                 ],
+                "operationId": "getDeviceCommand",
                 "security": [
                     {
                         "bearerAuth": []
@@ -4278,6 +4312,7 @@
                 "tags": [
                     "Devices"
                 ],
+                "operationId": "getDeviceLogs",
                 "security": [
                     {
                         "bearerAuth": []
@@ -4353,6 +4388,7 @@
                 "tags": [
                     "Devices"
                 ],
+                "operationId": "getDeviceMetrics",
                 "security": [
                     {
                         "bearerAuth": []
@@ -4406,6 +4442,7 @@
                 "tags": [
                     "Devices"
                 ],
+                "operationId": "getDeviceSettings",
                 "security": [
                     {
                         "bearerAuth": []
@@ -4457,6 +4494,7 @@
                 "tags": [
                     "Devices"
                 ],
+                "operationId": "updateDeviceSettings",
                 "security": [
                     {
                         "bearerAuth": []
@@ -4520,6 +4558,7 @@
                 "tags": [
                     "Devices"
                 ],
+                "operationId": "executeDeviceSsh",
                 "security": [
                     {
                         "bearerAuth": []
@@ -4583,6 +4622,7 @@
                 "tags": [
                     "Devices"
                 ],
+                "operationId": "getDeviceStatus",
                 "security": [
                     {
                         "bearerAuth": []
@@ -4636,6 +4676,7 @@
                 "tags": [
                     "Devices"
                 ],
+                "operationId": "rotateDeviceKey",
                 "security": [
                     {
                         "bearerAuth": []
@@ -4689,6 +4730,7 @@
                 "tags": [
                     "Devices"
                 ],
+                "operationId": "requestDeviceOta",
                 "security": [
                     {
                         "bearerAuth": []
@@ -4742,6 +4784,7 @@
                 "tags": [
                     "IoT"
                 ],
+                "operationId": "webhookTemperature",
                 "security": [
                     {
                         "apiKeyAuth": []
@@ -4794,6 +4837,7 @@
                 "tags": [
                     "IoT"
                 ],
+                "operationId": "iotTemperature",
                 "security": [
                     {
                         "apiKeyAuth": []
@@ -4846,6 +4890,7 @@
                 "tags": [
                     "IoT"
                 ],
+                "operationId": "deviceHeartbeat",
                 "security": [
                     {
                         "apiKeyAuth": []
@@ -4898,6 +4943,7 @@
                 "tags": [
                     "IoT"
                 ],
+                "operationId": "iotRegisterDevice",
                 "security": [
                     {
                         "apiKeyAuth": []
@@ -4950,6 +4996,7 @@
                 "tags": [
                     "IoT"
                 ],
+                "operationId": "iotShipLogs",
                 "security": [
                     {
                         "apiKeyAuth": []
@@ -5002,6 +5049,7 @@
                 "tags": [
                     "Admin"
                 ],
+                "operationId": "listAdminDevices",
                 "security": [
                     {
                         "bearerAuth": []
@@ -5075,6 +5123,7 @@
                 "tags": [
                     "Admin"
                 ],
+                "operationId": "createAdminDevice",
                 "security": [
                     {
                         "bearerAuth": []
@@ -5127,6 +5176,7 @@
                 "tags": [
                     "Monitoring"
                 ],
+                "operationId": "listAlerts",
                 "security": [
                     {
                         "bearerAuth": []
@@ -5212,6 +5262,7 @@
                 "tags": [
                     "Monitoring"
                 ],
+                "operationId": "createAlert",
                 "security": [
                     {
                         "bearerAuth": []
@@ -5264,6 +5315,7 @@
                 "tags": [
                     "Monitoring"
                 ],
+                "operationId": "getAlertsTrend",
                 "security": [
                     {
                         "bearerAuth": []
@@ -5328,6 +5380,7 @@
                 "tags": [
                     "Monitoring"
                 ],
+                "operationId": "batchUpdateAlerts",
                 "security": [
                     {
                         "bearerAuth": []
@@ -5380,6 +5433,7 @@
                 "tags": [
                     "Monitoring"
                 ],
+                "operationId": "getAlert",
                 "security": [
                     {
                         "bearerAuth": []
@@ -5431,6 +5485,7 @@
                 "tags": [
                     "Monitoring"
                 ],
+                "operationId": "updateAlert",
                 "security": [
                     {
                         "bearerAuth": []
@@ -5492,6 +5547,7 @@
                 "tags": [
                     "Monitoring"
                 ],
+                "operationId": "deleteAlert",
                 "security": [
                     {
                         "bearerAuth": []
@@ -5545,6 +5601,7 @@
                 "tags": [
                     "Monitoring"
                 ],
+                "operationId": "getMonitoringMetrics",
                 "security": [
                     {
                         "bearerAuth": []
@@ -5587,6 +5644,7 @@
                 "tags": [
                     "Monitoring"
                 ],
+                "operationId": "getMonitoringReports",
                 "security": [
                     {
                         "bearerAuth": []
@@ -5629,6 +5687,7 @@
                 "tags": [
                     "Monitoring"
                 ],
+                "operationId": "listThresholds",
                 "security": [
                     {
                         "bearerAuth": []
@@ -5691,6 +5750,7 @@
                 "tags": [
                     "Monitoring"
                 ],
+                "operationId": "createThreshold",
                 "security": [
                     {
                         "bearerAuth": []
@@ -5743,6 +5803,7 @@
                 "tags": [
                     "Monitoring"
                 ],
+                "operationId": "updateThreshold",
                 "security": [
                     {
                         "bearerAuth": []
@@ -5804,6 +5865,7 @@
                 "tags": [
                     "Monitoring"
                 ],
+                "operationId": "deleteThreshold",
                 "security": [
                     {
                         "bearerAuth": []
@@ -5857,6 +5919,7 @@
                 "tags": [
                     "Admin"
                 ],
+                "operationId": "listAdminUsers",
                 "security": [
                     {
                         "bearerAuth": []
@@ -5921,6 +5984,7 @@
                 "tags": [
                     "Admin"
                 ],
+                "operationId": "approveAdminUser",
                 "security": [
                     {
                         "bearerAuth": []
@@ -5974,6 +6038,7 @@
                 "tags": [
                     "Admin"
                 ],
+                "operationId": "getAdminLogs",
                 "security": [
                     {
                         "bearerAuth": []
@@ -6038,6 +6103,7 @@
                 "tags": [
                     "Admin"
                 ],
+                "operationId": "getAdminSystem",
                 "security": [
                     {
                         "bearerAuth": []
@@ -6080,6 +6146,7 @@
                 "tags": [
                     "Admin"
                 ],
+                "operationId": "getAdminStats",
                 "security": [
                     {
                         "bearerAuth": []
@@ -6122,6 +6189,7 @@
                 "tags": [
                     "Admin"
                 ],
+                "operationId": "listAdminCustomers",
                 "security": [
                     {
                         "bearerAuth": []
@@ -6184,6 +6252,7 @@
                 "tags": [
                     "Admin"
                 ],
+                "operationId": "createAdminCustomer",
                 "security": [
                     {
                         "bearerAuth": []
@@ -6226,6 +6295,7 @@
                 "tags": [
                     "Admin"
                 ],
+                "operationId": "updateAdminCustomer",
                 "security": [
                     {
                         "bearerAuth": []
@@ -6277,6 +6347,7 @@
                 "tags": [
                     "Admin"
                 ],
+                "operationId": "deleteAdminCustomer",
                 "security": [
                     {
                         "bearerAuth": []
@@ -6330,6 +6401,7 @@
                 "tags": [
                     "Users"
                 ],
+                "operationId": "listUsers",
                 "security": [
                     {
                         "bearerAuth": []
@@ -6415,6 +6487,7 @@
                 "tags": [
                     "Users"
                 ],
+                "operationId": "createUser",
                 "security": [
                     {
                         "bearerAuth": []
@@ -6467,6 +6540,7 @@
                 "tags": [
                     "Users"
                 ],
+                "operationId": "getCurrentUser",
                 "security": [
                     {
                         "bearerAuth": []
@@ -6509,6 +6583,7 @@
                 "tags": [
                     "Users"
                 ],
+                "operationId": "getUser",
                 "security": [
                     {
                         "bearerAuth": []
@@ -6560,6 +6635,7 @@
                 "tags": [
                     "Users"
                 ],
+                "operationId": "updateUser",
                 "security": [
                     {
                         "bearerAuth": []
@@ -6621,6 +6697,7 @@
                 "tags": [
                     "Users"
                 ],
+                "operationId": "deleteUser",
                 "security": [
                     {
                         "bearerAuth": []
@@ -6674,6 +6751,7 @@
                 "tags": [
                     "Users"
                 ],
+                "operationId": "getUserProfile",
                 "security": [
                     {
                         "bearerAuth": []
@@ -6725,6 +6803,7 @@
                 "tags": [
                     "Users"
                 ],
+                "operationId": "updateUserProfile",
                 "security": [
                     {
                         "bearerAuth": []
@@ -6788,6 +6867,7 @@
                 "tags": [
                     "Users"
                 ],
+                "operationId": "getUserNotificationPreferences",
                 "security": [
                     {
                         "bearerAuth": []
@@ -6839,6 +6919,7 @@
                 "tags": [
                     "Users"
                 ],
+                "operationId": "updateUserNotificationPreferences",
                 "security": [
                     {
                         "bearerAuth": []
@@ -6902,6 +6983,7 @@
                 "tags": [
                     "Users"
                 ],
+                "operationId": "registerPushToken",
                 "security": [
                     {
                         "bearerAuth": []
@@ -6952,6 +7034,7 @@
                 "tags": [
                     "Users"
                 ],
+                "operationId": "deregisterPushToken",
                 "security": [
                     {
                         "bearerAuth": []
@@ -6994,6 +7077,7 @@
                 "tags": [
                     "Settings"
                 ],
+                "operationId": "getSettings",
                 "security": [
                     {
                         "bearerAuth": []
@@ -7036,6 +7120,7 @@
                 "tags": [
                     "Settings"
                 ],
+                "operationId": "getProfileSettings",
                 "security": [
                     {
                         "bearerAuth": []
@@ -7076,6 +7161,7 @@
                 "tags": [
                     "Settings"
                 ],
+                "operationId": "updateProfileSettings",
                 "security": [
                     {
                         "bearerAuth": []
@@ -7128,6 +7214,7 @@
                 "tags": [
                     "Settings"
                 ],
+                "operationId": "getSecuritySettings",
                 "security": [
                     {
                         "bearerAuth": []
@@ -7168,6 +7255,7 @@
                 "tags": [
                     "Settings"
                 ],
+                "operationId": "updateSecuritySettings",
                 "security": [
                     {
                         "bearerAuth": []
@@ -7220,6 +7308,7 @@
                 "tags": [
                     "Settings"
                 ],
+                "operationId": "getSystemSettings",
                 "security": [
                     {
                         "bearerAuth": []
@@ -7260,6 +7349,7 @@
                 "tags": [
                     "Settings"
                 ],
+                "operationId": "updateSystemSettings",
                 "security": [
                     {
                         "bearerAuth": []
@@ -7302,6 +7392,7 @@
                 "tags": [
                     "Settings"
                 ],
+                "operationId": "getNotificationSettings",
                 "security": [
                     {
                         "bearerAuth": []
@@ -7342,6 +7433,7 @@
                 "tags": [
                     "Settings"
                 ],
+                "operationId": "updateNotificationSettings",
                 "security": [
                     {
                         "bearerAuth": []
@@ -7394,6 +7486,7 @@
                 "tags": [
                     "Notifications"
                 ],
+                "operationId": "listNotifications",
                 "security": [
                     {
                         "bearerAuth": []
@@ -7481,6 +7574,7 @@
                 "tags": [
                     "Notifications"
                 ],
+                "operationId": "getNotification",
                 "security": [
                     {
                         "bearerAuth": []
@@ -7532,6 +7626,7 @@
                 "tags": [
                     "Notifications"
                 ],
+                "operationId": "deleteNotification",
                 "security": [
                     {
                         "bearerAuth": []
@@ -7585,6 +7680,7 @@
                 "tags": [
                     "Notifications"
                 ],
+                "operationId": "retryNotification",
                 "security": [
                     {
                         "bearerAuth": []
