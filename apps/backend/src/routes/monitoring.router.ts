@@ -81,7 +81,7 @@ async function resolveAlertId(publicId: string): Promise<string | null> {
 
 const v = validator();
 
-const createAlertSchema = v.object({
+export const createAlertSchema = v.object({
     deviceId: v.string({ min: 1, message: 'Device ID is required' }),
     thresholdId: v.string({ min: 1, message: 'Threshold ID is required' }),
     title: v.string({ min: 1, message: 'Alert title is required' }),
@@ -90,11 +90,11 @@ const createAlertSchema = v.object({
     metadata: v.default(v.optional(v.record(v.string(), v.any())), {})
 });
 
-const alertActionSchema = v.object({
+export const alertActionSchema = v.object({
     action: v.enum(['acknowledge', 'resolve'] as const)
 });
 
-const createThresholdSchema = v.object({
+export const createThresholdSchema = v.object({
     deviceId: v.optional(v.nullable(v.string())),
     name: v.string({ min: 1, message: 'Threshold name is required' }),
     description: v.string({ min: 1, message: 'Threshold description is required' }),
@@ -390,7 +390,7 @@ monitoringRouter.get('/alerts/trend', requireAuth(), async (req: AuthenticatedRe
 // PUT /monitoring/alerts/batch — Batch acknowledge or resolve alerts
 // MUST be before /alerts/:id to avoid Express swallowing "batch" as an :id param.
 // ---------------------------------------------------------------------------
-const batchAlertSchema = v.object({
+export const batchAlertSchema = v.object({
     action: v.enum(['acknowledge', 'resolve'] as const),
     alertIds: v.array(v.string({ min: 1 })),
     resolutionNote: v.optional(v.string({ max: 2000 })),
@@ -1276,7 +1276,7 @@ monitoringRouter.post('/thresholds', requireAuth(), async (req: AuthenticatedReq
 // ---------------------------------------------------------------------------
 // PUT /monitoring/thresholds/:id — Update threshold
 // ---------------------------------------------------------------------------
-const updateThresholdSchema = v.object({
+export const updateThresholdSchema = v.object({
     name: v.string({ min: 1 }),
     description: v.string({ min: 1 }),
     metricName: v.string({ min: 1 }),

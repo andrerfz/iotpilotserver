@@ -45,7 +45,7 @@ function generateDeviceId(): string {
 }
 
 const v = validator();
-const preregisterSchema = v.object({
+export const preregisterSchema = v.object({
   count: v.number({ min: 1, max: 500 }),
 });
 

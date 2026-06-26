@@ -18,7 +18,7 @@ function isoTimestamp(): string {
 const v = validator();
 
 // Profile settings schema
-const profileSettingsSchema = v.object({
+export const profileSettingsSchema = v.object({
   language: v.string({ min: 2, max: 5 }),
   timezone: v.string({ min: 1 }),
   dateFormat: v.string({ min: 1 }),
@@ -29,7 +29,7 @@ const profileSettingsSchema = v.object({
 
 // Security settings schema
 const regexNumericString = z.string().regex(/^\d+$/);
-const securitySettingsSchema = v.object({
+export const securitySettingsSchema = v.object({
   twoFactorAuth: v.enum(['true', 'false'] as const),
   sessionTimeout: (v as any).fromZodSchema(regexNumericString), // numeric string
   loginNotifications: v.enum(['true', 'false'] as const),
@@ -52,7 +52,7 @@ const adminSystemSettingsSchemaZod = systemSettingsSchemaZod.extend({
 const adminSystemSettingsSchema = (v as any).fromZodSchema(adminSystemSettingsSchemaZod);
 
 // Notifications settings schema
-const notificationsSettingsSchema = v.object({
+export const notificationsSettingsSchema = v.object({
   emailNotifications: v.enum(['true', 'false'] as const),
   pushNotifications: v.enum(['true', 'false'] as const),
   alertNotifications: v.enum(['true', 'false'] as const),
