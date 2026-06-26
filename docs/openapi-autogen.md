@@ -164,17 +164,20 @@ hand spec be retired.
   SystemInfo, Customer, HeartbeatResponse, BulkResult, etc. (71 schemas total).
 
 ### T9 — Swap `openapi.yml` → generated + regenerate FE client 🔴 (the actual cutover)
-Coverage is done, but a **drop-in** replacement of the `ng-openapi-gen` source needs
-reconciliation first, or the regenerated client will differ:
-- Model-name alignment: the generated spec has both the lean `DeviceResponse` (used by
-  list/get) and the rich `Device` (detail fields). Point device list/get at the rich
-  model (or merge) so detail typing isn't lost; align other names with what the FE
-  imports today.
-- Then: emit the generated spec as `docs/openapi.yml` (needs a YAML writer — host has
-  one via the codegen toolchain), run `make ng-api-generate`, review the client diff,
-  fix FE type usages, and run `make ng-api-check`.
-- This is FE-affecting (the generated client is imported by ~63 files) — do it
-  deliberately with the diff in front of you, not blindly.
+Coverage is done, but a **drop-in** replacement of the `ng-openapi-gen` source is NOT
+safe yet — it would break the FE. Confirmed blockers:
+- **operationId (hard blocker).** `ng-openapi-gen` names every generated function from
+  the operation's `operationId` (current client: `fn/admin/approve-admin-user.ts`,
+  `fn/devices/list-devices.ts`, …). The generated spec sets **0 operationIds of 96**,
+  so a regen renames every function (method+path fallback) → all ~63 files importing
+  the client break. Fix: register an `operationId` on each path matching the current
+  client's names (extract them from `fn/**` or the legacy `openapi.yml`).
+- **Model-name/shape alignment.** Generated has both lean `DeviceResponse` (list/get)
+  and rich `Device` (detail). Point list/get at the rich model (or merge); align model
+  names/enums with what the FE imports.
+- Only then: emit the generated spec as `docs/openapi.yml` (YAML writer — host has one
+  via the codegen toolchain), `make ng-api-generate`, review the client diff, fix FE
+  usages, `make ng-api-check`. Do it on its own branch/PR with the diff in front of you.
 - CI check: regenerate and fail if it differs from the committed file (so drift can't
   reappear). Optionally a contract test asserting the documented webhook body matches
   the validator, like the alert-pipeline test.
