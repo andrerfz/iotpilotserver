@@ -21,7 +21,7 @@ record of *what to do* lives here in `docs/` — not in agent memory.
 | Domain events / event bus | [`event-driven-architecture.md`](event-driven-architecture.md) |
 | DDD layering / patterns | [`ddd-patterns-guide.md`](ddd-patterns-guide.md) |
 | A **frontend** feature (Angular/Ionic) | [`frontend/README.md`](frontend/README.md) → the `frontend/fe-<module>/` folder |
-| The API contract | [`openapi.yml`](openapi.yml) (generated client source of truth) + [`iot-api-endpoints.md`](iot-api-endpoints.md) |
+| The API contract | [`openapi.yml`](openapi.yml) (**hand-maintained, drifts** — see [`openapi-autogen.md`](openapi-autogen.md) for the plan to auto-generate it) + [`iot-api-endpoints.md`](iot-api-endpoints.md) |
 | Device provisioning / claiming | [`iot-provisioning-architecture.md`](iot-provisioning-architecture.md) |
 | Firmware OTA | [`firmware-ota/`](firmware-ota/) |
 | Multi-tenancy / auth / superadmin | [`security-implementation.md`](security-implementation.md), [`superadmin-management.md`](superadmin-management.md) |
@@ -75,8 +75,10 @@ per-module status table. Update the status there **and** in the module's
 See [`frontend/README.md`](frontend/README.md) "Backlog" for the live list. As of
 this writing the real remainders are:
 **dependency upgrades** (separate PR), **zoneless change detection** (optional),
-and **macOS Capacitor app + BLE device claiming** — planned, full design in
-[`frontend/fe-ble-claiming/`](frontend/fe-ble-claiming/).
+**macOS Capacitor app + BLE device claiming** — planned, full design in
+[`frontend/fe-ble-claiming/`](frontend/fe-ble-claiming/), and **OpenAPI
+auto-generation** — the spec is hand-maintained and drifts; enablement tasks in
+[`openapi-autogen.md`](openapi-autogen.md).
 
 ## Reference material (historical-by-nature, fine as-is)
 
