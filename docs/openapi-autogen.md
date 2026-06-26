@@ -182,6 +182,33 @@ generated from the spec. How it works:
 **Result:** `make ng-api-generate` from `docs/openapi.client.json` → FE app + spec
 type-check **0 errors**, lint clean, **541/541 tests pass**. `make openapi-client`
 rewrites the codegen spec; `make ng-api-check` guards client drift.
+
+## Known limitations / tech debt
+
+### T10 — Response models are hand-maintained (can drift from handlers) 🔴
+Requests are derived from the runtime validators, so they cannot drift. **Responses
+cannot** be derived the same way — responses aren't validated at runtime, so
+`apps/backend/src/openapi/response-schemas.ts` is a hand-written JSON-Schema layer
+ported from the handlers' `send.ok` payloads. The drift guards only check
+*generated == committed*, **not** *generated == what the handler actually returns*. So a
+handler that changes its response shape won't be caught.
+- Fix (bigger refactor): give each handler a typed response DTO (the value it returns)
+  and generate the response schema from that type, closing the loop.
+- Also: `response-schemas.ts` `obj()` defaults all fields optional — use `objR(...,
+  [required])` and correct enum types, or PUT-from-GET calls break (see the
+  ProfileSettings/Security/Notifications fixes). `operation-ids.ts` is a static map —
+  new endpoints need an entry or they get fallback names.
+
+### Response key casing — camelCase (decided)
+Response keys are **camelCase** (`deviceId`, `cpuThreshold`, `acknowledgedAt`…), with 3
+legacy snake_case exceptions kept to match the handlers (`_count`, `total_points`,
+`processed_points`). This is intentional and the right fit for an all-TypeScript stack:
+Prisma returns camelCase, the backend returns it unchanged, and the Angular client
+consumes it as idiomatic TS objects with **no conversion layer**. Switching responses to
+snake_case would be a breaking change (renames every generated model property → the FE,
+integrations, and firmware response-reads break) for no functional gain, so we keep
+camelCase. Note the system is mixed *by layer* on purpose: the **IoT device-agent
+requests** (`/iot/heartbeat`, `/iot/register`) are snake_case to match the firmware.
 - CI check: regenerate and fail if it differs from the committed file (so drift can't
   reappear). Optionally a contract test asserting the documented webhook body matches
   the validator, like the alert-pipeline test.
