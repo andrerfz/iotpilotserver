@@ -1,14 +1,12 @@
 import {registry} from './registry';
-import {registerAll} from './registrations';
 
 /**
- * Build the OpenAPI document from the registry. Endpoints/schemas are contributed
- * by registrations.ts (and, in the T6 end-state, by routers via their validators).
+ * Build the OpenAPI document from the registry. The registry is populated by the
+ * app layer (apps/backend/src/openapi/register-routes.ts) at import time — core
+ * must not depend on app routes, so registration happens there, not here.
  * See docs/openapi-autogen.md.
  */
 export function generateOpenApiSpec() {
-    registerAll();
-
     return {
         openapi: '3.0.0',
         info: {

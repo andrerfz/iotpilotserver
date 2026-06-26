@@ -29,7 +29,7 @@ function isoTimestamp(): string {
 
 const v = validator();
 
-const heartbeatSchema = v.object({
+export const heartbeatSchema = v.object({
     device_id: v.string({ min: 1, message: 'Device ID is required' }),
     hostname: v.string({ min: 1, message: 'Hostname is required' }),
     uptime: v.optional(v.string()),
@@ -50,7 +50,7 @@ const heartbeatSchema = v.object({
     tailscale_ip: v.optional(v.string())
 });
 
-const iotDeviceRegistrationSchema = v.object({
+export const iotDeviceRegistrationSchema = v.object({
     device_id: v.string({ min: 1, message: 'Device ID is required' }),
     hostname: v.string({ min: 1, message: 'Hostname is required' }),
     device_type: v.optional(v.string()),
@@ -542,7 +542,7 @@ const logEntrySchema = z.object({
     timestamp: z.string().datetime().optional(),
 });
 
-const logsSchema = z.object({
+export const logsSchema = z.object({
     deviceId: z.string().min(1),
     logs:     z.array(logEntrySchema).min(1).max(100),
 });

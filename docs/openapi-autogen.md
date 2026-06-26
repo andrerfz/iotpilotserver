@@ -91,7 +91,19 @@ Everything below assumes **Option A** unless decided otherwise.
   `iotDeviceRegistrationSchema` use `v`). Converge these when T6 reaches the `/iot/*`
   endpoints.
 
-### T6 — Cover all routers (the zod inventory) 🔴
+### T6 — Cover all routers (the zod inventory) 🟡
+
+**Registration lives in the app layer** (`apps/backend/src/openapi/register-routes.ts`),
+not core — core must not depend on app routes (dependency points app → core). That
+file imports the registry + core DTO schemas + each router's exported `v.*`/zod
+validators and registers every endpoint; `generator.ts` just reads the populated
+registry. A route's own validator becomes its request schema via `toJsonSchema()`
+(`v.*`) or `zodToOpenApi()` (raw zod) — no duplicate schema, no drift.
+
+**Done:** auth (login/register/me), devices (list/get/claim/activate), webhook +
+`/iot/temperature`, **iot heartbeat/register/logs (from the route validators)**, admin
+devices, monitoring alerts — 16 operations / 14 paths. **Remaining** per router below.
+
 Per-router request schemas that need a generator entry (and a response schema, mostly
 missing today). ✅ = already has a DTO/generator entry; 🔴 = needs one.
 

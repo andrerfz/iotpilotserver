@@ -8,6 +8,7 @@ import { settingsRouter } from './settings.router';
 import { iotRouter } from './iot.router';
 import { notificationsRouter } from './notifications.router';
 import { generateOpenApiSpec } from '@iotpilot/core/shared/infrastructure/openapi/generator';
+import '../openapi/register-routes';  // side effect: populates the OpenAPI registry
 
 export function createApiRouter(): Router {
   const router = Router();

@@ -11,6 +11,8 @@
  * multiple zod instances, breaking its `.openapi()` extension).
  */
 
+import {zodToJsonSchema} from 'zod-to-json-schema';
+
 export type JsonSchema = Record<string, unknown>;
 type Method = 'get' | 'post' | 'put' | 'delete' | 'patch';
 
@@ -22,6 +24,16 @@ export function asJsonSchema(source: JsonSchemaSource | JsonSchema): JsonSchema 
     return typeof (source as JsonSchemaSource).toJsonSchema === 'function'
         ? (source as JsonSchemaSource).toJsonSchema()
         : (source as JsonSchema);
+}
+
+/**
+ * Convert a raw zod schema to an OpenAPI-3 JSON Schema. Lives in core (which owns
+ * the zod-to-json-schema dependency) so the app layer doesn't need it directly —
+ * use this for DTO zod schemas, and `Schema.toJsonSchema()` for `v.*` validators.
+ */
+export function zodToOpenApi(zodSchema: unknown): JsonSchema {
+    const {$schema, ...rest} = zodToJsonSchema(zodSchema as any, {target: 'openApi3'}) as JsonSchema;
+    return rest;
 }
 
 export interface ParamDef {
