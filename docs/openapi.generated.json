@@ -1663,6 +1663,793 @@
                     "logs"
                 ],
                 "additionalProperties": false
+            },
+            "User": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email"
+                    },
+                    "username": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "type": "string",
+                        "enum": [
+                            "USER",
+                            "ADMIN",
+                            "SUPERADMIN",
+                            "READONLY"
+                        ]
+                    },
+                    "customerId": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "_count": {
+                        "type": "object",
+                        "properties": {
+                            "devices": {
+                                "type": "integer"
+                            },
+                            "alerts": {
+                                "type": "integer"
+                            }
+                        }
+                    }
+                }
+            },
+            "Session": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "expiresAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "isCurrent": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "AuthData": {
+                "type": "object",
+                "properties": {
+                    "user": {
+                        "$ref": "#/components/schemas/User"
+                    },
+                    "token": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ApiKey": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "lastUsedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "expiresAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                }
+            },
+            "ApiKeyCreated": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "key": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "expiresAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                }
+            },
+            "DeviceCommand": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "command": {
+                        "type": "string",
+                        "enum": [
+                            "REBOOT",
+                            "SHUTDOWN",
+                            "UPDATE",
+                            "RESTART",
+                            "CUSTOM"
+                        ]
+                    },
+                    "arguments": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "PENDING",
+                            "RUNNING",
+                            "COMPLETED",
+                            "FAILED",
+                            "TIMEOUT"
+                        ]
+                    },
+                    "output": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "error": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "exitCode": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "executedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                }
+            },
+            "DeviceSettings": {
+                "type": "object",
+                "properties": {
+                    "reportingInterval": {
+                        "type": "integer"
+                    },
+                    "heartbeatInterval": {
+                        "type": "integer"
+                    },
+                    "metricsEnabled": {
+                        "type": "boolean"
+                    },
+                    "cpuThreshold": {
+                        "type": "number"
+                    },
+                    "memoryThreshold": {
+                        "type": "number"
+                    },
+                    "temperatureThreshold": {
+                        "type": "number"
+                    },
+                    "diskThreshold": {
+                        "type": "number"
+                    },
+                    "sensorTempThreshold": {
+                        "type": "number"
+                    },
+                    "batteryThreshold": {
+                        "type": "number"
+                    },
+                    "networkMonitoring": {
+                        "type": "boolean"
+                    },
+                    "autoUpdate": {
+                        "type": "boolean"
+                    },
+                    "updateChannel": {
+                        "type": "string",
+                        "enum": [
+                            "stable",
+                            "beta",
+                            "nightly"
+                        ]
+                    },
+                    "sshEnabled": {
+                        "type": "boolean"
+                    },
+                    "apiKeyRotationDays": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "DeviceStatusInfo": {
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "type": "string"
+                    },
+                    "lastSeen": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "uptime": {
+                        "type": "number",
+                        "nullable": true
+                    }
+                }
+            },
+            "RotateKeyResult": {
+                "type": "object",
+                "properties": {
+                    "apiKey": {
+                        "type": "string"
+                    }
+                }
+            },
+            "BulkResult": {
+                "type": "object",
+                "properties": {
+                    "processed": {
+                        "type": "integer"
+                    },
+                    "succeeded": {
+                        "type": "integer"
+                    },
+                    "failed": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "Threshold": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "deviceId": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "metricName": {
+                        "type": "string"
+                    },
+                    "operator": {
+                        "type": "string",
+                        "enum": [
+                            "GREATER_THAN",
+                            "LESS_THAN",
+                            "EQUAL_TO",
+                            "NOT_EQUAL_TO",
+                            "GREATER_THAN_OR_EQUAL",
+                            "LESS_THAN_OR_EQUAL"
+                        ]
+                    },
+                    "value": {
+                        "type": "number"
+                    },
+                    "unit": {
+                        "type": "string"
+                    },
+                    "severity": {
+                        "type": "string",
+                        "enum": [
+                            "LOW",
+                            "MEDIUM",
+                            "HIGH",
+                            "CRITICAL"
+                        ]
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "STATIC",
+                            "DYNAMIC",
+                            "BASELINE"
+                        ]
+                    },
+                    "cooldownMinutes": {
+                        "type": "integer"
+                    },
+                    "isEnabled": {
+                        "type": "boolean"
+                    },
+                    "customerId": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "DeviceLogEntry": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "deviceId": {
+                        "type": "string"
+                    },
+                    "level": {
+                        "type": "string",
+                        "enum": [
+                            "DEBUG",
+                            "INFO",
+                            "WARN",
+                            "ERROR",
+                            "FATAL"
+                        ]
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "source": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "MetricPoint": {
+                "type": "object",
+                "properties": {
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "value": {
+                        "type": "number"
+                    },
+                    "unit": {
+                        "type": "string"
+                    }
+                }
+            },
+            "DeviceMetrics": {
+                "type": "object",
+                "properties": {
+                    "metrics": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/components/schemas/MetricPoint"
+                            }
+                        }
+                    },
+                    "period": {
+                        "type": "string"
+                    },
+                    "resolution": {
+                        "type": "string"
+                    },
+                    "total_points": {
+                        "type": "integer"
+                    },
+                    "processed_points": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "MonitoringMetrics": {
+                "type": "object",
+                "properties": {
+                    "metrics": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "metricName": {
+                                    "type": "string"
+                                },
+                                "value": {
+                                    "type": "number"
+                                },
+                                "timestamp": {
+                                    "type": "string",
+                                    "format": "date-time"
+                                },
+                                "unit": {
+                                    "type": "string"
+                                },
+                                "deviceId": {
+                                    "type": "string",
+                                    "nullable": true
+                                }
+                            }
+                        }
+                    },
+                    "summary": {
+                        "type": "object",
+                        "additionalProperties": true
+                    },
+                    "timeRange": {
+                        "type": "object",
+                        "properties": {
+                            "startTime": {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            "endTime": {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            "period": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "AlertTrendPoint": {
+                "type": "object",
+                "properties": {
+                    "date": {
+                        "type": "string"
+                    },
+                    "count": {
+                        "type": "integer"
+                    },
+                    "severity": {
+                        "type": "string"
+                    }
+                }
+            },
+            "MonitoringReport": {
+                "type": "object",
+                "properties": {
+                    "generatedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "summary": {
+                        "type": "object",
+                        "additionalProperties": true
+                    }
+                }
+            },
+            "SshResult": {
+                "type": "object",
+                "properties": {
+                    "output": {
+                        "type": "string"
+                    },
+                    "error": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                }
+            },
+            "NotificationRecord": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string"
+                    },
+                    "channel": {
+                        "type": "string",
+                        "enum": [
+                            "EMAIL",
+                            "SMS",
+                            "WEBHOOK",
+                            "SLACK",
+                            "PUSH"
+                        ]
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "PENDING",
+                            "SENDING",
+                            "DELIVERED",
+                            "FAILED",
+                            "DEAD",
+                            "CANCELLED"
+                        ]
+                    },
+                    "recipient": {
+                        "type": "string"
+                    },
+                    "subject": {
+                        "type": "string"
+                    },
+                    "attemptCount": {
+                        "type": "integer"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "ProfileSettings": {
+                "type": "object",
+                "properties": {
+                    "language": {
+                        "type": "string"
+                    },
+                    "timezone": {
+                        "type": "string"
+                    },
+                    "dateFormat": {
+                        "type": "string",
+                        "enum": [
+                            "MM/DD/YYYY",
+                            "DD/MM/YYYY",
+                            "YYYY-MM-DD"
+                        ]
+                    },
+                    "firstName": {
+                        "type": "string"
+                    },
+                    "lastName": {
+                        "type": "string"
+                    },
+                    "phoneNumber": {
+                        "type": "string"
+                    }
+                }
+            },
+            "SecuritySettings": {
+                "type": "object",
+                "properties": {
+                    "twoFactorAuth": {
+                        "type": "string"
+                    },
+                    "sessionTimeout": {
+                        "type": "string"
+                    },
+                    "loginNotifications": {
+                        "type": "string"
+                    }
+                }
+            },
+            "SystemSettings": {
+                "type": "object",
+                "properties": {
+                    "theme": {
+                        "type": "string",
+                        "enum": [
+                            "light",
+                            "dark",
+                            "system"
+                        ]
+                    },
+                    "dashboardLayout": {
+                        "type": "string",
+                        "enum": [
+                            "default",
+                            "compact",
+                            "expanded"
+                        ]
+                    },
+                    "itemsPerPage": {
+                        "type": "string"
+                    },
+                    "isAdmin": {
+                        "type": "string"
+                    },
+                    "enableAdvancedMetrics": {
+                        "type": "string"
+                    },
+                    "enableBetaFeatures": {
+                        "type": "string"
+                    },
+                    "logLevel": {
+                        "type": "string",
+                        "enum": [
+                            "debug",
+                            "info",
+                            "warn",
+                            "error"
+                        ]
+                    }
+                }
+            },
+            "NotificationSettings": {
+                "type": "object",
+                "properties": {
+                    "emailNotifications": {
+                        "type": "string"
+                    },
+                    "pushNotifications": {
+                        "type": "string"
+                    },
+                    "alertNotifications": {
+                        "type": "string"
+                    },
+                    "deviceOfflineNotifications": {
+                        "type": "string"
+                    }
+                }
+            },
+            "AdminStats": {
+                "type": "object",
+                "properties": {
+                    "totalDevices": {
+                        "type": "integer"
+                    },
+                    "onlineDevices": {
+                        "type": "integer"
+                    },
+                    "totalUsers": {
+                        "type": "integer"
+                    },
+                    "totalCustomers": {
+                        "type": "integer"
+                    },
+                    "openAlerts": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "SystemInfo": {
+                "type": "object",
+                "properties": {
+                    "version": {
+                        "type": "string"
+                    },
+                    "uptime": {
+                        "type": "number"
+                    },
+                    "environment": {
+                        "type": "string"
+                    }
+                }
+            },
+            "Customer": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "slug": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "deviceCount": {
+                        "type": "integer",
+                        "nullable": true
+                    }
+                }
+            },
+            "HeartbeatResponse": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "config": {
+                        "type": "object",
+                        "properties": {
+                            "reportingInterval": {
+                                "type": "integer"
+                            },
+                            "heartbeatInterval": {
+                                "type": "integer"
+                            },
+                            "deepSleepEnabled": {
+                                "type": "boolean"
+                            }
+                        }
+                    },
+                    "commands": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/DeviceCommand"
+                        }
+                    },
+                    "firmware": {
+                        "type": "object",
+                        "nullable": true,
+                        "properties": {
+                            "targetVersion": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "AllSettings": {
+                "type": "object",
+                "properties": {
+                    "profile": {
+                        "$ref": "#/components/schemas/ProfileSettings"
+                    },
+                    "security": {
+                        "$ref": "#/components/schemas/SecuritySettings"
+                    },
+                    "system": {
+                        "$ref": "#/components/schemas/SystemSettings"
+                    },
+                    "notifications": {
+                        "$ref": "#/components/schemas/NotificationSettings"
+                    }
+                }
+            },
+            "HealthResponse": {
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "type": "string"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "ScheduleResponse": {
+                "type": "object",
+                "properties": {
+                    "devices": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "deviceId": {
+                                    "type": "string"
+                                },
+                                "reportingInterval": {
+                                    "type": "integer"
+                                },
+                                "nextReportAt": {
+                                    "type": "string",
+                                    "format": "date-time",
+                                    "nullable": true
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     },
@@ -1675,7 +2462,14 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Service health"
+                        "description": "Service health",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HealthResponse"
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -1688,7 +2482,31 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Schedule"
+                        "description": "Schedule",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/ScheduleResponse"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -1921,7 +2739,31 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Session info"
+                        "description": "Session info",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/AuthData"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -1939,7 +2781,53 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Active sessions"
+                        "description": "Active sessions",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Session"
+                                            }
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "pagination": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "page": {
+                                                            "type": "integer"
+                                                        },
+                                                        "limit": {
+                                                            "type": "integer"
+                                                        },
+                                                        "total": {
+                                                            "type": "integer"
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             },
@@ -2112,7 +3000,31 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "API key created"
+                        "description": "API key created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/ApiKeyCreated"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             },
@@ -2128,7 +3040,53 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "API keys"
+                        "description": "API keys",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/ApiKey"
+                                            }
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "pagination": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "page": {
+                                                            "type": "integer"
+                                                        },
+                                                        "limit": {
+                                                            "type": "integer"
+                                                        },
+                                                        "total": {
+                                                            "type": "integer"
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             },
@@ -2531,7 +3489,31 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Bulk operation result"
+                        "description": "Bulk operation result",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/BulkResult"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -3116,7 +4098,53 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Commands"
+                        "description": "Commands",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/DeviceCommand"
+                                            }
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "pagination": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "page": {
+                                                            "type": "integer"
+                                                        },
+                                                        "limit": {
+                                                            "type": "integer"
+                                                        },
+                                                        "total": {
+                                                            "type": "integer"
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             },
@@ -3153,7 +4181,31 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "Command queued"
+                        "description": "Command queued",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/DeviceCommand"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -3191,7 +4243,31 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Command"
+                        "description": "Command",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/DeviceCommand"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -3220,7 +4296,53 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Logs"
+                        "description": "Logs",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/DeviceLogEntry"
+                                            }
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "pagination": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "page": {
+                                                            "type": "integer"
+                                                        },
+                                                        "limit": {
+                                                            "type": "integer"
+                                                        },
+                                                        "total": {
+                                                            "type": "integer"
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -3249,7 +4371,31 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Metrics"
+                        "description": "Metrics",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/DeviceMetrics"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -3278,7 +4424,31 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Settings"
+                        "description": "Settings",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/DeviceSettings"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             },
@@ -3315,7 +4485,31 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Settings updated"
+                        "description": "Settings updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/DeviceSettings"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -3354,7 +4548,31 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Command output"
+                        "description": "Command output",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/SshResult"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -3383,7 +4601,31 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Status"
+                        "description": "Status",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/DeviceStatusInfo"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -3412,7 +4654,31 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Key rotated"
+                        "description": "Key rotated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/RotateKeyResult"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -3597,7 +4863,31 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Heartbeat accepted"
+                        "description": "Heartbeat accepted",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/HeartbeatResponse"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -3625,7 +4915,31 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Device registered"
+                        "description": "Device registered",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/ActivateDeviceResponse"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -3653,7 +4967,31 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "Logs accepted"
+                        "description": "Logs accepted",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/MessageResponse"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -3933,7 +5271,53 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Trend data"
+                        "description": "Trend data",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/AlertTrendPoint"
+                                            }
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "pagination": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "page": {
+                                                            "type": "integer"
+                                                        },
+                                                        "limit": {
+                                                            "type": "integer"
+                                                        },
+                                                        "total": {
+                                                            "type": "integer"
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -3961,7 +5345,31 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Batch applied"
+                        "description": "Batch applied",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/BulkResult"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -4144,7 +5552,31 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Metrics"
+                        "description": "Metrics",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/MonitoringMetrics"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -4162,7 +5594,31 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Reports"
+                        "description": "Reports",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/MonitoringReport"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -4180,7 +5636,53 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Thresholds"
+                        "description": "Thresholds",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Threshold"
+                                            }
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "pagination": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "page": {
+                                                            "type": "integer"
+                                                        },
+                                                        "limit": {
+                                                            "type": "integer"
+                                                        },
+                                                        "total": {
+                                                            "type": "integer"
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             },
@@ -4206,7 +5708,31 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "Threshold created"
+                        "description": "Threshold created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Threshold"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -4245,7 +5771,31 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Threshold updated"
+                        "description": "Threshold updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Threshold"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             },
@@ -4314,7 +5864,53 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Users"
+                        "description": "Users",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/User"
+                                            }
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "pagination": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "page": {
+                                                            "type": "integer"
+                                                        },
+                                                        "limit": {
+                                                            "type": "integer"
+                                                        },
+                                                        "total": {
+                                                            "type": "integer"
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -4343,7 +5939,31 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "User approved"
+                        "description": "User approved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/User"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -4361,7 +5981,53 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Logs"
+                        "description": "Logs",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/DeviceLogEntry"
+                                            }
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "pagination": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "page": {
+                                                            "type": "integer"
+                                                        },
+                                                        "limit": {
+                                                            "type": "integer"
+                                                        },
+                                                        "total": {
+                                                            "type": "integer"
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -4379,7 +6045,31 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "System info"
+                        "description": "System info",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/SystemInfo"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -4397,7 +6087,31 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Stats"
+                        "description": "Stats",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/AdminStats"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -4415,7 +6129,53 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Customers"
+                        "description": "Customers",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Customer"
+                                            }
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "pagination": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "page": {
+                                                            "type": "integer"
+                                                        },
+                                                        "limit": {
+                                                            "type": "integer"
+                                                        },
+                                                        "total": {
+                                                            "type": "integer"
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             },
@@ -4431,7 +6191,31 @@
                 ],
                 "responses": {
                     "201": {
-                        "description": "Customer created"
+                        "description": "Customer created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Customer"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -4460,7 +6244,31 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Customer updated"
+                        "description": "Customer updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Customer"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             },
@@ -4487,7 +6295,31 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Customer deleted"
+                        "description": "Customer deleted",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/MessageResponse"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -4860,7 +6692,31 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Profile"
+                        "description": "Profile",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/ProfileSettings"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             },
@@ -4897,7 +6753,31 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Profile updated"
+                        "description": "Profile updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/ProfileSettings"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -4926,7 +6806,31 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Preferences"
+                        "description": "Preferences",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/NotificationSettings"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             },
@@ -4963,7 +6867,31 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Preferences updated"
+                        "description": "Preferences updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/NotificationSettings"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -4991,7 +6919,31 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Token registered"
+                        "description": "Token registered",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/MessageResponse"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             },
@@ -5049,7 +7001,31 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Settings"
+                        "description": "Settings",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/AllSettings"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -5067,7 +7043,31 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Profile settings"
+                        "description": "Profile settings",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/ProfileSettings"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             },
@@ -5093,7 +7093,31 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Updated"
+                        "description": "Updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/ProfileSettings"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -5111,7 +7135,31 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Security settings"
+                        "description": "Security settings",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/SecuritySettings"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             },
@@ -5137,7 +7185,31 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Updated"
+                        "description": "Updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/SecuritySettings"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -5155,7 +7227,31 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "System settings"
+                        "description": "System settings",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/SystemSettings"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             },
@@ -5171,7 +7267,31 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Updated"
+                        "description": "Updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/SystemSettings"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -5189,7 +7309,31 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Notification settings"
+                        "description": "Notification settings",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/NotificationSettings"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             },
@@ -5215,7 +7359,31 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Updated"
+                        "description": "Updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/NotificationSettings"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -5256,7 +7424,53 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Notifications"
+                        "description": "Notifications",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/NotificationRecord"
+                                            }
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "pagination": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "page": {
+                                                            "type": "integer"
+                                                        },
+                                                        "limit": {
+                                                            "type": "integer"
+                                                        },
+                                                        "total": {
+                                                            "type": "integer"
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -5285,7 +7499,31 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Notification"
+                        "description": "Notification",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/NotificationRecord"
+                                        },
+                                        "timestamp": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "data",
+                                        "timestamp"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             },

@@ -36,6 +36,7 @@ import {
 import {
     profileSettingsSchema, securitySettingsSchema, notificationsSettingsSchema,
 } from '../routes/settings.router';
+import {RESPONSE_SCHEMAS} from './response-schemas';
 
 /** Normalize a schema to OpenAPI-3 JSON Schema — accepts a `v.*` Schema or raw zod. */
 function toJson(schema: JsonSchemaSource | unknown): JsonSchema {
@@ -102,6 +103,12 @@ export function registerRoutes(): void {
     const IotRegisterInput = registry.registerSchema('IotRegisterInput', toJson(iotDeviceRegistrationSchema));
     const IotLogsInput = registry.registerSchema('IotLogsInput', toJson(logsSchema));
 
+    // Response models (T8) — registered in bulk; referenced as R.<Name> below.
+    const R: Record<string, {$ref: string}> = {};
+    for (const [name, schema] of Object.entries(RESPONSE_SCHEMAS)) {
+        R[name] = registry.registerSchema(name, schema);
+    }
+
     const idParam = {name: 'id', in: 'path' as const, schema: {type: 'string'}, description: 'Device public ID'};
     const pagination = [
         {name: 'page', in: 'query' as const, schema: {type: 'integer', minimum: 1}, description: 'Page number'},
@@ -110,9 +117,9 @@ export function registerRoutes(): void {
 
     // ── System ──────────────────────────────────────────────────
     registry.registerPath({method: 'get', path: '/health', summary: 'Health check', tags: ['System'],
-        envelope: 'none', responseDescription: 'Service health'});
+        envelope: 'none', response: R.HealthResponse, responseDescription: 'Service health'});
     registry.registerPath({method: 'get', path: '/schedule', summary: 'Reporting schedule for the caller’s devices', tags: ['System'],
-        responseDescription: 'Schedule'});
+        response: R.ScheduleResponse, responseDescription: 'Schedule'});
 
     // ── Auth ────────────────────────────────────────────────────
     registry.registerPath({method: 'post', path: '/auth/login', summary: 'Authenticate user', tags: ['Auth'],
@@ -126,9 +133,9 @@ export function registerRoutes(): void {
     registry.registerPath({method: 'post', path: '/auth/refresh', summary: 'Refresh the access token', tags: ['Auth'],
         request: RefreshInput, response: LoginResponse, responseDescription: 'Token refreshed'});
     registry.registerPath({method: 'get', path: '/auth/session', summary: 'Get current session info', tags: ['Auth'],
-        responseDescription: 'Session info'});
+        response: R.AuthData, responseDescription: 'Session info'});
     registry.registerPath({method: 'get', path: '/auth/sessions', summary: 'List active sessions', tags: ['Auth'],
-        security: bearer, responseDescription: 'Active sessions'});
+        security: bearer, response: R.Session, envelope: 'paginated', responseDescription: 'Active sessions'});
     registry.registerPath({method: 'delete', path: '/auth/sessions', summary: 'Revoke all other sessions', tags: ['Auth'],
         security: bearer, response: MessageResponse, responseDescription: 'Sessions revoked'});
     registry.registerPath({method: 'delete', path: '/auth/sessions/{id}', summary: 'Revoke a session', tags: ['Auth'],
@@ -137,9 +144,9 @@ export function registerRoutes(): void {
     registry.registerPath({method: 'put', path: '/auth/password', summary: 'Change password', tags: ['Auth'],
         security: bearer, request: ChangePasswordInput, response: MessageResponse, responseDescription: 'Password changed'});
     registry.registerPath({method: 'post', path: '/auth/api-keys', summary: 'Create an API key', tags: ['Auth'],
-        security: bearer, request: CreateApiKeyInput, status: 201, responseDescription: 'API key created'});
+        security: bearer, request: CreateApiKeyInput, status: 201, response: R.ApiKeyCreated, responseDescription: 'API key created'});
     registry.registerPath({method: 'get', path: '/auth/api-keys', summary: 'List API keys', tags: ['Auth'],
-        security: bearer, responseDescription: 'API keys'});
+        security: bearer, response: R.ApiKey, envelope: 'paginated', responseDescription: 'API keys'});
     registry.registerPath({method: 'delete', path: '/auth/api-keys', summary: 'Revoke an API key', tags: ['Auth'],
         security: bearer, response: MessageResponse, responseDescription: 'API key revoked'});
     registry.registerPath({method: 'post', path: '/auth/verify-2fa', summary: 'Verify a 2FA code', tags: ['Auth'],
@@ -160,7 +167,7 @@ export function registerRoutes(): void {
     registry.registerPath({method: 'post', path: '/devices/claim', summary: 'Claim an UNCLAIMED device', tags: ['Devices'],
         security: bearer, request: ClaimInput, response: ClaimResponse, responseDescription: 'Device claimed'});
     registry.registerPath({method: 'post', path: '/devices/bulk', summary: 'Bulk device operation', tags: ['Devices'],
-        security: bearer, request: BulkDeviceInput, responseDescription: 'Bulk operation result'});
+        security: bearer, request: BulkDeviceInput, response: R.BulkResult, responseDescription: 'Bulk operation result'});
     registry.registerPath({method: 'post', path: '/devices/tailscale-register', summary: 'Register a device via Tailscale', tags: ['Devices'],
         security: bearer, request: TailscaleRegisterInput, response: DeviceResponse, status: 201, responseDescription: 'Device registered'});
     registry.registerPath({method: 'get', path: '/devices/{id}', summary: 'Get a device', tags: ['Devices'],
@@ -182,25 +189,25 @@ export function registerRoutes(): void {
     registry.registerPath({method: 'delete', path: '/devices/{id}/alerts/{alertId}', summary: 'Delete a device alert', tags: ['Devices'],
         security: bearer, params: [idParam, alertId], response: MessageResponse, responseDescription: 'Alert deleted'});
     registry.registerPath({method: 'get', path: '/devices/{id}/commands', summary: 'List device commands', tags: ['Devices'],
-        security: bearer, params: [idParam], responseDescription: 'Commands'});
+        security: bearer, params: [idParam], response: R.DeviceCommand, envelope: 'paginated', responseDescription: 'Commands'});
     registry.registerPath({method: 'post', path: '/devices/{id}/commands', summary: 'Queue a command for a device', tags: ['Devices'],
-        security: bearer, params: [idParam], request: CreateCommandInput, status: 201, responseDescription: 'Command queued'});
+        security: bearer, params: [idParam], request: CreateCommandInput, status: 201, response: R.DeviceCommand, responseDescription: 'Command queued'});
     registry.registerPath({method: 'get', path: '/devices/{id}/commands/{commandId}', summary: 'Get a device command', tags: ['Devices'],
-        security: bearer, params: [idParam, commandId], responseDescription: 'Command'});
+        security: bearer, params: [idParam, commandId], response: R.DeviceCommand, responseDescription: 'Command'});
     registry.registerPath({method: 'get', path: '/devices/{id}/logs', summary: 'Get device logs', tags: ['Devices'],
-        security: bearer, params: [idParam], responseDescription: 'Logs'});
+        security: bearer, params: [idParam], response: R.DeviceLogEntry, envelope: 'paginated', responseDescription: 'Logs'});
     registry.registerPath({method: 'get', path: '/devices/{id}/metrics', summary: 'Get device metrics', tags: ['Devices'],
-        security: bearer, params: [idParam], responseDescription: 'Metrics'});
+        security: bearer, params: [idParam], response: R.DeviceMetrics, responseDescription: 'Metrics'});
     registry.registerPath({method: 'get', path: '/devices/{id}/settings', summary: 'Get device settings', tags: ['Devices'],
-        security: bearer, params: [idParam], responseDescription: 'Settings'});
+        security: bearer, params: [idParam], response: R.DeviceSettings, responseDescription: 'Settings'});
     registry.registerPath({method: 'put', path: '/devices/{id}/settings', summary: 'Update device settings (incl. alert thresholds)', tags: ['Devices'],
-        security: bearer, params: [idParam], request: DeviceSettingsInput, responseDescription: 'Settings updated'});
+        security: bearer, params: [idParam], request: DeviceSettingsInput, response: R.DeviceSettings, responseDescription: 'Settings updated'});
     registry.registerPath({method: 'post', path: '/devices/{id}/ssh', summary: 'Run an SSH command on a device', tags: ['Devices'],
-        security: bearer, params: [idParam], request: SshCommandInput, responseDescription: 'Command output'});
+        security: bearer, params: [idParam], request: SshCommandInput, response: R.SshResult, responseDescription: 'Command output'});
     registry.registerPath({method: 'get', path: '/devices/{id}/status', summary: 'Get device status', tags: ['Devices'],
-        security: bearer, params: [idParam], responseDescription: 'Status'});
+        security: bearer, params: [idParam], response: R.DeviceStatusInfo, responseDescription: 'Status'});
     registry.registerPath({method: 'post', path: '/devices/{id}/rotate-key', summary: 'Rotate a device’s API key', tags: ['Devices'],
-        security: bearer, params: [idParam], responseDescription: 'Key rotated'});
+        security: bearer, params: [idParam], response: R.RotateKeyResult, responseDescription: 'Key rotated'});
     registry.registerPath({method: 'post', path: '/devices/{id}/request-ota', summary: 'Request an OTA firmware update', tags: ['Devices'],
         security: bearer, params: [idParam], response: MessageResponse, responseDescription: 'OTA requested'});
 
@@ -210,11 +217,11 @@ export function registerRoutes(): void {
     registry.registerPath({method: 'post', path: '/iot/temperature', summary: 'Sensor reading webhook (alias of /webhook/temperature)', tags: ['IoT'],
         security: apiKey, request: WebhookInput, response: WebhookResponse, responseDescription: 'Sensor reading recorded'});
     registry.registerPath({method: 'post', path: '/iot/heartbeat', summary: 'Device heartbeat (status + pending commands)', tags: ['IoT'],
-        security: apiKey, request: HeartbeatInput, responseDescription: 'Heartbeat accepted'});
+        security: apiKey, request: HeartbeatInput, response: R.HeartbeatResponse, responseDescription: 'Heartbeat accepted'});
     registry.registerPath({method: 'post', path: '/iot/register', summary: 'Self-registration by firmware', tags: ['IoT'],
-        security: apiKey, request: IotRegisterInput, responseDescription: 'Device registered'});
+        security: apiKey, request: IotRegisterInput, response: ActivateResponse, responseDescription: 'Device registered'});
     registry.registerPath({method: 'post', path: '/iot/logs', summary: 'Device agent log shipping (batch)', tags: ['IoT'],
-        security: apiKey, request: IotLogsInput, status: 201, responseDescription: 'Logs accepted'});
+        security: apiKey, request: IotLogsInput, status: 201, response: MessageResponse, responseDescription: 'Logs accepted'});
 
     // ── Admin ───────────────────────────────────────────────────
     registry.registerPath({method: 'get', path: '/admin/devices', summary: 'List devices by status (SUPERADMIN)', tags: ['Admin'],
@@ -229,9 +236,9 @@ export function registerRoutes(): void {
     registry.registerPath({method: 'post', path: '/monitoring/alerts', summary: 'Create an alert', tags: ['Monitoring'],
         security: bearer, request: CreateAlertInput, response: AlertResponse, status: 201, responseDescription: 'Alert created'});
     registry.registerPath({method: 'get', path: '/monitoring/alerts/trend', summary: 'Alert trend over time', tags: ['Monitoring'],
-        security: bearer, responseDescription: 'Trend data'});
+        security: bearer, response: R.AlertTrendPoint, envelope: 'paginated', responseDescription: 'Trend data'});
     registry.registerPath({method: 'put', path: '/monitoring/alerts/batch', summary: 'Batch alert action', tags: ['Monitoring'],
-        security: bearer, request: BatchAlertInput, responseDescription: 'Batch applied'});
+        security: bearer, request: BatchAlertInput, response: R.BulkResult, responseDescription: 'Batch applied'});
     registry.registerPath({method: 'get', path: '/monitoring/alerts/{id}', summary: 'Get an alert', tags: ['Monitoring'],
         security: bearer, params: [idParam], response: AlertResponse, responseDescription: 'Alert'});
     registry.registerPath({method: 'put', path: '/monitoring/alerts/{id}', summary: 'Update/resolve an alert', tags: ['Monitoring'],
@@ -239,37 +246,37 @@ export function registerRoutes(): void {
     registry.registerPath({method: 'delete', path: '/monitoring/alerts/{id}', summary: 'Delete an alert', tags: ['Monitoring'],
         security: bearer, params: [idParam], response: MessageResponse, responseDescription: 'Alert deleted'});
     registry.registerPath({method: 'get', path: '/monitoring/metrics', summary: 'Aggregate metrics', tags: ['Monitoring'],
-        security: bearer, responseDescription: 'Metrics'});
+        security: bearer, response: R.MonitoringMetrics, responseDescription: 'Metrics'});
     registry.registerPath({method: 'get', path: '/monitoring/reports', summary: 'Monitoring reports', tags: ['Monitoring'],
-        security: bearer, responseDescription: 'Reports'});
+        security: bearer, response: R.MonitoringReport, responseDescription: 'Reports'});
     registry.registerPath({method: 'get', path: '/monitoring/thresholds', summary: 'List thresholds', tags: ['Monitoring'],
-        security: bearer, responseDescription: 'Thresholds'});
+        security: bearer, response: R.Threshold, envelope: 'paginated', responseDescription: 'Thresholds'});
     registry.registerPath({method: 'post', path: '/monitoring/thresholds', summary: 'Create a threshold', tags: ['Monitoring'],
-        security: bearer, request: CreateThresholdInput, status: 201, responseDescription: 'Threshold created'});
+        security: bearer, request: CreateThresholdInput, status: 201, response: R.Threshold, responseDescription: 'Threshold created'});
     registry.registerPath({method: 'put', path: '/monitoring/thresholds/{id}', summary: 'Update a threshold', tags: ['Monitoring'],
-        security: bearer, params: [idParam], request: UpdateThresholdInput, responseDescription: 'Threshold updated'});
+        security: bearer, params: [idParam], request: UpdateThresholdInput, response: R.Threshold, responseDescription: 'Threshold updated'});
     registry.registerPath({method: 'delete', path: '/monitoring/thresholds/{id}', summary: 'Delete a threshold', tags: ['Monitoring'],
         security: bearer, params: [idParam], response: MessageResponse, responseDescription: 'Threshold deleted'});
 
     // ── Admin ───────────────────────────────────────────────────
     registry.registerPath({method: 'get', path: '/admin/users', summary: 'List users (SUPERADMIN)', tags: ['Admin'],
-        security: bearer, responseDescription: 'Users'});
+        security: bearer, response: R.User, envelope: 'paginated', responseDescription: 'Users'});
     registry.registerPath({method: 'post', path: '/admin/users/{id}/approve', summary: 'Approve a pending user', tags: ['Admin'],
-        security: bearer, params: [idParam], responseDescription: 'User approved'});
+        security: bearer, params: [idParam], response: R.User, responseDescription: 'User approved'});
     registry.registerPath({method: 'get', path: '/admin/logs', summary: 'System logs', tags: ['Admin'],
-        security: bearer, responseDescription: 'Logs'});
+        security: bearer, response: R.DeviceLogEntry, envelope: 'paginated', responseDescription: 'Logs'});
     registry.registerPath({method: 'get', path: '/admin/system', summary: 'System info', tags: ['Admin'],
-        security: bearer, responseDescription: 'System info'});
+        security: bearer, response: R.SystemInfo, responseDescription: 'System info'});
     registry.registerPath({method: 'get', path: '/admin/stats', summary: 'Platform stats', tags: ['Admin'],
-        security: bearer, responseDescription: 'Stats'});
+        security: bearer, response: R.AdminStats, responseDescription: 'Stats'});
     registry.registerPath({method: 'get', path: '/admin/customers', summary: 'List customers/tenants', tags: ['Admin'],
-        security: bearer, responseDescription: 'Customers'});
+        security: bearer, response: R.Customer, envelope: 'paginated', responseDescription: 'Customers'});
     registry.registerPath({method: 'post', path: '/admin/customers', summary: 'Create a customer/tenant', tags: ['Admin'],
-        security: bearer, status: 201, responseDescription: 'Customer created'});
+        security: bearer, status: 201, response: R.Customer, responseDescription: 'Customer created'});
     registry.registerPath({method: 'patch', path: '/admin/customers/{id}', summary: 'Update a customer/tenant', tags: ['Admin'],
-        security: bearer, params: [idParam], responseDescription: 'Customer updated'});
+        security: bearer, params: [idParam], response: R.Customer, responseDescription: 'Customer updated'});
     registry.registerPath({method: 'delete', path: '/admin/customers/{id}', summary: 'Delete a customer/tenant', tags: ['Admin'],
-        security: bearer, params: [idParam], responseDescription: 'Customer deleted'});
+        security: bearer, params: [idParam], response: MessageResponse, responseDescription: 'Customer deleted'});
 
     // ── Users ───────────────────────────────────────────────────
     registry.registerPath({method: 'get', path: '/users', summary: 'List users', tags: ['Users'],
@@ -285,43 +292,43 @@ export function registerRoutes(): void {
     registry.registerPath({method: 'delete', path: '/users/{id}', summary: 'Delete a user', tags: ['Users'],
         security: bearer, params: [idParam], response: MessageResponse, responseDescription: 'User deleted'});
     registry.registerPath({method: 'get', path: '/users/{id}/profile', summary: 'Get a user profile', tags: ['Users'],
-        security: bearer, params: [idParam], responseDescription: 'Profile'});
+        security: bearer, params: [idParam], response: R.ProfileSettings, responseDescription: 'Profile'});
     registry.registerPath({method: 'put', path: '/users/{id}/profile', summary: 'Update a user profile', tags: ['Users'],
-        security: bearer, params: [idParam], request: UpdateProfileInput, responseDescription: 'Profile updated'});
+        security: bearer, params: [idParam], request: UpdateProfileInput, response: R.ProfileSettings, responseDescription: 'Profile updated'});
     registry.registerPath({method: 'get', path: '/users/{id}/notification-preferences', summary: 'Get notification preferences', tags: ['Users'],
-        security: bearer, params: [idParam], responseDescription: 'Preferences'});
+        security: bearer, params: [idParam], response: R.NotificationSettings, responseDescription: 'Preferences'});
     registry.registerPath({method: 'put', path: '/users/{id}/notification-preferences', summary: 'Update notification preferences', tags: ['Users'],
-        security: bearer, params: [idParam], request: UpdatePreferenceInput, responseDescription: 'Preferences updated'});
+        security: bearer, params: [idParam], request: UpdatePreferenceInput, response: R.NotificationSettings, responseDescription: 'Preferences updated'});
     registry.registerPath({method: 'post', path: '/users/me/push-token', summary: 'Register a push token', tags: ['Users'],
-        security: bearer, request: PushTokenInput, responseDescription: 'Token registered'});
+        security: bearer, request: PushTokenInput, response: MessageResponse, responseDescription: 'Token registered'});
     registry.registerPath({method: 'delete', path: '/users/me/push-token', summary: 'Remove a push token', tags: ['Users'],
         security: bearer, response: MessageResponse, responseDescription: 'Token removed'});
 
     // ── Settings ────────────────────────────────────────────────
     registry.registerPath({method: 'get', path: '/settings', summary: 'Get all settings', tags: ['Settings'],
-        security: bearer, responseDescription: 'Settings'});
+        security: bearer, response: R.AllSettings, responseDescription: 'Settings'});
     registry.registerPath({method: 'get', path: '/settings/profile', summary: 'Get profile settings', tags: ['Settings'],
-        security: bearer, responseDescription: 'Profile settings'});
+        security: bearer, response: R.ProfileSettings, responseDescription: 'Profile settings'});
     registry.registerPath({method: 'put', path: '/settings/profile', summary: 'Update profile settings', tags: ['Settings'],
-        security: bearer, request: ProfileSettingsInput, responseDescription: 'Updated'});
+        security: bearer, request: ProfileSettingsInput, response: R.ProfileSettings, responseDescription: 'Updated'});
     registry.registerPath({method: 'get', path: '/settings/security', summary: 'Get security settings', tags: ['Settings'],
-        security: bearer, responseDescription: 'Security settings'});
+        security: bearer, response: R.SecuritySettings, responseDescription: 'Security settings'});
     registry.registerPath({method: 'put', path: '/settings/security', summary: 'Update security settings', tags: ['Settings'],
-        security: bearer, request: SecuritySettingsInput, responseDescription: 'Updated'});
+        security: bearer, request: SecuritySettingsInput, response: R.SecuritySettings, responseDescription: 'Updated'});
     registry.registerPath({method: 'get', path: '/settings/system', summary: 'Get system settings', tags: ['Settings'],
-        security: bearer, responseDescription: 'System settings'});
+        security: bearer, response: R.SystemSettings, responseDescription: 'System settings'});
     registry.registerPath({method: 'put', path: '/settings/system', summary: 'Update system settings', tags: ['Settings'],
-        security: bearer, responseDescription: 'Updated'});
+        security: bearer, response: R.SystemSettings, responseDescription: 'Updated'});
     registry.registerPath({method: 'get', path: '/settings/notifications', summary: 'Get notification settings', tags: ['Settings'],
-        security: bearer, responseDescription: 'Notification settings'});
+        security: bearer, response: R.NotificationSettings, responseDescription: 'Notification settings'});
     registry.registerPath({method: 'put', path: '/settings/notifications', summary: 'Update notification settings', tags: ['Settings'],
-        security: bearer, request: NotificationsSettingsInput, responseDescription: 'Updated'});
+        security: bearer, request: NotificationsSettingsInput, response: R.NotificationSettings, responseDescription: 'Updated'});
 
     // ── Notifications ───────────────────────────────────────────
     registry.registerPath({method: 'get', path: '/notifications', summary: 'List notifications', tags: ['Notifications'],
-        security: bearer, params: pagination, responseDescription: 'Notifications'});
+        security: bearer, params: pagination, response: R.NotificationRecord, envelope: 'paginated', responseDescription: 'Notifications'});
     registry.registerPath({method: 'get', path: '/notifications/{id}', summary: 'Get a notification', tags: ['Notifications'],
-        security: bearer, params: [idParam], responseDescription: 'Notification'});
+        security: bearer, params: [idParam], response: R.NotificationRecord, responseDescription: 'Notification'});
     registry.registerPath({method: 'delete', path: '/notifications/{id}', summary: 'Delete a notification', tags: ['Notifications'],
         security: bearer, params: [idParam], response: MessageResponse, responseDescription: 'Deleted'});
     registry.registerPath({method: 'post', path: '/notifications/{id}/retry', summary: 'Retry a failed notification', tags: ['Notifications'],
