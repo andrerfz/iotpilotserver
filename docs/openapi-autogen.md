@@ -147,29 +147,34 @@ schema), so regenerating the client from it would drop response types and break 
 code. **Do not replace `openapi.yml` until T8.** Safe now: publish the generated spec
 as a separate tracked artifact + drift guard; keep `openapi.yml` feeding the client.
 
-### T8 — Response DTO schemas for all endpoints 🟡 (gates the replace)
+### T8 — Response DTO schemas for all endpoints ✅ (gates the replace)
 Author response DTOs (or register inline response schemas) for the endpoints that lack
 them, so the generated spec matches the hand spec's response coverage. Only then can
 `make openapi` overwrite `docs/openapi.yml`, regenerate the FE client safely, and the
 hand spec be retired.
 
-**Progress:** 66 → 52 endpoints still missing a response schema.
-- ✅ Batch 1: shared `MessageResponse` for 14 acknowledgement endpoints (deletes,
-  logout, password, retry, request-ota).
+**✅ Response coverage complete — 0 of 96 operations missing a response schema.**
+- Shared `MessageResponse` for acknowledgement endpoints (deletes, logout, password,
+  retry, request-ota, push-token, logs).
+- Response models in `apps/backend/src/openapi/response-schemas.ts` (plain JSON Schema,
+  ported from the handlers / legacy `openapi.yml`): User, Session, AuthData, ApiKey,
+  DeviceCommand, DeviceSettings, DeviceStatusInfo, Threshold, DeviceLogEntry,
+  MetricPoint, DeviceMetrics, MonitoringMetrics, SshResult, NotificationRecord,
+  ProfileSettings, SecuritySettings, SystemSettings, NotificationSettings, AdminStats,
+  SystemInfo, Customer, HeartbeatResponse, BulkResult, etc. (71 schemas total).
 
-**Remaining 52, by shape (each needs a real response DTO ported from the hand
-`openapi.yml` or read from the handler's `send.ok` payload):**
-- Entity GETs/PUTs returning existing DTOs — wire to `DeviceResponse` / `UserResponse`
-  / `AlertResponse` where applicable (e.g. PUT /devices/{id}/settings, approve, user
-  CRUD responses).
-- New response DTOs needed: heartbeat (config+commands+firmware), iot register
-  (credentials), rotate-key ({apiKey}), bulk/batch (counts), ssh (output), device
-  settings object, metrics/logs/status, monitoring trend/metrics/reports, thresholds,
-  admin stats/system/logs/customers, notifications, sessions, api-keys list, profile,
-  notification-preferences.
-
-This is mostly mechanical but ~50 shapes; do it in batches, regenerating
-`docs/openapi.generated.json` (`make openapi`) each time.
+### T9 — Swap `openapi.yml` → generated + regenerate FE client 🔴 (the actual cutover)
+Coverage is done, but a **drop-in** replacement of the `ng-openapi-gen` source needs
+reconciliation first, or the regenerated client will differ:
+- Model-name alignment: the generated spec has both the lean `DeviceResponse` (used by
+  list/get) and the rich `Device` (detail fields). Point device list/get at the rich
+  model (or merge) so detail typing isn't lost; align other names with what the FE
+  imports today.
+- Then: emit the generated spec as `docs/openapi.yml` (needs a YAML writer — host has
+  one via the codegen toolchain), run `make ng-api-generate`, review the client diff,
+  fix FE type usages, and run `make ng-api-check`.
+- This is FE-affecting (the generated client is imported by ~63 files) — do it
+  deliberately with the diff in front of you, not blindly.
 - CI check: regenerate and fail if it differs from the committed file (so drift can't
   reappear). Optionally a contract test asserting the documented webhook body matches
   the validator, like the alert-pipeline test.
