@@ -106,6 +106,12 @@ export function registerRoutes(): void {
         {name: 'limit', in: 'query' as const, schema: {type: 'integer', minimum: 1, maximum: 100}, description: 'Page size'},
     ];
 
+    // ── System ──────────────────────────────────────────────────
+    registry.registerPath({method: 'get', path: '/health', summary: 'Health check', tags: ['System'],
+        envelope: 'none', responseDescription: 'Service health'});
+    registry.registerPath({method: 'get', path: '/schedule', summary: 'Reporting schedule for the caller’s devices', tags: ['System'],
+        responseDescription: 'Schedule'});
+
     // ── Auth ────────────────────────────────────────────────────
     registry.registerPath({method: 'post', path: '/auth/login', summary: 'Authenticate user', tags: ['Auth'],
         request: LoginInput, response: LoginResponse, responseDescription: 'Login successful'});
