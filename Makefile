@@ -9,7 +9,7 @@
 .PHONY: dev-start dev-stop dev-restart dev-logs dev-shell
 .PHONY: local-logs-app local-logs-influxdb local-logs-loki local-logs-postgres local-logs-redis local-logs-traefik local-logs-tailscale
 .PHONY: dev shell health migrate migrate-reset migrate-dev db-push db-setup db-status db-shell apply-migration
-.PHONY: fresh-setup local-start-with-migration
+.PHONY: fresh-setup local-start-with-migration test-alerts
 .PHONY: test lint route-list openapi-check openapi-diff test-api test-ci test-db test-influxdb test-integration test-unit test-fresh test-file test-debug test-watch test-coverage test-env-check test-integration-full test-performance test-security test-clean test-db-with-data test-influxdb-connection test-services test-smoke test-all
 .PHONY: create-superadmin list-superadmins reset-superadmin-password delete-superadmin
 .PHONY: sync-node-modules clean-dev
@@ -820,6 +820,10 @@ test-smoke: check-env
 test-api: check-env
 	@echo "🌐 Testing API endpoints..."
 	@$(EXEC_FRONTEND) npm test -- --run src/__tests__/api
+
+test-alerts:
+	@echo "🚨 Testing alert pipeline against the DEV stack..."
+	@bash scripts/test-alert-pipeline.sh
 
 when: test-env-check test-fresh test-services test-smoke
 	@echo "🎉 All tests completed!"
