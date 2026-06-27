@@ -29,6 +29,7 @@ import {
   IonSkeletonText,
   IonText,
   DataTableComponent,
+  SwipeListComponent,
   EmptyStateComponent,
   MetricCardComponent,
   MetricGridComponent,
@@ -36,7 +37,8 @@ import {
   SeverityBadgeComponent,
   StatusBadgeComponent,
 } from '@ng/shared/ui';
-import type { ColumnDef, PickerOption } from '@ng/shared/ui';
+import type { ColumnDef, PickerOption, SwipeAction } from '@ng/shared/ui';
+import { ViewportService } from '@ng/core/layout/viewport.service';
 import type { Alert } from '@ng/core/api/generated/models/alert';
 import { AlertsStream } from '@ng/core/realtime/alerts.stream';
 import { DeviceDetailService } from '../../services/device-detail.service';
@@ -94,6 +96,7 @@ const STATE_OPTIONS: PickerOption[] = [
     StatusBadgeComponent,
     ThresholdConfigSheetComponent,
     AlertDetailSheetComponent,
+    SwipeListComponent,
   ],
 })
 export class DeviceAlertsPage implements OnInit, AfterViewInit {
@@ -105,9 +108,23 @@ export class DeviceAlertsPage implements OnInit, AfterViewInit {
   private readonly toast = inject(ToastService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly t = inject(TranslateService);
+  protected readonly vp = inject(ViewportService);
   private readonly thresholdSheet = viewChild(ThresholdConfigSheetComponent);
 
   protected readonly deviceId = signal('');
+
+  // Swipe actions for the mobile list (desktop uses the inline action column).
+  protected readonly alertActions: SwipeAction<Alert>[] = [
+    { key: 'ack', label: 'alerts.acknowledge', color: 'warning', show: (a) => !a.resolved && !a.acknowledgedAt },
+    { key: 'resolve', label: 'alerts.resolve', color: 'success', show: (a) => !a.resolved },
+    { key: 'delete', label: 'common.delete', icon: 'trash-outline', color: 'danger' },
+  ];
+
+  onSwipeAction(ev: { key: string; item: Alert }): void {
+    if (ev.key === 'ack') void this.onAcknowledge(ev.item);
+    else if (ev.key === 'resolve') void this.onResolve(ev.item);
+    else if (ev.key === 'delete') void this.onDeleteAlert(ev.item);
+  }
 
   readonly alerts = this.svc.deviceAlerts;
   readonly trend = this.dashSvc.alertsTrend;
