@@ -14,6 +14,8 @@ export interface AuthUser {
   username: string;
   role: UserRoleType;
   customerId?: string | null;
+  /** SUPERADMIN "act as" tenant, from the current session (null = global/none). */
+  actingCustomerId?: string | null;
 }
 
 export interface AuthenticatedRequest extends Request {
@@ -51,7 +53,10 @@ export async function resolveUser(token: string): Promise<AuthUser | null> {
   });
 
   if (!session || session.user.deletedAt) return null;
-  return session.user as unknown as AuthUser;
+  return {
+    ...(session.user as unknown as AuthUser),
+    actingCustomerId: (session as { actingCustomerId?: string | null }).actingCustomerId ?? null,
+  };
 }
 
 async function resolveApiKeyUser(apiKey: string): Promise<AuthUser | null> {
@@ -84,10 +89,16 @@ export interface AuthOptions {
 
 function buildTenantContext(user: AuthUser, req: Request): TenantContext | null {
   const isSuperAdmin = user.role === 'SUPERADMIN';
+  // SUPERADMIN: the acting tenant comes from their session ("act as", server-side),
+  // falling back to an X-Customer-Id header for programmatic use. A normal user's
+  // tenant always comes from their own JWT — the session/header are never read for them.
+  const superAdminTenant = user.actingCustomerId
+    ? user.actingCustomerId
+    : (req.headers['x-customer-id'] as string | undefined) || null;
   const customerId = user.customerId
     ? CustomerId.fromString(user.customerId)
-    : isSuperAdmin
-      ? (req.headers['x-customer-id'] ? CustomerId.fromString(req.headers['x-customer-id'] as string) : null)
+    : isSuperAdmin && superAdminTenant
+      ? CustomerId.fromString(superAdminTenant)
       : null;
 
   if (!isSuperAdmin && !customerId) return null;

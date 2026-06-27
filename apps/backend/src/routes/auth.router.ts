@@ -416,6 +416,78 @@ authRouter.get('/me', requireAuth(), async (req: AuthenticatedRequest, res: Resp
     }
 });
 
+// ---------------------------------------------------------------------------
+// SUPERADMIN "act as" tenant — server-side per-session tenant scope.
+// See docs/superadmin-tenant-switch.md. Only a SUPERADMIN may set/read this;
+// for everyone else the tenant always comes from their own JWT.
+// ---------------------------------------------------------------------------
+
+function currentToken(req: AuthenticatedRequest): string | undefined {
+    return req.cookies?.['auth-token']
+        || (req.headers['authorization'] as string | undefined)?.replace('Bearer ', '');
+}
+
+async function actingCustomerDto(actingCustomerId: string | null) {
+    if (!actingCustomerId) return { actingCustomerId: null, customerName: null };
+    const c = await prisma.getClient().customer.findFirst({
+        where: { id: actingCustomerId, deletedAt: null },
+        select: { id: true, name: true },
+    });
+    return { actingCustomerId: c?.id ?? null, customerName: c?.name ?? null };
+}
+
+// GET current acting tenant (for the "viewing as" banner)
+authRouter.get('/act-as', requireAuth(), async (req: AuthenticatedRequest, res: Response) => {
+    if (req.user?.role !== 'SUPERADMIN') { send.forbidden(res, 'SUPERADMIN only'); return; }
+    send.ok(res, await actingCustomerDto(req.user.actingCustomerId ?? null));
+});
+
+// POST { customerId } — start acting as a tenant
+authRouter.post('/act-as', requireAuth(), async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        if (req.user?.role !== 'SUPERADMIN') { send.forbidden(res, 'SUPERADMIN only'); return; }
+        const customerId = req.body?.customerId;
+        if (!customerId || typeof customerId !== 'string') { send.badRequest(res, 'customerId is required'); return; }
+
+        const customer = await prisma.getClient().customer.findFirst({
+            where: { id: customerId, deletedAt: null },
+            select: { id: true, name: true },
+        });
+        if (!customer) { send.notFound(res, 'Customer not found'); return; }
+
+        const token = currentToken(req);
+        if (!token) { send.unauthorized(res); return; }
+
+        await prisma.getClient().session.updateMany({
+            where: { token, deletedAt: null },
+            data: { actingCustomerId: customer.id },
+        });
+        logger.info('SUPERADMIN tenant switch (act-as)', {
+            userId: req.user.id, actingCustomerId: customer.id, customerName: customer.name,
+        });
+        send.ok(res, { actingCustomerId: customer.id, customerName: customer.name });
+    } catch (err) {
+        send.fromError(res, err);
+    }
+});
+
+// DELETE — stop acting as a tenant (back to global)
+authRouter.delete('/act-as', requireAuth(), async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        if (req.user?.role !== 'SUPERADMIN') { send.forbidden(res, 'SUPERADMIN only'); return; }
+        const token = currentToken(req);
+        if (!token) { send.unauthorized(res); return; }
+        await prisma.getClient().session.updateMany({
+            where: { token, deletedAt: null },
+            data: { actingCustomerId: null },
+        });
+        logger.info('SUPERADMIN tenant switch cleared (act-as)', { userId: req.user.id });
+        send.ok(res, { actingCustomerId: null, customerName: null });
+    } catch (err) {
+        send.fromError(res, err);
+    }
+});
+
 // POST /auth/register
 authRouter.post('/register', async (req: AuthenticatedRequest, res: Response) => {
     try {
