@@ -42,10 +42,12 @@ import {
   ViewWillEnter,
   IonRefresher,
   IonRefresherContent,
+  SwipeListComponent,
 } from '@ng/shared/ui';
 import { TranslatePipe } from '@ngx-translate/core';
-import type { ColumnDef, DevicePickerItem, PickerOption } from '@ng/shared/ui';
+import type { ColumnDef, DevicePickerItem, PickerOption, SwipeAction } from '@ng/shared/ui';
 import type { Alert } from '@ng/core/api/generated/models/alert';
+import { ViewportService } from '@ng/core/layout/viewport.service';
 import { AlertDetailSheetComponent } from '../../components/alert-detail-sheet/alert-detail-sheet.component';
 import { DashboardService } from '../../services/dashboard.service';
 import { applyAlertFilters, alertState } from '../../filters/alert-filters';
@@ -107,6 +109,7 @@ function presetToTimeRange(preset: string): { startTime?: string; endTime?: stri
     MultiSelectPickerComponent,
     DateRangePickerComponent,
     AlertDetailSheetComponent,
+    SwipeListComponent,
     IonRefresher, IonRefresherContent,
     TranslatePipe,
   ],
@@ -240,6 +243,17 @@ export class MonitoringPage implements AfterViewInit, ViewWillEnter {
 
   @ViewChild('detailSheet') private detailSheet?: AlertDetailSheetComponent;
   readonly actionBusy = signal(false);
+
+  protected readonly vp = inject(ViewportService);
+  // Swipe actions for the mobile list (desktop uses the table + bulk bar).
+  protected readonly alertActions: SwipeAction<Alert>[] = [
+    { key: 'acknowledge', label: 'alerts.acknowledge', color: 'warning', show: (a) => !a.resolved && !a.acknowledgedAt },
+    { key: 'resolve', label: 'alerts.resolve', color: 'success', show: (a) => !a.resolved },
+  ];
+
+  onSwipeAction(ev: { key: string; item: Alert }): void {
+    void this.onAlertAction(ev.item, ev.key as 'acknowledge' | 'resolve');
+  }
 
   openDetail(alert: Alert): void {
     this.detailSheet?.open(alert);
