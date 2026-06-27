@@ -28,7 +28,7 @@ addIcons({ chevronForward, search });
           @if (i > 0) {
             <span class="crumbs__sep"><ion-icon name="chevron-forward"></ion-icon></span>
           }
-          <span class="crumbs__seg" [class.crumbs__seg--current]="i === breadcrumbs().length - 1">{{ c }}</span>
+          <span class="crumbs__seg" [class.crumbs__seg--current]="i === breadcrumbs().length - 1">{{ c | translate }}</span>
         }
       </nav>
 

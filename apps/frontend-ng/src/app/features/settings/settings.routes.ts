@@ -10,7 +10,7 @@ export const SETTINGS_ROUTES: Routes = [
     path: 'profile',
     loadComponent: () =>
       import('./pages/profile/settings-profile.page').then((m) => m.SettingsProfilePage),
-    data: { breadcrumb: ['Administer', 'Settings', 'Profile'] },
+    data: { breadcrumb: ['nav.administer', 'nav.settings', 'settings.tabs.profile'] },
   },
   {
     path: 'notifications',
@@ -18,24 +18,24 @@ export const SETTINGS_ROUTES: Routes = [
       import('./pages/notifications/settings-notifications.page').then(
         (m) => m.SettingsNotificationsPage,
       ),
-    data: { breadcrumb: ['Administer', 'Settings', 'Notifications'] },
+    data: { breadcrumb: ['nav.administer', 'nav.settings', 'settings.tabs.notifications'] },
   },
   {
     path: 'security',
     loadComponent: () =>
       import('./pages/security/settings-security.page').then((m) => m.SettingsSecurityPage),
-    data: { breadcrumb: ['Administer', 'Settings', 'Security'] },
+    data: { breadcrumb: ['nav.administer', 'nav.settings', 'settings.tabs.security'] },
   },
   {
     path: 'system',
     loadComponent: () =>
       import('./pages/system/settings-system.page').then((m) => m.SettingsSystemPage),
-    data: { breadcrumb: ['Administer', 'Settings', 'System'] },
+    data: { breadcrumb: ['nav.administer', 'nav.settings', 'settings.tabs.system'] },
   },
   {
     path: 'api-keys',
     loadComponent: () =>
       import('./pages/api-keys/settings-api-keys.page').then((m) => m.SettingsApiKeysPage),
-    data: { breadcrumb: ['Administer', 'Settings', 'API Keys'] },
+    data: { breadcrumb: ['nav.administer', 'nav.settings', 'settings.tabs.api_keys'] },
   },
 ];
