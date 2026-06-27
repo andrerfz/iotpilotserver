@@ -13,6 +13,12 @@ export interface NavItem {
   adminOnly?: boolean;
   /** Visible only to SUPERADMIN role. */
   superAdminOnly?: boolean;
+  /**
+   * Requires a tenant context. Hidden for a SUPERADMIN until they "act as" a
+   * customer (these views 400/are empty without a tenant). Always shown to a
+   * regular ADMIN/USER (who always have a tenant).
+   */
+  tenantScoped?: boolean;
   /** Sub-items always rendered indented below this item. */
   children?: NavItem[];
 }
@@ -28,10 +34,10 @@ export const NAV: NavGroup[] = [
   {
     group: 'nav.operate',
     items: [
-      { label: 'nav.dashboard', path: 'dashboard', icon: 'grid-outline' },
-      { label: 'nav.devices', path: 'devices', icon: 'hardware-chip-outline' },
-      { label: 'nav.monitoring', path: 'monitoring', icon: 'notifications-outline' },
-      { label: 'nav.logs', path: 'logs', icon: 'document-text-outline', adminOnly: true },
+      { label: 'nav.dashboard', path: 'dashboard', icon: 'grid-outline', tenantScoped: true },
+      { label: 'nav.devices', path: 'devices', icon: 'hardware-chip-outline', tenantScoped: true },
+      { label: 'nav.monitoring', path: 'monitoring', icon: 'notifications-outline', tenantScoped: true },
+      { label: 'nav.logs', path: 'logs', icon: 'document-text-outline', adminOnly: true, tenantScoped: true },
     ],
   },
   {
@@ -50,5 +56,15 @@ export const NAV: NavGroup[] = [
   },
 ];
 
-/** Paths shown as primary tabs in the mobile bottom bar. */
+/** Paths shown as primary tabs in the mobile bottom bar (tenant context). */
 export const PRIMARY_PATHS = new Set(['dashboard', 'devices', 'monitoring']);
+
+/**
+ * Mobile primary tabs for a SUPERADMIN in Platform mode (not acting as a tenant):
+ * platform-level views that work cross-tenant, instead of the tenant-scoped ones.
+ */
+export const PLATFORM_PRIMARY: NavItem[] = [
+  { label: 'nav.overview', path: 'admin', icon: 'stats-chart-outline', exact: true },
+  { label: 'nav.devices', path: 'admin/devices', icon: 'hardware-chip-outline' },
+  { label: 'nav.users', path: 'admin/users', icon: 'people-outline' },
+];

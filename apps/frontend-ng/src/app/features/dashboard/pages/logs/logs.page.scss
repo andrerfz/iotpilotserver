@@ -1,3 +1,23 @@
+.pagehead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+
+  &__title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  &__sub {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+}
+
 .pagehead--mobile-hidden {
   @media (max-width: 1079px) { display: none; }
 }

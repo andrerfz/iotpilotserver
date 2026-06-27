@@ -1,0 +1,23 @@
+.swipe-list {
+  background: transparent;
+  padding: 0;
+
+  ion-item-sliding {
+    margin-bottom: 8px;
+  }
+
+  &__item {
+    --background: var(--surface);
+    --border-radius: 12px;
+    --padding-start: 14px;
+    --inner-padding-end: 14px;
+    --min-height: 56px;
+    border: 1px solid var(--ui-border);
+    border-radius: 12px;
+  }
+
+  ion-item-option {
+    font-weight: 600;
+    font-size: 13px;
+  }
+}

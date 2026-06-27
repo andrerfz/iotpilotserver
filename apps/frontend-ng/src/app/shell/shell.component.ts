@@ -33,7 +33,9 @@ import { PushNotificationService } from '../core/native/push-notification.servic
   ],
   template: `
     <ion-split-pane contentId="shell-main" when="(min-width: 1080px)">
-      <ion-menu menuId="shell-menu" contentId="shell-main" type="overlay">
+      <!-- swipeGesture=false: below 1080px the rail must stay hidden (mobile has its
+           own bottom-nav + right drawer); only the desktop split-pane shows it inline. -->
+      <ion-menu menuId="shell-menu" contentId="shell-main" type="overlay" [swipeGesture]="false">
         <ion-content class="rail-host">
           <app-rail>
             @if (showTenantMenu()) {

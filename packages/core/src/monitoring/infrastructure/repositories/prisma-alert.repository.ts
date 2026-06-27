@@ -203,16 +203,16 @@ export class PrismaAlertRepository implements AlertRepository {
         const tenantContext = this.createMockTenantContext(tenantId);
         this.tenantValidator.validateTenantAccess(tenantContext, tenantId, 'FindAlertsByStatus');
 
-        // Prisma schema uses resolved:Boolean (not a status string).
+        // Prisma schema uses resolved:Boolean + acknowledgedAt (not a status string).
         // Map domain AlertStatus to the DB representation:
-        //   RESOLVED    → resolved = true
-        //   ACKNOWLEDGED → resolved = false AND userId IS NOT NULL
-        //   ACTIVE       → resolved = false AND userId IS NULL
+        //   RESOLVED     → resolved = true
+        //   ACKNOWLEDGED → resolved = false AND acknowledgedAt IS NOT NULL
+        //   ACTIVE       → resolved = false AND acknowledgedAt IS NULL
         const resolvedFilter = status.value === 'RESOLVED'
             ? { resolved: true }
             : status.value === 'ACKNOWLEDGED'
-                ? { resolved: false, userId: { not: null } }
-                : { resolved: false, userId: null };
+                ? { resolved: false, acknowledgedAt: { not: null } }
+                : { resolved: false, acknowledgedAt: null };
 
         const where: Record<string, unknown> = {
             ...resolvedFilter,
@@ -336,9 +336,12 @@ export class PrismaAlertRepository implements AlertRepository {
 
     private mapToEntity(data: any): Alert {
         const customerId = CustomerId.create(data.customerId as string);
+        // Status is derived from acknowledgedAt (set by acknowledge()), NOT userId —
+        // userId is the alert's owner and is set at creation, so using it would mark
+        // every owned alert as ACKNOWLEDGED and block acknowledging it.
         const status = data.resolved
             ? AlertStatus.RESOLVED
-            : (data.userId ? AlertStatus.ACKNOWLEDGED : AlertStatus.ACTIVE);
+            : (data.acknowledgedAt ? AlertStatus.ACKNOWLEDGED : AlertStatus.ACTIVE);
 
         const entity = AlertEntity.create(
             AlertId.fromString(data.id),

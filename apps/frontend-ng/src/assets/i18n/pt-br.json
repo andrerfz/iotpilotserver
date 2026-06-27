@@ -1098,5 +1098,11 @@
     "required": "Obrigatório",
     "email": "E-mail inválido",
     "min8": "Mínimo de 8 caracteres"
+  },
+  "alerts": {
+    "detail": "Detalhes do alerta",
+    "acknowledge": "Reconhecer",
+    "resolve": "Resolver",
+    "already_resolved": "Este alerta está resolvido."
   }
 }

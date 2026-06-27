@@ -286,7 +286,8 @@ model User {
 model Session {
   id         String    @id @default(cuid())
   userId     String
-  customerId String? // Inherited from user for easier validation
+  customerId String? // Inherited from user at login (login-time tenant)
+  actingCustomerId String? // SUPERADMIN "act as" tenant (null = global/none)
   token      String    @unique
   expiresAt  DateTime
   createdAt  DateTime  @default(now())

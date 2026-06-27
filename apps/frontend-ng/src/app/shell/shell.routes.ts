@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { roleGuard } from '../core/auth/guards';
+import { roleGuard, superadminTenantGuard } from '../core/auth/guards';
 
 /**
  * Child routes rendered inside the shell outlet. Each carries `breadcrumb`
@@ -9,19 +9,21 @@ import { roleGuard } from '../core/auth/guards';
 export const SHELL_CHILDREN: Routes = [
   {
     path: 'dashboard',
+    canActivate: [superadminTenantGuard],
     loadComponent: () =>
       import('../features/dashboard/pages/dashboard/dashboard.page').then(
         (m) => m.DashboardPage,
       ),
-    data: { breadcrumb: ['Operate', 'Dashboard'] },
+    data: { breadcrumb: ['nav.operate', 'nav.dashboard'] },
   },
   {
     path: 'devices',
+    canActivate: [superadminTenantGuard],
     loadComponent: () =>
       import('../features/dashboard/pages/devices/devices.page').then(
         (m) => m.DevicesPage,
       ),
-    data: { breadcrumb: ['Operate', 'Devices'] },
+    data: { breadcrumb: ['nav.operate', 'nav.devices'] },
   },
   {
     path: 'devices/:id',
@@ -33,22 +35,23 @@ export const SHELL_CHILDREN: Routes = [
       import('../features/dashboard/device-detail.routes').then(
         (m) => m.DEVICE_DETAIL_ROUTES,
       ),
-    data: { breadcrumb: ['Operate', 'Devices'] },
+    data: { breadcrumb: ['nav.operate', 'nav.devices'] },
   },
   {
     path: 'monitoring',
+    canActivate: [superadminTenantGuard],
     loadComponent: () =>
       import('../features/dashboard/pages/monitoring/monitoring.page').then(
         (m) => m.MonitoringPage,
       ),
-    data: { breadcrumb: ['Operate', 'Monitoring'] },
+    data: { breadcrumb: ['nav.operate', 'nav.monitoring'] },
   },
   {
     path: 'logs',
-    canActivate: [roleGuard('ADMIN')],
+    canActivate: [roleGuard('ADMIN'), superadminTenantGuard],
     loadComponent: () =>
       import('../features/dashboard/pages/logs/logs.page').then(m => m.LogsPage),
-    data: { breadcrumb: ['Operate', 'Logs'] },
+    data: { breadcrumb: ['nav.operate', 'nav.logs'] },
   },
   {
     path: 'admin',
@@ -64,7 +67,7 @@ export const SHELL_CHILDREN: Routes = [
       ),
     loadChildren: () =>
       import('../features/settings/settings.routes').then((m) => m.SETTINGS_ROUTES),
-    data: { breadcrumb: ['Administer', 'Settings'] },
+    data: { breadcrumb: ['nav.administer', 'nav.settings'] },
   },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
 ];

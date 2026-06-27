@@ -153,18 +153,45 @@
         ></ui-empty-state>
       }
 
-      <!-- Table -->
+      <!-- Listing: table on desktop, swipeable list on mobile (same data + actions) -->
       @if (filteredAlerts().length > 0) {
-        <ui-data-table
-          [rows]="filteredAlerts()"
-          [columns]="columns()"
-          [pageSize]="20"
-          [selectable]="true"
-          (selectionChange)="onSelectionChange($event)"
-        ></ui-data-table>
+        @if (vp.wide()) {
+          <ui-data-table
+            [rows]="filteredAlerts()"
+            [columns]="columns()"
+            [pageSize]="20"
+            [selectable]="true"
+            [rowClickable]="true"
+            (rowClick)="openDetail($event)"
+            (selectionChange)="onSelectionChange($event)"
+          ></ui-data-table>
+        } @else {
+          <ui-swipe-list
+            [items]="filteredAlerts()"
+            [actions]="alertActions"
+            (itemClick)="openDetail($event)"
+            (action)="onSwipeAction($event)">
+            <ng-template #itemContent let-a>
+              <div class="alert-li">
+                <ui-severity-badge [severity]="a.severity ?? 'INFO'"></ui-severity-badge>
+                <div class="alert-li__body">
+                  <span class="alert-li__title">{{ a.title }}</span>
+                  <span class="alert-li__msg">{{ a.message }}</span>
+                  <span class="alert-li__meta">
+                    {{ formatAge(a.createdAt) }} · <ui-status-badge [status]="alertState(a)"></ui-status-badge>
+                  </span>
+                </div>
+              </div>
+            </ng-template>
+          </ui-swipe-list>
+        }
       }
     </ion-card-content>
   </ion-card>
+
+  <app-alert-detail-sheet #detailSheet [busy]="actionLoading() !== null"
+    (acknowledge)="onAcknowledge($event)"
+    (resolve)="onResolve($event)"></app-alert-detail-sheet>
 
 </ion-content>
 

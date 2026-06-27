@@ -113,15 +113,38 @@
         [title]="'monitoring.empty.no_alerts' | translate"
         [description]="'monitoring.empty.filtered' | translate">
       </ui-empty-state>
-    } @else {
+    } @else if (vp.wide()) {
       <ui-data-table
         [columns]="$any(columns())"
         [rows]="$any(filteredAlerts())"
         [pageSize]="10"
         [selectable]="true"
+        [rowClickable]="true"
+        (rowClick)="openDetail($any($event))"
         (selectionChange)="onSelectionChange($any($event))">
       </ui-data-table>
+    } @else {
+      <ui-swipe-list
+        [items]="filteredAlerts()"
+        [actions]="alertActions"
+        (itemClick)="openDetail($any($event))"
+        (action)="onSwipeAction($any($event))">
+        <ng-template #itemContent let-a>
+          <div class="alert-li">
+            <ui-severity-badge [severity]="a.severity ?? 'INFO'"></ui-severity-badge>
+            <div class="alert-li__body">
+              <span class="alert-li__title">{{ a.title }}</span>
+              <span class="alert-li__msg">{{ a.message }}</span>
+              <span class="alert-li__meta">{{ a.deviceId || '' }}</span>
+            </div>
+          </div>
+        </ng-template>
+      </ui-swipe-list>
     }
+
+    <app-alert-detail-sheet #detailSheet [busy]="actionBusy()"
+      (acknowledge)="onAlertAction($event, 'acknowledge')"
+      (resolve)="onAlertAction($event, 'resolve')"></app-alert-detail-sheet>
 
     <!-- Alert trend chart -->
     <div class="section-head">{{ 'monitoring.chart.title' | translate }}</div>

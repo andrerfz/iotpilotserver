@@ -236,7 +236,7 @@
   "device_alerts": {
     "states": {
       "open": "Abierta",
-      "acknowledged": "Reconocida",
+      "acknowledged": "Visto",
       "resolved": "Resuelta"
     },
     "filter": {
@@ -247,9 +247,9 @@
     "actions": {
       "thresholds": "Umbrales",
       "refresh": "Actualizar",
-      "ack": "Reconocer",
+      "ack": "Visto",
       "resolve": "Resolver",
-      "ack_selected": "Reconocer seleccionadas",
+      "ack_selected": "Marcar vistas",
       "resolve_selected": "Resolver seleccionadas"
     },
     "chart": {
@@ -442,7 +442,7 @@
     "alert_plural": "alertas",
     "states": {
       "open": "Abierta",
-      "acknowledged": "Reconocida",
+      "acknowledged": "Visto",
       "resolved": "Resuelta"
     },
     "filter": {
@@ -453,7 +453,7 @@
       "period": "Período"
     },
     "actions": {
-      "acknowledge": "Reconocer",
+      "acknowledge": "Visto",
       "resolve": "Resolver",
       "clear": "Limpiar"
     },
@@ -1027,7 +1027,7 @@
     "failed": "Fallido",
     "timeout": "Tiempo agotado",
     "open": "Abierto",
-    "acknowledged": "Reconocido",
+    "acknowledged": "Visto",
     "resolved": "Resuelto"
   },
   "severity": {
@@ -1098,5 +1098,11 @@
     "required": "Obligatorio",
     "email": "Correo no válido",
     "min8": "Mínimo 8 caracteres"
+  },
+  "alerts": {
+    "detail": "Detalle de alerta",
+    "acknowledge": "Visto",
+    "resolve": "Resolver",
+    "already_resolved": "Esta alerta está resuelta."
   }
 }

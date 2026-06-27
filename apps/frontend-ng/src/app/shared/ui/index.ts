@@ -149,6 +149,8 @@ export { EmptyStateComponent } from './data/empty-state.component';
 // T6 — DataTable
 export { DataTableComponent } from './data/data-table.component';
 export type { ColumnDef } from './data/data-table.component';
+export { SwipeListComponent } from './data/swipe-list.component';
+export type { SwipeAction } from './data/swipe-list.component';
 // T7 — Sheets
 export { BottomSheetComponent } from './sheets/bottom-sheet.component';
 export { FilterChipComponent } from './sheets/filter-chip.component';
