@@ -20,7 +20,7 @@ import {
   moonOutline, sunnyOutline, logOutOutline, closeOutline, searchOutline,
 } from 'ionicons/icons';
 
-import { NAV, NavItem, PRIMARY_PATHS } from './nav';
+import { NAV, NavItem, PRIMARY_PATHS, PLATFORM_PRIMARY } from './nav';
 
 addIcons({
   gridOutline, hardwareChipOutline, notificationsOutline, settingsOutline,
@@ -116,7 +116,7 @@ addIcons({
 
     <!-- Bottom bar -->
     <nav class="bnav">
-      @for (it of primary; track it.path) {
+      @for (it of primary(); track it.path) {
         <a class="bnav-tab" [routerLink]="it.path" routerLinkActive="bnav-tab--active" (click)="close()"
            [attr.aria-label]="it.label | translate">
           <ion-icon [name]="it.icon"></ion-icon>
@@ -191,7 +191,7 @@ export class BottomNavComponent {
 
   private readonly allItems: NavItem[] = NAV.reduce<NavItem[]>((acc, g) => acc.concat(g.items), []);
 
-  protected readonly primary = this.allItems.filter(it => PRIMARY_PATHS.has(it.path));
+  private readonly tenantPrimary = this.allItems.filter(it => PRIMARY_PATHS.has(it.path));
   protected readonly secondaryNav = this.allItems.filter(
     it => !PRIMARY_PATHS.has(it.path) && !it.adminOnly && it.path !== 'settings',
   );
@@ -200,6 +200,12 @@ export class BottomNavComponent {
   protected readonly role = computed(() => this.auth.role() ?? 'USER');
   protected readonly showAdmin = computed(() => hasRole(this.role(), 'ADMIN'));
   protected readonly isSuperAdmin = computed(() => hasRole(this.role(), 'SUPERADMIN'));
+
+  // Bottom-bar tabs: tenant-scoped by default; for a SUPERADMIN in Platform mode
+  // (not acting as a customer) swap to platform-level tabs that work cross-tenant.
+  protected readonly primary = computed<NavItem[]>(() =>
+    this.isSuperAdmin() && !this.ctx.isActive() ? PLATFORM_PRIMARY : this.tenantPrimary,
+  );
 
   protected readonly themeIcon = computed(() =>
     this.themeService.theme() === 'dark' ? 'sunny-outline' : 'moon-outline',

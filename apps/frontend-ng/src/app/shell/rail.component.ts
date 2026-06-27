@@ -11,6 +11,7 @@ import {
 import { NAV } from './nav';
 import { AuthService } from '../core/auth/auth.service';
 import { hasRole } from '../core/auth/roles';
+import { TenantContextService } from '../core/auth/tenant-context.service';
 
 addIcons({
   gridOutline, hardwareChipOutline, notificationsOutline,
@@ -74,21 +75,27 @@ addIcons({
 })
 export class RailComponent {
   private readonly auth = inject(AuthService);
+  private readonly tenantCtx = inject(TenantContextService);
 
   protected readonly isSuperAdmin = computed(() => hasRole(this.auth.role(), 'SUPERADMIN'));
 
   protected readonly visibleNav = computed(() => {
     const isAdmin = hasRole(this.auth.role(), 'ADMIN');
     const isSuperAdmin = hasRole(this.auth.role(), 'SUPERADMIN');
+    // A SUPERADMIN in Platform mode (not acting as a customer) has no tenant, so
+    // tenant-scoped views (Operate) are hidden until they pick a customer.
+    const hideTenantScoped = isSuperAdmin && !this.tenantCtx.isActive();
+    const allowed = (it: { adminOnly?: boolean; superAdminOnly?: boolean; tenantScoped?: boolean }) =>
+      (!it.adminOnly || isAdmin)
+      && (!it.superAdminOnly || isSuperAdmin)
+      && (!it.tenantScoped || !hideTenantScoped);
     return NAV.map(g => ({
       ...g,
       items: g.items
-        .filter(it => (!it.adminOnly || isAdmin) && (!it.superAdminOnly || isSuperAdmin))
+        .filter(allowed)
         .map(it => ({
           ...it,
-          children: it.children?.filter(c =>
-            (!c.adminOnly || isAdmin) && (!c.superAdminOnly || isSuperAdmin)
-          ),
+          children: it.children?.filter(allowed),
         })),
     })).filter(g => g.items.length > 0);
   });
