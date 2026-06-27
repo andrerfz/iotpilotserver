@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { roleGuard } from '../core/auth/guards';
+import { roleGuard, superadminTenantGuard } from '../core/auth/guards';
 
 /**
  * Child routes rendered inside the shell outlet. Each carries `breadcrumb`
@@ -9,6 +9,7 @@ import { roleGuard } from '../core/auth/guards';
 export const SHELL_CHILDREN: Routes = [
   {
     path: 'dashboard',
+    canActivate: [superadminTenantGuard],
     loadComponent: () =>
       import('../features/dashboard/pages/dashboard/dashboard.page').then(
         (m) => m.DashboardPage,
@@ -17,6 +18,7 @@ export const SHELL_CHILDREN: Routes = [
   },
   {
     path: 'devices',
+    canActivate: [superadminTenantGuard],
     loadComponent: () =>
       import('../features/dashboard/pages/devices/devices.page').then(
         (m) => m.DevicesPage,
@@ -37,6 +39,7 @@ export const SHELL_CHILDREN: Routes = [
   },
   {
     path: 'monitoring',
+    canActivate: [superadminTenantGuard],
     loadComponent: () =>
       import('../features/dashboard/pages/monitoring/monitoring.page').then(
         (m) => m.MonitoringPage,
@@ -45,7 +48,7 @@ export const SHELL_CHILDREN: Routes = [
   },
   {
     path: 'logs',
-    canActivate: [roleGuard('ADMIN')],
+    canActivate: [roleGuard('ADMIN'), superadminTenantGuard],
     loadComponent: () =>
       import('../features/dashboard/pages/logs/logs.page').then(m => m.LogsPage),
     data: { breadcrumb: ['Operate', 'Logs'] },

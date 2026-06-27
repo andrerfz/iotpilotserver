@@ -2,6 +2,7 @@ import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { AuthService } from './auth.service';
 import { hasRole, Role } from './roles';
+import { TenantContextService } from './tenant-context.service';
 
 /** Route guard: prevents authenticated users from visiting public-only routes
  *  (/login, /register). Authenticated visitors are redirected to /app. */
@@ -60,3 +61,20 @@ export function roleGuard(minRole: Role): CanActivateFn {
     return true;
   };
 }
+
+/**
+ * Route guard for tenant-scoped pages (Operate: dashboard/devices/monitoring/logs).
+ * A SUPERADMIN in Platform mode (not acting as a customer) has no tenant, so these
+ * views would 400/be empty — bounce them to the platform overview instead. Everyone
+ * else (regular ADMIN/USER, or a SUPERADMIN acting as a tenant) passes through.
+ */
+export const superadminTenantGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const tenant = inject(TenantContextService);
+  const router = inject(Router);
+
+  if (hasRole(auth.role(), 'SUPERADMIN') && !tenant.isActive()) {
+    return router.createUrlTree(['/app/admin']);
+  }
+  return true;
+};
