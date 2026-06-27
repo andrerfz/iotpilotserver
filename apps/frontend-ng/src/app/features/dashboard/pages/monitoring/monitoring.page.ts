@@ -46,6 +46,7 @@ import {
 import { TranslatePipe } from '@ngx-translate/core';
 import type { ColumnDef, DevicePickerItem, PickerOption } from '@ng/shared/ui';
 import type { Alert } from '@ng/core/api/generated/models/alert';
+import { AlertDetailSheetComponent } from '../../components/alert-detail-sheet/alert-detail-sheet.component';
 import { DashboardService } from '../../services/dashboard.service';
 import { applyAlertFilters, alertState } from '../../filters/alert-filters';
 import { TopbarService } from '../../../../shell/topbar.service';
@@ -105,6 +106,7 @@ function presetToTimeRange(preset: string): { startTime?: string; endTime?: stri
     DevicePickerComponent,
     MultiSelectPickerComponent,
     DateRangePickerComponent,
+    AlertDetailSheetComponent,
     IonRefresher, IonRefresherContent,
     TranslatePipe,
   ],
@@ -234,6 +236,32 @@ export class MonitoringPage implements AfterViewInit, ViewWillEnter {
 
   onSelectionChange(alerts: Alert[]): void {
     this._selectedIds.set(alerts.map(a => a.id ?? ''));
+  }
+
+  @ViewChild('detailSheet') private detailSheet?: AlertDetailSheetComponent;
+  readonly actionBusy = signal(false);
+
+  openDetail(alert: Alert): void {
+    this.detailSheet?.open(alert);
+  }
+
+  async onAlertAction(alert: Alert, action: 'acknowledge' | 'resolve'): Promise<void> {
+    const id = alert.id;
+    if (!id) return;
+    this.actionBusy.set(true);
+    try {
+      await this.dashService.batchUpdateAlerts(action, [id]);
+      this._liveAlerts.update(rows =>
+        rows.map(a => a.id === id
+          ? (action === 'resolve'
+              ? { ...a, resolved: true, resolvedAt: new Date().toISOString() }
+              : { ...a, acknowledgedAt: new Date().toISOString() })
+          : a),
+      );
+      this.detailSheet?.close();
+    } finally {
+      this.actionBusy.set(false);
+    }
   }
 
   async onBulkAcknowledge(): Promise<void> {
