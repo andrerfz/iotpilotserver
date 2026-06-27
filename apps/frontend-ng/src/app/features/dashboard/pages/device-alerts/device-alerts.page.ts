@@ -43,6 +43,7 @@ import { DeviceDetailService } from '../../services/device-detail.service';
 import { DashboardService } from '../../services/dashboard.service';
 import { ToastService } from '@ng/core/errors/toast.service';
 import { ThresholdConfigSheetComponent } from '../../components/threshold-config-sheet/threshold-config-sheet.component';
+import { AlertDetailSheetComponent } from '../../components/alert-detail-sheet/alert-detail-sheet.component';
 
 addIcons({ refreshOutline, settingsOutline, trashOutline });
 
@@ -92,6 +93,7 @@ const STATE_OPTIONS: PickerOption[] = [
     SeverityBadgeComponent,
     StatusBadgeComponent,
     ThresholdConfigSheetComponent,
+    AlertDetailSheetComponent,
   ],
 })
 export class DeviceAlertsPage implements OnInit, AfterViewInit {
@@ -154,6 +156,11 @@ export class DeviceAlertsPage implements OnInit, AfterViewInit {
   @ViewChild('stateCell') private stateCellTpl!: TemplateRef<{ $implicit: Alert }>;
   @ViewChild('triggeredCell') private triggeredCellTpl!: TemplateRef<{ $implicit: Alert }>;
   @ViewChild('actionsCell') private actionsCellTpl!: TemplateRef<{ $implicit: Alert }>;
+  @ViewChild('detailSheet') private detailSheet?: AlertDetailSheetComponent;
+
+  openDetail(alert: Alert): void {
+    this.detailSheet?.open(alert);
+  }
   readonly columns = signal<ColumnDef<Alert>[]>([]);
 
   constructor() {
@@ -210,6 +217,7 @@ export class DeviceAlertsPage implements OnInit, AfterViewInit {
         list.map(a => a.id === alert.id ? { ...a, acknowledgedAt: new Date().toISOString() } : a),
       );
       void this.toast.success('Alert acknowledged');
+      this.detailSheet?.close();
     } catch (e) {
       void this.toast.error(e instanceof Error ? e.message : this.t.instant('device_alerts.msg_ack_failed'));
     } finally {
@@ -226,6 +234,7 @@ export class DeviceAlertsPage implements OnInit, AfterViewInit {
         list.map(a => a.id === alert.id ? { ...a, resolved: true, resolvedAt: new Date().toISOString() } : a),
       );
       void this.toast.success('Alert resolved');
+      this.detailSheet?.close();
     } catch (e) {
       void this.toast.error(e instanceof Error ? e.message : this.t.instant('device_alerts.msg_resolve_failed'));
     } finally {

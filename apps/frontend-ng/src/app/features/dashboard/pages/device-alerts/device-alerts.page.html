@@ -160,11 +160,17 @@
           [columns]="columns()"
           [pageSize]="20"
           [selectable]="true"
+          [rowClickable]="true"
+          (rowClick)="openDetail($event)"
           (selectionChange)="onSelectionChange($event)"
         ></ui-data-table>
       }
     </ion-card-content>
   </ion-card>
+
+  <app-alert-detail-sheet #detailSheet [busy]="actionLoading() !== null"
+    (acknowledge)="onAcknowledge($event)"
+    (resolve)="onResolve($event)"></app-alert-detail-sheet>
 
 </ion-content>
 
