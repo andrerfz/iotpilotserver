@@ -297,7 +297,8 @@
       "no_logs": "No logs found",
       "filtered": "Try adjusting your filters.",
       "none": "This device has no log entries yet."
-    }
+    },
+    "detail": "Log entry"
   },
   "device_commands": {
     "offline_warning": "Device is offline",
@@ -751,7 +752,8 @@
       },
       "empty": {
         "title": "No users"
-      }
+      },
+      "detail": "User details"
     },
     "customers": {
       "search_placeholder": "Search name or slug",
@@ -795,7 +797,8 @@
         "xlsx_label": "Export XLSX",
         "csv_label": "Export CSV",
         "pdf_label": "Export PDF"
-      }
+      },
+      "detail": "Log entry"
     },
     "system": {
       "last_updated": "Last updated",

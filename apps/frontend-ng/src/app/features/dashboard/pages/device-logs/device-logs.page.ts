@@ -29,6 +29,7 @@ import {
   EmptyStateComponent,
   UiSearchFieldComponent,
   UiSelectComponent,
+  BottomSheetComponent,
 } from '@ng/shared/ui';
 import type { ColumnDef, SelectOption } from '@ng/shared/ui';
 import { ViewportService } from '@ng/core/layout/viewport.service';
@@ -68,6 +69,7 @@ const LEVEL_OPTIONS: SelectOption[] = [
     EmptyStateComponent,
     UiSearchFieldComponent,
     UiSelectComponent,
+    BottomSheetComponent,
   ],
 })
 export class DeviceLogsPage implements OnInit, AfterViewInit {
@@ -97,7 +99,16 @@ export class DeviceLogsPage implements OnInit, AfterViewInit {
   @ViewChild('levelCell') private levelCellTpl!: TemplateRef<{ $implicit: DeviceLogEntry }>;
   @ViewChild('sourceCell') private sourceCellTpl!: TemplateRef<{ $implicit: DeviceLogEntry }>;
   @ViewChild('messageCell') private messageCellTpl!: TemplateRef<{ $implicit: DeviceLogEntry }>;
+  @ViewChild('logSheet') private logSheet?: BottomSheetComponent;
   readonly columns = signal<ColumnDef<DeviceLogEntry>[]>([]);
+
+  /** Selected log for the read-only detail sheet (mobile tap). */
+  readonly selectedLog = signal<DeviceLogEntry | null>(null);
+
+  protected openDetail(log: DeviceLogEntry): void {
+    this.selectedLog.set(log);
+    this.logSheet?.open();
+  }
 
   constructor() {
     const id = this.route.parent?.snapshot.paramMap.get('id') ?? '';

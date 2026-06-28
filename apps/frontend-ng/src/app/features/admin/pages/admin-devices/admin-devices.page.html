@@ -71,26 +71,21 @@
   } @else if (vp.wide()) {
     <ui-data-table [columns]="cols()" [rows]="filtered()" rowKey="id" [pageSize]="20">
     </ui-data-table>
+  } @else if (!filtered().length) {
+    <ui-empty-state [title]="'admin.devices.empty.title' | translate"></ui-empty-state>
   } @else {
-    <div class="admin-cards">
-      @for (d of filtered(); track d.id) {
-        <div class="admin-card">
-          <div class="admin-card__main">
-            <ui-status-dot [status]="d.status"></ui-status-dot>
-            <div class="admin-card__info">
-              <div class="admin-card__title">{{ d.hostname }}</div>
-              <div class="admin-card__sub">{{ d.deviceId }} · {{ d.deviceType }}</div>
-            </div>
-            <ui-status-badge [status]="d.status"></ui-status-badge>
+    <ui-swipe-list [items]="filtered()" [actions]="rowActions" (itemClick)="openDevice($any($event))" (action)="onSwipeAction($any($event))">
+      <ng-template #itemContent let-d>
+        <div class="admin-li">
+          <ui-status-dot [status]="d.status"></ui-status-dot>
+          <div class="admin-li__info">
+            <div class="admin-li__title">{{ d.hostname }}</div>
+            <div class="admin-li__sub">{{ d.deviceId }} · {{ d.deviceType }}</div>
           </div>
-          <div class="admin-card__actions">
-            <ng-container *ngTemplateOutlet="actionsCell; context: { $implicit: d }"></ng-container>
-          </div>
+          <ui-status-badge [status]="d.status"></ui-status-badge>
         </div>
-      } @empty {
-        <ui-empty-state [title]="'admin.devices.empty.title' | translate"></ui-empty-state>
-      }
-    </div>
+      </ng-template>
+    </ui-swipe-list>
   }
 
 </ion-content>

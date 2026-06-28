@@ -297,7 +297,8 @@
       "no_logs": "Nessun log trovato",
       "filtered": "Prova a modificare i filtri.",
       "none": "Questo dispositivo non ha ancora voci di log."
-    }
+    },
+    "detail": "Voce di log"
   },
   "device_commands": {
     "offline_warning": "Il dispositivo è offline",
@@ -751,7 +752,8 @@
       },
       "empty": {
         "title": "Nessun utente"
-      }
+      },
+      "detail": "Dettagli utente"
     },
     "customers": {
       "search_placeholder": "Cerca nome o slug",
@@ -795,7 +797,8 @@
         "xlsx_label": "Esporta XLSX",
         "csv_label": "Esporta CSV",
         "pdf_label": "Esporta PDF"
-      }
+      },
+      "detail": "Voce di log"
     },
     "system": {
       "last_updated": "Ultimo aggiornamento",

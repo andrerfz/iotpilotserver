@@ -14,11 +14,11 @@ import {
   DataTableComponent, EmptyStateComponent,
   StatusBadgeComponent, StatusDotComponent,
   UiSearchFieldComponent, UiSelectComponent, UiInputComponent,
-  BottomSheetComponent,
+  BottomSheetComponent, SwipeListComponent,
   ViewWillEnter,
   IonRefresher, IonRefresherContent,
 } from '@ng/shared/ui';
-import type { ColumnDef, SelectOption } from '@ng/shared/ui';
+import type { ColumnDef, SelectOption, SwipeAction } from '@ng/shared/ui';
 import { ViewportService } from '@ng/core/layout/viewport.service';
 import { AdminCustomersService, AdminCustomer } from '../../services/admin-customers.service';
 import { TopbarService } from '../../../../shell/topbar.service';
@@ -37,7 +37,7 @@ addIcons({ addOutline, pencilOutline, banOutline, businessOutline });
     DataTableComponent, EmptyStateComponent,
     StatusBadgeComponent, StatusDotComponent,
     UiSearchFieldComponent, UiSelectComponent, UiInputComponent,
-    BottomSheetComponent,
+    BottomSheetComponent, SwipeListComponent,
     IonRefresher, IonRefresherContent,
     TranslatePipe,
   ],
@@ -70,6 +70,17 @@ export class AdminCustomersPage implements AfterViewInit, ViewWillEnter {
     { label: 'fields.inactive',     value: 'INACTIVE' },
     { label: 'fields.suspended',    value: 'SUSPENDED' },
   ];
+
+  // Mobile swipe actions (desktop uses the table).
+  protected readonly rowActions: SwipeAction<AdminCustomer>[] = [
+    { key: 'edit',       label: 'admin.customers.actions.edit',       icon: 'pencil-outline', color: 'medium' },
+    { key: 'deactivate', label: 'admin.customers.actions.deactivate', icon: 'ban-outline',    color: 'warning', show: (c) => c.status !== 'INACTIVE' },
+  ];
+
+  protected onSwipeAction(ev: { key: string; item: AdminCustomer }): void {
+    if (ev.key === 'edit') this.onEdit(ev.item);
+    else if (ev.key === 'deactivate') void this.onDeactivate(ev.item);
+  }
 
   protected readonly filtered = computed(() => {
     const q = this.searchQuery().toLowerCase();

@@ -5,9 +5,8 @@ import {
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { skip } from 'rxjs';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { NgTemplateOutlet } from '@angular/common';
 import { addIcons } from 'ionicons';
 import {
   refreshOutline, eyeOutline, reloadOutline, hardwareChipOutline,
@@ -18,12 +17,12 @@ import {
   AlertController,
   MetricCardComponent, MetricGridComponent, DataTableComponent, EmptyStateComponent,
   StatusBadgeComponent, DeviceTypeBadgeComponent, StatusDotComponent,
-  UiSearchFieldComponent, UiSelectComponent,
+  UiSearchFieldComponent, UiSelectComponent, SwipeListComponent,
   ViewWillEnter,
   IonRefresher,
   IonRefresherContent,
 } from '@ng/shared/ui';
-import type { ColumnDef, SelectOption } from '@ng/shared/ui';
+import type { ColumnDef, SelectOption, SwipeAction } from '@ng/shared/ui';
 import { ViewportService } from '@ng/core/layout/viewport.service';
 import { AdminDevicesService, AdminDevice } from '../../services/admin-devices.service';
 import { TopbarService } from '../../../../shell/topbar.service';
@@ -42,9 +41,8 @@ addIcons({ refreshOutline, eyeOutline, reloadOutline, hardwareChipOutline, check
     IonContent, IonCard, IonCardContent, IonButton, IonIcon, IonSkeletonText,
     MetricCardComponent, MetricGridComponent, DataTableComponent, EmptyStateComponent,
     StatusBadgeComponent, DeviceTypeBadgeComponent, StatusDotComponent,
-    UiSearchFieldComponent, UiSelectComponent,
+    UiSearchFieldComponent, UiSelectComponent, SwipeListComponent,
     IonRefresher, IonRefresherContent,
-    NgTemplateOutlet,
     TranslatePipe,
   ],
 })
@@ -55,6 +53,20 @@ export class AdminDevicesPage implements AfterViewInit, ViewWillEnter {
   private readonly tenantCtx = inject(TenantContextService);
   private readonly t = inject(TranslateService);
   protected readonly vp = inject(ViewportService);
+  private readonly router = inject(Router);
+
+  // Mobile swipe action (desktop uses the table). Tap navigates to the device detail.
+  protected readonly rowActions: SwipeAction<AdminDevice>[] = [
+    { key: 'restart', label: 'admin.devices.actions.restart', icon: 'refresh-outline', color: 'warning', show: (d) => d.status === 'ONLINE' },
+  ];
+
+  protected onSwipeAction(ev: { key: string; item: AdminDevice }): void {
+    if (ev.key === 'restart') void this.onRestart(ev.item);
+  }
+
+  protected openDevice(d: AdminDevice): void {
+    void this.router.navigate(['/app/devices', d.id]);
+  }
 
   protected statusFilter = '';
   protected readonly searchQuery = signal('');

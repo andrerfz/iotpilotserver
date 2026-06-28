@@ -6,7 +6,6 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { skip } from 'rxjs';
 import { FormsModule } from '@angular/forms';
-import { NgTemplateOutlet } from '@angular/common';
 import { addIcons } from 'ionicons';
 import {
   checkmarkOutline, closeOutline, banOutline, personOutline, addOutline,
@@ -18,11 +17,12 @@ import {
   DataTableComponent, EmptyStateComponent,
   StatusBadgeComponent,
   UiSearchFieldComponent, UiSelectComponent,
+  SwipeListComponent, BottomSheetComponent,
   ViewWillEnter,
   IonRefresher,
   IonRefresherContent,
 } from '@ng/shared/ui';
-import type { ColumnDef, SelectOption } from '@ng/shared/ui';
+import type { ColumnDef, SelectOption, SwipeAction } from '@ng/shared/ui';
 import { ViewportService } from '@ng/core/layout/viewport.service';
 import { AdminNewUserModalComponent } from '../admin-new-user/admin-new-user.modal';
 import { AuthService } from '../../../../core/auth/auth.service';
@@ -46,9 +46,9 @@ addIcons({ checkmarkOutline, closeOutline, banOutline, personOutline, addOutline
     DataTableComponent, EmptyStateComponent,
     StatusBadgeComponent,
     UiSearchFieldComponent, UiSelectComponent,
+    SwipeListComponent, BottomSheetComponent,
     AdminNewUserModalComponent,
     IonRefresher, IonRefresherContent,
-    NgTemplateOutlet,
     TranslatePipe,
   ],
 })
@@ -69,8 +69,34 @@ export class AdminUsersPage implements AfterViewInit, ViewWillEnter {
 
   @ViewChild('statusCell')  private statusCellTpl!: TemplateRef<{ $implicit: AdminUser }>;
   @ViewChild('actionsCell') private actionsCellTpl!: TemplateRef<{ $implicit: AdminUser }>;
+  @ViewChild('userSheet')   private userSheet?: BottomSheetComponent;
 
   protected readonly isSuperAdmin = computed(() => hasRole(this.auth.role(), 'SUPERADMIN'));
+
+  /** Selected user for the read-only detail sheet (mobile tap). */
+  protected readonly selectedUser = signal<AdminUser | null>(null);
+
+  // Mobile swipe actions (desktop uses the table's actions cell). Role/self-gated.
+  protected readonly rowActions: SwipeAction<AdminUser>[] = [
+    { key: 'approve',  label: 'admin.users.actions.approve',  icon: 'checkmark-outline', color: 'success', show: (u) => u.status === 'PENDING' && this.isSuperAdmin() },
+    { key: 'reject',   label: 'admin.users.actions.reject',   icon: 'close-outline',     color: 'danger',  show: (u) => u.status === 'PENDING' && this.isSuperAdmin() },
+    { key: 'suspend',  label: 'admin.users.actions.suspend',  icon: 'ban-outline',       color: 'warning', show: (u) => u.status === 'ACTIVE' && this.isSuperAdmin() && !this.isSelf(u) },
+    { key: 'activate', label: 'admin.users.actions.activate', icon: 'checkmark-outline', color: 'success', show: (u) => u.status === 'SUSPENDED' && this.isSuperAdmin() },
+  ];
+
+  protected onSwipeAction(ev: { key: string; item: AdminUser }): void {
+    switch (ev.key) {
+      case 'approve':  void this.onApprove(ev.item); break;
+      case 'reject':   void this.onReject(ev.item); break;
+      case 'suspend':  void this.onSuspend(ev.item); break;
+      case 'activate': void this.onActivate(ev.item); break;
+    }
+  }
+
+  protected openDetail(user: AdminUser): void {
+    this.selectedUser.set(user);
+    this.userSheet?.open();
+  }
 
   protected readonly statusOptions: SelectOption[] = [
     { label: 'fields.all_statuses', value: '' },

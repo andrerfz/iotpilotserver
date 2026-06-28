@@ -297,7 +297,8 @@
       "no_logs": "Nenhum registro encontrado",
       "filtered": "Tente ajustar seus filtros.",
       "none": "Este dispositivo ainda não possui entradas de registro."
-    }
+    },
+    "detail": "Entrada de log"
   },
   "device_commands": {
     "offline_warning": "Dispositivo está offline",
@@ -751,7 +752,8 @@
       },
       "empty": {
         "title": "Sem usuários"
-      }
+      },
+      "detail": "Detalhes do usuário"
     },
     "customers": {
       "search_placeholder": "Pesquisar nome ou slug",
@@ -795,7 +797,8 @@
         "xlsx_label": "Exportar XLSX",
         "csv_label": "Exportar CSV",
         "pdf_label": "Exportar PDF"
-      }
+      },
+      "detail": "Entrada de log"
     },
     "system": {
       "last_updated": "Última atualização",

@@ -297,7 +297,8 @@
       "no_logs": "Aucun journal trouvé",
       "filtered": "Essayez d'ajuster vos filtres.",
       "none": "Cet appareil ne possède pas encore d'entrées de journal."
-    }
+    },
+    "detail": "Entrée de journal"
   },
   "device_commands": {
     "offline_warning": "L'appareil est hors ligne",
@@ -751,7 +752,8 @@
       },
       "empty": {
         "title": "Aucun utilisateur"
-      }
+      },
+      "detail": "Détails de l'utilisateur"
     },
     "customers": {
       "search_placeholder": "Rechercher par nom ou identifiant",
@@ -795,7 +797,8 @@
         "xlsx_label": "Exporter XLSX",
         "csv_label": "Exporter CSV",
         "pdf_label": "Exporter PDF"
-      }
+      },
+      "detail": "Entrée de journal"
     },
     "system": {
       "last_updated": "Dernière mise à jour",

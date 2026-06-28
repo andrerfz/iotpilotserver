@@ -62,28 +62,38 @@
   } @else if (vp.wide()) {
     <ui-data-table [columns]="cols()" [rows]="filtered()" rowKey="id" [pageSize]="20">
     </ui-data-table>
+  } @else if (!filtered().length) {
+    <ui-empty-state [title]="'admin.users.empty.title' | translate"></ui-empty-state>
   } @else {
-    <div class="admin-cards">
-      @for (u of filtered(); track u.id) {
-        <div class="admin-card">
-          <div class="admin-card__main">
-            <div class="admin-card__info">
-              <div class="admin-card__title">{{ u.name ?? u.username ?? u.email }}</div>
-              <div class="admin-card__sub">{{ u.email }} · {{ u.role }}</div>
-            </div>
-            <ui-status-badge [status]="u.status"></ui-status-badge>
+    <ui-swipe-list [items]="filtered()" [actions]="rowActions" (itemClick)="openDetail($any($event))" (action)="onSwipeAction($any($event))">
+      <ng-template #itemContent let-u>
+        <div class="admin-li">
+          <div class="admin-li__info">
+            <div class="admin-li__title">{{ u.name ?? u.username ?? u.email }}</div>
+            <div class="admin-li__sub">{{ u.email }} · {{ u.role }}</div>
           </div>
-          <div class="admin-card__actions">
-            <ng-container *ngTemplateOutlet="actionsCell; context: { $implicit: u }"></ng-container>
-          </div>
+          <ui-status-badge [status]="u.status"></ui-status-badge>
         </div>
-      } @empty {
-        <ui-empty-state [title]="'admin.users.empty.title' | translate"></ui-empty-state>
-      }
-    </div>
+      </ng-template>
+    </ui-swipe-list>
   }
 
 </ion-content>
+
+<!-- User detail (read-only) -->
+<ui-bottom-sheet #userSheet [title]="'admin.users.detail' | translate" [showSave]="false">
+  @if (selectedUser(); as u) {
+    <div class="detail-list">
+      <div class="detail-row"><span class="detail-row__k">{{ 'fields.name' | translate }}</span><span class="detail-row__v">{{ u.name ?? u.username ?? '—' }}</span></div>
+      <div class="detail-row"><span class="detail-row__k">{{ 'fields.email' | translate }}</span><span class="detail-row__v">{{ u.email }}</span></div>
+      <div class="detail-row"><span class="detail-row__k">{{ 'fields.role' | translate }}</span><span class="detail-row__v">{{ u.role }}</span></div>
+      <div class="detail-row"><span class="detail-row__k">{{ 'fields.status' | translate }}</span><span class="detail-row__v"><ui-status-badge [status]="u.status"></ui-status-badge></span></div>
+      @if (u.createdAt) {
+        <div class="detail-row"><span class="detail-row__k">{{ 'fields.joined' | translate }}</span><span class="detail-row__v">{{ u.createdAt }}</span></div>
+      }
+    </div>
+  }
+</ui-bottom-sheet>
 
 <!-- New User Modal (sheet on mobile, centered card on desktop) -->
 <ion-modal [isOpen]="showNewUserModal()" (ionModalDidDismiss)="onModalDismissed(false)"
