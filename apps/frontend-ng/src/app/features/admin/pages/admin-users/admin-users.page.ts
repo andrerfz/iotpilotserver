@@ -133,6 +133,11 @@ export class AdminUsersPage implements AfterViewInit, ViewWillEnter {
     return user.name ?? user.username ?? user.email;
   }
 
+  /** True when the row is the signed-in user (used to hide self-suspend). */
+  protected isSelf(user: AdminUser): boolean {
+    return this.auth.currentUser()?.id === user.id;
+  }
+
   async onApprove(user: AdminUser): Promise<void> {
     const alert = await this.alertCtrl.create({
       header: this.t.instant('admin.dialogs.user_approve'),

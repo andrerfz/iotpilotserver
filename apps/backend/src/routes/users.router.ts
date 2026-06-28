@@ -366,6 +366,14 @@ usersRouter.put('/:id', requireAuth(), async (req: AuthenticatedRequest, res: Re
         }
         const userId = internalId;
 
+        // Self-guard: nobody (not even SUPERADMIN) can suspend/deactivate their own
+        // account — that would lock them out. Applies before any role logic.
+        const requestedStatus = req.body?.status;
+        if (req.user?.id === userId && (requestedStatus === 'SUSPENDED' || requestedStatus === 'INACTIVE')) {
+            send.badRequest(res, 'You cannot suspend or deactivate your own account');
+            return;
+        }
+
         // Only SUPERADMIN can update other users
         if (req.user?.role !== 'SUPERADMIN' && req.user?.id !== userId) {
             send.forbidden(res, 'Only superadmin can update other users');

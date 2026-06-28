@@ -37,14 +37,14 @@
           {{ 'admin.users.actions.reject' | translate }}
         </ion-button>
       }
-      @if (row.status === 'ACTIVE') {
+      @if (row.status === 'ACTIVE' && isSuperAdmin() && !isSelf(row)) {
         <ion-button size="small" fill="outline" color="warning"
           [disabled]="actionLoading()" (click)="onSuspend(row)">
           <ion-icon slot="start" name="ban-outline"></ion-icon>
           {{ 'admin.users.actions.suspend' | translate }}
         </ion-button>
       }
-      @if (row.status === 'SUSPENDED') {
+      @if (row.status === 'SUSPENDED' && isSuperAdmin()) {
         <ion-button size="small" fill="outline" color="success"
           [disabled]="actionLoading()" (click)="onActivate(row)">
           <ion-icon slot="start" name="checkmark-outline"></ion-icon>
