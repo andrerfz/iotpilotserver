@@ -33,13 +33,13 @@ export interface SwipeAction<T> {
   template: `
     <ion-list class="swipe-list" lines="none">
       @for (item of items(); track key()(item)) {
-        <ion-item-sliding>
+        <ion-item-sliding #sliding>
           <ion-item button="true" detail="false" class="swipe-list__item" (click)="itemClick.emit(item)">
             <ng-container *ngTemplateOutlet="content(); context: { $implicit: item }"></ng-container>
           </ion-item>
           <ion-item-options side="end">
             @for (a of visibleActions(item); track a.key) {
-              <ion-item-option [color]="a.color || 'medium'" (click)="action.emit({ key: a.key, item })">
+              <ion-item-option [color]="a.color || 'medium'" (click)="onAction(a.key, item, sliding)">
                 @if (a.icon) {
                   <ion-icon slot="icon-only" [name]="a.icon"></ion-icon>
                 } @else {
@@ -68,5 +68,11 @@ export class SwipeListComponent<T> {
 
   protected visibleActions(item: T): SwipeAction<T>[] {
     return this.actions().filter((a) => !a.show || a.show(item));
+  }
+
+  /** Close the open sliding row before emitting, so it doesn't leave a gap. */
+  protected onAction(key: string, item: T, sliding: IonItemSliding): void {
+    void sliding.close();
+    this.action.emit({ key, item });
   }
 }

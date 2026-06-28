@@ -1103,6 +1103,10 @@
     "detail": "Detalle de alerta",
     "acknowledge": "Visto",
     "resolve": "Resolver",
-    "already_resolved": "Esta alerta está resuelta."
+    "already_resolved": "Esta alerta está resuelta.",
+    "msg_acknowledged": "Alerta marcada como vista",
+    "msg_resolved": "Alerta resuelta",
+    "msg_ack_failed": "No se pudo marcar la alerta",
+    "msg_resolve_failed": "No se pudo resolver la alerta"
   }
 }

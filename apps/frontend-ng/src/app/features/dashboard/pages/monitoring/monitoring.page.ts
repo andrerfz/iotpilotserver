@@ -44,7 +44,7 @@ import {
   IonRefresherContent,
   SwipeListComponent,
 } from '@ng/shared/ui';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import type { ColumnDef, DevicePickerItem, PickerOption, SwipeAction } from '@ng/shared/ui';
 import type { Alert } from '@ng/core/api/generated/models/alert';
 import { ViewportService } from '@ng/core/layout/viewport.service';
@@ -53,6 +53,7 @@ import { DashboardService } from '../../services/dashboard.service';
 import { applyAlertFilters, alertState } from '../../filters/alert-filters';
 import { TopbarService } from '../../../../shell/topbar.service';
 import { TenantContextService } from '@ng/core/auth/tenant-context.service';
+import { ToastService } from '@ng/core/errors/toast.service';
 
 addIcons({ alertCircleOutline, checkmarkCircleOutline, settingsOutline });
 
@@ -119,6 +120,8 @@ export class MonitoringPage implements AfterViewInit, ViewWillEnter {
   private readonly router = inject(Router);
   private readonly topbar = inject(TopbarService);
   private readonly tenantCtx = inject(TenantContextService);
+  private readonly toast = inject(ToastService);
+  private readonly t = inject(TranslateService);
   readonly alertsLoading = this.dashService.alerts.loading;
   readonly alertsError = this.dashService.alerts.error;
   readonly trendLoading = this.dashService.alertsTrend.loading;
@@ -273,6 +276,15 @@ export class MonitoringPage implements AfterViewInit, ViewWillEnter {
           : a),
       );
       this.detailSheet?.close();
+      void this.toast.success(
+        this.t.instant(action === 'resolve' ? 'alerts.msg_resolved' : 'alerts.msg_acknowledged'),
+      );
+    } catch (e) {
+      void this.toast.error(
+        e instanceof Error
+          ? e.message
+          : this.t.instant(action === 'resolve' ? 'alerts.msg_resolve_failed' : 'alerts.msg_ack_failed'),
+      );
     } finally {
       this.actionBusy.set(false);
     }

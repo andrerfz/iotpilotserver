@@ -1103,6 +1103,10 @@
     "detail": "Detalhes do alerta",
     "acknowledge": "Reconhecer",
     "resolve": "Resolver",
-    "already_resolved": "Este alerta está resolvido."
+    "already_resolved": "Este alerta está resolvido.",
+    "msg_acknowledged": "Alerta reconhecido",
+    "msg_resolved": "Alerta resolvido",
+    "msg_ack_failed": "Não foi possível reconhecer o alerta",
+    "msg_resolve_failed": "Não foi possível resolver o alerta"
   }
 }

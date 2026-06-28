@@ -1103,6 +1103,10 @@
     "detail": "Détails de l'alerte",
     "acknowledge": "Accuser réception",
     "resolve": "Résoudre",
-    "already_resolved": "Cette alerte est résolue."
+    "already_resolved": "Cette alerte est résolue.",
+    "msg_acknowledged": "Alerte accusée",
+    "msg_resolved": "Alerte résolue",
+    "msg_ack_failed": "Impossible d'accuser réception de l'alerte",
+    "msg_resolve_failed": "Impossible de résoudre l'alerte"
   }
 }

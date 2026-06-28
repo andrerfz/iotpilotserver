@@ -1103,6 +1103,10 @@
     "detail": "Dettagli avviso",
     "acknowledge": "Conferma",
     "resolve": "Risolvi",
-    "already_resolved": "Questo avviso è risolto."
+    "already_resolved": "Questo avviso è risolto.",
+    "msg_acknowledged": "Avviso confermato",
+    "msg_resolved": "Avviso risolto",
+    "msg_ack_failed": "Impossibile confermare l'avviso",
+    "msg_resolve_failed": "Impossibile risolvere l'avviso"
   }
 }

@@ -1103,6 +1103,10 @@
     "detail": "Alert details",
     "acknowledge": "Acknowledge",
     "resolve": "Resolve",
-    "already_resolved": "This alert is resolved."
+    "already_resolved": "This alert is resolved.",
+    "msg_acknowledged": "Alert acknowledged",
+    "msg_resolved": "Alert resolved",
+    "msg_ack_failed": "Couldn't acknowledge the alert",
+    "msg_resolve_failed": "Couldn't resolve the alert"
   }
 }
