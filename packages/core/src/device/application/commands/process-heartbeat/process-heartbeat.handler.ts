@@ -10,6 +10,30 @@ import {CustomerId} from '@iotpilot/core/shared/domain/value-objects/customer-id
 
 type PrismaClient = ReturnType<PrismaService['getClient']>;
 
+// System-metric alert config. `warn` is the configurable threshold (the "Umbrales"
+// modal stores these in the thresholds table as metricName cpu_usage/memory_usage/
+// disk_usage/temperature); `critOffset` derives the CRITICAL line above it. `def` is
+// the fallback when neither a device-scoped nor a global threshold is configured.
+interface SystemMetricConfig {
+    metricName: string;
+    type: string;
+    label: string;
+    title: string;
+    critTitle: string;
+    unit: string;
+    def: number;
+    critOffset: number;
+    cap: number;
+    read: (d: HeartbeatData) => number | undefined;
+}
+
+const SYSTEM_METRICS: SystemMetricConfig[] = [
+    { metricName: 'cpu_usage',    type: 'HIGH_CPU',         label: 'CPU usage',         title: 'High CPU Usage',    critTitle: 'Critical CPU Usage',    unit: '%',  def: 80, critOffset: 15, cap: 100, read: d => d.cpuUsage },
+    { metricName: 'memory_usage', type: 'HIGH_MEMORY',      label: 'Memory usage',      title: 'High Memory Usage', critTitle: 'Critical Memory Usage', unit: '%',  def: 85, critOffset: 10, cap: 100, read: d => d.memoryUsagePercent },
+    { metricName: 'disk_usage',   type: 'LOW_DISK_SPACE',   label: 'Disk usage',        title: 'Low Disk Space',    critTitle: 'Critically Low Disk',   unit: '%',  def: 90, critOffset: 8,  cap: 100, read: d => d.diskUsagePercent },
+    { metricName: 'temperature',  type: 'HIGH_TEMPERATURE', label: 'CPU temperature',   title: 'High Temperature',  critTitle: 'Critical Temperature',  unit: '°C', def: 70, critOffset: 10, cap: 999, read: d => d.cpuTemperature },
+];
+
 export interface FirmwareDirective {
     targetVersion: string;
 }
@@ -150,6 +174,35 @@ export class ProcessHeartbeatHandler implements CommandHandler<ProcessHeartbeatC
         }
     }
 
+    /**
+     * Effective warning threshold per system metric: a device-scoped threshold
+     * (deviceId = this device) overrides the tenant-wide global (deviceId = null);
+     * when neither exists we fall back to the metric's built-in default. The query
+     * is scoped to the device's own customerId (cross-tenant isolation). Mirrors the
+     * sensor path's loadThresholds so the "Umbrales" modal drives system alerts too.
+     */
+    private async loadSystemThresholds(deviceId: string, customerId: string): Promise<Record<string, number>> {
+        const metricNames = SYSTEM_METRICS.map(m => m.metricName);
+        const rows = await this.prisma.threshold.findMany({
+            where: {
+                customerId,
+                metricName: { in: metricNames },
+                enabled: true,
+                deletedAt: null,
+                OR: [{ deviceId }, { deviceId: null }],
+            },
+            orderBy: { updatedAt: 'desc' },
+        });
+        const pick = (metric: string, def: number): number => {
+            const deviceRow = rows.find(r => r.metricName === metric && r.deviceId === deviceId);
+            if (deviceRow) return deviceRow.value;
+            return rows.find(r => r.metricName === metric && r.deviceId === null)?.value ?? def;
+        };
+        const warn: Record<string, number> = {};
+        for (const m of SYSTEM_METRICS) warn[m.metricName] = pick(m.metricName, m.def);
+        return warn;
+    }
+
     private async checkAlertConditions(
         deviceId: string,
         data: HeartbeatData,
@@ -157,73 +210,61 @@ export class ProcessHeartbeatHandler implements CommandHandler<ProcessHeartbeatC
         customerId: string | null
     ): Promise<void> {
         if (!customerId) return;
-        const alerts: Array<{
-            deviceId: string;
-            userId: string | null;
-            customerId: string;
-            type: string;
-            severity: string;
-            title: string;
-            message: string;
-        }> = [];
 
-        if (data.cpuUsage && data.cpuUsage > 85) {
-            alerts.push({
-                deviceId, userId, customerId,
-                type: 'HIGH_CPU',
-                severity: data.cpuUsage > 95 ? 'CRITICAL' : 'WARNING',
-                title: 'High CPU Usage',
-                message: `CPU usage is ${data.cpuUsage}%`
-            });
-        }
+        const warn = await this.loadSystemThresholds(deviceId, customerId);
 
-        if (data.memoryUsagePercent && data.memoryUsagePercent > 85) {
-            alerts.push({
-                deviceId, userId, customerId,
-                type: 'HIGH_MEMORY',
-                severity: data.memoryUsagePercent > 95 ? 'CRITICAL' : 'WARNING',
-                title: 'High Memory Usage',
-                message: `Memory usage is ${data.memoryUsagePercent}%`
-            });
-        }
+        for (const m of SYSTEM_METRICS) {
+            const value = m.read(data);
+            if (value === undefined || value === null) continue; // metric not reported by this device
 
-        if (data.cpuTemperature && data.cpuTemperature > 70) {
-            alerts.push({
-                deviceId, userId, customerId,
-                type: 'HIGH_TEMPERATURE',
-                severity: data.cpuTemperature > 80 ? 'CRITICAL' : 'WARNING',
-                title: 'High Temperature',
-                message: `CPU temperature is ${data.cpuTemperature}°C`
+            const warnLine = warn[m.metricName];
+            const critLine = Math.min(warnLine + m.critOffset, m.cap);
+            const open = await this.prisma.alert.findFirst({
+                where: { deviceId, type: m.type as any, resolved: false },
             });
-        }
 
-        if (data.diskUsagePercent && data.diskUsagePercent > 85) {
-            alerts.push({
-                deviceId, userId, customerId,
-                type: 'LOW_DISK_SPACE',
-                severity: data.diskUsagePercent > 95 ? 'CRITICAL' : 'WARNING',
-                title: 'Low Disk Space',
-                message: `Disk usage is ${data.diskUsagePercent}%`
-            });
-        }
-
-        if (data.appStatus === 'ERROR') {
-            alerts.push({
-                deviceId, userId, customerId,
-                type: 'APPLICATION_ERROR',
-                severity: 'ERROR',
-                title: 'Application Error',
-                message: 'Device application is in error state'
-            });
-        }
-
-        for (const alertData of alerts) {
-            const existingAlert = await this.prisma.alert.findFirst({
-                where: { deviceId: alertData.deviceId, type: alertData.type as any, resolved: false }
-            });
-            if (!existingAlert) {
-                await this.prisma.alert.create({ data: alertData as any });
+            if (value > warnLine) {
+                const severity = value >= critLine ? 'CRITICAL' : 'WARNING';
+                const title = severity === 'CRITICAL' ? m.critTitle : m.title;
+                const message = `${m.label} is ${value}${m.unit} (threshold ${warnLine}${m.unit})`;
+                if (!open) {
+                    await this.prisma.alert.create({
+                        data: { deviceId, userId: userId ?? undefined, customerId, type: m.type as any, severity, title, message } as any,
+                    });
+                } else if (open.severity === 'WARNING' && severity === 'CRITICAL') {
+                    await this.prisma.alert.update({
+                        where: { id: open.id },
+                        data: { severity: 'CRITICAL', title: m.critTitle, message },
+                    });
+                }
+            } else if (open) {
+                // Metric recovered below the warning line — resolve the open alert.
+                await this.prisma.alert.update({
+                    where: { id: open.id },
+                    data: { resolved: true, resolvedAt: new Date() },
+                });
             }
+        }
+
+        // Application error is a state flag, not a threshold breach.
+        if (data.appStatus === 'ERROR') {
+            const open = await this.prisma.alert.findFirst({
+                where: { deviceId, type: 'APPLICATION_ERROR' as any, resolved: false },
+            });
+            if (!open) {
+                await this.prisma.alert.create({
+                    data: {
+                        deviceId, userId: userId ?? undefined, customerId,
+                        type: 'APPLICATION_ERROR' as any, severity: 'ERROR',
+                        title: 'Application Error', message: 'Device application is in error state',
+                    } as any,
+                });
+            }
+        } else {
+            await this.prisma.alert.updateMany({
+                where: { deviceId, type: 'APPLICATION_ERROR' as any, resolved: false },
+                data: { resolved: true, resolvedAt: new Date() },
+            });
         }
     }
 }

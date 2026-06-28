@@ -37,11 +37,16 @@ interface GlobalMetric {
   defaultValue: number;
 }
 
-// Only the metrics the alert evaluator actually uses. These globals apply to every
-// device of the tenant that has no per-device override.
+// Tenant-wide defaults the evaluators use, applied to every device without a
+// per-device override. Sensor metrics drive the sensor/webhook path; cpu/memory/
+// disk/temperature drive the heartbeat path (system devices).
 const GLOBAL_METRICS: GlobalMetric[] = [
-  { metricName: 'sensor_temp', labelKey: 'metrics.sensor_temp', unit: '°C', operator: 'GREATER_THAN', name: 'Sensor Temp', defaultValue: 8 },
-  { metricName: 'battery',     labelKey: 'metrics.battery_low', unit: '%',  operator: 'LESS_THAN',    name: 'Battery Low', defaultValue: 20 },
+  { metricName: 'sensor_temp',  labelKey: 'metrics.sensor_temp',  unit: '°C', operator: 'GREATER_THAN', name: 'Sensor Temp',  defaultValue: 8 },
+  { metricName: 'battery',      labelKey: 'metrics.battery_low',  unit: '%',  operator: 'LESS_THAN',    name: 'Battery Low',  defaultValue: 20 },
+  { metricName: 'cpu_usage',    labelKey: 'metrics.cpu_usage',    unit: '%',  operator: 'GREATER_THAN', name: 'CPU Usage',    defaultValue: 80 },
+  { metricName: 'memory_usage', labelKey: 'metrics.memory_usage', unit: '%',  operator: 'GREATER_THAN', name: 'Memory Usage', defaultValue: 85 },
+  { metricName: 'disk_usage',   labelKey: 'metrics.disk_usage',   unit: '%',  operator: 'GREATER_THAN', name: 'Disk Usage',   defaultValue: 90 },
+  { metricName: 'temperature',  labelKey: 'metrics.temperature',  unit: '°C', operator: 'GREATER_THAN', name: 'Temperature',  defaultValue: 70 },
 ];
 
 /**

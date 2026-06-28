@@ -73,3 +73,12 @@ so the modal's `deviceId === publicId` filter never matched; and create enforced
 **Resolved:** 2026-06-28
 **Applies to:** `record-sensor-reading.handler`, `create-threshold.handler`,
 `monitoring.router` threshold endpoints, device-settings page, threshold migration
+
+**Addendum (2026-06-28):** the heartbeat path (`process-heartbeat.handler`) now reads
+the same `thresholds` table for system metrics (`cpu_usage`, `memory_usage`,
+`disk_usage`, `temperature`) — device override > global > built-in default — instead
+of the hardcoded `> 85` lines, and resolves the alert when the metric recovers (it
+previously only created, never resolved). CRITICAL is derived per metric
+(`warn + critOffset`). The Settings → "Umbrales por defecto" page manages the global
+defaults for these too. So both alert paths (sensor/webhook and system/heartbeat) are
+now driven by the single `thresholds` source of truth.
