@@ -7,6 +7,7 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
+import { ApproveUserInput } from '../../models/approve-user-input';
 import { User } from '../../models/user';
 
 export interface ApproveAdminUser$Params {
@@ -15,12 +16,14 @@ export interface ApproveAdminUser$Params {
  * Device public ID
  */
   id: string;
+      body: ApproveUserInput
 }
 
 export function approveAdminUser(http: HttpClient, rootUrl: string, params: ApproveAdminUser$Params, context?: HttpContext): Observable<StrictHttpResponse<User>> {
   const rb = new RequestBuilder(rootUrl, approveAdminUser.PATH, 'post');
   if (params) {
     rb.path('id', params.id, {});
+    rb.body(params.body, 'application/json');
   }
 
   return http.request(

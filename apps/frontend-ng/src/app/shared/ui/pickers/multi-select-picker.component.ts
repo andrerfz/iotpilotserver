@@ -74,7 +74,7 @@ export interface PickerOption<T = string> {
             @if (opt.dot) { <ui-status-dot [status]="opt.dot"></ui-status-dot> }
             @if (opt.severity) { <ui-severity-badge [severity]="opt.severity"></ui-severity-badge> }
             <div class="opt__main">
-              @if (!opt.severity) { <div class="opt__title">{{ opt.label }}</div> }
+              @if (!opt.severity) { <div class="opt__title">{{ opt.label | translate }}</div> }
               @if (opt.meta) { <div class="opt__meta">{{ opt.meta }}</div> }
             </div>
             <div class="opt__check">
@@ -117,7 +117,10 @@ export class MultiSelectPickerComponent<T = string> {
   protected readonly summary = computed(() => {
     const v = this.value();
     if (!v.length) return '';
-    if (v.length === 1) return this.options().find(o => o.value === v[0])?.label ?? '';
+    if (v.length === 1) {
+      const label = this.options().find(o => o.value === v[0])?.label ?? '';
+      return label ? this.t.instant(label) : '';
+    }
     return `${v.length} ${this.t.instant('common.selected')}`;
   });
 

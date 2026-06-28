@@ -7,14 +7,17 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
+import { CreateCustomerInput } from '../../models/create-customer-input';
 import { Customer } from '../../models/customer';
 
 export interface CreateAdminCustomer$Params {
+      body: CreateCustomerInput
 }
 
-export function createAdminCustomer(http: HttpClient, rootUrl: string, params?: CreateAdminCustomer$Params, context?: HttpContext): Observable<StrictHttpResponse<Customer>> {
+export function createAdminCustomer(http: HttpClient, rootUrl: string, params: CreateAdminCustomer$Params, context?: HttpContext): Observable<StrictHttpResponse<Customer>> {
   const rb = new RequestBuilder(rootUrl, createAdminCustomer.PATH, 'post');
   if (params) {
+    rb.body(params.body, 'application/json');
   }
 
   return http.request(

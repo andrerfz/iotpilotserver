@@ -1446,6 +1446,96 @@
                 ],
                 "additionalProperties": false
             },
+            "AlertUpdateInput": {
+                "type": "object",
+                "required": [
+                    "action"
+                ],
+                "properties": {
+                    "action": {
+                        "type": "string",
+                        "enum": [
+                            "acknowledge",
+                            "resolve"
+                        ]
+                    },
+                    "note": {
+                        "type": "string"
+                    }
+                }
+            },
+            "CreateCustomerInput": {
+                "type": "object",
+                "required": [
+                    "name"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "contactEmail": {
+                        "type": "string"
+                    }
+                }
+            },
+            "UpdateCustomerInput": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "contactEmail": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ApproveUserInput": {
+                "type": "object",
+                "required": [
+                    "action"
+                ],
+                "properties": {
+                    "action": {
+                        "type": "string",
+                        "enum": [
+                            "approve",
+                            "reject"
+                        ]
+                    },
+                    "reason": {
+                        "type": "string"
+                    }
+                }
+            },
+            "SystemSettingsInput": {
+                "type": "object",
+                "properties": {
+                    "theme": {
+                        "type": "string"
+                    },
+                    "dashboardLayout": {
+                        "type": "string"
+                    },
+                    "itemsPerPage": {
+                        "type": "string"
+                    },
+                    "enableAdvancedMetrics": {
+                        "type": "string"
+                    },
+                    "enableBetaFeatures": {
+                        "type": "string"
+                    },
+                    "logLevel": {
+                        "type": "string"
+                    }
+                }
+            },
             "User": {
                 "type": "object",
                 "properties": {
@@ -3775,6 +3865,16 @@
                         "description": "Alert ID"
                     }
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AlertUpdateInput"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "Alert updated",
@@ -5133,6 +5233,16 @@
                         "description": "Device public ID"
                     }
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ApproveUserInput"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "User approved",
@@ -5267,6 +5377,16 @@
                         "bearerAuth": []
                     }
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateCustomerInput"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "201": {
                         "description": "Customer created",
@@ -5304,6 +5424,16 @@
                         "description": "Device public ID"
                     }
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateCustomerInput"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "Customer updated",
@@ -5988,6 +6118,16 @@
                         "bearerAuth": []
                     }
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SystemSettingsInput"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "Updated",

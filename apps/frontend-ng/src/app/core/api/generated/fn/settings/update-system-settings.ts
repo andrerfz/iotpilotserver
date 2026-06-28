@@ -8,13 +8,16 @@ import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
 import { SystemSettings } from '../../models/system-settings';
+import { SystemSettingsInput } from '../../models/system-settings-input';
 
 export interface UpdateSystemSettings$Params {
+      body: SystemSettingsInput
 }
 
-export function updateSystemSettings(http: HttpClient, rootUrl: string, params?: UpdateSystemSettings$Params, context?: HttpContext): Observable<StrictHttpResponse<SystemSettings>> {
+export function updateSystemSettings(http: HttpClient, rootUrl: string, params: UpdateSystemSettings$Params, context?: HttpContext): Observable<StrictHttpResponse<SystemSettings>> {
   const rb = new RequestBuilder(rootUrl, updateSystemSettings.PATH, 'put');
   if (params) {
+    rb.body(params.body, 'application/json');
   }
 
   return http.request(

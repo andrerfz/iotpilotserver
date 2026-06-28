@@ -8,6 +8,7 @@ import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
 import { Alert } from '../../models/alert';
+import { AlertUpdateInput } from '../../models/alert-update-input';
 
 export interface UpdateDeviceAlert$Params {
 
@@ -20,6 +21,7 @@ export interface UpdateDeviceAlert$Params {
  * Alert ID
  */
   alertId: string;
+      body: AlertUpdateInput
 }
 
 export function updateDeviceAlert(http: HttpClient, rootUrl: string, params: UpdateDeviceAlert$Params, context?: HttpContext): Observable<StrictHttpResponse<Alert>> {
@@ -27,6 +29,7 @@ export function updateDeviceAlert(http: HttpClient, rootUrl: string, params: Upd
   if (params) {
     rb.path('id', params.id, {});
     rb.path('alertId', params.alertId, {});
+    rb.body(params.body, 'application/json');
   }
 
   return http.request(

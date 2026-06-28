@@ -8,6 +8,7 @@ import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
 import { Customer } from '../../models/customer';
+import { UpdateCustomerInput } from '../../models/update-customer-input';
 
 export interface UpdateAdminCustomer$Params {
 
@@ -15,12 +16,14 @@ export interface UpdateAdminCustomer$Params {
  * Device public ID
  */
   id: string;
+      body: UpdateCustomerInput
 }
 
 export function updateAdminCustomer(http: HttpClient, rootUrl: string, params: UpdateAdminCustomer$Params, context?: HttpContext): Observable<StrictHttpResponse<Customer>> {
   const rb = new RequestBuilder(rootUrl, updateAdminCustomer.PATH, 'patch');
   if (params) {
     rb.path('id', params.id, {});
+    rb.body(params.body, 'application/json');
   }
 
   return http.request(

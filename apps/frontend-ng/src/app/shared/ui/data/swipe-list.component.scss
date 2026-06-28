@@ -2,18 +2,22 @@
   background: transparent;
   padding: 0;
 
+  // The whole sliding row is a single rounded, bordered card. Clipping here means
+  // the revealed action buttons inherit the right-corner radius instead of sitting
+  // as square blocks against the rounded card edge.
   ion-item-sliding {
     margin-bottom: 8px;
+    border: 1px solid var(--ui-border);
+    border-radius: 12px;
+    overflow: hidden;
   }
 
   &__item {
     --background: var(--surface);
-    --border-radius: 12px;
+    --border-radius: 0;
     --padding-start: 14px;
     --inner-padding-end: 14px;
     --min-height: 56px;
-    border: 1px solid var(--ui-border);
-    border-radius: 12px;
   }
 
   ion-item-option {
