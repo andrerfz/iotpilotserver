@@ -12,7 +12,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { TopbarService } from '@ng/shell/topbar.service';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
-import { copyOutline, eyeOffOutline, eyeOutline, refreshOutline, trashOutline, warningOutline } from 'ionicons/icons';
+import { alertCircleOutline, copyOutline, eyeOffOutline, eyeOutline, refreshOutline, trashOutline, warningOutline } from 'ionicons/icons';
 import {
   IonContent,
   IonCard,
@@ -38,7 +38,7 @@ import { DeviceDetailService } from '../../services/device-detail.service';
 import { ToastService } from '@ng/core/errors/toast.service';
 import { hasHeartbeat, hasSSH, hasSystemInfo } from '../../device-capabilities';
 
-addIcons({ copyOutline, eyeOffOutline, eyeOutline, refreshOutline, trashOutline, warningOutline });
+addIcons({ alertCircleOutline, copyOutline, eyeOffOutline, eyeOutline, refreshOutline, trashOutline, warningOutline });
 
 const UPDATE_CHANNELS: SelectOption[] = [
   { value: 'stable', label: 'Stable' },
@@ -160,18 +160,21 @@ export class DeviceSettingsPage implements OnInit {
     }
     this.saving.set(true);
     try {
+      // Alert thresholds (cpu/memory/disk/temperature/sensorTemp/battery) are no
+      // longer set here — they live in the "Umbrales" modal (Alerts tab), the
+      // single source of truth read by the alert evaluator.
       const payload: DeviceSettings = {
         ...this.formData,
         heartbeatInterval:    this.toNum(this.formData.heartbeatInterval),
         reportingInterval:    this.reportingIntervalSec(),
-        cpuThreshold:         this.toNum(this.formData.cpuThreshold),
-        memoryThreshold:      this.toNum(this.formData.memoryThreshold),
-        diskThreshold:        this.toNum(this.formData.diskThreshold),
-        temperatureThreshold: this.toNum(this.formData.temperatureThreshold),
-        sensorTempThreshold:  this.toNum(this.formData.sensorTempThreshold),
-        batteryThreshold:     this.toNum(this.formData.batteryThreshold),
         apiKeyRotationDays:   this.toNum(this.formData.apiKeyRotationDays),
       };
+      delete payload.cpuThreshold;
+      delete payload.memoryThreshold;
+      delete payload.diskThreshold;
+      delete payload.temperatureThreshold;
+      delete payload.sensorTempThreshold;
+      delete payload.batteryThreshold;
       await this.svc.updateSettings(this.deviceId(), payload);
       void this.toast.success(this.t.instant('device_settings.msg_saved'));
     } catch (e) {

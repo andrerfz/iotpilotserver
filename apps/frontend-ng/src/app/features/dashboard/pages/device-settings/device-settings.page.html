@@ -80,46 +80,6 @@
                 placeholder="60"
               ></ui-input>
             </ion-item>
-            <ion-item>
-              <ion-label>{{ 'device_settings.fields.cpu_threshold' | translate }}</ion-label>
-              <ui-input
-                slot="end"
-                type="number"
-                [(ngModel)]="formData.cpuThreshold"
-                name="cpuThreshold"
-                placeholder="80"
-              ></ui-input>
-            </ion-item>
-            <ion-item>
-              <ion-label>{{ 'device_settings.fields.memory_threshold' | translate }}</ion-label>
-              <ui-input
-                slot="end"
-                type="number"
-                [(ngModel)]="formData.memoryThreshold"
-                name="memoryThreshold"
-                placeholder="85"
-              ></ui-input>
-            </ion-item>
-            <ion-item>
-              <ion-label>{{ 'device_settings.fields.disk_threshold' | translate }}</ion-label>
-              <ui-input
-                slot="end"
-                type="number"
-                [(ngModel)]="formData.diskThreshold"
-                name="diskThreshold"
-                placeholder="90"
-              ></ui-input>
-            </ion-item>
-            <ion-item>
-              <ion-label>{{ 'device_settings.fields.temp_threshold' | translate }}</ion-label>
-              <ui-input
-                slot="end"
-                type="number"
-                [(ngModel)]="formData.temperatureThreshold"
-                name="temperatureThreshold"
-                placeholder="75"
-              ></ui-input>
-            </ion-item>
           } @else {
             <!-- Sensor device: stepper for reporting interval -->
             <ion-item class="interval-item">
@@ -142,27 +102,11 @@
                 {{ 'device_settings.fields.reporting_interval_hint' | translate }}
               </div>
             }
-            <ion-item>
-              <ion-label>{{ 'device_settings.fields.sensor_temp_threshold' | translate }}</ion-label>
-              <ui-input
-                slot="end"
-                type="number"
-                [(ngModel)]="formData.sensorTempThreshold"
-                name="sensorTempThreshold"
-                placeholder="40"
-              ></ui-input>
-            </ion-item>
-            <ion-item>
-              <ion-label>{{ 'device_settings.fields.battery_threshold' | translate }}</ion-label>
-              <ui-input
-                slot="end"
-                type="number"
-                [(ngModel)]="formData.batteryThreshold"
-                name="batteryThreshold"
-                placeholder="20"
-              ></ui-input>
-            </ion-item>
           }
+          <div class="interval-hint">
+            <ion-icon name="alert-circle-outline"></ion-icon>
+            {{ 'device_settings.thresholds_moved' | translate }}
+          </div>
         </ion-list>
       </ion-card-content>
     </ion-card>

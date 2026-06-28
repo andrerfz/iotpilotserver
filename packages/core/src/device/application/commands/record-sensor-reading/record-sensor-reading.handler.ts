@@ -41,36 +41,41 @@ export class RecordSensorReadingHandler implements CommandHandler<RecordSensorRe
     }
 
     /**
-     * Load the device's configurable alert thresholds from its DEVICE_SETTINGS
-     * preferences (the values the device-settings UI saves), falling back to the
-     * legacy hardcoded freezer defaults when a device has none configured.
+     * Load the device's effective alert thresholds from the `thresholds` table
+     * (the single source of truth managed by the "Umbrales" modal). For each
+     * metric a device-scoped threshold (deviceId = this device) overrides the
+     * tenant-wide global threshold (deviceId = null); when neither exists we fall
+     * back to the legacy hardcoded freezer defaults so unconfigured devices keep
+     * alerting exactly as before.
      *
-     * Preferences are keyed `device_<internalId>_<setting>` and stored as strings.
-     * We match on the key (which embeds the unique internal device id) and scope to
-     * preferences owned by a user in the device's own tenant, so a preference row
-     * planted under another tenant's user cannot tamper with this device's alert
-     * thresholds (cross-tenant IDOR defense-in-depth).
+     * The query is scoped to the device's own customerId, so a threshold planted
+     * under another tenant can never apply here (cross-tenant isolation). We only
+     * read the stored `value` per metric — the warn/crit severity split is derived
+     * here (crit = warn + offset for temperature, half for battery) to preserve the
+     * existing escalation behavior with the modal's single-value-per-metric model.
      */
     private async loadThresholds(deviceId: string, customerId: string): Promise<DeviceThresholds> {
-        const prefs = await this.prisma.userPreference.findMany({
+        const rows = await this.prisma.threshold.findMany({
             where: {
-                category: 'DEVICE_SETTINGS',
-                key: { in: [`device_${deviceId}_batteryThreshold`, `device_${deviceId}_sensorTempThreshold`] },
-                user: { customerId }
+                customerId,
+                metricName: { in: ['sensor_temp', 'battery'] },
+                enabled: true,
+                deletedAt: null,
+                OR: [{ deviceId }, { deviceId: null }],
             },
-            orderBy: { updatedAt: 'desc' }
+            orderBy: { updatedAt: 'desc' },
         });
 
-        const read = (suffix: string): number | undefined => {
-            const pref = prefs.find(p => p.key === `device_${deviceId}_${suffix}`);
-            if (!pref) return undefined;
-            const n = parseFloat(pref.value);
-            return Number.isFinite(n) ? n : undefined;
+        // Device-scoped threshold wins over the global (deviceId = null) default.
+        const pick = (metric: string): number | undefined => {
+            const deviceRow = rows.find(r => r.metricName === metric && r.deviceId === deviceId);
+            if (deviceRow) return deviceRow.value;
+            return rows.find(r => r.metricName === metric && r.deviceId === null)?.value;
         };
 
-        const configuredTemp = read('sensorTempThreshold');
+        const configuredTemp = pick('sensor_temp');
         const tempWarn = configuredTemp ?? DEFAULT_TEMP_WARNING;
-        const batteryWarn = read('batteryThreshold') ?? DEFAULT_BATTERY_WARNING;
+        const batteryWarn = pick('battery') ?? DEFAULT_BATTERY_WARNING;
 
         return {
             tempWarn,

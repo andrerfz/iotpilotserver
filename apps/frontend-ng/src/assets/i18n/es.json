@@ -373,7 +373,8 @@
     },
     "msg_saved": "Configuración guardada",
     "msg_save_failed": "Error al guardar",
-    "msg_rotate_failed": "Error al rotar"
+    "msg_rotate_failed": "Error al rotar",
+    "thresholds_moved": "Los umbrales de alerta (temperatura, batería…) ahora se configuran en la pestaña Alertas."
   },
   "device_network": {
     "title": "Red",

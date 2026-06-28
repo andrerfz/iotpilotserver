@@ -1117,11 +1117,29 @@ monitoringRouter.get('/thresholds', requireAuth(), async (req: AuthenticatedRequ
             customerId: req.user?.customerId
         });
 
+        // thresholds.deviceId is the internal devices.id, but the client filters by
+        // the route publicId — resolve internal → public so device-scoped thresholds
+        // match the device they were saved for.
+        const internalIds = [...new Set(
+            (thresholdsList || [])
+                .map((t: any) => (t.deviceId?.getValue ? t.deviceId.getValue() : t.deviceId))
+                .filter(Boolean),
+        )] as string[];
+        const deviceRows = internalIds.length
+            ? await prisma.getClient().device.findMany({
+                where: { id: { in: internalIds } },
+                select: { id: true, publicId: true },
+            })
+            : [];
+        const internalToPublic = new Map(deviceRows.map(d => [d.id, d.publicId]));
+
         // Convert domain result to API response format
         const response = {
-            thresholds: (thresholdsList || []).map((threshold: any) => ({
+            thresholds: (thresholdsList || []).map((threshold: any) => {
+                const internalDeviceId = threshold.deviceId?.getValue ? threshold.deviceId.getValue() : threshold.deviceId;
+                return ({
                 id: threshold.id?.getValue ? threshold.id.getValue() : threshold.id,
-                deviceId: threshold.deviceId?.getValue ? threshold.deviceId.getValue() : threshold.deviceId,
+                deviceId: internalDeviceId ? (internalToPublic.get(internalDeviceId) ?? internalDeviceId) : null,
                 name: threshold.name,
                 description: threshold.description,
                 metricName: threshold.metricName,
@@ -1142,7 +1160,8 @@ monitoringRouter.get('/thresholds', requireAuth(), async (req: AuthenticatedRequ
                     type: threshold.device.type,
                     status: threshold.device.status
                 } : null
-            })),
+            });
+            }),
             filters: {
                 deviceId: deviceId || null,
                 type: type || null,
@@ -1215,9 +1234,26 @@ monitoringRouter.post('/thresholds', requireAuth(), async (req: AuthenticatedReq
         // Use tenant context already built by auth middleware
         const tenantContext = req.tenant ?? TenantContextImpl.createSuperAdmin();
 
+        // Resolve device publicId → internal id. thresholds.deviceId is a FK to
+        // devices.id and the alert evaluator matches on the internal id, but the
+        // client sends the route publicId. (Without this, device-scoped creates
+        // FK-failed and the value never reached the evaluator.)
+        let internalDeviceId: string | null = null;
+        if (thresholdData.deviceId) {
+            const deviceRecord = await prisma.getClient().device.findFirst({
+                where: { publicId: thresholdData.deviceId },
+                select: { id: true },
+            });
+            if (!deviceRecord) {
+                send.badRequest(res, 'Device not found');
+                return;
+            }
+            internalDeviceId = deviceRecord.id;
+        }
+
         // Create and execute CreateThreshold command
         const createThresholdCommand = CreateThresholdCommand.create(
-            thresholdData.deviceId || null,
+            internalDeviceId,
             thresholdData.name,
             thresholdData.description,
             thresholdData.metricName,
@@ -1248,7 +1284,7 @@ monitoringRouter.post('/thresholds', requireAuth(), async (req: AuthenticatedReq
             message: 'Threshold created successfully',
             threshold: {
                 id: createdThreshold.id,
-                deviceId: createdThreshold.deviceId,
+                deviceId: thresholdData.deviceId || null,
                 name: createdThreshold.name,
                 description: createdThreshold.description,
                 metricName: createdThreshold.metricName,

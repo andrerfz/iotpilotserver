@@ -38,13 +38,16 @@ export class CreateThresholdHandler implements CommandHandler<CreateThresholdCom
       throw new Error('Customer ID is required');
     }
     
-    const existingThreshold = await this.thresholdRepository.findByName(
-      command.name, 
-      customerId
-    );
-    
-    if (existingThreshold) {
-      throw new Error(`Threshold with name '${command.name}' already exists`);
+    // Enforce the real invariant: at most one threshold per (deviceId, metricName)
+    // within the tenant. The name is only a display label — a global and a
+    // per-device threshold for the same metric legitimately share a name, so a
+    // name-uniqueness check wrongly blocked that (and multi-device) case.
+    const scopeThresholds = command.deviceId
+      ? await this.thresholdRepository.findByDeviceId(command.deviceId, customerId)
+      : await this.thresholdRepository.findGlobalThresholds(customerId);
+
+    if (scopeThresholds.some(t => t.metricName === command.metricName)) {
+      throw new Error(`A threshold for metric '${command.metricName}' already exists in this scope`);
     }
 
     // Generate a new threshold ID

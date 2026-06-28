@@ -373,7 +373,8 @@
     },
     "msg_saved": "Configurações salvas",
     "msg_save_failed": "Falha ao salvar",
-    "msg_rotate_failed": "Falha ao rotacionar"
+    "msg_rotate_failed": "Falha ao rotacionar",
+    "thresholds_moved": "Os limites de alerta (temperatura, bateria…) agora são configurados na aba Alertas."
   },
   "device_network": {
     "title": "Rede",

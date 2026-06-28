@@ -373,7 +373,8 @@
     },
     "msg_saved": "Settings saved",
     "msg_save_failed": "Save failed",
-    "msg_rotate_failed": "Rotate failed"
+    "msg_rotate_failed": "Rotate failed",
+    "thresholds_moved": "Alert thresholds (temperature, battery…) are now configured in the Alerts tab."
   },
   "device_network": {
     "title": "Network",

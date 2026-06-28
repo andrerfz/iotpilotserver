@@ -373,7 +373,8 @@
     },
     "msg_saved": "Paramètres enregistrés",
     "msg_save_failed": "Échec de l'enregistrement",
-    "msg_rotate_failed": "Échec de la rotation"
+    "msg_rotate_failed": "Échec de la rotation",
+    "thresholds_moved": "Les seuils d'alerte (température, batterie…) se configurent désormais dans l'onglet Alertes."
   },
   "device_network": {
     "title": "Réseau",

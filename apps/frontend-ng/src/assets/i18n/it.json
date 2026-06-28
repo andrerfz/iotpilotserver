@@ -373,7 +373,8 @@
     },
     "msg_saved": "Impostazioni salvate",
     "msg_save_failed": "Salvataggio non riuscito",
-    "msg_rotate_failed": "Rotazione non riuscita"
+    "msg_rotate_failed": "Rotazione non riuscita",
+    "thresholds_moved": "Le soglie di avviso (temperatura, batteria…) ora si configurano nella scheda Avvisi."
   },
   "device_network": {
     "title": "Rete",

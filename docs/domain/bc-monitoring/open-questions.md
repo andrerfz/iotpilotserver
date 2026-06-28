@@ -42,3 +42,34 @@
 
 **Resolved:** 2026-06-09
 **Applies to:** Configure modal frontend, `CreateThreshold` / `UpdateThreshold` calls from modal
+
+---
+
+## Q6 _resolved_ — Threshold storage: two disconnected systems
+
+**Problem:** Alert thresholds had two unconnected homes. The device "Configuración"
+tab wrote `sensorTempThreshold` / `batteryThreshold` to `UserPreference`
+(`device_<internalId>_*`), and the **alert evaluator** (`record-sensor-reading.handler`)
+read from there. Meanwhile the "Umbrales" modal read/wrote the dedicated `thresholds`
+table — which the evaluator never consulted. So the modal always showed hardcoded
+defaults (battery 20 % / sensor 50 °C) and editing it had no effect. The `thresholds`
+write-path also had latent bugs: POST stored the route **publicId** in `thresholds.deviceId`
+(a FK to `devices.id`) so device-scoped creates FK-failed; GET returned the internal id
+so the modal's `deviceId === publicId` filter never matched; and create enforced
+**name** uniqueness instead of the real `(deviceId, metricName)` invariant.
+
+**Decision:** The `thresholds` table is the single source of truth.
+- `loadThresholds()` reads `thresholds` (metricName `sensor_temp` / `battery`),
+  device-scoped row > global (`deviceId = null`) > hardcoded default. Warn/crit split
+  is still derived (crit = warn + 5 °C / battery half) to keep the single-value-per-metric
+  modal model with the existing escalation behavior.
+- POST resolves publicId → internal `devices.id`; GET resolves internal → publicId.
+- Create uniqueness is now per `(deviceId, metricName)`, not name.
+- The "Umbrales" modal (Alerts tab) is the only UI for alert thresholds. The device
+  "Configuración" tab no longer carries threshold fields (operational settings only).
+- Existing `UserPreference` thresholds were migrated to `thresholds` rows
+  (`apps/backend/prisma/migration/migrate-thresholds-from-preferences.ts`, idempotent).
+
+**Resolved:** 2026-06-28
+**Applies to:** `record-sensor-reading.handler`, `create-threshold.handler`,
+`monitoring.router` threshold endpoints, device-settings page, threshold migration
