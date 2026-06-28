@@ -731,6 +731,9 @@
       "actions": {
         "view": "View",
         "restart": "Restart"
+      },
+      "empty": {
+        "title": "No devices"
       }
     },
     "users": {
@@ -745,6 +748,9 @@
         "reject": "Reject",
         "suspend": "Suspend",
         "activate": "Activate"
+      },
+      "empty": {
+        "title": "No users"
       }
     },
     "customers": {
@@ -757,6 +763,12 @@
       "actions": {
         "edit": "Edit",
         "deactivate": "Deactivate"
+      },
+      "empty": {
+        "title": "No customers"
+      },
+      "fields": {
+        "contact_email": "Contact email"
       }
     },
     "logs": {

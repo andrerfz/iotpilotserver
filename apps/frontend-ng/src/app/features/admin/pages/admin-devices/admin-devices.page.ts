@@ -7,6 +7,7 @@ import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { skip } from 'rxjs';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { NgTemplateOutlet } from '@angular/common';
 import { addIcons } from 'ionicons';
 import {
   refreshOutline, eyeOutline, reloadOutline, hardwareChipOutline,
@@ -16,13 +17,14 @@ import {
   IonContent, IonCard, IonCardContent, IonButton, IonIcon, IonSkeletonText,
   AlertController,
   MetricCardComponent, MetricGridComponent, DataTableComponent, EmptyStateComponent,
-  StatusBadgeComponent, DeviceTypeBadgeComponent,
+  StatusBadgeComponent, DeviceTypeBadgeComponent, StatusDotComponent,
   UiSearchFieldComponent, UiSelectComponent,
   ViewWillEnter,
   IonRefresher,
   IonRefresherContent,
 } from '@ng/shared/ui';
 import type { ColumnDef, SelectOption } from '@ng/shared/ui';
+import { ViewportService } from '@ng/core/layout/viewport.service';
 import { AdminDevicesService, AdminDevice } from '../../services/admin-devices.service';
 import { TopbarService } from '../../../../shell/topbar.service';
 import { TenantContextService } from '@ng/core/auth/tenant-context.service';
@@ -40,10 +42,11 @@ addIcons({ refreshOutline, eyeOutline, reloadOutline, hardwareChipOutline, check
     RouterLink, FormsModule,
     IonContent, IonCard, IonCardContent, IonButton, IonIcon, IonSkeletonText,
     MetricCardComponent, MetricGridComponent, DataTableComponent, EmptyStateComponent,
-    StatusBadgeComponent, DeviceTypeBadgeComponent,
+    StatusBadgeComponent, DeviceTypeBadgeComponent, StatusDotComponent,
     UiSearchFieldComponent, UiSelectComponent,
     AdminTabsComponent,
     IonRefresher, IonRefresherContent,
+    NgTemplateOutlet,
     TranslatePipe,
   ],
 })
@@ -53,6 +56,7 @@ export class AdminDevicesPage implements AfterViewInit, ViewWillEnter {
   private readonly topbar = inject(TopbarService);
   private readonly tenantCtx = inject(TenantContextService);
   private readonly t = inject(TranslateService);
+  protected readonly vp = inject(ViewportService);
 
   protected statusFilter = '';
   protected readonly searchQuery = signal('');

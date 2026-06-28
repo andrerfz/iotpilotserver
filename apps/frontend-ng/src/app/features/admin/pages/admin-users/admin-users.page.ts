@@ -6,6 +6,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { skip } from 'rxjs';
 import { FormsModule } from '@angular/forms';
+import { NgTemplateOutlet } from '@angular/common';
 import { addIcons } from 'ionicons';
 import {
   checkmarkOutline, closeOutline, banOutline, personOutline, addOutline,
@@ -22,6 +23,7 @@ import {
   IonRefresherContent,
 } from '@ng/shared/ui';
 import type { ColumnDef, SelectOption } from '@ng/shared/ui';
+import { ViewportService } from '@ng/core/layout/viewport.service';
 import { AdminNewUserModalComponent } from '../admin-new-user/admin-new-user.modal';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { hasRole } from '../../../../core/auth/roles';
@@ -48,6 +50,7 @@ addIcons({ checkmarkOutline, closeOutline, banOutline, personOutline, addOutline
     AdminNewUserModalComponent,
     AdminTabsComponent,
     IonRefresher, IonRefresherContent,
+    NgTemplateOutlet,
     TranslatePipe,
   ],
 })
@@ -58,6 +61,7 @@ export class AdminUsersPage implements AfterViewInit, ViewWillEnter {
   private readonly topbar = inject(TopbarService);
   private readonly tenantCtx = inject(TenantContextService);
   private readonly t = inject(TranslateService);
+  protected readonly vp = inject(ViewportService);
 
   protected statusFilter = '';
   protected readonly searchQuery = signal('');

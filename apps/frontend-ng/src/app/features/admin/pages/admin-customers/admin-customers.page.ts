@@ -1,6 +1,6 @@
 import {
   AfterViewInit, ChangeDetectionStrategy, Component,
-  computed, DestroyRef, inject, signal, TemplateRef, ViewChild,
+  computed, DestroyRef, inject, signal, TemplateRef, ViewChild, viewChild,
 } from '@angular/core';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { FormsModule } from '@angular/forms';
@@ -12,12 +12,14 @@ import {
   IonContent, IonCard, IonCardContent, IonButton, IonIcon,
   AlertController,
   DataTableComponent, EmptyStateComponent,
-  StatusBadgeComponent,
-  UiSearchFieldComponent, UiSelectComponent,
+  StatusBadgeComponent, StatusDotComponent,
+  UiSearchFieldComponent, UiSelectComponent, UiInputComponent,
+  BottomSheetComponent,
   ViewWillEnter,
   IonRefresher, IonRefresherContent,
 } from '@ng/shared/ui';
 import type { ColumnDef, SelectOption } from '@ng/shared/ui';
+import { ViewportService } from '@ng/core/layout/viewport.service';
 import { AdminCustomersService, AdminCustomer } from '../../services/admin-customers.service';
 import { TopbarService } from '../../../../shell/topbar.service';
 import { AdminTabsComponent } from '../../components/admin-tabs.component';
@@ -34,8 +36,9 @@ addIcons({ addOutline, pencilOutline, banOutline, businessOutline });
     FormsModule,
     IonContent, IonCard, IonCardContent, IonButton, IonIcon,
     DataTableComponent, EmptyStateComponent,
-    StatusBadgeComponent,
-    UiSearchFieldComponent, UiSelectComponent,
+    StatusBadgeComponent, StatusDotComponent,
+    UiSearchFieldComponent, UiSelectComponent, UiInputComponent,
+    BottomSheetComponent,
     AdminTabsComponent,
     IonRefresher, IonRefresherContent,
     TranslatePipe,
@@ -47,11 +50,18 @@ export class AdminCustomersPage implements AfterViewInit, ViewWillEnter {
   private readonly topbar = inject(TopbarService);
   private readonly destroy = inject(DestroyRef);
   private readonly t = inject(TranslateService);
+  protected readonly vp = inject(ViewportService);
 
+  private readonly editSheet = viewChild<BottomSheetComponent>('editSheet');
   protected statusFilter = '';
   protected readonly searchQuery = signal('');
   protected readonly actionLoading = signal(false);
   protected readonly cols = signal<ColumnDef<AdminCustomer>[]>([]);
+
+  // Edit/add bottom-sheet state (replaces the AlertController prompt).
+  protected readonly editingId = signal<string | null>(null);
+  protected readonly formName = signal('');
+  protected readonly formEmail = signal('');
 
   @ViewChild('statusCell')  private statusCellTpl!: TemplateRef<{ $implicit: AdminCustomer }>;
   @ViewChild('actionsCell') private actionsCellTpl!: TemplateRef<{ $implicit: AdminCustomer }>;
@@ -96,57 +106,36 @@ export class AdminCustomersPage implements AfterViewInit, ViewWillEnter {
     event.target.complete();
   }
 
-  protected async onAdd(): Promise<void> {
-    const alert = await this.alertCtrl.create({
-      header: this.t.instant('admin.dialogs.customer_new'),
-      inputs: [
-        { name: 'name',         type: 'text',  placeholder: 'Name *' },
-        { name: 'contactEmail', type: 'email', placeholder: 'Contact email' },
-      ],
-      buttons: [
-        { text: this.t.instant('common.cancel'), role: 'cancel' },
-        {
-          text: this.t.instant('common.create'),
-          handler: async (data: { name: string; contactEmail: string }) => {
-            if (!data.name?.trim()) return false;
-            this.actionLoading.set(true);
-            try {
-              await this.svc.create(data.name.trim(), undefined, data.contactEmail || undefined);
-            } finally {
-              this.actionLoading.set(false);
-            }
-            return true;
-          },
-        },
-      ],
-    });
-    await alert.present();
+  protected onAdd(): void {
+    this.editingId.set(null);
+    this.formName.set('');
+    this.formEmail.set('');
+    this.editSheet()?.open();
   }
 
-  protected async onEdit(customer: AdminCustomer): Promise<void> {
-    const alert = await this.alertCtrl.create({
-      header: this.t.instant('admin.dialogs.customer_edit'),
-      inputs: [
-        { name: 'name', type: 'text', placeholder: 'Name', value: customer.name },
-      ],
-      buttons: [
-        { text: this.t.instant('common.cancel'), role: 'cancel' },
-        {
-          text: this.t.instant('common.save'),
-          handler: async (data: { name: string }) => {
-            if (!data.name?.trim()) return false;
-            this.actionLoading.set(true);
-            try {
-              await this.svc.update(customer.id, data.name.trim());
-            } finally {
-              this.actionLoading.set(false);
-            }
-            return true;
-          },
-        },
-      ],
-    });
-    await alert.present();
+  protected onEdit(customer: AdminCustomer): void {
+    this.editingId.set(customer.id);
+    this.formName.set(customer.name);
+    this.formEmail.set('');
+    this.editSheet()?.open();
+  }
+
+  protected async onSaveSheet(): Promise<void> {
+    const name = this.formName().trim();
+    if (!name) return;
+    const email = this.formEmail().trim() || undefined;
+    this.actionLoading.set(true);
+    try {
+      const id = this.editingId();
+      if (id) {
+        await this.svc.update(id, name, undefined, email);
+      } else {
+        await this.svc.create(name, undefined, email);
+      }
+      this.editSheet()?.close();
+    } finally {
+      this.actionLoading.set(false);
+    }
   }
 
   protected async onDeactivate(customer: AdminCustomer): Promise<void> {

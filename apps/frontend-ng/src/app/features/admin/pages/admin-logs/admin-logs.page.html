@@ -35,42 +35,65 @@
   } @else {
     <ion-card>
       <ion-card-content class="logs-table-wrap">
-        <table class="logs-table">
-          <thead>
-            <tr>
-              <th class="col-ts">{{ 'admin.logs.table.timestamp' | translate }}</th>
-              <th class="col-level">{{ 'admin.logs.table.level' | translate }}</th>
-              <th class="col-device">{{ 'admin.logs.table.device' | translate }}</th>
-              <th class="col-source">{{ 'admin.logs.table.source' | translate }}</th>
-              <th>{{ 'admin.logs.table.message' | translate }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            @if (svc.loading()) {
-              @for (_ of [1,2,3,4,5]; track $index) {
+        @if (vp.wide()) {
+          <table class="logs-table">
+            <thead>
+              <tr>
+                <th class="col-ts">{{ 'admin.logs.table.timestamp' | translate }}</th>
+                <th class="col-level">{{ 'admin.logs.table.level' | translate }}</th>
+                <th class="col-device">{{ 'admin.logs.table.device' | translate }}</th>
+                <th class="col-source">{{ 'admin.logs.table.source' | translate }}</th>
+                <th>{{ 'admin.logs.table.message' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @if (svc.loading()) {
+                @for (_ of [1,2,3,4,5]; track $index) {
+                  <tr>
+                    <td colspan="5"><ion-skeleton-text [animated]="true" style="height:18px;border-radius:4px;"></ion-skeleton-text></td>
+                  </tr>
+                }
+              } @else if (!svc.logs().length) {
                 <tr>
-                  <td colspan="5"><ion-skeleton-text [animated]="true" style="height:18px;border-radius:4px;"></ion-skeleton-text></td>
+                  <td colspan="5" class="logs-empty">{{ 'admin.logs.empty' | translate }}</td>
                 </tr>
+              } @else {
+                @for (log of svc.logs(); track log.id) {
+                  <tr>
+                    <td class="col-ts">{{ formatTs(log.timestamp) }}</td>
+                    <td class="col-level">
+                      <ion-badge [color]="levelColor(log.level)">{{ log.level }}</ion-badge>
+                    </td>
+                    <td class="col-device">{{ log.device?.hostname ?? '—' }}</td>
+                    <td class="col-source">{{ log.source ?? 'system' }}</td>
+                    <td class="col-msg">{{ log.message }}</td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        } @else {
+          <div class="log-cards">
+            @if (svc.loading()) {
+              @for (_ of [1,2,3]; track $index) {
+                <ion-skeleton-text [animated]="true" style="height:54px;border-radius:10px;"></ion-skeleton-text>
               }
             } @else if (!svc.logs().length) {
-              <tr>
-                <td colspan="5" class="logs-empty">{{ 'admin.logs.empty' | translate }}</td>
-              </tr>
+              <div class="logs-empty">{{ 'admin.logs.empty' | translate }}</div>
             } @else {
               @for (log of svc.logs(); track log.id) {
-                <tr>
-                  <td class="col-ts">{{ formatTs(log.timestamp) }}</td>
-                  <td class="col-level">
+                <div class="log-card">
+                  <div class="log-card__head">
                     <ion-badge [color]="levelColor(log.level)">{{ log.level }}</ion-badge>
-                  </td>
-                  <td class="col-device">{{ log.device?.hostname ?? '—' }}</td>
-                  <td class="col-source">{{ log.source ?? 'system' }}</td>
-                  <td class="col-msg">{{ log.message }}</td>
-                </tr>
+                    <span class="log-card__ts">{{ formatTs(log.timestamp) }}</span>
+                  </div>
+                  <div class="log-card__msg">{{ log.message }}</div>
+                  <div class="log-card__src">{{ log.device?.hostname ?? '—' }} · {{ log.source ?? 'system' }}</div>
+                </div>
               }
             }
-          </tbody>
-        </table>
+          </div>
+        }
       </ion-card-content>
 
       <!-- Pagination -->

@@ -312,3 +312,57 @@ html[data-theme="dark"] .main {
     radial-gradient(ellipse 75% 36% at 50% -2%, hsl(217 65% 22% / 0.22), transparent 100%),
     linear-gradient(180deg, hsl(226 22% 9.5%) 0%, hsl(226 18% 7.5%) 100%);
 }
+
+/* Shared mobile card list for admin section pages (customers, users, logs, devices) */
+.admin-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.admin-card {
+  border: 1px solid var(--ui-border);
+  border-radius: 12px;
+  background: var(--surface);
+  padding: 12px 14px;
+
+  &__main {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  &__info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__title {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__sub {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+  }
+}
+
+.edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 4px 16px 16px;
+}

@@ -41,14 +41,62 @@
     </div>
   </ng-template>
 
-  <!-- Table -->
+  <!-- Table (desktop) / cards (mobile) -->
   @if (svc.error() && !svc.customers().length) {
     <ui-empty-state [title]="'admin.customers.failed.title' | translate" [hasAction]="true">
       <ion-button action fill="outline" size="small" (click)="svc.load()">{{ 'admin.customers.failed.retry' | translate }}</ion-button>
     </ui-empty-state>
-  } @else {
+  } @else if (vp.wide()) {
     <ui-data-table [columns]="cols()" [rows]="filtered()" rowKey="id" [pageSize]="20">
     </ui-data-table>
+  } @else {
+    <div class="admin-cards">
+      @for (c of filtered(); track c.id) {
+        <div class="admin-card">
+          <div class="admin-card__main">
+            <ui-status-dot [status]="c.status"></ui-status-dot>
+            <div class="admin-card__info">
+              <div class="admin-card__title">{{ c.name }}</div>
+              <div class="admin-card__sub">{{ c.slug }}</div>
+            </div>
+            <ui-status-badge [status]="c.status"></ui-status-badge>
+          </div>
+          <div class="admin-card__actions">
+            <ion-button size="small" fill="outline" color="medium" [disabled]="actionLoading()" (click)="onEdit(c)">
+              <ion-icon slot="start" name="pencil-outline"></ion-icon>{{ 'admin.customers.actions.edit' | translate }}
+            </ion-button>
+            @if (c.status !== 'INACTIVE') {
+              <ion-button size="small" fill="outline" color="warning" [disabled]="actionLoading()" (click)="onDeactivate(c)">
+                <ion-icon slot="start" name="ban-outline"></ion-icon>{{ 'admin.customers.actions.deactivate' | translate }}
+              </ion-button>
+            }
+          </div>
+        </div>
+      } @empty {
+        <ui-empty-state [title]="'admin.customers.empty.title' | translate"></ui-empty-state>
+      }
+    </div>
   }
 
 </ion-content>
+
+<!-- Add / edit customer -->
+<ui-bottom-sheet #editSheet
+  [title]="(editingId() ? 'admin.dialogs.customer_edit' : 'admin.dialogs.customer_new') | translate"
+  [saveLabel]="(editingId() ? 'common.save' : 'common.create') | translate"
+  [saveDisabled]="actionLoading() || !formName().trim()"
+  (save)="onSaveSheet()">
+  <div class="edit-form">
+    <ui-input
+      [label]="'fields.name' | translate"
+      [ngModel]="formName()" (ngModelChange)="formName.set($event)" name="custName">
+    </ui-input>
+    @if (!editingId()) {
+      <ui-input
+        type="email"
+        [label]="'admin.customers.fields.contact_email' | translate"
+        [ngModel]="formEmail()" (ngModelChange)="formEmail.set($event)" name="custEmail">
+      </ui-input>
+    }
+  </div>
+</ui-bottom-sheet>

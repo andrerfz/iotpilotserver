@@ -16,6 +16,7 @@ import {
   ViewWillEnter,
 } from '@ng/shared/ui';
 import type { SelectOption } from '@ng/shared/ui';
+import { ViewportService } from '@ng/core/layout/viewport.service';
 import { AdminLogsService, AdminLogEntry } from '../../services/admin-logs.service';
 import { TopbarService } from '../../../../shell/topbar.service';
 import { AdminTabsComponent } from '../../components/admin-tabs.component';
@@ -56,6 +57,7 @@ export class AdminLogsPage implements ViewWillEnter {
   protected readonly svc = inject(AdminLogsService);
   private readonly topbar = inject(TopbarService);
   private readonly destroyRef = inject(DestroyRef);
+  protected readonly vp = inject(ViewportService);
 
   private readonly exportSheet = viewChild<BottomSheetComponent>('exportSheet');
 
