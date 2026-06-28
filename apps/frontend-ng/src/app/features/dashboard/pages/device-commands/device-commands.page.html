@@ -102,13 +102,28 @@
             <ng-template #statusCell let-row>
               <ui-status-badge [status]="row.status ?? 'UNKNOWN'"></ui-status-badge>
             </ng-template>
-            <ui-data-table
-              [rows]="commands.data() ?? []"
-              [columns]="columns()"
-              [pageSize]="10"
-              [rowClickable]="true"
-              (rowClick)="onRowClick($event)"
-            ></ui-data-table>
+            @if (vp.wide()) {
+              <ui-data-table
+                [rows]="commands.data() ?? []"
+                [columns]="columns()"
+                [pageSize]="10"
+                [rowClickable]="true"
+                (rowClick)="onRowClick($event)"
+              ></ui-data-table>
+            } @else {
+              <div class="cmd-cards">
+                @for (cmd of commands.data() ?? []; track $index) {
+                  <div class="cmd-card" role="button" tabindex="0"
+                    (click)="onRowClick(cmd)" (keydown.enter)="onRowClick(cmd)">
+                    <div class="cmd-card__head">
+                      <code class="mono">{{ cmd.command }}{{ cmd.arguments ? ' ' + cmd.arguments : '' }}</code>
+                      <ui-status-badge [status]="cmd.status ?? 'UNKNOWN'"></ui-status-badge>
+                    </div>
+                    <div class="cmd-card__ts mono">{{ cmd.createdAt | date:'short' }}</div>
+                  </div>
+                }
+              </div>
+            }
           }
         </ion-card-content>
       </ion-card>

@@ -96,11 +96,28 @@
       }
 
       @if ((logs.data()?.length ?? 0) > 0) {
-        <ui-data-table
-          [rows]="logs.data() ?? []"
-          [columns]="columns()"
-          [pageSize]="100"
-        ></ui-data-table>
+        @if (vp.wide()) {
+          <ui-data-table
+            [rows]="logs.data() ?? []"
+            [columns]="columns()"
+            [pageSize]="100"
+          ></ui-data-table>
+        } @else {
+          <div class="log-cards">
+            @for (row of logs.data() ?? []; track $index) {
+              <div class="log-card">
+                <div class="log-card__head">
+                  <span class="log-badge log-badge--{{ row.level?.toLowerCase() ?? 'debug' }}">{{ row.level ?? '?' }}</span>
+                  <span class="mono dim log-card__ts">{{ formatTs(row.timestamp) }}</span>
+                </div>
+                <div class="log-card__msg">{{ row.message }}</div>
+                @if (row.source) {
+                  <div class="mono dim log-card__src">{{ row.source }}</div>
+                }
+              </div>
+            }
+          </div>
+        }
       }
     </ion-card-content>
   </ion-card>

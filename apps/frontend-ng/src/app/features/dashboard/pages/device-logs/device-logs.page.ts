@@ -31,6 +31,7 @@ import {
   UiSelectComponent,
 } from '@ng/shared/ui';
 import type { ColumnDef, SelectOption } from '@ng/shared/ui';
+import { ViewportService } from '@ng/core/layout/viewport.service';
 import type { DeviceLogEntry } from '@ng/core/api/generated/models/device-log-entry';
 import type { GetDeviceLogs$Params } from '@ng/core/api/generated/fn/devices/get-device-logs';
 import { DeviceDetailService } from '../../services/device-detail.service';
@@ -74,6 +75,7 @@ export class DeviceLogsPage implements OnInit, AfterViewInit {
   private readonly topbar = inject(TopbarService);
   private readonly svc = inject(DeviceDetailService);
   private readonly destroyRef = inject(DestroyRef);
+  protected readonly vp = inject(ViewportService);
 
   private readonly deviceId = signal('');
   readonly logs = this.svc.deviceLogs;

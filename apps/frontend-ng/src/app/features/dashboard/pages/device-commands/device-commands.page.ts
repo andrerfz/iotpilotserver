@@ -10,6 +10,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ActivatedRoute } from '@angular/router';
 import { TopbarService } from '@ng/shell/topbar.service';
@@ -37,6 +38,7 @@ import {
   StatusBadgeComponent,
 } from '@ng/shared/ui';
 import type { ColumnDef } from '@ng/shared/ui';
+import { ViewportService } from '@ng/core/layout/viewport.service';
 import type { DeviceCommand } from '@ng/core/api/generated/models/device-command';
 import { DeviceDetailService } from '../../services/device-detail.service';
 import { ToastService } from '@ng/core/errors/toast.service';
@@ -67,6 +69,7 @@ const QUICK_ACTIONS: QuickAction[] = [
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    DatePipe,
     TranslatePipe,
     IonContent,
     IonCard,
@@ -88,6 +91,7 @@ export class DeviceCommandsPage implements OnInit, AfterViewInit {
   private readonly toast = inject(ToastService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly t = inject(TranslateService);
+  protected readonly vp = inject(ViewportService);
 
   private readonly deviceId = signal('');
   readonly device = this.svc.device;

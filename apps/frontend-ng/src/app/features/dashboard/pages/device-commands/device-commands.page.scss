@@ -138,3 +138,31 @@
   font-size: 0.875rem;
   font-weight: 600;
 }
+
+/* Mobile: command history as cards instead of a table */
+.cmd-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cmd-card {
+  border: 1px solid var(--ui-border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: var(--surface);
+  cursor: pointer;
+
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  &__ts {
+    margin-top: 4px;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+  }
+}
