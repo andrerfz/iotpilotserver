@@ -137,9 +137,10 @@ COPY infra/nginx/frontend-ng-dev.conf.template /etc/nginx/templates/frontend-ng-
 COPY infra/docker/ng-dev-static.sh             /usr/local/bin/ng-dev-static.sh
 RUN chmod +x /usr/local/bin/ng-dev-static.sh
 
-# First build takes ~30s; start-period gives it time before health checks kick in
+# First build takes ~30s; start-period gives it time before health checks kick in.
+# 127.0.0.1 (not localhost) — nginx is IPv4-only, localhost→::1 would be refused.
 HEALTHCHECK --interval=15s --timeout=5s --start-period=120s --retries=10 \
-  CMD curl -sf http://localhost:4200/ | grep -q '<' || exit 1
+  CMD curl -sf http://127.0.0.1:4200/ | grep -q '<' || exit 1
 
 CMD ["/usr/local/bin/ng-dev-static.sh"]
 
@@ -177,7 +178,10 @@ FROM nginx:alpine AS production-ng
 COPY infra/nginx/frontend-ng.conf /etc/nginx/conf.d/default.conf
 COPY --from=builder-ng /app/apps/frontend-ng/www /usr/share/nginx/html
 
+# Use 127.0.0.1 (not localhost): nginx listens on IPv4 0.0.0.0:80, but `localhost`
+# resolves to ::1 (IPv6) first inside the container → "connection refused" and a
+# false "unhealthy", even though the app serves 200 fine via Traefik.
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget -qO- http://localhost/index.html || exit 1
+  CMD wget -q -O /dev/null http://127.0.0.1/index.html || exit 1
 
 EXPOSE 80
