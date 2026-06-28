@@ -58,6 +58,15 @@ export class AdminLogsPage implements ViewWillEnter {
   protected readonly vp = inject(ViewportService);
 
   private readonly exportSheet = viewChild<BottomSheetComponent>('exportSheet');
+  private readonly logSheet = viewChild<BottomSheetComponent>('logSheet');
+
+  /** Selected log for the read-only detail sheet (mobile tap). */
+  protected readonly selectedLog = signal<AdminLogEntry | null>(null);
+
+  protected openDetail(log: AdminLogEntry): void {
+    this.selectedLog.set(log);
+    this.logSheet()?.open();
+  }
 
   protected levelFilter   = '';
   protected deviceFilter  = '';
