@@ -33,6 +33,12 @@ export type { DeleteApiKey$Params as DeleteApiKey$Params } from './fn/auth/delet
 export { deleteApiKey as deleteApiKey } from './fn/auth/delete-api-key';
 export type { VerifyTwoFactor$Params as VerifyTwoFactor$Params } from './fn/auth/verify-two-factor';
 export { verifyTwoFactor as verifyTwoFactor } from './fn/auth/verify-two-factor';
+export type { AuthActAsGet$Params as AuthActAsGet$Params } from './fn/auth/auth-act-as-get';
+export { authActAsGet as authActAsGet } from './fn/auth/auth-act-as-get';
+export type { AuthActAsPost$Params as AuthActAsPost$Params } from './fn/auth/auth-act-as-post';
+export { authActAsPost as authActAsPost } from './fn/auth/auth-act-as-post';
+export type { AuthActAsDelete$Params as AuthActAsDelete$Params } from './fn/auth/auth-act-as-delete';
+export { authActAsDelete as authActAsDelete } from './fn/auth/auth-act-as-delete';
 export type { ListDevices$Params as ListDevices$Params } from './fn/devices/list-devices';
 export { listDevices as listDevices } from './fn/devices/list-devices';
 export type { CreateDevice$Params as CreateDevice$Params } from './fn/devices/create-device';

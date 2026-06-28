@@ -76,7 +76,21 @@ a tenant is selected, the normal tenant-scoped path serves those endpoints direc
   `buildTenantContext` resolves it for SUPERADMIN (header kept as fallback);
   `GET/POST/DELETE /api/auth/act-as` (SUPERADMIN-only, validated, logged).
   Verified in dev: before act-as `/monitoring/*` → 400; after → 200; per-session.
-- 🔴 Frontend: tenant picker + "viewing as" banner + service.
+- ✅ Frontend: tenant picker implemented — `TenantContextService`
+  (`core/auth/tenant-context.service.ts`), `app-tenant-menu` (desktop) and the
+  `bottom-nav` switcher sheet (mobile), customer list via `GET /admin/customers`
+  with search + infinite scroll. Selection persists across refresh.
+- ⚠️ **Divergence — FE uses the header path, not the session endpoints.** The FE
+  stores the active customer in `localStorage` (`iot_active_tenant`) and the auth
+  interceptor sends `X-Customer-Id`; it does **not** call `POST/DELETE /api/auth/act-as`.
+  So the server-side `Session.actingCustomerId` + `act-as` endpoints are effectively
+  unused. Both paths are honored by `buildTenantContext`, but we should pick one:
+  either wire the FE to `act-as` (server-side, audited, survives across devices) or
+  retire the unused endpoints and keep the header (client-side, simpler).
+- 🔴 Pending: a **persistent "Viewing as <Customer>" banner**. Today the "acting as"
+  notice only shows inside the tenant dropdown/sheet (and as subtle meta on the tenant
+  button) — there is no always-visible banner, so a SUPERADMIN can forget they are
+  scoped to a tenant (the footgun this design called out). This is the main UX gap.
 
 ### Prod deploy note
 `prisma migrate deploy` is a no-op here (no `migrations/` dir; dev uses `db push`).

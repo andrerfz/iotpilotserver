@@ -125,6 +125,19 @@ export function registerRoutes(): void {
             enableAdvancedMetrics: {type: 'string'}, enableBetaFeatures: {type: 'string'}, logLevel: {type: 'string'},
         },
     });
+    // SUPERADMIN "act as" tenant (server-side session). The FE drives tenant switching
+    // through these so the acting tenant lives on the session (audited), not just a header.
+    const ActingTenant = registry.registerSchema('ActingTenant', {
+        type: 'object',
+        properties: {
+            actingCustomerId: {type: 'string', nullable: true},
+            customerName: {type: 'string', nullable: true},
+        },
+    });
+    const ActAsInput = registry.registerSchema('ActAsInput', {
+        type: 'object', required: ['customerId'],
+        properties: {customerId: {type: 'string'}},
+    });
 
     // Response models (T8) — registered in bulk; referenced as R.<Name> below.
     const R: Record<string, {$ref: string}> = {};
@@ -175,6 +188,12 @@ export function registerRoutes(): void {
         security: bearer, response: MessageResponse, responseDescription: 'API key revoked'});
     registry.registerPath({method: 'post', path: '/auth/verify-2fa', summary: 'Verify a 2FA code', tags: ['Auth'],
         request: Verify2faInput, response: R.AuthData, clientWrap: true, responseDescription: '2FA verified'});
+    registry.registerPath({method: 'get', path: '/auth/act-as', summary: 'Get the current acting tenant (SUPERADMIN)', tags: ['Auth'],
+        security: bearer, response: ActingTenant, clientWrap: true, responseDescription: 'Acting tenant'});
+    registry.registerPath({method: 'post', path: '/auth/act-as', summary: 'Act as a tenant (SUPERADMIN)', tags: ['Auth'],
+        security: bearer, request: ActAsInput, response: ActingTenant, clientWrap: true, responseDescription: 'Acting tenant set'});
+    registry.registerPath({method: 'delete', path: '/auth/act-as', summary: 'Stop acting as a tenant (SUPERADMIN)', tags: ['Auth'],
+        security: bearer, response: ActingTenant, clientWrap: true, responseDescription: 'Acting tenant cleared'});
 
     // ── Devices ─────────────────────────────────────────────────
     const alertId = {name: 'alertId', in: 'path' as const, schema: {type: 'string'}, description: 'Alert ID'};

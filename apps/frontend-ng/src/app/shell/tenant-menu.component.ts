@@ -9,7 +9,7 @@ import { IonInfiniteScroll, IonInfiniteScrollContent } from '@ionic/angular/stan
 import { addIcons } from 'ionicons';
 import {
   chevronDown, peopleOutline, settingsOutline, closeOutline,
-  searchOutline, swapHorizontalOutline,
+  searchOutline, swapHorizontalOutline, eyeOutline,
 } from 'ionicons/icons';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
@@ -21,7 +21,7 @@ import { TenantContextService, CustomerSummary } from '@ng/core/auth/tenant-cont
 import { Api } from '@ng/core/api/generated/api';
 import { listAdminCustomers } from '@ng/core/api/generated/fn/admin/list-admin-customers';
 
-addIcons({ chevronDown, peopleOutline, settingsOutline, closeOutline, searchOutline, swapHorizontalOutline });
+addIcons({ chevronDown, peopleOutline, settingsOutline, closeOutline, searchOutline, swapHorizontalOutline, eyeOutline });
 
 interface Customer { id: string; name: string; status: string; }
 
@@ -36,7 +36,13 @@ interface Customer { id: string; name: string; status: string; }
         <span class="tenant__logo">{{ logo() }}</span>
         <span class="tenant__main">
           <span class="tenant__name">{{ displayName() }}</span>
-          <span class="tenant__meta">{{ isSuperAdmin() ? (ctx.isActive() ? ('shell.tenant.acting_as_customer' | translate) : ('shell.tenant.platform' | translate)) : ('shell.tenant.tenant' | translate) }}</span>
+          <span class="tenant__meta">
+            @if (isSuperAdmin() && ctx.isActive()) {
+              <ion-icon name="eye-outline" class="tenant__meta-eye"></ion-icon>{{ 'shell.tenant.acting_as' | translate }}
+            } @else {
+              {{ isSuperAdmin() ? ('shell.tenant.platform' | translate) : ('shell.tenant.tenant' | translate) }}
+            }
+          </span>
         </span>
         <ion-icon name="chevron-down" class="tenant__chev" [class.tenant__chev--open]="open()"></ion-icon>
       </button>
@@ -155,6 +161,10 @@ export class TenantMenuComponent {
   protected readonly isSuperAdmin = computed(() => hasRole(this.auth.role(), 'SUPERADMIN'));
 
   constructor() {
+    if (this.isSuperAdmin()) {
+      void this.ctx.hydrate();
+    }
+
     effect(() => {
       if (!this.stats.data() && !this.stats.loading()) {
         void this.stats.load();
@@ -228,15 +238,15 @@ export class TenantMenuComponent {
     }
   }
 
-  protected selectCustomer(c: Customer): void {
+  protected async selectCustomer(c: Customer): Promise<void> {
     const summary: CustomerSummary = { id: c.id, name: c.name, status: c.status };
-    this.ctx.set(summary);
+    await this.ctx.set(summary);
     this.tenantSheetRef()?.close();
     this.tenantSearch.set('');
   }
 
-  protected exitCustomer(): void {
-    this.ctx.clear();
+  protected async exitCustomer(): Promise<void> {
+    await this.ctx.clear();
     this.close();
     this.tenantSheetRef()?.close();
   }

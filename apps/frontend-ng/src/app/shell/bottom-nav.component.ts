@@ -215,6 +215,10 @@ export class BottomNavComponent {
   );
 
   constructor() {
+    if (this.isSuperAdmin()) {
+      void this.ctx.hydrate();
+    }
+
     this.searchInput$.pipe(
       debounceTime(300),
       distinctUntilChanged(),
@@ -285,15 +289,15 @@ export class BottomNavComponent {
     }
   }
 
-  protected selectTenant(c: CustomerSummary): void {
-    this.ctx.set(c);
+  protected async selectTenant(c: CustomerSummary): Promise<void> {
+    await this.ctx.set(c);
     this.tenantSheetRef()?.close();
     this.tenantSearch.set('');
     // Pages react reactively via toObservable(tenantCtx.customer).pipe(skip(1))
   }
 
-  protected exitTenant(): void {
-    this.ctx.clear();
+  protected async exitTenant(): Promise<void> {
+    await this.ctx.clear();
     this.tenantSheetRef()?.close();
     this.close();
   }

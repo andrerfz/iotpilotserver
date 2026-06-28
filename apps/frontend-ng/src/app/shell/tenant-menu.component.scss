@@ -9,7 +9,11 @@
   background: var(--surface); border: 1px solid var(--ui-border);
   cursor: pointer; text-align: left; font-family: var(--font-sans);
 
-  &--active { border-color: var(--primary-line); background: var(--primary-weak); }
+  &--active {
+    border-color: var(--primary);
+    background: var(--primary-weak);
+    box-shadow: inset 3px 0 0 0 var(--primary);
+  }
   &:hover { border-color: var(--border-strong); }
   &--active:hover { border-color: var(--primary); }
 }
@@ -22,7 +26,9 @@
 }
 .tenant__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .tenant__name { font-size: 12.5px; font-weight: 550; color: var(--text); }
-.tenant__meta { font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); }
+.tenant__meta { font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); display: flex; align-items: center; gap: 3px; }
+.tenant--active .tenant__meta { color: var(--primary); }
+.tenant__meta-eye { font-size: 11px; }
 .tenant__chev { width: 15px; height: 15px; color: var(--text-dim); transition: transform .15s; flex: none; }
 .tenant__chev--open { transform: rotate(180deg); }
 
