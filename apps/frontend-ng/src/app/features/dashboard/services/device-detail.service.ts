@@ -16,6 +16,7 @@ import { createDeviceCommand } from '@ng/core/api/generated/fn/devices/create-de
 import { updateDeviceAlert } from '@ng/core/api/generated/fn/devices/update-device-alert';
 import { createThreshold } from '@ng/core/api/generated/fn/monitoring/create-threshold';
 import { updateThreshold } from '@ng/core/api/generated/fn/monitoring/update-threshold';
+import { deleteThreshold } from '@ng/core/api/generated/fn/monitoring/delete-threshold';
 import { claimDevice as claimDeviceFn } from '@ng/core/api/generated/fn/devices/claim-device';
 import { updateDevice as updateDeviceFn } from '@ng/core/api/generated/fn/devices/update-device';
 import type { ListDeviceAlerts$Params } from '@ng/core/api/generated/fn/devices/list-device-alerts';
@@ -181,6 +182,11 @@ export class DeviceDetailService {
 
   async updateThreshold(id: string, payload: UpdateThresholdPayload): Promise<void> {
     await this.api.invoke(updateThreshold, { id, body: payload });
+    void this.thresholds.reload();
+  }
+
+  async deleteThreshold(id: string): Promise<void> {
+    await this.api.invoke(deleteThreshold, { id });
     void this.thresholds.reload();
   }
 

@@ -671,7 +671,14 @@
       "notifications": "Notifications",
       "security": "Security",
       "system": "System",
-      "api_keys": "API Keys"
+      "api_keys": "API Keys",
+      "thresholds": "Default thresholds"
+    },
+    "thresholds": {
+      "title": "Default alert thresholds",
+      "intro": "Tenant-wide defaults applied to every device without its own threshold. Per-device overrides are set in the device's Alerts tab.",
+      "saved": "Default thresholds saved",
+      "save_failed": "Couldn't save thresholds"
     }
   },
   "admin": {
@@ -887,7 +894,11 @@
       "save": "Save",
       "scope_device": "This device",
       "scope_global": "Global",
-      "failed": "Failed to load thresholds."
+      "failed": "Failed to load thresholds.",
+      "own": "Custom for this device",
+      "inherited_global": "Inherited from default",
+      "inherited_default": "System default",
+      "customize": "Customize"
     },
     "ble_claim": {
       "title": "Claim via Bluetooth",

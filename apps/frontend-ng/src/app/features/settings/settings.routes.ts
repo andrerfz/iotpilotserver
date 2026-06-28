@@ -38,4 +38,10 @@ export const SETTINGS_ROUTES: Routes = [
       import('./pages/api-keys/settings-api-keys.page').then((m) => m.SettingsApiKeysPage),
     data: { breadcrumb: ['nav.administer', 'nav.settings', 'settings.tabs.api_keys'] },
   },
+  {
+    path: 'thresholds',
+    loadComponent: () =>
+      import('./pages/thresholds/settings-thresholds.page').then((m) => m.SettingsThresholdsPage),
+    data: { breadcrumb: ['nav.administer', 'nav.settings', 'settings.tabs.thresholds'] },
+  },
 ];

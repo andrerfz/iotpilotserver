@@ -671,7 +671,14 @@
       "notifications": "Notifications",
       "security": "Sécurité",
       "system": "Système",
-      "api_keys": "Clés API"
+      "api_keys": "Clés API",
+      "thresholds": "Seuils par défaut"
+    },
+    "thresholds": {
+      "title": "Seuils d'alerte par défaut",
+      "intro": "Valeurs par défaut pour tout le locataire, appliquées à chaque appareil sans seuil propre. Les seuils par appareil se définissent dans l'onglet Alertes de l'appareil.",
+      "saved": "Seuils par défaut enregistrés",
+      "save_failed": "Impossible d'enregistrer les seuils"
     }
   },
   "admin": {
@@ -887,7 +894,11 @@
       "save": "Enregistrer",
       "scope_device": "Cet appareil",
       "scope_global": "Global",
-      "failed": "Échec du chargement des seuils."
+      "failed": "Échec du chargement des seuils.",
+      "own": "Propre à cet appareil",
+      "inherited_global": "Hérité du défaut global",
+      "inherited_default": "Valeur par défaut système",
+      "customize": "Personnaliser"
     },
     "ble_claim": {
       "title": "Revendiquer via Bluetooth",

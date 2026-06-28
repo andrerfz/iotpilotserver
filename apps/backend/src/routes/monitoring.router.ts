@@ -1189,7 +1189,7 @@ monitoringRouter.get('/thresholds', requireAuth(), async (req: AuthenticatedRequ
 });
 
 // POST /monitoring/thresholds - Create new threshold using DDD architecture
-monitoringRouter.post('/thresholds', requireAuth(), async (req: AuthenticatedRequest, res: Response) => {
+monitoringRouter.post('/thresholds', requireAuth('ADMIN'), async (req: AuthenticatedRequest, res: Response) => {
     try {
         console.log('🔐 MONITORING THRESHOLDS POST: Starting with DDD architecture');
 

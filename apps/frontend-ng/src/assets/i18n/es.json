@@ -671,7 +671,14 @@
       "notifications": "Notificaciones",
       "security": "Seguridad",
       "system": "Sistema",
-      "api_keys": "Claves API"
+      "api_keys": "Claves API",
+      "thresholds": "Umbrales por defecto"
+    },
+    "thresholds": {
+      "title": "Umbrales de alerta por defecto",
+      "intro": "Valores por defecto para todo el tenant, aplicados a cada dispositivo que no tenga su propio umbral. Los umbrales por dispositivo se ajustan en la pestaña Alertas del dispositivo.",
+      "saved": "Umbrales por defecto guardados",
+      "save_failed": "No se pudieron guardar los umbrales"
     }
   },
   "admin": {
@@ -887,7 +894,11 @@
       "save": "Guardar",
       "scope_device": "Este dispositivo",
       "scope_global": "Global",
-      "failed": "Error al cargar los umbrales."
+      "failed": "Error al cargar los umbrales.",
+      "own": "Propio de este dispositivo",
+      "inherited_global": "Heredado del global",
+      "inherited_default": "Por defecto del sistema",
+      "customize": "Personalizar"
     },
     "ble_claim": {
       "title": "Reclamar por Bluetooth",

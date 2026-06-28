@@ -16,5 +16,6 @@ export class SettingsHubPage {
     { label: 'settings.tabs.security', path: 'security' },
     { label: 'settings.tabs.system', path: 'system' },
     { label: 'settings.tabs.api_keys', path: 'api-keys' },
+    { label: 'settings.tabs.thresholds', path: 'thresholds' },
   ] as const;
 }

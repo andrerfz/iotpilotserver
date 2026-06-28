@@ -1,0 +1,45 @@
+<ion-content class="ion-padding">
+  <div class="settings-page">
+
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>{{ 'settings.thresholds.title' | translate }}</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="thresholds-intro">
+          <ion-icon name="information-circle-outline"></ion-icon>
+          <span>{{ 'settings.thresholds.intro' | translate }}</span>
+        </div>
+
+        @if (loading()) {
+          <div class="thresholds-loading">
+            <ion-spinner name="dots"></ion-spinner>
+          </div>
+        } @else {
+          <ion-list lines="none">
+            @for (m of metrics; track m.metricName) {
+              <ion-item>
+                <ion-label>{{ m.labelKey | translate }}</ion-label>
+                <ui-input
+                  slot="end"
+                  type="number"
+                  [ngModel]="getValue(m.metricName)"
+                  (ngModelChange)="setValue(m.metricName, $event)"
+                  [name]="m.metricName"
+                ></ui-input>
+                <ion-note slot="end" class="thresholds-unit">{{ m.unit }}</ion-note>
+              </ion-item>
+            }
+          </ion-list>
+
+          <div class="thresholds-actions">
+            <ion-button expand="block" (click)="onSave()" [disabled]="saving()">
+              {{ (saving() ? 'common.saving' : 'common.save') | translate }}
+            </ion-button>
+          </div>
+        }
+      </ion-card-content>
+    </ion-card>
+
+  </div>
+</ion-content>

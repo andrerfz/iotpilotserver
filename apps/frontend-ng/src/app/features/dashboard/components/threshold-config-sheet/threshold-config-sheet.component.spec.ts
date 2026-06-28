@@ -17,9 +17,11 @@ function makeSurface<T>(data: T | null = null) {
   };
 }
 
+// A sensor device 'dev-1' with its own sensor_temp override (24) and an inherited
+// global battery default (15, deviceId null — no per-device battery row).
 const MOCK_THRESHOLDS: Threshold[] = [
-  { id: 't1', metricName: 'cpu_usage', value: 80, unit: '%', operator: 'GREATER_THAN', severity: 'HIGH', type: 'STATIC', deviceId: 'dev-1' },
-  { id: 't2', metricName: 'memory_usage', value: 90, unit: '%', operator: 'GREATER_THAN', severity: 'HIGH', type: 'STATIC', deviceId: null },
+  { id: 't1', metricName: 'sensor_temp', value: 24, unit: '°C', operator: 'GREATER_THAN', severity: 'HIGH', type: 'STATIC', deviceId: 'dev-1' },
+  { id: 't2', metricName: 'battery', value: 15, unit: '%', operator: 'LESS_THAN', severity: 'HIGH', type: 'STATIC', deviceId: null },
 ];
 
 function buildSvc(thresholdData: Threshold[] | null = MOCK_THRESHOLDS) {
@@ -27,6 +29,7 @@ function buildSvc(thresholdData: Threshold[] | null = MOCK_THRESHOLDS) {
     thresholds: makeSurface<Threshold[]>(thresholdData),
     createThreshold: vi.fn().mockResolvedValue(undefined),
     updateThreshold: vi.fn().mockResolvedValue(undefined),
+    deleteThreshold: vi.fn().mockResolvedValue(undefined),
   };
 }
 
@@ -49,120 +52,85 @@ async function createComp(inputs: Record<string, unknown>, svc = buildSvc()) {
 describe('ThresholdConfigSheetComponent', () => {
   describe('activeMetrics', () => {
     it('returns system metrics for RASPBERRY_PI', async () => {
-      const { comp } = await createComp({ deviceId: 'dev-1', deviceType: 'RASPBERRY_PI' });
+      const { comp } = await createComp({ deviceId: 'dev-1', deviceType: 'PI_4' });
       const metrics = comp['activeMetrics']();
-      expect(metrics.map(m => m.metricName)).toContain('cpu_usage');
-      expect(metrics.map(m => m.metricName)).toContain('memory_usage');
-      expect(metrics.map(m => m.metricName)).toContain('temperature');
-      expect(metrics.map(m => m.metricName)).toContain('disk_usage');
+      expect(metrics.map(m => m.metricName)).toEqual(['cpu_usage', 'memory_usage', 'temperature', 'disk_usage']);
     });
 
     it('returns sensor metrics for ESP32C3_SENSOR', async () => {
       const { comp } = await createComp({ deviceId: 'dev-2', deviceType: 'ESP32C3_SENSOR' });
       const metrics = comp['activeMetrics']();
-      expect(metrics.map(m => m.metricName)).toContain('sensor_temp');
-      expect(metrics.map(m => m.metricName)).toContain('battery');
-      expect(metrics.map(m => m.metricName)).not.toContain('cpu_usage');
-    });
-
-    it('falls back to system metrics when deviceType is undefined', async () => {
-      const { comp } = await createComp({ deviceId: 'dev-3' });
-      const metrics = comp['activeMetrics']();
-      expect(metrics.map(m => m.metricName)).toContain('cpu_usage');
+      expect(metrics.map(m => m.metricName)).toEqual(['sensor_temp', 'battery']);
     });
   });
 
-  describe('scope', () => {
-    it('defaults to device scope', async () => {
-      const { comp } = await createComp({ deviceId: 'dev-1' });
-      expect(comp['scope']()).toBe('device');
-    });
-
-    it('switches scope on onScopeChange', async () => {
-      const { comp } = await createComp({ deviceId: 'dev-1' });
-      comp.onScopeChange('global');
-      expect(comp['scope']()).toBe('global');
-    });
-
-    it('filters scopedThresholds for device scope', async () => {
-      const { comp } = await createComp({ deviceId: 'dev-1' }, buildSvc(MOCK_THRESHOLDS));
-      comp['scope'].set('device');
-      const filtered = comp['scopedThresholds']();
-      expect(filtered.every(t => t.deviceId === 'dev-1')).toBe(true);
-    });
-
-    it('filters scopedThresholds for global scope', async () => {
-      const { comp } = await createComp({ deviceId: 'dev-1' }, buildSvc(MOCK_THRESHOLDS));
-      comp['scope'].set('global');
-      const filtered = comp['scopedThresholds']();
-      expect(filtered.every(t => t.deviceId == null)).toBe(true);
-    });
-  });
-
-  describe('getValue', () => {
-    it('returns defaultValue when no existing threshold', async () => {
-      const { comp } = await createComp({ deviceId: 'dev-1', deviceType: 'RASPBERRY_PI' }, buildSvc([]));
-      expect(comp['getValue']('cpu_usage')).toBe(80);
-      expect(comp['getValue']('temperature')).toBe(70);
-    });
-
-    it('returns loaded threshold value after populateValues', async () => {
-      const { comp } = await createComp({ deviceId: 'dev-1', deviceType: 'RASPBERRY_PI' }, buildSvc(MOCK_THRESHOLDS));
+  describe('inheritance', () => {
+    it('marks a metric with its own device row as overridden', async () => {
+      const { comp } = await createComp({ deviceId: 'dev-1', deviceType: 'ESP32C3_SENSOR' });
       comp['populateValues']();
-      expect(comp['getValue']('cpu_usage')).toBe(80);
+      expect(comp['isOverridden']('sensor_temp')).toBe(true);
+      expect(comp['displayValue']('sensor_temp')).toBe(24);
+    });
+
+    it('inherits the global value when the device has no own row', async () => {
+      const { comp } = await createComp({ deviceId: 'dev-1', deviceType: 'ESP32C3_SENSOR' });
+      comp['populateValues']();
+      expect(comp['isOverridden']('battery')).toBe(false);
+      expect(comp['inheritedSource']('battery')).toBe('global');
+      expect(comp['displayValue']('battery')).toBe(15);
+    });
+
+    it('falls back to the built-in default when no global exists', async () => {
+      const { comp } = await createComp({ deviceId: 'dev-1', deviceType: 'ESP32C3_SENSOR' }, buildSvc([]));
+      comp['populateValues']();
+      expect(comp['inheritedSource']('sensor_temp')).toBe('default');
+      expect(comp['displayValue']('sensor_temp')).toBe(8);
     });
   });
 
-  describe('setValue', () => {
-    it('updates values signal with numeric input', async () => {
-      const { comp } = await createComp({ deviceId: 'dev-1' });
-      comp['setValue']('cpu_usage', 75);
-      expect(comp['getValue']('cpu_usage')).toBe(75);
-    });
-
-    it('handles range object input by taking lower value', async () => {
-      const { comp } = await createComp({ deviceId: 'dev-1' });
-      comp['setValue']('cpu_usage', { lower: 60, upper: 90 });
-      expect(comp['getValue']('cpu_usage')).toBe(60);
+  describe('toggleOverride', () => {
+    it('turning on seeds the value from the inherited value', async () => {
+      const { comp } = await createComp({ deviceId: 'dev-1', deviceType: 'ESP32C3_SENSOR' });
+      comp['populateValues']();
+      comp['toggleOverride']('battery', true);
+      expect(comp['isOverridden']('battery')).toBe(true);
+      expect(comp['displayValue']('battery')).toBe(15);
     });
   });
 
   describe('onSave', () => {
-    it('calls createThreshold for all metrics when no existing thresholds', async () => {
-      const svc = buildSvc([]);
-      const { comp } = await createComp({ deviceId: 'dev-1', deviceType: 'RASPBERRY_PI' }, svc);
-      await comp.onSave();
-      expect(svc.createThreshold).toHaveBeenCalledTimes(4);
-      expect(svc.createThreshold).toHaveBeenCalledWith(
-        expect.objectContaining({ metricName: 'cpu_usage', deviceId: 'dev-1' }),
-      );
-    });
-
-    it('calls updateThreshold for existing matching threshold', async () => {
+    it('updates the existing device row for an overridden metric', async () => {
       const svc = buildSvc(MOCK_THRESHOLDS);
-      const { comp } = await createComp({ deviceId: 'dev-1', deviceType: 'RASPBERRY_PI' }, svc);
-      comp['scope'].set('device');
+      const { comp } = await createComp({ deviceId: 'dev-1', deviceType: 'ESP32C3_SENSOR' }, svc);
       comp['populateValues']();
       await comp.onSave();
-      expect(svc.updateThreshold).toHaveBeenCalledWith(
-        't1',
-        expect.objectContaining({ metricName: 'cpu_usage' }),
+      expect(svc.updateThreshold).toHaveBeenCalledWith('t1', expect.objectContaining({ metricName: 'sensor_temp' }));
+    });
+
+    it('creates a device row when an inherited metric is overridden', async () => {
+      const svc = buildSvc(MOCK_THRESHOLDS);
+      const { comp } = await createComp({ deviceId: 'dev-1', deviceType: 'ESP32C3_SENSOR' }, svc);
+      comp['populateValues']();
+      comp['toggleOverride']('battery', true);
+      comp['setValue']('battery', 30);
+      await comp.onSave();
+      expect(svc.createThreshold).toHaveBeenCalledWith(
+        expect.objectContaining({ metricName: 'battery', deviceId: 'dev-1', value: 30 }),
       );
     });
 
-    it('passes null deviceId for global scope', async () => {
-      const svc = buildSvc([]);
-      const { comp } = await createComp({ deviceId: 'dev-1', deviceType: 'RASPBERRY_PI' }, svc);
-      comp['scope'].set('global');
+    it('deletes the device row when an override is turned off', async () => {
+      const svc = buildSvc(MOCK_THRESHOLDS);
+      const { comp } = await createComp({ deviceId: 'dev-1', deviceType: 'ESP32C3_SENSOR' }, svc);
+      comp['populateValues']();
+      comp['toggleOverride']('sensor_temp', false);
       await comp.onSave();
-      expect(svc.createThreshold).toHaveBeenCalledWith(
-        expect.objectContaining({ deviceId: null }),
-      );
+      expect(svc.deleteThreshold).toHaveBeenCalledWith('t1');
     });
 
     it('emits thresholdsSaved on success', async () => {
       const svc = buildSvc([]);
-      const { comp } = await createComp({ deviceId: 'dev-1', deviceType: 'RASPBERRY_PI' }, svc);
+      const { comp } = await createComp({ deviceId: 'dev-1', deviceType: 'ESP32C3_SENSOR' }, svc);
       const spy = vi.fn();
       comp.thresholdsSaved.subscribe(spy);
       await comp.onSave();

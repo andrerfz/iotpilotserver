@@ -5,16 +5,6 @@
   (willOpen)="onWillOpen()"
   (save)="onSave()">
 
-  <!-- Scope selector -->
-  <div class="scope-seg">
-    <ion-segment
-      [value]="scope()"
-      (ionChange)="onScopeChange($any($event).detail.value)">
-      <ion-segment-button value="device">{{ 'components.threshold.scope_device' | translate }}</ion-segment-button>
-      <ion-segment-button value="global">{{ 'components.threshold.scope_global' | translate }}</ion-segment-button>
-    </ion-segment>
-  </div>
-
   <!-- Loading -->
   @if (thresholds.loading()) {
     <div class="sheet-loading">
@@ -30,28 +20,48 @@
     </div>
   }
 
-  <!-- Metric sliders -->
+  <!-- Metric rows: per-device override or inherited tenant default -->
   @if (!thresholds.loading()) {
     <div class="metrics-form">
       @for (m of activeMetrics(); track m.metricName) {
-        <div class="metric-row">
+        <div class="metric-row" [class.metric-row--inherited]="!isOverridden(m.metricName)">
           <div class="metric-row__head">
             <span class="metric-row__label">{{ m.labelKey | translate }}</span>
-            <span class="metric-row__val">{{ getValue(m.metricName) }}{{ m.unit }}</span>
+            <span class="metric-row__val">{{ displayValue(m.metricName) }}{{ m.unit }}</span>
           </div>
-          <ion-range
-            [min]="m.min"
-            [max]="m.max"
-            [step]="m.step"
-            [value]="getValue(m.metricName)"
-            [pin]="true"
-            [pinFormatter]="makePinFormatter(m.unit)"
-            (ionChange)="setValue(m.metricName, $any($event).detail.value)">
-          </ion-range>
-          <div class="metric-row__bounds">
-            <span>{{ m.min }}{{ m.unit }}</span>
-            <span>{{ m.max }}{{ m.unit }}</span>
+
+          <div class="metric-row__override">
+            <span class="metric-row__source">
+              @if (isOverridden(m.metricName)) {
+                {{ 'components.threshold.own' | translate }}
+              } @else if (inheritedSource(m.metricName) === 'global') {
+                {{ 'components.threshold.inherited_global' | translate }}
+              } @else {
+                {{ 'components.threshold.inherited_default' | translate }}
+              }
+            </span>
+            <ion-toggle
+              [checked]="isOverridden(m.metricName)"
+              (ionChange)="toggleOverride(m.metricName, $any($event).detail.checked)">
+              {{ 'components.threshold.customize' | translate }}
+            </ion-toggle>
           </div>
+
+          @if (isOverridden(m.metricName)) {
+            <ion-range
+              [min]="m.min"
+              [max]="m.max"
+              [step]="m.step"
+              [value]="displayValue(m.metricName)"
+              [pin]="true"
+              [pinFormatter]="makePinFormatter(m.unit)"
+              (ionChange)="setValue(m.metricName, $any($event).detail.value)">
+            </ion-range>
+            <div class="metric-row__bounds">
+              <span>{{ m.min }}{{ m.unit }}</span>
+              <span>{{ m.max }}{{ m.unit }}</span>
+            </div>
+          }
         </div>
       }
     </div>

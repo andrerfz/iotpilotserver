@@ -15,10 +15,9 @@ import {
   BottomSheetComponent,
   IonIcon,
   IonRange,
-  IonSegment,
-  IonSegmentButton,
   IonSpinner,
   IonText,
+  IonToggle,
 } from '@ng/shared/ui';
 import type { Threshold } from '@ng/core/api/generated/models/threshold';
 import type { CreateThresholdPayload } from '../../services/device-detail.service';
@@ -49,10 +48,16 @@ const SYSTEM_METRICS: MetricConfig[] = [
 ];
 
 const SENSOR_METRICS: MetricConfig[] = [
-  { metricName: 'sensor_temp',   label: 'Sensor Temp',   labelKey: 'metrics.sensor_temp',  unit: '°C', min: -20, max: 80,  step: 1, defaultValue: 50, operator: 'GREATER_THAN' },
+  { metricName: 'sensor_temp',   label: 'Sensor Temp',   labelKey: 'metrics.sensor_temp',  unit: '°C', min: -20, max: 80,  step: 1, defaultValue: 8,  operator: 'GREATER_THAN' },
   { metricName: 'battery',       label: 'Battery Low',   labelKey: 'metrics.battery_low',  unit: '%',  min: 0,   max: 100, step: 5, defaultValue: 20, operator: 'LESS_THAN' },
 ];
 
+/**
+ * Per-device alert threshold editor (Alerts tab). Device-scoped only: each metric
+ * either uses this device's own override or inherits the tenant default (the global
+ * threshold managed in Settings → "Umbrales por defecto", or the built-in default).
+ * Toggling "override" off deletes the device's row so it falls back to the global.
+ */
 @Component({
   selector: 'app-threshold-config-sheet',
   templateUrl: 'threshold-config-sheet.component.html',
@@ -64,10 +69,9 @@ const SENSOR_METRICS: MetricConfig[] = [
     BottomSheetComponent,
     IonIcon,
     IonRange,
-    IonSegment,
-    IonSegmentButton,
     IonSpinner,
     IonText,
+    IonToggle,
   ],
 })
 export class ThresholdConfigSheetComponent {
@@ -80,8 +84,10 @@ export class ThresholdConfigSheetComponent {
 
   readonly thresholdsSaved = output<void>();
 
-  protected readonly scope = signal<'device' | 'global'>('device');
+  /** Per-metric override value (only meaningful when the metric is overridden). */
   protected readonly values = signal<Record<string, number>>({});
+  /** Metric names currently overridden for this device. */
+  protected readonly overridden = signal<Set<string>>(new Set());
   protected readonly saving = signal(false);
 
   readonly thresholds = this.svc.thresholds;
@@ -90,16 +96,14 @@ export class ThresholdConfigSheetComponent {
     hasSystemMetrics(this.deviceType()) ? SYSTEM_METRICS : SENSOR_METRICS,
   );
 
-  protected readonly scopedThresholds = computed(() => {
-    const all = this.thresholds.data() ?? [];
-    const id = this.deviceId();
-    return this.scope() === 'device'
-      ? all.filter(t => t.deviceId === id)
-      : all.filter(t => t.deviceId == null);
-  });
+  private readonly deviceThresholds = computed(() =>
+    (this.thresholds.data() ?? []).filter(t => t.deviceId === this.deviceId()),
+  );
+  private readonly globalThresholds = computed(() =>
+    (this.thresholds.data() ?? []).filter(t => t.deviceId == null),
+  );
 
   openSheet(): void {
-    this.scope.set('device');
     void this.svc.thresholds.load();
     this.sheet().open();
   }
@@ -108,16 +112,40 @@ export class ThresholdConfigSheetComponent {
     void this.svc.thresholds.load().then(() => this.populateValues());
   }
 
-  onScopeChange(val: string): void {
-    this.scope.set(val as 'device' | 'global');
-    this.populateValues();
+  protected isOverridden(metricName: string): boolean {
+    return this.overridden().has(metricName);
   }
 
-  protected getValue(metricName: string): number {
-    const v = this.values()[metricName];
-    if (v !== undefined) return v;
-    const m = [...SYSTEM_METRICS, ...SENSOR_METRICS].find(x => x.metricName === metricName);
-    return m?.defaultValue ?? 0;
+  /** The value inherited when this device has no override: the global row, else the built-in default. */
+  protected inheritedValue(metricName: string): number {
+    const global = this.globalThresholds().find(t => t.metricName === metricName);
+    if (global?.value !== undefined && global.value !== null) return global.value;
+    return this.metricConfig(metricName)?.defaultValue ?? 0;
+  }
+
+  /** 'global' if a tenant default exists for this metric, otherwise 'default'. */
+  protected inheritedSource(metricName: string): 'global' | 'default' {
+    return this.globalThresholds().some(t => t.metricName === metricName) ? 'global' : 'default';
+  }
+
+  /** Value shown on the slider: the override when set, otherwise the inherited value. */
+  protected displayValue(metricName: string): number {
+    if (this.isOverridden(metricName)) {
+      const v = this.values()[metricName];
+      if (v !== undefined) return v;
+    }
+    return this.inheritedValue(metricName);
+  }
+
+  protected toggleOverride(metricName: string, on: boolean): void {
+    this.overridden.update(prev => {
+      const next = new Set(prev);
+      if (on) next.add(metricName); else next.delete(metricName);
+      return next;
+    });
+    if (on && this.values()[metricName] === undefined) {
+      this.values.update(prev => ({ ...prev, [metricName]: this.inheritedValue(metricName) }));
+    }
   }
 
   protected setValue(metricName: string, raw: number | { lower: number; upper: number }): void {
@@ -129,40 +157,47 @@ export class ThresholdConfigSheetComponent {
     if (this.saving()) return;
     this.saving.set(true);
     const metrics = this.activeMetrics();
-    const existing = this.scopedThresholds();
-    const scopeDeviceId = this.scope() === 'device' ? this.deviceId() : null;
+    const deviceRows = this.deviceThresholds();
+    const deviceId = this.deviceId();
 
     try {
       await Promise.all(metrics.map(async m => {
-        const value = this.getValue(m.metricName);
-        const found = existing.find(t => t.metricName === m.metricName);
-        if (found?.id) {
-          await this.svc.updateThreshold(found.id, {
-            name: found.name ?? m.label,
-            description: found.description ?? '',
-            metricName: m.metricName,
-            operator: m.operator,
-            value,
-            unit: m.unit,
-            severity: found.severity ?? 'HIGH',
-            type: 'STATIC',
-            cooldownMinutes: found.cooldownMinutes,
-            enabled: found.isEnabled ?? true,
-          });
-        } else {
-          const payload: CreateThresholdPayload = {
-            deviceId: scopeDeviceId,
-            name: m.label,
-            description: `Auto-generated ${m.label} threshold`,
-            metricName: m.metricName,
-            operator: m.operator,
-            value,
-            unit: m.unit,
-            severity: 'HIGH',
-            type: 'STATIC',
-            cooldownMinutes: 5,
-          };
-          await this.svc.createThreshold(payload);
+        const found = deviceRows.find(t => t.metricName === m.metricName);
+        const overriding = this.isOverridden(m.metricName);
+
+        if (overriding) {
+          const value = this.displayValue(m.metricName);
+          if (found?.id) {
+            await this.svc.updateThreshold(found.id, {
+              name: found.name ?? m.label,
+              description: found.description ?? '',
+              metricName: m.metricName,
+              operator: m.operator,
+              value,
+              unit: m.unit,
+              severity: found.severity ?? 'HIGH',
+              type: 'STATIC',
+              cooldownMinutes: found.cooldownMinutes,
+              enabled: found.isEnabled ?? true,
+            });
+          } else {
+            const payload: CreateThresholdPayload = {
+              deviceId,
+              name: m.label,
+              description: `Per-device ${m.label} threshold`,
+              metricName: m.metricName,
+              operator: m.operator,
+              value,
+              unit: m.unit,
+              severity: 'HIGH',
+              type: 'STATIC',
+              cooldownMinutes: 5,
+            };
+            await this.svc.createThreshold(payload);
+          }
+        } else if (found?.id) {
+          // Override turned off → delete the device row so it falls back to the global.
+          await this.svc.deleteThreshold(found.id);
         }
       }));
       void this.toast.success('Thresholds saved');
@@ -179,13 +214,24 @@ export class ThresholdConfigSheetComponent {
     return (v: number) => `${v}${unit}`;
   }
 
+  private metricConfig(metricName: string): MetricConfig | undefined {
+    return [...SYSTEM_METRICS, ...SENSOR_METRICS].find(x => x.metricName === metricName);
+  }
+
   private populateValues(): void {
-    const existing = this.scopedThresholds();
+    const deviceRows = this.deviceThresholds();
     const newValues: Record<string, number> = {};
+    const newOverridden = new Set<string>();
     for (const m of this.activeMetrics()) {
-      const found = existing.find(t => t.metricName === m.metricName);
-      newValues[m.metricName] = found?.value ?? m.defaultValue;
+      const found = deviceRows.find(t => t.metricName === m.metricName);
+      if (found?.value !== undefined && found.value !== null) {
+        newOverridden.add(m.metricName);
+        newValues[m.metricName] = found.value;
+      } else {
+        newValues[m.metricName] = this.inheritedValue(m.metricName);
+      }
     }
     this.values.set(newValues);
+    this.overridden.set(newOverridden);
   }
 }

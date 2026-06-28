@@ -671,7 +671,14 @@
       "notifications": "Notifiche",
       "security": "Sicurezza",
       "system": "Sistema",
-      "api_keys": "Chiavi API"
+      "api_keys": "Chiavi API",
+      "thresholds": "Soglie predefinite"
+    },
+    "thresholds": {
+      "title": "Soglie di avviso predefinite",
+      "intro": "Valori predefiniti per l'intero tenant, applicati a ogni dispositivo senza una soglia propria. Le soglie per dispositivo si impostano nella scheda Avvisi del dispositivo.",
+      "saved": "Soglie predefinite salvate",
+      "save_failed": "Impossibile salvare le soglie"
     }
   },
   "admin": {
@@ -887,7 +894,11 @@
       "save": "Salva",
       "scope_device": "Questo dispositivo",
       "scope_global": "Globale",
-      "failed": "Caricamento soglie non riuscito."
+      "failed": "Caricamento soglie non riuscito.",
+      "own": "Specifico per questo dispositivo",
+      "inherited_global": "Ereditato dal globale",
+      "inherited_default": "Predefinito di sistema",
+      "customize": "Personalizza"
     },
     "ble_claim": {
       "title": "Rivendica via Bluetooth",
