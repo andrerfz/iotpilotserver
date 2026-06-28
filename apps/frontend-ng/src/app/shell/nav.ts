@@ -46,10 +46,11 @@ export const NAV: NavGroup[] = [
       {
         label: 'nav.overview', path: 'admin', icon: 'stats-chart-outline', exact: true, adminOnly: true,
         children: [
-          { label: 'nav.devices', path: 'admin/devices', icon: 'hardware-chip-outline', adminOnly: true, superAdminOnly: true },
-          { label: 'nav.users',   path: 'admin/users',   icon: 'people-outline', adminOnly: true },
-          { label: 'nav.logs',    path: 'admin/logs',    icon: 'document-text-outline', adminOnly: true },
-          { label: 'nav.system',  path: 'admin/system',  icon: 'server-outline', adminOnly: true },
+          { label: 'nav.devices',   path: 'admin/devices',   icon: 'hardware-chip-outline', adminOnly: true, superAdminOnly: true },
+          { label: 'nav.customers', path: 'admin/customers', icon: 'business-outline', adminOnly: true, superAdminOnly: true },
+          { label: 'nav.users',     path: 'admin/users',     icon: 'people-outline', adminOnly: true },
+          { label: 'nav.logs',      path: 'admin/logs',      icon: 'document-text-outline', adminOnly: true },
+          { label: 'nav.system',    path: 'admin/system',    icon: 'server-outline', adminOnly: true },
         ],
       },
     ],
@@ -60,11 +61,11 @@ export const NAV: NavGroup[] = [
 export const PRIMARY_PATHS = new Set(['dashboard', 'devices', 'monitoring']);
 
 /**
- * Mobile primary tabs for a SUPERADMIN in Platform mode (not acting as a tenant):
- * platform-level views that work cross-tenant, instead of the tenant-scoped ones.
+ * Mobile primary tab(s) for a SUPERADMIN in Platform mode (not acting as a tenant).
+ * Just the admin overview — the admin sub-pages (devices/customers/users/logs/system)
+ * are navigated by the in-page admin-tabs bar, so we don't duplicate them here. The
+ * bottom bar adds a tenant switcher tab for SUPERADMIN (see BottomNavComponent).
  */
 export const PLATFORM_PRIMARY: NavItem[] = [
   { label: 'nav.overview', path: 'admin', icon: 'stats-chart-outline', exact: true },
-  { label: 'nav.devices', path: 'admin/devices', icon: 'hardware-chip-outline' },
-  { label: 'nav.users', path: 'admin/users', icon: 'people-outline' },
 ];

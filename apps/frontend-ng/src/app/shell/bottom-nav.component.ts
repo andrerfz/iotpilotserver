@@ -17,7 +17,7 @@ import { addIcons } from 'ionicons';
 import {
   gridOutline, hardwareChipOutline, notificationsOutline, settingsOutline,
   ellipsisHorizontal, documentTextOutline, peopleOutline,
-  moonOutline, sunnyOutline, logOutOutline, closeOutline, searchOutline,
+  moonOutline, sunnyOutline, logOutOutline, closeOutline, searchOutline, businessOutline,
 } from 'ionicons/icons';
 
 import { NAV, NavItem, PRIMARY_PATHS, PLATFORM_PRIMARY } from './nav';
@@ -25,7 +25,7 @@ import { NAV, NavItem, PRIMARY_PATHS, PLATFORM_PRIMARY } from './nav';
 addIcons({
   gridOutline, hardwareChipOutline, notificationsOutline, settingsOutline,
   ellipsisHorizontal, documentTextOutline, peopleOutline,
-  moonOutline, sunnyOutline, logOutOutline, closeOutline, searchOutline,
+  moonOutline, sunnyOutline, logOutOutline, closeOutline, searchOutline, businessOutline,
 });
 
 @Component({
@@ -94,24 +94,6 @@ addIcons({
         </div>
       }
 
-      @if (isSuperAdmin()) {
-        <div class="more-sep"></div>
-        <div class="more-section">
-          <div class="more-section__label">{{ 'shell.bottom_nav.platform' | translate }}</div>
-          <div class="more-grid">
-            <button class="more-tile" [class.more-tile--active]="ctx.isActive()" (click)="openTenantSheet()">
-              <span class="more-tile__icon"><ion-icon name="people-outline"></ion-icon></span>
-              <span class="more-tile__label">{{ ctx.isActive() ? ctx.customer()!.name : ('shell.tenant.switch' | translate) }}</span>
-            </button>
-            @if (ctx.isActive()) {
-              <button class="more-tile more-tile--danger" (click)="exitTenant()">
-                <span class="more-tile__icon"><ion-icon name="close-outline"></ion-icon></span>
-                <span class="more-tile__label">{{ 'shell.tenant.exit' | translate }}</span>
-              </button>
-            }
-          </div>
-        </div>
-      }
     </div>
 
     <!-- Bottom bar -->
@@ -121,6 +103,12 @@ addIcons({
            [attr.aria-label]="it.label | translate">
           <ion-icon [name]="it.icon"></ion-icon>
         </a>
+      }
+      @if (isSuperAdmin()) {
+        <button class="bnav-tab" [class.bnav-tab--active]="ctx.isActive()" (click)="openTenantSheet()"
+                [attr.aria-label]="'shell.tenant.switch' | translate">
+          <ion-icon name="business-outline"></ion-icon>
+        </button>
       }
       <button class="bnav-tab" [class.bnav-tab--active]="open()" (click)="toggle()" [attr.aria-label]="'shell.bottom_nav.more' | translate">
         <ion-icon name="ellipsis-horizontal"></ion-icon>

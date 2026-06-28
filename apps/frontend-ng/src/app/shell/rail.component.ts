@@ -6,7 +6,7 @@ import { addIcons } from 'ionicons';
 import {
   gridOutline, hardwareChipOutline, notificationsOutline,
   documentTextOutline, peopleOutline,
-  statsChartOutline, serverOutline,
+  statsChartOutline, serverOutline, businessOutline,
 } from 'ionicons/icons';
 import { NAV } from './nav';
 import { AuthService } from '../core/auth/auth.service';
@@ -16,7 +16,7 @@ import { TenantContextService } from '../core/auth/tenant-context.service';
 addIcons({
   gridOutline, hardwareChipOutline, notificationsOutline,
   documentTextOutline, peopleOutline,
-  statsChartOutline, serverOutline,
+  statsChartOutline, serverOutline, businessOutline,
 });
 
 /**
