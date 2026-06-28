@@ -13,7 +13,6 @@ import {
 } from '@ng/shared/ui';
 import { AdminSystemService } from '../../services/admin-system.service';
 import { TopbarService } from '../../../../shell/topbar.service';
-import { AdminTabsComponent } from '../../components/admin-tabs.component';
 
 addIcons({ reloadOutline, serverOutline, layersOutline, albumsOutline });
 
@@ -28,7 +27,6 @@ addIcons({ reloadOutline, serverOutline, layersOutline, albumsOutline });
     IonButton, IonIcon, IonProgressBar, IonBadge, IonChip,
     IonList, IonItem, IonLabel, IonSkeletonText,
     EmptyStateComponent,
-    AdminTabsComponent,
     TranslatePipe,
   ],
 })

@@ -28,7 +28,6 @@ import { ViewportService } from '@ng/core/layout/viewport.service';
 import { AdminDevicesService, AdminDevice } from '../../services/admin-devices.service';
 import { TopbarService } from '../../../../shell/topbar.service';
 import { TenantContextService } from '@ng/core/auth/tenant-context.service';
-import { AdminTabsComponent } from '../../components/admin-tabs.component';
 
 addIcons({ refreshOutline, eyeOutline, reloadOutline, hardwareChipOutline, checkmarkCircleOutline, closeCircleOutline, warningOutline });
 
@@ -44,7 +43,6 @@ addIcons({ refreshOutline, eyeOutline, reloadOutline, hardwareChipOutline, check
     MetricCardComponent, MetricGridComponent, DataTableComponent, EmptyStateComponent,
     StatusBadgeComponent, DeviceTypeBadgeComponent, StatusDotComponent,
     UiSearchFieldComponent, UiSelectComponent,
-    AdminTabsComponent,
     IonRefresher, IonRefresherContent,
     NgTemplateOutlet,
     TranslatePipe,

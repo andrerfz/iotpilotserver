@@ -30,7 +30,6 @@ import { hasRole } from '../../../../core/auth/roles';
 import { AdminUsersService, AdminUser } from '../../services/admin-users.service';
 import { TopbarService } from '../../../../shell/topbar.service';
 import { TenantContextService } from '@ng/core/auth/tenant-context.service';
-import { AdminTabsComponent } from '../../components/admin-tabs.component';
 
 addIcons({ checkmarkOutline, closeOutline, banOutline, personOutline, addOutline });
 
@@ -48,7 +47,6 @@ addIcons({ checkmarkOutline, closeOutline, banOutline, personOutline, addOutline
     StatusBadgeComponent,
     UiSearchFieldComponent, UiSelectComponent,
     AdminNewUserModalComponent,
-    AdminTabsComponent,
     IonRefresher, IonRefresherContent,
     NgTemplateOutlet,
     TranslatePipe,

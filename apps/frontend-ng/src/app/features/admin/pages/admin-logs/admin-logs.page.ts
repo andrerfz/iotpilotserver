@@ -19,7 +19,6 @@ import type { SelectOption } from '@ng/shared/ui';
 import { ViewportService } from '@ng/core/layout/viewport.service';
 import { AdminLogsService, AdminLogEntry } from '../../services/admin-logs.service';
 import { TopbarService } from '../../../../shell/topbar.service';
-import { AdminTabsComponent } from '../../components/admin-tabs.component';
 
 addIcons({ downloadOutline, reloadOutline, documentOutline, codeOutline, documentTextOutline });
 
@@ -49,7 +48,6 @@ function toLogRows(logs: AdminLogEntry[]): Record<string, string>[] {
     EmptyStateComponent,
     UiSearchFieldComponent, UiSelectComponent,
     BottomSheetComponent,
-    AdminTabsComponent,
     TranslatePipe,
   ],
 })

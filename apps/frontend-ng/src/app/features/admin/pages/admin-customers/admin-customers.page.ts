@@ -22,7 +22,6 @@ import type { ColumnDef, SelectOption } from '@ng/shared/ui';
 import { ViewportService } from '@ng/core/layout/viewport.service';
 import { AdminCustomersService, AdminCustomer } from '../../services/admin-customers.service';
 import { TopbarService } from '../../../../shell/topbar.service';
-import { AdminTabsComponent } from '../../components/admin-tabs.component';
 
 addIcons({ addOutline, pencilOutline, banOutline, businessOutline });
 
@@ -39,7 +38,6 @@ addIcons({ addOutline, pencilOutline, banOutline, businessOutline });
     StatusBadgeComponent, StatusDotComponent,
     UiSearchFieldComponent, UiSelectComponent, UiInputComponent,
     BottomSheetComponent,
-    AdminTabsComponent,
     IonRefresher, IonRefresherContent,
     TranslatePipe,
   ],

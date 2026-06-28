@@ -81,7 +81,7 @@ addIcons({
         <div class="more-section">
           <div class="more-section__label">{{ 'shell.bottom_nav.admin' | translate }}</div>
           <div class="more-grid">
-            @for (it of adminNav; track it.path) {
+            @for (it of adminNav(); track it.path) {
               <a class="more-tile" [routerLink]="it.path"
                 routerLinkActive="more-tile--active"
                 [routerLinkActiveOptions]="{ exact: it.exact ?? false }"
@@ -183,10 +183,28 @@ export class BottomNavComponent {
   protected readonly secondaryNav = this.allItems.filter(
     it => !PRIMARY_PATHS.has(it.path) && !it.adminOnly && it.path !== 'settings',
   );
-  protected readonly adminNav = this.allItems.filter(it => it.adminOnly);
 
   protected readonly role = computed(() => this.auth.role() ?? 'USER');
   protected readonly showAdmin = computed(() => hasRole(this.role(), 'ADMIN'));
+
+  // Admin section in the "More" drawer — this is the mobile counterpart of the rail's
+  // Administer sub-nav (the old top admin-tabs bar was removed). Flatten NAV incl.
+  // children, then role/tenant-gate: SUPERADMIN-only items only for superadmin;
+  // tenant-scoped items hidden for a superadmin in Platform mode (no tenant).
+  protected readonly adminNav = computed<NavItem[]>(() => {
+    const sa = this.isSuperAdmin();
+    const acting = this.ctx.isActive();
+    const flat: NavItem[] = [];
+    for (const g of NAV) for (const it of g.items) {
+      flat.push(it);
+      for (const c of it.children ?? []) flat.push(c);
+    }
+    return flat.filter(it =>
+      !!it.adminOnly &&
+      (!it.superAdminOnly || sa) &&
+      (!it.tenantScoped || !sa || acting),
+    );
+  });
   protected readonly isSuperAdmin = computed(() => hasRole(this.role(), 'SUPERADMIN'));
 
   // Bottom-bar tabs: tenant-scoped by default; for a SUPERADMIN in Platform mode

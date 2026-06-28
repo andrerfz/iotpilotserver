@@ -18,7 +18,6 @@ import {
 import { AdminStatsService } from '../../services/admin-stats.service';
 import { TopbarService } from '../../../../shell/topbar.service';
 import { TenantContextService } from '@ng/core/auth/tenant-context.service';
-import { AdminTabsComponent } from '../../components/admin-tabs.component';
 
 addIcons({ hardwareChipOutline, peopleOutline, documentTextOutline, serverOutline, statsChartOutline });
 
@@ -32,7 +31,6 @@ addIcons({ hardwareChipOutline, peopleOutline, documentTextOutline, serverOutlin
     RouterLink,
     IonContent, IonCard, IonCardContent, IonIcon, IonButton, IonSkeletonText,
     MetricCardComponent, MetricGridComponent, EmptyStateComponent,
-    AdminTabsComponent,
     IonRefresher, IonRefresherContent,
     TranslatePipe,
   ],
