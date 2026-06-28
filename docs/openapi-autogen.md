@@ -199,6 +199,49 @@ handler that changes its response shape won't be caught.
   ProfileSettings/Security/Notifications fixes). `operation-ids.ts` is a static map —
   new endpoints need an entry or they get fallback names.
 
+#### T10 execution recipe (per entity — do ONE bounded context at a time)
+register-routes safely mixes Zod-derived (`toJson(schema)`) and hand-written (`R.X`)
+schemas, so a half-migrated state never breaks. For each entity:
+1. **Find the real shape:** read the actual response builder (mapper like `alertToDTO`,
+   or the inline object the route `send.ok`s). That — not the existing schema — is truth.
+2. **Define/align the Zod schema** in the context's `*.schemas.ts` to match the builder
+   **exactly** (field presence, nullability, enums). Add `z.infer` type.
+3. **Type the builder's return** as that inferred type → tsc now fails if the handler
+   drifts (this is the "closed loop").
+4. **Wire register-routes** to `toJson(ctx.XResponseSchema)`; delete the entry from
+   `response-schemas.ts`.
+5. **Regenerate** (`make openapi-client` → `make ng-api-generate`), then **diff the
+   client model**: additive changes (new optional fields, widened nullability) are safe;
+   **removed fields or narrowed enums break the FE** — reconcile before committing.
+6. tsc (backend+FE) + lint + 536 tests + `make ng-api-check`.
+
+#### Landmines already found (must be resolved during migration, not assumed)
+- **The existing Zod response schemas have already drifted** from the hand schemas /
+  client — `AlertResponseSchema` and `DeviceResponseSchema` exist but do NOT match
+  `R.Alert`/`R.Device`. Treat them as untrusted; re-derive from the builder.
+- **Alert** (`alertToDTO`): real output has `deviceId: string|null` (R.Alert says
+  required), plus `source` and `updatedAt` that no schema has; `AlertResponseSchema`
+  is missing `acknowledgedAt`+`metadata` (FE ack logic needs them) and wrongly adds
+  `customerId` (the builder doesn't return it).
+- **Alert `type` enum is incomplete:** client/schemas list HIGH_CPU/HIGH_MEMORY/
+  HIGH_TEMPERATURE/DISK_SPACE/DEVICE_OFFLINE/SECURITY_ALERT/CUSTOM, but handlers also
+  create `LOW_BATTERY`, `LOW_DISK_SPACE`, `APPLICATION_ERROR`. The enum must be widened
+  (touches the AlertType domain VO + common.schemas + FE display/icon maps) — a
+  cross-cutting change, do it deliberately.
+- **`type` fields are computed as `string`** in builders (`x?.getValue() || 'CUSTOM'`),
+  so typing against a `z.enum` needs a cast (`as XResponse['type']`) — acceptable, but
+  it weakens that one field's loop check.
+- **Envelope:** some GETs registered `paginated`/`clientWrap` don't return `data` as a
+  bare array (e.g. thresholds returns `{thresholds:[…]}`); verify the wire shape vs the
+  registered envelope when migrating, or the client unwrap breaks.
+
+#### Suggested rollout order (smallest blast radius first)
+auth/user (already partly Zod) → settings (already objR-tightened) → customer →
+monitoring (Alert/Threshold/Metrics — resolve the type-enum landmine here) → device
+(largest: Device/Command/Settings/Logs/Metrics). Best run as a dedicated focused
+effort (or an opt-in multi-agent workflow), one context per commit, FE-client diff
+reviewed each time.
+
 ### Response key casing — camelCase (decided)
 Response keys are **camelCase** (`deviceId`, `cpuThreshold`, `acknowledgedAt`…), with 3
 legacy snake_case exceptions kept to match the handlers (`_count`, `total_points`,
