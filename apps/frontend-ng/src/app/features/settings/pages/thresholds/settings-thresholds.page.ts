@@ -102,7 +102,11 @@ export class SettingsThresholdsPage implements OnInit {
     this.loading.set(true);
     try {
       const res = await this.api.invoke(listThresholds, {});
-      const all = ((res as { data?: Threshold[] }).data ?? (res as Threshold[]) ?? []);
+      // Backend wraps the list under data.thresholds; tolerate a bare array too.
+      const payload = (res as { data?: unknown }).data;
+      const all: Threshold[] = Array.isArray(payload)
+        ? (payload as Threshold[])
+        : ((payload as { thresholds?: Threshold[] })?.thresholds ?? []);
       const globals = all.filter(t => t.deviceId == null);
       const vals: Record<string, number> = {};
       this.existing = {};

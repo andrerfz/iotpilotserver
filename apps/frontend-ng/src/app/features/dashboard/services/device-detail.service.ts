@@ -130,7 +130,13 @@ export class DeviceDetailService {
   readonly thresholds = makeSurface<Threshold[], ListThresholds$Params>(
     async (params) => {
       const res = await this.api.invoke(listThresholds, params);
-      return (res as { data?: Threshold[] }).data ?? [];
+      // Backend wraps the list under data.thresholds ({ thresholds, filters,
+      // summary }). Tolerate a bare array too, in case the contract is later
+      // normalised — otherwise `.data` is an object and `.filter` blows up.
+      const payload = (res as { data?: unknown }).data;
+      return Array.isArray(payload)
+        ? (payload as Threshold[])
+        : ((payload as { thresholds?: Threshold[] })?.thresholds ?? []);
     },
   );
 
