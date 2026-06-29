@@ -679,7 +679,10 @@
       "title": "Soglie di avviso predefinite",
       "intro": "Valori predefiniti per l'intero tenant, applicati a ogni dispositivo senza una soglia propria. Le soglie per dispositivo si impostano nella scheda Avvisi del dispositivo.",
       "saved": "Soglie predefinite salvate",
-      "save_failed": "Impossibile salvare le soglie"
+      "save_failed": "Impossibile salvare le soglie",
+      "col_metric": "Metrica",
+      "col_value": "Valore",
+      "col_unit": "Unità"
     }
   },
   "admin": {

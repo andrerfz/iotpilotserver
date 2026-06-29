@@ -679,7 +679,10 @@
       "title": "Umbrales de alerta por defecto",
       "intro": "Valores por defecto para todo el tenant, aplicados a cada dispositivo que no tenga su propio umbral. Los umbrales por dispositivo se ajustan en la pestaña Alertas del dispositivo.",
       "saved": "Umbrales por defecto guardados",
-      "save_failed": "No se pudieron guardar los umbrales"
+      "save_failed": "No se pudieron guardar los umbrales",
+      "col_metric": "Métrica",
+      "col_value": "Valor",
+      "col_unit": "Unidad"
     }
   },
   "admin": {

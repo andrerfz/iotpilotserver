@@ -16,7 +16,35 @@
             <ion-spinner name="dots"></ion-spinner>
           </div>
         } @else {
-          <ion-list lines="none">
+          <!-- Desktop: table -->
+          <table class="thr-table">
+            <thead>
+              <tr>
+                <th>{{ 'settings.thresholds.col_metric' | translate }}</th>
+                <th>{{ 'settings.thresholds.col_value' | translate }}</th>
+                <th>{{ 'settings.thresholds.col_unit' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (m of metrics; track m.metricName) {
+                <tr>
+                  <td>{{ m.labelKey | translate }}</td>
+                  <td class="thr-table__value">
+                    <ui-input
+                      type="number"
+                      [ngModel]="getValue(m.metricName)"
+                      (ngModelChange)="setValue(m.metricName, $event)"
+                      [name]="m.metricName + '_table'"
+                    ></ui-input>
+                  </td>
+                  <td class="thr-table__unit">{{ m.unit }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+
+          <!-- Mobile: list -->
+          <ion-list class="thr-list" lines="none">
             @for (m of metrics; track m.metricName) {
               <ion-item>
                 <ion-label>{{ m.labelKey | translate }}</ion-label>

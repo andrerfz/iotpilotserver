@@ -679,7 +679,10 @@
       "title": "Default alert thresholds",
       "intro": "Tenant-wide defaults applied to every device without its own threshold. Per-device overrides are set in the device's Alerts tab.",
       "saved": "Default thresholds saved",
-      "save_failed": "Couldn't save thresholds"
+      "save_failed": "Couldn't save thresholds",
+      "col_metric": "Metric",
+      "col_value": "Value",
+      "col_unit": "Unit"
     }
   },
   "admin": {

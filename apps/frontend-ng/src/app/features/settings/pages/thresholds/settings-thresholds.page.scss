@@ -33,3 +33,55 @@
 .thresholds-actions {
   margin-top: 16px;
 }
+
+/* Responsive: table on desktop, ion-list on mobile (mirrors devices.page). */
+.thr-table {
+  display: none;
+}
+.thr-list {
+  display: block;
+}
+
+@media (min-width: 768px) {
+  .thr-table {
+    display: table;
+    width: 100%;
+    border-collapse: collapse;
+
+    thead th {
+      text-align: left;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-dim);
+      font-weight: 600;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--ui-border);
+    }
+
+    tbody td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--ui-border);
+      color: var(--text);
+      vertical-align: middle;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+  }
+
+  .thr-table__value {
+    width: 160px;
+  }
+
+  .thr-table__unit {
+    width: 80px;
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+  }
+
+  .thr-list {
+    display: none;
+  }
+}

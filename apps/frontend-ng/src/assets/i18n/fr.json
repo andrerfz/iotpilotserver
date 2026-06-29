@@ -679,7 +679,10 @@
       "title": "Seuils d'alerte par défaut",
       "intro": "Valeurs par défaut pour tout le locataire, appliquées à chaque appareil sans seuil propre. Les seuils par appareil se définissent dans l'onglet Alertes de l'appareil.",
       "saved": "Seuils par défaut enregistrés",
-      "save_failed": "Impossible d'enregistrer les seuils"
+      "save_failed": "Impossible d'enregistrer les seuils",
+      "col_metric": "Métrique",
+      "col_value": "Valeur",
+      "col_unit": "Unité"
     }
   },
   "admin": {

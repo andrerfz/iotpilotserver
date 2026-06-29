@@ -679,7 +679,10 @@
       "title": "Limites de alerta padrão",
       "intro": "Padrões para todo o tenant, aplicados a cada dispositivo sem limite próprio. Os limites por dispositivo são definidos na aba Alertas do dispositivo.",
       "saved": "Limites padrão salvos",
-      "save_failed": "Não foi possível salvar os limites"
+      "save_failed": "Não foi possível salvar os limites",
+      "col_metric": "Métrica",
+      "col_value": "Valor",
+      "col_unit": "Unidade"
     }
   },
   "admin": {
