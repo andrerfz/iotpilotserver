@@ -49,6 +49,7 @@
 #include <DallasTemperature.h>
 #include <ArduinoJson.h>
 #include <NimBLEDevice.h>   // BLE setup-mode provisioning (fe-ble-claiming A2/A3)
+#include "esp_system.h"     // esp_reset_reason() — distinguish RST/power from deep-sleep wake
 
 // ====================
 // CONFIGURATION
@@ -78,7 +79,11 @@
 #define WIFI_AP_PASSWORD       "iotpilot123"
 #define FIRMWARE_VERSION       "1.2.0"
 #define FACTORY_RESET_PIN      9        // GPIO9 — BOOT button (active LOW, internal pull-up)
-#define FACTORY_RESET_HOLD_MS  5000     // Hold 5 seconds to trigger factory reset
+#define FACTORY_RESET_HOLD_MS  5000     // Hold 5 seconds to trigger factory reset (BOOT-button boards)
+// RST-button factory reset: tap the RST button N times quickly. Deep-sleep timer wakes
+// and crashes are NOT counted (only ESP_RST_POWERON), so normal cycles never trigger it.
+#define RESET_TAP_COUNT        3        // RST presses to factory reset
+#define RESET_TAP_WINDOW_MS    3000     // window to chain the next tap (else the count clears)
 
 // Consecutive WiFi failures before entering setup portal
 #define MAX_WIFI_FAILS         3
@@ -809,6 +814,54 @@ void checkFactoryReset() {
   digitalWrite(LED_PIN, LED_ON);
 }
 
+// Factory reset for single-RST-button boards (e.g. T-OI Plus): tap RST
+// RESET_TAP_COUNT times in a row. Only ESP_RST_POWERON boots count (the RST/EN
+// button and battery insert) — deep-sleep timer wakes (ESP_RST_DEEPSLEEP), software
+// restarts, and crashes (PANIC/WDT/BROWNOUT) are ignored, so normal sensor cycles
+// never advance the counter and there's no battery cost. The count is held in NVS
+// (survives the EN reset, unlike RTC RAM) and clears itself if you stop tapping.
+void checkResetCounter() {
+  // Count only the RST/EN button & power-on (reported as POWERON or EXT depending on
+  // the chip). Deep-sleep timer wakes (DEEPSLEEP), SW restarts, and crashes are ignored.
+  esp_reset_reason_t reason = esp_reset_reason();
+  if (reason != ESP_RST_POWERON && reason != ESP_RST_EXT) return;
+
+  prefs.begin(NVS_NAMESPACE, false);
+  uint16_t count = prefs.getUShort("rstcnt", 0) + 1;
+
+  if (count >= RESET_TAP_COUNT) {
+    prefs.putUShort("rstcnt", 0);
+    prefs.end();
+    Serial.printf("[RESET] RST tapped %dx — factory reset\n", RESET_TAP_COUNT);
+    digitalWrite(LED_PIN, LED_ON);
+    WiFiManager wm;
+    wm.resetSettings();
+    clearConfig();
+    wifiFailCount = 0;
+    delay(800);
+    ESP.restart();
+    return;
+  }
+
+  prefs.putUShort("rstcnt", count);
+  prefs.end();
+  Serial.printf("[RESET] RST tap %u/%d — tap again within %ds to factory reset\n",
+                count, RESET_TAP_COUNT, RESET_TAP_WINDOW_MS / 1000);
+
+  // Blink for the window. A further RST tap reboots us mid-window (so the clear
+  // below never runs and the count carries over); if the window elapses untapped,
+  // clear the count and continue a normal boot.
+  unsigned long start = millis();
+  while (millis() - start < RESET_TAP_WINDOW_MS) {
+    digitalWrite(LED_PIN, (millis() / 150) % 2);
+    delay(30);
+  }
+  prefs.begin(NVS_NAMESPACE, false);
+  prefs.putUShort("rstcnt", 0);
+  prefs.end();
+  digitalWrite(LED_PIN, LED_ON);
+}
+
 // ====================
 // DEEP SLEEP
 // ====================
@@ -841,7 +894,8 @@ void setup() {
 
   Serial.println("\n[BOOT] IotPilot Sensor " FIRMWARE_VERSION " (ESP32-C3)");
 
-  checkFactoryReset();
+  checkFactoryReset();    // BOOT-button boards: hold GPIO9 5s at power-up (inert if no such button)
+  checkResetCounter();    // single-RST-button boards: tap RST 3x to factory reset
   Serial.printf("[BOOT] WiFi fail count: %d/%d\n", wifiFailCount, MAX_WIFI_FAILS);
 
   loadConfig();
