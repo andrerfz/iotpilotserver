@@ -9,7 +9,7 @@
  *   GPIO1   — Battery ADC (VBAT_Read, 1:1 voltage divider)
  *   GPIO37  — ADC_Ctrl (P-channel MOSFET: LOW = enable, HIGH = disable)
  *   GPIO35  — LED (active HIGH)
- *   GPIO0   — PRG button (active LOW): 2s = sleep, 5s = factory reset
+ *   GPIO0   — PRG button (active LOW): tap = wake, hold 10s = factory reset
  *   GPIO36  — Vext_Ctrl (LOW = enable power to OLED + external rail, HIGH = off)
  *   GPIO17  — OLED SDA (I2C)
  *   GPIO18  — OLED SCL (I2C)
@@ -19,9 +19,10 @@
  *   NSS=GPIO8  SCK=GPIO9  MOSI=GPIO10  MISO=GPIO11
  *   RST=GPIO12  BUSY=GPIO13  DIO1=GPIO14
  *
- * PRG button behavior (GPIO0):
- *   Hold 2–5s → immediate deep sleep
- *   Hold 5s+  → factory reset (clears NVS + WiFi)
+ * PRG button behavior (GPIO0 — wakes the S3 from deep sleep, so it works at runtime
+ * without a power-cycle):
+ *   Quick tap   → wake (resume normal cycle)
+ *   Hold 10s    → factory reset (clears NVS + WiFi)
  *
  * Display:
  *   Shows temperature, battery %, WiFi RSSI and send result
@@ -41,6 +42,11 @@
 #include <ArduinoJson.h>
 #include <NimBLEDevice.h>   // BLE setup-mode provisioning (fe-ble-claiming A4)
 #include <SPI.h>
+#include "driver/rtc_io.h"  // RTC pullup for the PRG-button deep-sleep wakeup
+
+// Forward declaration — checkPrgButton() calls enterDeepSleep() before its definition,
+// and the Arduino auto-prototyper skips functions with default arguments.
+void enterDeepSleep(uint32_t overrideSeconds = 0);
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
@@ -84,8 +90,8 @@
 #define NVS_NAMESPACE          "iotpilot"
 #define WIFI_AP_PASSWORD       "iotpilot123"
 #define FIRMWARE_VERSION       "1.2.0"
-#define SLEEP_HOLD_MS          2000    // PRG hold 2s → sleep
-#define FACTORY_RESET_HOLD_MS  5000   // PRG hold 5s → factory reset
+#define FACTORY_RESET_HOLD_MS  10000  // PRG hold 10s → factory reset
+#define RELEASE_DEBOUNCE_MS    80     // sustained HIGH before treating PRG as released
 #define DISPLAY_ON_SECONDS     5      // seconds to show display before sleeping
 #define MAX_WIFI_FAILS         3
 #define WIFI_RETRY_INTERVAL    60
@@ -647,7 +653,11 @@ static void scanWifiNetworks() {
 static void bleStart(const char* apName) {
   NimBLEDevice::init(apName);
   // Encrypt the link (Just Works) so the WiFi password in `provision` isn't sniffable.
-  NimBLEDevice::setSecurityAuth(true, false, true);
+  // bonding=false on purpose: provisioning is one-shot, so a persistent bond adds no
+  // value and breaks reconnection after an ERASE/reflash (device keys wiped, but the
+  // phone/Mac keeps the stale bond → encrypted link can't re-establish). Encryption
+  // (SC=true) still protects the WiFi password without storing keys.
+  NimBLEDevice::setSecurityAuth(false, false, true);
   NimBLEDevice::setSecurityIOCap(BLE_HS_IO_NO_INPUT_OUTPUT);
   NimBLEServer* server = NimBLEDevice::createServer();
   NimBLEService* svc = server->createService(BLE_SVC_UUID);
@@ -714,7 +724,13 @@ bool setupBLE() {
     if (bleActivateReq) {
       bleActivateReq = false;
       bleSetStatus("WIFI_CONNECTING");
-      bleStop();   // free the radio for WiFi
+      // Do NOT NimBLEDevice::deinit() here: on the S3 it crashes the NimBLE host_task
+      // (InstrFetchProhibited, PC=0) mid-teardown. Just stop advertising — BLE/WiFi
+      // coexist on the S3 for this one-shot connect — and reboot either way so we never
+      // re-init NimBLE on top of a live instance (the GATT link stays up long enough to
+      // deliver the status notification before we restart).
+      NimBLEDevice::stopAdvertising();
+      delay(150);
 
       bool wifiOk = connectWiFiWith(bleSsid, blePass);
       bool ok = wifiOk && activateDevice(bleToken);
@@ -723,16 +739,13 @@ bool setupBLE() {
         Serial.println("[BLE] Activation complete — rebooting into normal operation");
         delay(1500);
         ESP.restart();
-        return true;   // not reached
       }
 
-      WiFi.disconnect(true);
-      WiFi.mode(WIFI_OFF);
-      bleStart(apName);
+      // Failure: report status to the app, then reboot to re-enter BLE setup cleanly.
       bleSetStatus(wifiOk ? "ERR_TOKEN" : "ERR_WIFI");
-      bleProvReceived = false;
-      bleProvBuf = "";
-      deadline = millis() + BLE_SETUP_TIMEOUT_MS;
+      Serial.println("[BLE] Provisioning failed — rebooting to retry");
+      delay(2000);
+      ESP.restart();
     }
   }
 
@@ -817,14 +830,24 @@ void checkPrgButton() {
 
   if (digitalRead(PRG_BUTTON_PIN) != LOW) return;
 
-  Serial.println("[BUTTON] PRG held — 2s=sleep, 5s=factory reset");
+  Serial.println("[BUTTON] PRG down — hold 10s for factory reset");
   unsigned long held = millis();
+  unsigned long releasedSince = 0;  // 0 = currently pressed
 
-  while (digitalRead(PRG_BUTTON_PIN) == LOW) {
+  for (;;) {
+    if (digitalRead(PRG_BUTTON_PIN) == LOW) {
+      releasedSince = 0;                       // (still / again) pressed
+    } else {
+      // Debounce the release — a brief HIGH glitch must not abort the hold.
+      if (releasedSince == 0) releasedSince = millis();
+      if (millis() - releasedSince >= RELEASE_DEBOUNCE_MS) break;
+    }
+
     unsigned long elapsed = millis() - held;
-    int blinkRate = elapsed >= SLEEP_HOLD_MS ? 100 : 300;
+    // Slow blink while counting, fast blink in the last 2s before reset.
+    int blinkRate = elapsed >= FACTORY_RESET_HOLD_MS - 2000 ? 100 : 300;
     digitalWrite(LED_PIN, (millis() / blinkRate) % 2);
-    delay(50);
+    delay(20);
 
     if (elapsed >= FACTORY_RESET_HOLD_MS) {
       digitalWrite(LED_PIN, LED_ON);
@@ -839,26 +862,16 @@ void checkPrgButton() {
     }
   }
 
-  unsigned long elapsed = millis() - held;
-  digitalWrite(LED_PIN, LED_ON);
-
-  if (elapsed >= SLEEP_HOLD_MS) {
-    Serial.println("[BUTTON] Sleep requested");
-    digitalWrite(VEXT_CTRL_PIN, HIGH);  // HIGH = cut Vext power before sleep
-    digitalWrite(LED_PIN, LED_OFF);
-    Serial.flush();
-    esp_sleep_enable_timer_wakeup((uint64_t)config.reportingInterval * 1000000ULL);
-    esp_deep_sleep_start();
-  }
-
-  Serial.println("[BUTTON] Cancelled (too short)");
+  // Released before 10s → cancel and resume the normal cycle (no forced sleep).
+  digitalWrite(LED_PIN, LED_OFF);
+  Serial.printf("[BUTTON] Released after %lums — resuming\n", millis() - held);
 }
 
 // ====================
 // DEEP SLEEP
 // ====================
 
-void enterDeepSleep(uint32_t overrideSeconds = 0) {
+void enterDeepSleep(uint32_t overrideSeconds) {
   uint32_t interval = overrideSeconds > 0
     ? overrideSeconds
     : (config.deepSleepEnabled ? config.reportingInterval : MIN_REPORTING_INTERVAL);
@@ -872,6 +885,11 @@ void enterDeepSleep(uint32_t overrideSeconds = 0) {
   delay(100);
 
   esp_sleep_enable_timer_wakeup((uint64_t)interval * 1000000ULL);
+  // Wake on a PRG press too (GPIO0 is RTC-capable on the S3), so a quick tap wakes
+  // the device and a long hold triggers factory reset at runtime — no power-cycle.
+  rtc_gpio_pullup_en((gpio_num_t)PRG_BUTTON_PIN);
+  rtc_gpio_pulldown_dis((gpio_num_t)PRG_BUTTON_PIN);
+  esp_sleep_enable_ext0_wakeup((gpio_num_t)PRG_BUTTON_PIN, 0);  // 0 = wake on LOW (pressed)
   esp_deep_sleep_start();
 }
 

@@ -593,9 +593,11 @@ static void scanWifiNetworks() {
 
 static void bleStart(const char* apName) {
   NimBLEDevice::init(apName);
-  // Encrypt the link (Just Works: bond + LE Secure Connections, no MITM) so the
-  // WiFi password written to `provision` isn't sniffable. NoInputNoOutput → no PIN.
-  NimBLEDevice::setSecurityAuth(true, false, true);
+  // Encrypt the link (Just Works, LE Secure Connections, no MITM) so the WiFi password
+  // written to `provision` isn't sniffable. NoInputNoOutput → no PIN. bonding=false:
+  // provisioning is one-shot, and a persistent bond breaks reconnection after an
+  // ERASE/reflash (device keys wiped while the phone/Mac keeps the stale bond).
+  NimBLEDevice::setSecurityAuth(false, false, true);
   NimBLEDevice::setSecurityIOCap(BLE_HS_IO_NO_INPUT_OUTPUT);
   NimBLEServer* server = NimBLEDevice::createServer();
   NimBLEService* svc = server->createService(BLE_SVC_UUID);
