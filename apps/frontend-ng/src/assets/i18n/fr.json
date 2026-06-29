@@ -944,7 +944,8 @@
       "manual": "Saisir l’ID de l’appareil",
       "manual_desc": "Tapez l’ID de l’étiquette de l’appareil",
       "bluetooth": "Scanner via Bluetooth",
-      "bluetooth_desc": "Trouvez un capteur à proximité en mode configuration"
+      "bluetooth_desc": "Trouvez un capteur à proximité en mode configuration",
+      "bluetooth_unavailable": "Indisponible — utilisez Chrome/Edge sur ordinateur ou Android (pas iOS/Safari)"
     }
   },
   "shell": {

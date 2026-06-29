@@ -150,11 +150,13 @@
         <span class="add-chooser__desc">{{ 'components.add_device.manual_desc' | translate }}</span>
       </span>
     </button>
-    <button type="button" class="add-chooser__opt" (click)="chooseBle()">
+    <button type="button" class="add-chooser__opt" [disabled]="!bleAvailable" (click)="chooseBle()">
       <ion-icon name="bluetooth-outline" class="add-chooser__icon"></ion-icon>
       <span class="add-chooser__text">
         <span class="add-chooser__title">{{ 'components.add_device.bluetooth' | translate }}</span>
-        <span class="add-chooser__desc">{{ 'components.add_device.bluetooth_desc' | translate }}</span>
+        <span class="add-chooser__desc">
+          {{ (bleAvailable ? 'components.add_device.bluetooth_desc' : 'components.add_device.bluetooth_unavailable') | translate }}
+        </span>
       </span>
     </button>
   </div>

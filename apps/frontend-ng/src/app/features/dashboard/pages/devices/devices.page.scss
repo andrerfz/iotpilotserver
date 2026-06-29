@@ -143,3 +143,5 @@
   font-size: 13px;
   color: var(--text-muted);
 }
+
+.add-chooser__opt[disabled] { opacity: 0.5; cursor: not-allowed; }

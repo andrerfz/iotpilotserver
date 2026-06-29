@@ -944,7 +944,8 @@
       "manual": "Enter device ID",
       "manual_desc": "Type the ID from the device label",
       "bluetooth": "Scan via Bluetooth",
-      "bluetooth_desc": "Find a nearby sensor in setup mode"
+      "bluetooth_desc": "Find a nearby sensor in setup mode",
+      "bluetooth_unavailable": "Not available — use Chrome/Edge on desktop or Android (not iOS/Safari)"
     }
   },
   "shell": {

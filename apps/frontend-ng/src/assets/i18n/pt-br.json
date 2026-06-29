@@ -944,7 +944,8 @@
       "manual": "Inserir ID do dispositivo",
       "manual_desc": "Digite o ID da etiqueta do dispositivo",
       "bluetooth": "Escanear por Bluetooth",
-      "bluetooth_desc": "Encontre um sensor próximo em modo de configuração"
+      "bluetooth_desc": "Encontre um sensor próximo em modo de configuração",
+      "bluetooth_unavailable": "Indisponível — use Chrome/Edge no desktop ou Android (não iOS/Safari)"
     }
   },
   "shell": {

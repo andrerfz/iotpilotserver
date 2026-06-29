@@ -244,11 +244,9 @@ export class DevicesPage implements AfterViewInit, ViewWillEnter {
   }
 
   onRegisterDevice(): void {
-    // No BLE on this platform → straight to manual entry; else a short chooser.
-    if (!this.bleAvailable) {
-      this.registerSheet()?.open();
-      return;
-    }
+    // Always show the chooser. If Web Bluetooth isn't available (iOS/Safari, or a
+    // non-Chrome/Edge desktop), the BLE option is shown disabled with the reason —
+    // so it's never a silent jump straight to manual.
     this.pendingAdd.set(null);
     this.addSheet()?.open();
   }
