@@ -4,6 +4,7 @@ import { provideRouter } from '@angular/router';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
 import { AuthService } from '@ng/core/auth/auth.service';
+import { TenantContextService } from '@ng/core/auth/tenant-context.service';
 import { authGuard } from '@ng/core/auth/guards';
 import { SettingsHubPage } from './settings-hub.page';
 import { SETTINGS_ROUTES } from '../../settings.routes';
@@ -18,6 +19,9 @@ async function setup() {
           children: SETTINGS_ROUTES,
         },
       ]),
+      // Regular (non-SUPERADMIN) context → all tabs visible, including thresholds.
+      { provide: AuthService, useValue: { role: () => 'ADMIN' } },
+      { provide: TenantContextService, useValue: { isActive: () => false } },
     ],
   });
 }
@@ -36,10 +40,34 @@ describe('SettingsHubPage', () => {
     const { fixture } = await setup();
     const component = fixture.componentInstance;
 
-    expect(component.navItems[0].path).toBe('profile');
-    expect(component.navItems[1].path).toBe('notifications');
-    expect(component.navItems[2].path).toBe('security');
-    expect(component.navItems[3].path).toBe('system');
+    expect(component.navItems()[0].path).toBe('profile');
+    expect(component.navItems()[1].path).toBe('notifications');
+    expect(component.navItems()[2].path).toBe('security');
+    expect(component.navItems()[3].path).toBe('system');
+  });
+
+  it('hides the thresholds tab for a platform-mode SUPERADMIN (no active customer)', async () => {
+    const { fixture } = await render(SettingsHubPage, {
+      providers: [
+        provideRouter([]),
+        { provide: AuthService, useValue: { role: () => 'SUPERADMIN' } },
+        { provide: TenantContextService, useValue: { isActive: () => false } },
+      ],
+    });
+    const paths = fixture.componentInstance.navItems().map((t) => t.path);
+    expect(paths).not.toContain('thresholds');
+  });
+
+  it('shows the thresholds tab for a SUPERADMIN acting as a customer', async () => {
+    const { fixture } = await render(SettingsHubPage, {
+      providers: [
+        provideRouter([]),
+        { provide: AuthService, useValue: { role: () => 'SUPERADMIN' } },
+        { provide: TenantContextService, useValue: { isActive: () => true } },
+      ],
+    });
+    const paths = fixture.componentInstance.navItems().map((t) => t.path);
+    expect(paths).toContain('thresholds');
   });
 });
 
