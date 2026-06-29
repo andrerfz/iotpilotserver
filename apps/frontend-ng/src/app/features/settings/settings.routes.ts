@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { superadminTenantGuard } from '@ng/core/auth/guards';
 
 export const SETTINGS_ROUTES: Routes = [
   {
@@ -40,6 +41,10 @@ export const SETTINGS_ROUTES: Routes = [
   },
   {
     path: 'thresholds',
+    // Thresholds are tenant-scoped; a SUPERADMIN in platform mode (no active
+    // customer) has nothing to edit and the API 400s. Bounce them out — they
+    // must select a customer first. Regular ADMIN/USER pass through.
+    canActivate: [superadminTenantGuard],
     loadComponent: () =>
       import('./pages/thresholds/settings-thresholds.page').then((m) => m.SettingsThresholdsPage),
     data: { breadcrumb: ['nav.administer', 'nav.settings', 'settings.tabs.thresholds'] },

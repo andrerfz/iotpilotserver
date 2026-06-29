@@ -1,6 +1,6 @@
 <div class="settings-hub">
   <nav class="settings-tabs">
-    @for (item of navItems; track item.path) {
+    @for (item of navItems(); track item.path) {
       <a
         class="settings-tabs__tab"
         [routerLink]="item.path"
