@@ -1,0 +1,33 @@
+<div class="list-row">
+  <div class="list-row__lead">
+    <ng-content select="[lead]"></ng-content>
+  </div>
+
+  <div class="list-row__body">
+    <span class="list-row__title">{{ title() }}</span>
+    @if (subtitle()) {
+      <span class="list-row__subtitle">{{ subtitle() }}</span>
+    }
+    @if (metaPairs().length > 0) {
+      <div class="list-row__meta">
+        @for (pair of metaPairs(); track $index) {
+          <span class="list-row__meta-item">
+            <span class="list-row__meta-key">{{ pair.label }}:</span>
+            <span class="list-row__meta-val">{{ pair.value }}</span>
+          </span>
+        }
+      </div>
+    }
+  </div>
+
+  @if (cols().length > 0) {
+    <div class="list-row__cols">
+      @for (col of cols(); track $index) {
+        <div class="list-row__col">
+          <span class="list-row__col-label">{{ col.label }}</span>
+          <span class="list-row__col-value">{{ col.value }}</span>
+        </div>
+      }
+    </div>
+  }
+</div>

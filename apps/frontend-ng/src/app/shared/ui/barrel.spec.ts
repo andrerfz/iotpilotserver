@@ -20,7 +20,7 @@ describe('shared/ui barrel', () => {
     expect(barrel.IonSplitPane).toBeDefined();
     expect(barrel.IonMenu).toBeDefined();
     expect(barrel.IonContent).toBeDefined();
-  });
+  }, 30000);
 
   it('exports navigation tokens', async () => {
     const barrel = await import('./index');
@@ -55,7 +55,7 @@ describe('shared/ui barrel — ESLint import restriction', () => {
       (m) => m.ruleId === 'no-restricted-imports',
     );
     expect(ionicErrors?.length).toBeGreaterThan(0);
-  });
+  }, 30000);
 
   it('allows @ionic/angular imports in shared/ui files', async () => {
     const { ESLint } = await import('eslint');

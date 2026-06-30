@@ -1,6 +1,6 @@
 import {
-  AfterViewInit, ChangeDetectionStrategy, Component,
-  computed, inject, signal, TemplateRef, ViewChild,
+  ChangeDetectionStrategy, Component,
+  computed, inject, signal, viewChild,
 } from '@angular/core';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
@@ -14,15 +14,15 @@ import {
   IonContent, IonCard, IonCardContent, IonButton, IonIcon,
   IonModal,
   AlertController,
-  DataTableComponent, EmptyStateComponent,
+  EmptyStateComponent,
   StatusBadgeComponent,
   UiSearchFieldComponent, UiSelectComponent,
-  SwipeListComponent, BottomSheetComponent,
+  SwipeListComponent, UiListRowComponent, BottomSheetComponent,
   ViewWillEnter,
   IonRefresher,
   IonRefresherContent,
 } from '@ng/shared/ui';
-import type { ColumnDef, SelectOption, SwipeAction } from '@ng/shared/ui';
+import type { SelectOption, SwipeAction } from '@ng/shared/ui';
 import { ViewportService } from '@ng/core/layout/viewport.service';
 import { AdminNewUserModalComponent } from '../admin-new-user/admin-new-user.modal';
 import { AuthService } from '../../../../core/auth/auth.service';
@@ -43,16 +43,16 @@ addIcons({ checkmarkOutline, closeOutline, banOutline, personOutline, addOutline
     FormsModule,
     IonContent, IonCard, IonCardContent, IonButton, IonIcon,
     IonModal,
-    DataTableComponent, EmptyStateComponent,
+    EmptyStateComponent,
     StatusBadgeComponent,
     UiSearchFieldComponent, UiSelectComponent,
-    SwipeListComponent, BottomSheetComponent,
+    SwipeListComponent, UiListRowComponent, BottomSheetComponent,
     AdminNewUserModalComponent,
     IonRefresher, IonRefresherContent,
     TranslatePipe,
   ],
 })
-export class AdminUsersPage implements AfterViewInit, ViewWillEnter {
+export class AdminUsersPage implements ViewWillEnter {
   protected readonly svc = inject(AdminUsersService);
   private readonly auth = inject(AuthService);
   private readonly alertCtrl = inject(AlertController);
@@ -65,11 +65,8 @@ export class AdminUsersPage implements AfterViewInit, ViewWillEnter {
   protected readonly searchQuery = signal('');
   protected readonly actionLoading = signal(false);
   protected readonly showNewUserModal = signal(false);
-  protected readonly cols = signal<ColumnDef<AdminUser>[]>([]);
 
-  @ViewChild('statusCell')  private statusCellTpl!: TemplateRef<{ $implicit: AdminUser }>;
-  @ViewChild('actionsCell') private actionsCellTpl!: TemplateRef<{ $implicit: AdminUser }>;
-  @ViewChild('userSheet')   private userSheet?: BottomSheetComponent;
+  private readonly userSheet = viewChild<BottomSheetComponent>('userSheet');
 
   protected readonly isSuperAdmin = computed(() => hasRole(this.auth.role(), 'SUPERADMIN'));
 
@@ -95,7 +92,7 @@ export class AdminUsersPage implements AfterViewInit, ViewWillEnter {
 
   protected openDetail(user: AdminUser): void {
     this.selectedUser.set(user);
-    this.userSheet?.open();
+    this.userSheet()?.open();
   }
 
   protected readonly statusOptions: SelectOption[] = [
@@ -129,17 +126,6 @@ export class AdminUsersPage implements AfterViewInit, ViewWillEnter {
     void this.svc.load().finally(() => {
       ((ev as CustomEvent).target as HTMLIonRefresherElement | null)?.complete();
     });
-  }
-
-  ngAfterViewInit(): void {
-    this.cols.set([
-      { key: 'name',     label: 'fields.name',    sortable: true },
-      { key: 'email',    label: 'fields.email',   sortable: true },
-      { key: 'role',     label: 'fields.role' },
-      { key: 'status',   label: 'fields.status',  cellTemplate: this.statusCellTpl },
-      { key: 'createdAt', label: 'fields.joined', sortable: true },
-      { key: 'actions',  label: '',        cellTemplate: this.actionsCellTpl },
-    ]);
   }
 
   protected onStatusChange(val: string): void {

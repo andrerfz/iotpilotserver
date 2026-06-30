@@ -9,7 +9,7 @@ import { authGuard } from '@ng/core/auth/guards';
 import { SettingsHubPage } from './settings-hub.page';
 import { SETTINGS_ROUTES } from '../../settings.routes';
 
-async function setup() {
+async function setup(role = 'ADMIN', isActive = true) {
   return render(SettingsHubPage, {
     providers: [
       provideRouter([
@@ -19,55 +19,57 @@ async function setup() {
           children: SETTINGS_ROUTES,
         },
       ]),
-      // Regular (non-SUPERADMIN) context → all tabs visible, including thresholds.
-      { provide: AuthService, useValue: { role: () => 'ADMIN' } },
-      { provide: TenantContextService, useValue: { isActive: () => false } },
+      { provide: AuthService, useValue: { role: () => role } },
+      { provide: TenantContextService, useValue: { isActive: () => isActive } },
     ],
   });
 }
 
 describe('SettingsHubPage', () => {
-  it('renders all 4 nav items with correct labels', async () => {
+  it('renders account section items (profile, security, notifications, preferences)', async () => {
     const { getByText } = await setup();
 
     expect(getByText('Profile')).toBeTruthy();
-    expect(getByText('Notifications')).toBeTruthy();
     expect(getByText('Security')).toBeTruthy();
-    expect(getByText('System')).toBeTruthy();
+    expect(getByText('Notifications')).toBeTruthy();
+    expect(getByText('Preferences')).toBeTruthy();
   });
 
-  it('nav items have correct routerLink paths', async () => {
+  it('accountItems contains the 4 expected paths in order', async () => {
     const { fixture } = await setup();
-    const component = fixture.componentInstance;
-
-    expect(component.navItems()[0].path).toBe('profile');
-    expect(component.navItems()[1].path).toBe('notifications');
-    expect(component.navItems()[2].path).toBe('security');
-    expect(component.navItems()[3].path).toBe('system');
+    const paths = fixture.componentInstance.accountItems.map((i) => i.path);
+    expect(paths).toEqual(['profile', 'security', 'notifications', 'preferences']);
   });
 
-  it('hides the thresholds tab for a platform-mode SUPERADMIN (no active customer)', async () => {
-    const { fixture } = await render(SettingsHubPage, {
-      providers: [
-        provideRouter([]),
-        { provide: AuthService, useValue: { role: () => 'SUPERADMIN' } },
-        { provide: TenantContextService, useValue: { isActive: () => false } },
-      ],
-    });
-    const paths = fixture.componentInstance.navItems().map((t) => t.path);
-    expect(paths).not.toContain('thresholds');
+  it('orgItems contains thresholds, api-keys, and org', async () => {
+    const { fixture } = await setup();
+    const paths = fixture.componentInstance.orgItems.map((i) => i.path);
+    expect(paths).toEqual(['thresholds', 'api-keys', 'org']);
   });
 
-  it('shows the thresholds tab for a SUPERADMIN acting as a customer', async () => {
-    const { fixture } = await render(SettingsHubPage, {
-      providers: [
-        provideRouter([]),
-        { provide: AuthService, useValue: { role: () => 'SUPERADMIN' } },
-        { provide: TenantContextService, useValue: { isActive: () => true } },
-      ],
-    });
-    const paths = fixture.componentInstance.navItems().map((t) => t.path);
-    expect(paths).toContain('thresholds');
+  it('showOrg is true for ADMIN with an active tenant', async () => {
+    const { fixture } = await setup('ADMIN', true);
+    expect(fixture.componentInstance.showOrg()).toBe(true);
+  });
+
+  it('showOrg is false for ADMIN without an active tenant', async () => {
+    const { fixture } = await setup('ADMIN', false);
+    expect(fixture.componentInstance.showOrg()).toBe(false);
+  });
+
+  it('showOrg is false for regular USER regardless of tenant', async () => {
+    const { fixture } = await setup('USER', true);
+    expect(fixture.componentInstance.showOrg()).toBe(false);
+  });
+
+  it('showOrg is false for platform-mode SUPERADMIN (no active customer)', async () => {
+    const { fixture } = await setup('SUPERADMIN', false);
+    expect(fixture.componentInstance.showOrg()).toBe(false);
+  });
+
+  it('showOrg is true for SUPERADMIN acting as a customer (isActive)', async () => {
+    const { fixture } = await setup('SUPERADMIN', true);
+    expect(fixture.componentInstance.showOrg()).toBe(true);
   });
 });
 

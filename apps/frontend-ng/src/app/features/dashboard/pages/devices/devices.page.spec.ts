@@ -9,6 +9,9 @@ import { DevicesPage } from './devices.page';
 import { DashboardService } from '../../services/dashboard.service';
 import { provideBle } from '@ng/core/ble/ble.providers';
 import { SocketService } from '@ng/core/realtime/socket.service';
+import { AuthService } from '@ng/core/auth/auth.service';
+import { TenantContextService } from '@ng/core/auth/tenant-context.service';
+import { AdminDevicesService } from '../../../admin/services/admin-devices.service';
 import type { Device } from '@ng/core/api/generated/models/device';
 
 function makeSurface<T>(data: T | null = null) {
@@ -27,9 +30,22 @@ const MOCK_DEVICES: Device[] = [
   { id: 'dev-3', hostname: 'pi-lab', status: 'ERROR', deviceType: 'RaspberryPi' },
 ];
 
+function makeAdminSvc(devices = []) {
+  return {
+    devices: signal(devices),
+    stats: signal({ total: 0, online: 0, offline: 0, maintenance: 0, error: 0 }),
+    loading: signal(false),
+    error: signal(null),
+    load: vi.fn().mockResolvedValue(undefined),
+    sendCommand: vi.fn().mockResolvedValue(undefined),
+  };
+}
+
 function buildProviders(overrides: {
   devices?: ReturnType<typeof makeSurface<Device[]>>;
   socketOn?: ReturnType<typeof vi.fn>;
+  role?: string;
+  isActive?: boolean;
 } = {}) {
   const socketOn = overrides.socketOn ?? vi.fn().mockReturnValue(new Subject());
   return [
@@ -42,6 +58,9 @@ function buildProviders(overrides: {
       },
     },
     { provide: SocketService, useValue: { on: socketOn } },
+    { provide: AuthService, useValue: { role: () => overrides.role ?? 'ADMIN' } },
+    { provide: TenantContextService, useValue: { isActive: () => overrides.isActive ?? true, customer: signal(null) } },
+    { provide: AdminDevicesService, useValue: makeAdminSvc() },
     provideBle(),
   ];
 }
@@ -72,7 +91,7 @@ describe('DevicesPage', () => {
   });
 
   describe('ionViewWillEnter', () => {
-    it('loads devices with limit 50 when view enters', async () => {
+    it('loads devices with limit 50 when view enters (tenant mode)', async () => {
       const devices = makeSurface<Device[]>(MOCK_DEVICES);
       const { fixture } = await render(DevicesPage, {
         imports: [RouterTestingModule],
@@ -161,6 +180,53 @@ describe('DevicesPage', () => {
 
       const updated = fixture.componentInstance['_deviceRows']().find(d => d.id === 'dev-1');
       expect(updated?.status).toBe('OFFLINE');
+    });
+  });
+
+  describe('scope-aware mode', () => {
+    it('platformMode is false for a regular ADMIN with active tenant', async () => {
+      const { fixture } = await render(DevicesPage, {
+        imports: [RouterTestingModule],
+        providers: buildProviders({ role: 'ADMIN', isActive: true }),
+      });
+      expect(fixture.componentInstance.platformMode()).toBe(false);
+    });
+
+    it('platformMode is true for SUPERADMIN without active tenant (platform mode)', async () => {
+      const { fixture } = await render(DevicesPage, {
+        imports: [RouterTestingModule],
+        providers: buildProviders({ role: 'SUPERADMIN', isActive: false }),
+      });
+      expect(fixture.componentInstance.platformMode()).toBe(true);
+    });
+
+    it('platformMode is false for SUPERADMIN acting as a tenant (isActive)', async () => {
+      const { fixture } = await render(DevicesPage, {
+        imports: [RouterTestingModule],
+        providers: buildProviders({ role: 'SUPERADMIN', isActive: true }),
+      });
+      expect(fixture.componentInstance.platformMode()).toBe(false);
+    });
+
+    it('in platform mode, ionViewWillEnter calls adminSvc.load (not dashService.devices.load)', async () => {
+      const devices = makeSurface<Device[]>(MOCK_DEVICES);
+      const adminSvc = makeAdminSvc();
+      const { fixture } = await render(DevicesPage, {
+        imports: [RouterTestingModule],
+        providers: [
+          { provide: DashboardService, useValue: { devices, alerts: makeSurface(null), monitoringMetrics: makeSurface(null) } },
+          { provide: SocketService, useValue: { on: vi.fn().mockReturnValue(new Subject()) } },
+          { provide: AuthService, useValue: { role: () => 'SUPERADMIN' } },
+          { provide: TenantContextService, useValue: { isActive: () => false, customer: signal(null) } },
+          { provide: AdminDevicesService, useValue: adminSvc },
+          provideBle(),
+        ],
+      });
+      devices.load.mockClear();
+      adminSvc.load.mockClear();
+      fixture.componentInstance.ionViewWillEnter();
+      expect(adminSvc.load).toHaveBeenCalledTimes(1);
+      expect(devices.load).not.toHaveBeenCalled();
     });
   });
 });

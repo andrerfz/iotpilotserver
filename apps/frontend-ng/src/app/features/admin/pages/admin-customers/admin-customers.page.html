@@ -3,7 +3,6 @@
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
 
-
   <!-- Filters -->
   <ion-card class="filter-bar">
     <ion-card-content>
@@ -18,49 +17,23 @@
     </ion-card-content>
   </ion-card>
 
-  <!-- Cell templates -->
-  <ng-template #statusCell let-row>
-    <ui-status-badge [status]="row.status"></ui-status-badge>
-  </ng-template>
-
-  <ng-template #actionsCell let-row>
-    <div class="row-actions">
-      <ion-button size="small" fill="outline" color="medium"
-        [disabled]="actionLoading()" (click)="onEdit(row)">
-        <ion-icon slot="start" name="pencil-outline"></ion-icon>
-        {{ 'admin.customers.actions.edit' | translate }}
-      </ion-button>
-      @if (row.status !== 'INACTIVE') {
-        <ion-button size="small" fill="outline" color="warning"
-          [disabled]="actionLoading()" (click)="onDeactivate(row)">
-          <ion-icon slot="start" name="ban-outline"></ion-icon>
-          {{ 'admin.customers.actions.deactivate' | translate }}
-        </ion-button>
-      }
-    </div>
-  </ng-template>
-
-  <!-- Table (desktop) / cards (mobile) -->
   @if (svc.error() && !svc.customers().length) {
     <ui-empty-state [title]="'admin.customers.failed.title' | translate" [hasAction]="true">
       <ion-button action fill="outline" size="small" (click)="svc.load()">{{ 'admin.customers.failed.retry' | translate }}</ion-button>
     </ui-empty-state>
-  } @else if (vp.wide()) {
-    <ui-data-table [columns]="cols()" [rows]="filtered()" rowKey="id" [pageSize]="20">
-    </ui-data-table>
   } @else if (!filtered().length) {
     <ui-empty-state [title]="'admin.customers.empty.title' | translate"></ui-empty-state>
   } @else {
-    <ui-swipe-list [items]="filtered()" [actions]="rowActions" (itemClick)="onEdit($any($event))" (action)="onSwipeAction($any($event))">
+    <ui-swipe-list [items]="filtered()" [actions]="rowActions"
+      (itemClick)="onEdit($any($event))" (action)="onSwipeAction($any($event))">
       <ng-template #itemContent let-c>
-        <div class="admin-li">
-          <ui-status-dot [status]="c.status"></ui-status-dot>
-          <div class="admin-li__info">
-            <div class="admin-li__title">{{ c.name }}</div>
-            <div class="admin-li__sub">{{ c.slug }}</div>
-          </div>
-          <ui-status-badge [status]="c.status"></ui-status-badge>
-        </div>
+        <ui-list-row
+          [title]="c.name"
+          [subtitle]="c.slug"
+          [meta]="['Status', c.status]"
+          [cols]="[{ label: 'Status', value: c.status }, { label: 'Slug', value: c.slug }]">
+          <ui-status-dot lead [status]="c.status"></ui-status-dot>
+        </ui-list-row>
       </ng-template>
     </ui-swipe-list>
   }

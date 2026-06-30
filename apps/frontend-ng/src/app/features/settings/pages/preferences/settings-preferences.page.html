@@ -1,0 +1,75 @@
+<ion-content class="ion-padding">
+  @if (isLoading()) {
+    <div class="pref-loading">
+      <ion-spinner name="crescent" />
+    </div>
+  } @else {
+    <ion-card class="pref-card">
+      <ion-card-header>
+        <ion-card-title>{{ 'settings.system.title' | translate }}</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <form [formGroup]="form" (ngSubmit)="onSave()">
+          <div class="pref-field">
+            <ion-label class="pref-field__label">
+              <h3>{{ 'settings.system.theme.label' | translate }}</h3>
+              <p>{{ 'settings.system.theme.desc' | translate }}</p>
+            </ion-label>
+            <ion-segment [value]="currentTheme()" (ionChange)="onThemeChange($event)">
+              <ion-segment-button value="light">{{ 'settings.system.theme.light' | translate }}</ion-segment-button>
+              <ion-segment-button value="dark">{{ 'settings.system.theme.dark' | translate }}</ion-segment-button>
+              <ion-segment-button value="system">{{ 'settings.system.theme.system' | translate }}</ion-segment-button>
+            </ion-segment>
+          </div>
+
+          <div class="pref-field">
+            <ion-label class="pref-field__label">
+              <h3>{{ 'settings.system.layout.label' | translate }}</h3>
+              <p>{{ 'settings.system.layout.desc' | translate }}</p>
+            </ion-label>
+            <ui-select
+              [label]="'settings.system.layout.label' | translate"
+              formControlName="dashboardLayout"
+              [options]="dashboardLayoutOptions"
+            />
+          </div>
+
+          <div class="pref-field">
+            <ion-label class="pref-field__label">
+              <h3>{{ 'settings.system.items_per_page.label' | translate }}</h3>
+              <p>{{ 'settings.system.items_per_page.desc' | translate }}</p>
+            </ion-label>
+            <ui-select
+              [label]="'settings.system.items_per_page.label' | translate"
+              formControlName="itemsPerPage"
+              [options]="itemsPerPageOptions"
+            />
+          </div>
+
+          @if (saveError()) {
+            <p class="pref-msg pref-msg--error">{{ saveError() }}</p>
+          }
+          @if (saveSuccess()) {
+            <p class="pref-msg pref-msg--success">{{ saveSuccess() }}</p>
+          }
+
+          <div class="settings-actions">
+            <ion-button
+              type="submit"
+              fill="solid"
+              color="primary"
+              [disabled]="form.pristine || isSaving()"
+            >
+              @if (isSaving()) {
+                <ion-spinner name="crescent" slot="start" />
+                {{ 'settings.system.saving' | translate }}
+              } @else {
+                {{ 'settings.system.save' | translate }}
+              }
+            </ion-button>
+          </div>
+        </form>
+      </ion-card-content>
+    </ion-card>
+  }
+</ion-content>

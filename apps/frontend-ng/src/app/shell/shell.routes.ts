@@ -18,7 +18,6 @@ export const SHELL_CHILDREN: Routes = [
   },
   {
     path: 'devices',
-    canActivate: [superadminTenantGuard],
     loadComponent: () =>
       import('../features/dashboard/pages/devices/devices.page').then(
         (m) => m.DevicesPage,
@@ -48,7 +47,7 @@ export const SHELL_CHILDREN: Routes = [
   },
   {
     path: 'logs',
-    canActivate: [roleGuard('ADMIN'), superadminTenantGuard],
+    canActivate: [roleGuard('ADMIN')],
     loadComponent: () =>
       import('../features/dashboard/pages/logs/logs.page').then(m => m.LogsPage),
     data: { breadcrumb: ['nav.operate', 'nav.logs'] },
@@ -67,7 +66,7 @@ export const SHELL_CHILDREN: Routes = [
       ),
     loadChildren: () =>
       import('../features/settings/settings.routes').then((m) => m.SETTINGS_ROUTES),
-    data: { breadcrumb: ['nav.administer', 'nav.settings'] },
+    data: { breadcrumb: ['nav.account', 'nav.settings'] },
   },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
 ];

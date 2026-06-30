@@ -108,7 +108,8 @@
     "system": "System",
     "operate": "Operate",
     "administer": "Administer",
-    "monitor": "Monitor"
+    "monitor": "Monitor",
+    "account": "Account"
   },
   "dashboard": {
     "title": "Fleet overview",
@@ -150,6 +151,7 @@
       "title": "Failed to load devices",
       "desc": "Check your connection and try again."
     },
+    "platform_mode_banner": "Platform mode — showing all customers' devices",
     "export_sheet": {
       "title": "Export devices",
       "xlsx_label": "Export XLSX",
@@ -501,7 +503,18 @@
     "level_debug": "Debug (Verbose)",
     "level_info": "Info (Standard)",
     "level_warning": "Warning (Minimal)",
-    "level_error": "Error (Critical Only)"
+    "level_error": "Error (Critical Only)",
+    "tabs": {
+      "ops": "Operational",
+      "audit": "Audit"
+    },
+    "export_sheet": {
+      "title": "Export logs",
+      "xlsx_label": "Excel (.xlsx)",
+      "csv_label": "CSV (.csv)",
+      "pdf_label": "PDF (.pdf)"
+    },
+    "detail": "Log entry"
   },
   "settings": {
     "profile": {
@@ -673,7 +686,15 @@
       "security": "Security",
       "system": "System",
       "api_keys": "API Keys",
-      "thresholds": "Default thresholds"
+      "thresholds": "Default thresholds",
+      "preferences": "Preferences",
+      "org": "Organization"
+    },
+    "hub": {
+      "account_title": "Account",
+      "account_desc": "Your personal settings and security.",
+      "org_title": "Organization",
+      "org_desc": "Tenant-wide configuration. ADMIN only."
     },
     "thresholds": {
       "title": "Default alert thresholds",
@@ -1095,6 +1116,7 @@
     "email": "Email",
     "role": "Role",
     "hostname": "Hostname",
+    "customer": "Customer",
     "ip_address": "IP Address",
     "device_id": "Device ID",
     "key": "Key",

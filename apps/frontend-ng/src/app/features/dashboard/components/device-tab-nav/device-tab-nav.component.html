@@ -1,33 +1,7 @@
 <div class="device-nav">
-  <!-- Group selector — ios pill segment -->
-  <div class="device-nav__segment-wrap">
-    <ion-segment
-      [value]="activeGroupKey()"
-      (ionChange)="switchGroup($any($event).detail.value)"
-      class="device-nav__segment"
-    >
-      @for (group of groups(); track group.key) {
-        <ion-segment-button [value]="group.key" class="device-nav__seg-btn">
-          <ion-label>{{ group.label | translate }}</ion-label>
-        </ion-segment-button>
-      }
-    </ion-segment>
-  </div>
-
-  <!-- Sub-tabs for the active group -->
-  <nav class="device-tabs" role="tablist">
-    @for (tab of activeTabs(); track tab.path) {
-      <a
-        class="device-tabs__tab"
-        [routerLink]="tab.path === '' ? ['/app/devices', deviceId()] : ['/app/devices', deviceId(), tab.path]"
-        routerLinkActive="device-tabs__tab--active"
-        [routerLinkActiveOptions]="{ exact: tab.path === '' }"
-      >
-        {{ tab.label | translate }}
-        @if (tab.alertsBadge && openAlertCount() > 0) {
-          <span class="device-tabs__badge">{{ openAlertCount() }}</span>
-        }
-      </a>
-    }
-  </nav>
+  <ui-nav-select
+    [items]="navItems()"
+    [value]="activeValue()"
+    (valueChange)="onTabSelect($event)"
+  ></ui-nav-select>
 </div>

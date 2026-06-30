@@ -1,6 +1,5 @@
 import { Component, input, output, inject, ChangeDetectionStrategy } from '@angular/core';
-import { IonIcon } from '@ng/shared/ui';
-import { AppLogoComponent } from '@ng/shared/ui';
+import { IonIcon, AppLogoComponent, UiActionsMenuComponent } from '@ng/shared/ui';
 import { TranslatePipe } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
 import { chevronForward, search } from 'ionicons/icons';
@@ -18,7 +17,7 @@ addIcons({ chevronForward, search });
   selector: 'app-topbar',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonIcon, AppLogoComponent, TranslatePipe],
+  imports: [IonIcon, AppLogoComponent, UiActionsMenuComponent, TranslatePipe],
   template: `
     <header class="topbar">
       <ui-app-logo class="topbar__logo" [size]="32" [showText]="false"></ui-app-logo>
@@ -42,10 +41,11 @@ addIcons({ chevronForward, search });
         <kbd>⌘K</kbd>
       </button>
 
-      @if (topbar.action()) {
-        <button class="topbar__action" (click)="topbar.action()!.handler()">
-          <ion-icon [name]="topbar.action()!.icon"></ion-icon>
-        </button>
+      @if (topbar.action() || topbar.overflowActions().length > 0) {
+        <ui-actions-menu
+          [primary]="topbar.action()"
+          [overflow]="topbar.overflowActions()"
+        ></ui-actions-menu>
       }
 
       <div class="topbar__user">

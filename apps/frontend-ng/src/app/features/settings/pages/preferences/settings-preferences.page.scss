@@ -1,0 +1,32 @@
+.pref-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+}
+
+.pref-card {
+  margin-bottom: 16px;
+}
+
+.pref-field {
+  padding: 12px 0;
+
+  &__label {
+    display: block;
+    margin-bottom: 8px;
+  }
+}
+
+.pref-msg {
+  margin: 12px 0 4px;
+  font-size: 13px;
+
+  &--error {
+    color: var(--ion-color-danger);
+  }
+
+  &--success {
+    color: var(--ion-color-success);
+  }
+}

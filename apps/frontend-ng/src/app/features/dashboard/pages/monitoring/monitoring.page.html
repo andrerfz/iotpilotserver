@@ -86,23 +86,7 @@
       </ion-card-content>
     </ion-card>
 
-    <!-- Bulk action bar -->
-    @if (selectedCount() > 0) {
-      <div class="bulk-bar">
-        <span class="bulk-bar__count">{{ 'monitoring.selected' | translate: { count: selectedCount() } }}</span>
-        <ion-button fill="outline" color="warning" size="small" [disabled]="_bulkBusy()" (click)="onBulkAcknowledge()">
-          {{ 'monitoring.actions.acknowledge' | translate }}
-        </ion-button>
-        <ion-button fill="outline" color="success" size="small" [disabled]="_bulkBusy()" (click)="onBulkResolve()">
-          {{ 'monitoring.actions.resolve' | translate }}
-        </ion-button>
-        <ion-button fill="clear" color="medium" size="small" (click)="_selectedIds.set([])">
-          {{ 'monitoring.actions.clear' | translate }}
-        </ion-button>
-      </div>
-    }
-
-    <!-- Alerts table / empty states -->
+    <!-- Alerts list / empty states -->
     @if (_liveAlerts().length === 0) {
       <ui-empty-state
         [title]="'monitoring.empty.no_alerts' | translate"
@@ -113,16 +97,6 @@
         [title]="'monitoring.empty.no_alerts' | translate"
         [description]="'monitoring.empty.filtered' | translate">
       </ui-empty-state>
-    } @else if (vp.wide()) {
-      <ui-data-table
-        [columns]="$any(columns())"
-        [rows]="$any(filteredAlerts())"
-        [pageSize]="10"
-        [selectable]="true"
-        [rowClickable]="true"
-        (rowClick)="openDetail($any($event))"
-        (selectionChange)="onSelectionChange($any($event))">
-      </ui-data-table>
     } @else {
       <ui-swipe-list
         [items]="filteredAlerts()"
@@ -130,14 +104,17 @@
         (itemClick)="openDetail($any($event))"
         (action)="onSwipeAction($any($event))">
         <ng-template #itemContent let-a>
-          <div class="alert-li">
-            <ui-severity-badge [severity]="a.severity ?? 'INFO'"></ui-severity-badge>
-            <div class="alert-li__body">
-              <span class="alert-li__title">{{ a.title }}</span>
-              <span class="alert-li__msg">{{ a.message }}</span>
-              <span class="alert-li__meta">{{ a.deviceId || '' }}</span>
-            </div>
-          </div>
+          <ui-list-row
+            [title]="a.title ?? ''"
+            [subtitle]="a.message ?? ''"
+            [meta]="['Device', deviceName(a.deviceId ?? ''), 'State', alertStateOf(a)]"
+            [cols]="[
+              { label: 'Device', value: deviceName(a.deviceId ?? '') },
+              { label: 'State', value: alertStateOf(a) },
+              { label: 'Severity', value: a.severity ?? 'INFO' }
+            ]">
+            <ui-severity-badge lead [severity]="a.severity ?? 'INFO'"></ui-severity-badge>
+          </ui-list-row>
         </ng-template>
       </ui-swipe-list>
     }
@@ -162,23 +139,5 @@
 
   }
 
-  <!-- Cell templates (rendered outside visible area, referenced by DataTable) -->
-  <ng-template #severityCell let-alert>
-    <div class="sev-cell">
-      <div class="sev-bar sev-bar--{{ alert.severity?.toLowerCase() }}"></div>
-      <ui-severity-badge [severity]="alert.severity ?? 'INFO'"></ui-severity-badge>
-    </div>
-  </ng-template>
-
-  <ng-template #deviceCell let-alert>
-    <div class="device-cell">
-      <ui-status-dot [status]="deviceStatus(alert.deviceId ?? '')"></ui-status-dot>
-      <span class="td-strong">{{ deviceName(alert.deviceId ?? '') }}</span>
-    </div>
-  </ng-template>
-
-  <ng-template #stateCell let-alert>
-    <ui-status-badge [status]="alertStateOf(alert)"></ui-status-badge>
-  </ng-template>
 
 </ion-content>

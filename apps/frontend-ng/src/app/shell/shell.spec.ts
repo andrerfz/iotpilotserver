@@ -6,11 +6,14 @@ import { provideHttpClient } from '@angular/common/http';
 import { ThemeService } from '@ng/shared/ui';
 import { AuthService } from '../core/auth/auth.service';
 import { ToastService } from '../core/errors/toast.service';
+import { TenantContextService } from '../core/auth/tenant-context.service';
+import { Api } from '@ng/core/api/generated/api';
 import { ApiConfiguration } from '@ng/core/api/generated/api-configuration';
 import { breadcrumbFromSnapshot } from './breadcrumbs';
 import { RailComponent } from './rail.component';
 import { TopbarComponent } from './topbar.component';
 import { ShellComponent } from './shell.component';
+import { BottomNavComponent } from './bottom-nav.component';
 
 function snap(data: Record<string, unknown>, child: ActivatedRouteSnapshot | null = null): ActivatedRouteSnapshot {
   return { data, firstChild: child } as unknown as ActivatedRouteSnapshot;
@@ -141,5 +144,57 @@ describe('ShellComponent', () => {
   it('starts with empty breadcrumbs when the route declares none', async () => {
     const { fixture } = await render(ShellComponent, { providers: providers() });
     expect((fixture.componentInstance as ShellComponent).breadcrumbs()).toEqual([]);
+  });
+});
+
+// ─── BottomNavComponent — adminNav ──────────────────────────────────────────
+
+describe('BottomNavComponent — adminNav', () => {
+  function tenantStub(active = true) {
+    return {
+      isActive: signal(active),
+      customer: signal(active ? { id: '1', name: 'Acme', code: 'AC' } : null),
+      hydrate: vi.fn().mockResolvedValue(undefined),
+      set: vi.fn().mockResolvedValue(undefined),
+      clear: vi.fn().mockResolvedValue(undefined),
+    };
+  }
+
+  const apiStub = { invoke: vi.fn().mockResolvedValue({ data: [], pagination: { total: 0 } }) };
+
+  it('does not produce duplicate label keys in adminNav for an ADMIN with active tenant', async () => {
+    const { fixture } = await render(BottomNavComponent, {
+      providers: [
+        ...BASE_PROVIDERS,
+        provideRouter([]),
+        { provide: ThemeService, useValue: themeStub() },
+        { provide: AuthService, useValue: authStub('ADMIN') },
+        { provide: TenantContextService, useValue: tenantStub(true) },
+        { provide: Api, useValue: apiStub },
+      ],
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const nav: { label: string }[] = (fixture.componentInstance as any).adminNav();
+    const labels = nav.map(it => it.label);
+    const duplicates = labels.filter((l, i) => labels.indexOf(l) !== i);
+    expect(duplicates).toEqual([]);
+  });
+
+  it('nav.logs points to the unified logs route (not admin/logs)', async () => {
+    const { fixture } = await render(BottomNavComponent, {
+      providers: [
+        ...BASE_PROVIDERS,
+        provideRouter([]),
+        { provide: ThemeService, useValue: themeStub() },
+        { provide: AuthService, useValue: authStub('ADMIN') },
+        { provide: TenantContextService, useValue: tenantStub(true) },
+        { provide: Api, useValue: apiStub },
+      ],
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const nav: { label: string; path: string }[] = (fixture.componentInstance as any).adminNav();
+    const logsItems = nav.filter(it => it.label === 'nav.logs');
+    expect(logsItems).toHaveLength(1);
+    expect(logsItems[0].path).toBe('logs');
   });
 });

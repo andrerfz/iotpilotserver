@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { superadminTenantGuard } from '@ng/core/auth/guards';
+import { roleGuard, superadminTenantGuard } from '@ng/core/auth/guards';
 
 export const SETTINGS_ROUTES: Routes = [
   {
@@ -11,7 +11,7 @@ export const SETTINGS_ROUTES: Routes = [
     path: 'profile',
     loadComponent: () =>
       import('./pages/profile/settings-profile.page').then((m) => m.SettingsProfilePage),
-    data: { breadcrumb: ['nav.administer', 'nav.settings', 'settings.tabs.profile'] },
+    data: { breadcrumb: ['nav.account', 'nav.settings', 'settings.tabs.profile'] },
   },
   {
     path: 'notifications',
@@ -19,25 +19,34 @@ export const SETTINGS_ROUTES: Routes = [
       import('./pages/notifications/settings-notifications.page').then(
         (m) => m.SettingsNotificationsPage,
       ),
-    data: { breadcrumb: ['nav.administer', 'nav.settings', 'settings.tabs.notifications'] },
+    data: { breadcrumb: ['nav.account', 'nav.settings', 'settings.tabs.notifications'] },
   },
   {
     path: 'security',
     loadComponent: () =>
       import('./pages/security/settings-security.page').then((m) => m.SettingsSecurityPage),
-    data: { breadcrumb: ['nav.administer', 'nav.settings', 'settings.tabs.security'] },
+    data: { breadcrumb: ['nav.account', 'nav.settings', 'settings.tabs.security'] },
   },
   {
-    path: 'system',
+    // Personal display preferences: theme, dashboard layout, items per page.
+    path: 'preferences',
     loadComponent: () =>
-      import('./pages/system/settings-system.page').then((m) => m.SettingsSystemPage),
-    data: { breadcrumb: ['nav.administer', 'nav.settings', 'settings.tabs.system'] },
+      import('./pages/preferences/settings-preferences.page').then(
+        (m) => m.SettingsPreferencesPage,
+      ),
+    data: { breadcrumb: ['nav.account', 'nav.settings', 'settings.tabs.preferences'] },
+  },
+  {
+    // settings/system now lives at preferences; redirect for backwards-compat.
+    path: 'system',
+    redirectTo: 'preferences',
+    pathMatch: 'full',
   },
   {
     path: 'api-keys',
     loadComponent: () =>
       import('./pages/api-keys/settings-api-keys.page').then((m) => m.SettingsApiKeysPage),
-    data: { breadcrumb: ['nav.administer', 'nav.settings', 'settings.tabs.api_keys'] },
+    data: { breadcrumb: ['nav.account', 'nav.settings', 'settings.tabs.api_keys'] },
   },
   {
     path: 'thresholds',
@@ -47,6 +56,15 @@ export const SETTINGS_ROUTES: Routes = [
     canActivate: [superadminTenantGuard],
     loadComponent: () =>
       import('./pages/thresholds/settings-thresholds.page').then((m) => m.SettingsThresholdsPage),
-    data: { breadcrumb: ['nav.administer', 'nav.settings', 'settings.tabs.thresholds'] },
+    data: { breadcrumb: ['nav.account', 'nav.settings', 'settings.tabs.thresholds'] },
+  },
+  {
+    // Tenant admin config: advanced metrics, beta features, log level.
+    // Gated to ADMIN role + active tenant (superadminTenantGuard).
+    path: 'org',
+    canActivate: [roleGuard('ADMIN'), superadminTenantGuard],
+    loadComponent: () =>
+      import('./pages/org/settings-org.page').then((m) => m.SettingsOrgPage),
+    data: { breadcrumb: ['nav.account', 'nav.settings', 'settings.tabs.org'] },
   },
 ];

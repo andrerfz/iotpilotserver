@@ -110,34 +110,28 @@ describe('MonitoringPage', () => {
     expect(screen.getByText('Try adjusting the severity, state or period filters.')).toBeTruthy();
   });
 
-  it('calls batchUpdateAlerts(acknowledge) on bulk acknowledge', async () => {
+  it('calls batchUpdateAlerts(acknowledge) on swipe acknowledge action', async () => {
     mockDash.alerts.data.set(ALERTS);
     const { fixture } = await renderPage();
     const page = fixture.componentInstance as MonitoringPage;
-    (page as unknown as { _selectedIds: ReturnType<typeof signal<string[]>> })._selectedIds.set(['a1', 'a3']);
-    fixture.detectChanges();
-    await page.onBulkAcknowledge();
-    expect(mockDash.batchUpdateAlerts).toHaveBeenCalledWith('acknowledge', ['a1', 'a3']);
+    await page.onAlertAction(ALERTS[0], 'acknowledge');
+    expect(mockDash.batchUpdateAlerts).toHaveBeenCalledWith('acknowledge', ['a1']);
   });
 
-  it('calls batchUpdateAlerts(resolve) on bulk resolve', async () => {
+  it('calls batchUpdateAlerts(resolve) on swipe resolve action', async () => {
     mockDash.alerts.data.set(ALERTS);
     const { fixture } = await renderPage();
     const page = fixture.componentInstance as MonitoringPage;
-    (page as unknown as { _selectedIds: ReturnType<typeof signal<string[]>> })._selectedIds.set(['a1']);
-    fixture.detectChanges();
-    await page.onBulkResolve();
+    await page.onAlertAction(ALERTS[0], 'resolve');
     expect(mockDash.batchUpdateAlerts).toHaveBeenCalledWith('resolve', ['a1']);
   });
 
-  it('clears selection after bulk action', async () => {
+  it('dispatches swipe action to onAlertAction', async () => {
     mockDash.alerts.data.set(ALERTS);
     const { fixture } = await renderPage();
     const page = fixture.componentInstance as MonitoringPage;
-    const sel = (page as unknown as { _selectedIds: ReturnType<typeof signal<string[]>> })._selectedIds;
-    sel.set(['a1']);
-    await page.onBulkAcknowledge();
-    expect(sel()).toHaveLength(0);
+    page.onSwipeAction({ key: 'acknowledge', item: ALERTS[0] });
+    expect(mockDash.batchUpdateAlerts).toHaveBeenCalledWith('acknowledge', ['a1']);
   });
 
   it('reloads alerts and trend on period change', async () => {

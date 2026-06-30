@@ -69,6 +69,7 @@ reach **done**. Estimates are dev-days for one senior dev.
 | fe-mobile | Capacitor iOS/Android, push (FCM/APNs), touch UX, signed builds | all page modules | 6–9 | ✅ | ✅ done |
 | [fe-cutover](fe-cutover/) | Test migration, parity QA, Traefik switch, remove `apps/frontend` | all | 8–12 | ✅ | ✅ done |
 | [fe-ble-claiming](fe-ble-claiming/) | macOS Capacitor app + BLE device claiming (firmware + app + UI) | fe-mobile | 12–18 | ✅ | 🔴 planned |
+| [fe-nav-unification](fe-nav-unification/) | Settings scope reorg, route unification (devices+logs), mobile drawer bug, UI pattern catalog (nav-select, list-row, actions-menu) | fe-settings, fe-dashboard, fe-admin, fe-device-detail | 6–8 | ✅ | ✅ done |
 
 **Total: 64–93 dev-days.** (fe-ui-kit grew 6–9 → 9–12 after adopting the design
 prototype's larger component inventory — see below.)

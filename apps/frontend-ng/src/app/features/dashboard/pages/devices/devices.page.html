@@ -3,139 +3,176 @@
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
 
-  <!-- Loading skeletons -->
-  @if (devicesLoading()) {
+  @if (platformMode()) {
+
+    <!-- Platform mode: SUPERADMIN viewing all customers' devices -->
+    <div class="platform-banner">
+      <ion-icon name="globe-outline"></ion-icon>
+      <span>{{ 'devices.platform_mode_banner' | translate }}</span>
+    </div>
+
+    <!-- Platform KPI cards -->
     <ui-metric-grid>
-      @for (_ of [1,2,3,4]; track $index) {
-        <div class="metric-skeleton sk"></div>
-      }
-    </ui-metric-grid>
-  }
-
-  <!-- Error state -->
-  @if (devicesError()) {
-    <ui-empty-state
-      [title]="'devices.failed.title' | translate"
-      [description]="devicesError()?.message ?? 'Check your connection and try again.'"
-      [hasAction]="true"
-      (action)="onRetry()">
-    </ui-empty-state>
-  }
-
-  @if (!devicesLoading() && !devicesError()) {
-
-    <!-- KPI row -->
-    <ui-metric-grid>
-      <ui-metric-card [label]="'devices.kpi.online' | translate" [value]="onlineCount() + '/' + totalCount()" iconColor="var(--ion-color-success)">
+      <ui-metric-card [label]="'admin.devices.kpi.total' | translate"   [value]="adminSvc.stats().total"   [loading]="adminSvc.loading() && !adminSvc.devices().length">
+        <ion-icon icon name="hardware-chip-outline"></ion-icon>
+      </ui-metric-card>
+      <ui-metric-card [label]="'admin.devices.kpi.online' | translate"  [value]="adminSvc.stats().online"  [loading]="adminSvc.loading() && !adminSvc.devices().length" iconColor="var(--ion-color-success)">
         <ion-icon icon name="wifi-outline"></ion-icon>
       </ui-metric-card>
-      <ui-metric-card [label]="'devices.kpi.offline_error' | translate" [value]="offlineErrorCount()" iconColor="var(--ion-color-danger)">
+      <ui-metric-card [label]="'admin.devices.kpi.offline' | translate" [value]="adminSvc.stats().offline" [loading]="adminSvc.loading() && !adminSvc.devices().length" iconColor="var(--ion-color-danger)">
         <ion-icon icon name="alert-circle-outline"></ion-icon>
       </ui-metric-card>
-      <ui-metric-card [label]="'devices.kpi.maintenance' | translate" [value]="maintenanceCount()" iconColor="var(--ion-color-warning)">
+      <ui-metric-card [label]="'admin.devices.kpi.issues' | translate"  [value]="adminSvc.stats().error"   [loading]="adminSvc.loading() && !adminSvc.devices().length" iconColor="var(--ion-color-warning)">
         <ion-icon icon name="construct-outline"></ion-icon>
-      </ui-metric-card>
-      <ui-metric-card [label]="'devices.kpi.firmware_ok' | translate" [value]="firmwareCurrentCount()" iconColor="var(--ion-color-success)">
-        <ion-icon icon name="checkmark-circle-outline"></ion-icon>
       </ui-metric-card>
     </ui-metric-grid>
 
-    <!-- Filter bar + create button -->
+    <!-- Platform search filter -->
     <ion-card class="filter-bar">
       <ion-card-content>
         <div class="filter-row">
           <ui-search-field
-            [placeholder]="'devices.search_placeholder' | translate"
-            [value]="search()"
-            (valueChange)="search.set($event)">
+            [placeholder]="'admin.devices.search_placeholder' | translate"
+            [value]="platformSearch()"
+            (valueChange)="platformSearch.set($event)">
           </ui-search-field>
-          <ui-multi-select-picker
-            label="Status"
-            [title]="'devices.filter_by_status' | translate"
-            [sub]="'devices.filter_sub' | translate"
-            [options]="statusOptions"
-            [value]="statusFilter()"
-            (valueChange)="statusFilter.set($event)">
-          </ui-multi-select-picker>
         </div>
       </ion-card-content>
     </ion-card>
 
-    <!-- Bulk actions bar -->
-    @if (selectedCount() > 0) {
-      <div class="bulk-bar">
-        <span class="bulk-bar__label">{{ 'devices.selected' | translate:{ count: selectedCount() } }}</span>
-        <ion-button fill="clear" size="small" color="medium" (click)="onExportSelected()">
-          <ion-icon slot="start" name="download-outline"></ion-icon>
-          {{ 'devices.export' | translate }}
+    @if (adminSvc.error() && !adminSvc.devices().length) {
+      <ui-empty-state [title]="'admin.devices.failed.title' | translate" [hasAction]="true">
+        <ion-button action fill="outline" size="small" (click)="adminSvc.load()">
+          {{ 'admin.devices.failed.retry' | translate }}
         </ion-button>
-      </div>
-    }
+      </ui-empty-state>
+    } @else {
+      <ui-swipe-list
+        [items]="platformFiltered()"
+        [actions]="platformRowActions"
+        (itemClick)="onPlatformRowClick($any($event))">
+        <ng-template #itemContent let-d>
+          <ui-list-row
+            [title]="d.hostname"
+            [subtitle]="d.deviceType + (d.ipAddress ? ' · ' + d.ipAddress : '')"
+            [meta]="['Status', d.status, 'Customer', d.customerId, 'Alerts', String(d.alertCount ?? 0)]"
+            [cols]="[
+              { label: 'Status', value: d.status },
+              { label: 'Customer', value: d.customerId },
+              { label: 'Alerts', value: String(d.alertCount ?? 0) }
+            ]">
+            <ui-status-dot lead [status]="d.status"></ui-status-dot>
+          </ui-list-row>
+        </ng-template>
+      </ui-swipe-list>
 
-    <!-- Desktop: data table -->
-    <div class="devices-table">
-      <ui-data-table
-        [columns]="$any(columns())"
-        [rows]="$any(filteredDevices())"
-        [pageSize]="10"
-        [selectable]="true"
-        [rowClickable]="true"
-        (rowClick)="onDeviceRowClick($event)"
-        (selectionChange)="onSelectionChange($any($event))">
-      </ui-data-table>
-    </div>
-
-    <!-- Mobile: card list -->
-    <div class="devices-list">
-      @for (device of filteredDevices(); track device.id) {
-        <div class="device-item" (click)="onDeviceRowClick(device)"
-          (keydown.enter)="onDeviceRowClick(device)" tabindex="0" role="button">
-          <ui-status-dot [status]="device.status ?? 'OFFLINE'"></ui-status-dot>
-          <div class="device-item__info">
-            <div class="device-item__name">{{ device.hostname ?? device.name ?? device.id }}</div>
-            <div class="device-item__sub">{{ device.deviceType ?? 'Unknown' }}{{ device.ipAddress ? ' · ' + device.ipAddress : '' }}</div>
-          </div>
-          <ui-status-badge [status]="device.status ?? 'OFFLINE'"></ui-status-badge>
-        </div>
+      @if (platformFiltered().length === 0) {
+        <ui-empty-state [title]="'admin.devices.empty.title' | translate"></ui-empty-state>
       }
-    </div>
+    }
 
-    @if (filteredDevices().length === 0 && _deviceRows().length > 0) {
+  } @else {
+
+    <!-- Tenant mode -->
+
+    @if (devicesLoading()) {
+      <ui-metric-grid>
+        @for (_ of [1,2,3,4]; track $index) {
+          <div class="metric-skeleton sk"></div>
+        }
+      </ui-metric-grid>
+    }
+
+    @if (devicesError()) {
       <ui-empty-state
-        [title]="'devices.empty_filtered.title' | translate"
-        [description]="'devices.empty_filtered.desc' | translate">
+        [title]="'devices.failed.title' | translate"
+        [description]="devicesError()?.message ?? 'Check your connection and try again.'"
+        [hasAction]="true"
+        (action)="onRetry()">
       </ui-empty-state>
     }
 
-    @if (_deviceRows().length === 0) {
-      <ui-empty-state
-        [title]="'devices.empty.title' | translate"
-        [description]="'devices.empty.desc' | translate"
-        [hasAction]="true"
-        (action)="onRegisterDevice()">
-      </ui-empty-state>
+    @if (!devicesLoading() && !devicesError()) {
+
+      <!-- KPI row -->
+      <ui-metric-grid>
+        <ui-metric-card [label]="'devices.kpi.online' | translate" [value]="onlineCount() + '/' + totalCount()" iconColor="var(--ion-color-success)">
+          <ion-icon icon name="wifi-outline"></ion-icon>
+        </ui-metric-card>
+        <ui-metric-card [label]="'devices.kpi.offline_error' | translate" [value]="offlineErrorCount()" iconColor="var(--ion-color-danger)">
+          <ion-icon icon name="alert-circle-outline"></ion-icon>
+        </ui-metric-card>
+        <ui-metric-card [label]="'devices.kpi.maintenance' | translate" [value]="maintenanceCount()" iconColor="var(--ion-color-warning)">
+          <ion-icon icon name="construct-outline"></ion-icon>
+        </ui-metric-card>
+        <ui-metric-card [label]="'devices.kpi.firmware_ok' | translate" [value]="firmwareCurrentCount()" iconColor="var(--ion-color-success)">
+          <ion-icon icon name="checkmark-circle-outline"></ion-icon>
+        </ui-metric-card>
+      </ui-metric-grid>
+
+      <!-- Filter bar -->
+      <ion-card class="filter-bar">
+        <ion-card-content>
+          <div class="filter-row">
+            <ui-search-field
+              [placeholder]="'devices.search_placeholder' | translate"
+              [value]="search()"
+              (valueChange)="search.set($event)">
+            </ui-search-field>
+            <ui-multi-select-picker
+              label="Status"
+              [title]="'devices.filter_by_status' | translate"
+              [sub]="'devices.filter_sub' | translate"
+              [options]="statusOptions"
+              [value]="statusFilter()"
+              (valueChange)="statusFilter.set($event)">
+            </ui-multi-select-picker>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <ui-swipe-list
+        [items]="filteredDevices()"
+        [actions]="deviceRowActions"
+        (itemClick)="onDeviceRowClick($any($event))">
+        <ng-template #itemContent let-d>
+          <ui-list-row
+            [title]="d.hostname ?? d.name ?? d.id ?? ''"
+            [subtitle]="(d.deviceType ?? 'Unknown') + (d.ipAddress ? ' · ' + d.ipAddress : '')"
+            [meta]="['Status', d.status ?? 'OFFLINE', 'Location', d.location ?? '—', 'CPU', d.cpuUsage !== null && d.cpuUsage !== undefined ? d.cpuUsage + '%' : '—']"
+            [cols]="[
+              { label: 'Location', value: d.location ?? '—' },
+              { label: 'CPU', value: d.cpuUsage !== null && d.cpuUsage !== undefined ? d.cpuUsage + '%' : '—' },
+              { label: 'Memory', value: d.memoryUsage !== null && d.memoryUsage !== undefined ? d.memoryUsage + '%' : '—' }
+            ]">
+            <ui-status-dot lead [status]="d.status ?? 'OFFLINE'"></ui-status-dot>
+          </ui-list-row>
+        </ng-template>
+      </ui-swipe-list>
+
+      @if (filteredDevices().length === 0 && _deviceRows().length > 0) {
+        <ui-empty-state
+          [title]="'devices.empty_filtered.title' | translate"
+          [description]="'devices.empty_filtered.desc' | translate">
+        </ui-empty-state>
+      }
+
+      @if (_deviceRows().length === 0) {
+        <ui-empty-state
+          [title]="'devices.empty.title' | translate"
+          [description]="'devices.empty.desc' | translate"
+          [hasAction]="true"
+          (action)="onRegisterDevice()">
+        </ui-empty-state>
+      }
+
     }
 
   }
 
 </ion-content>
 
-<!-- Cell templates (desktop table only) -->
-<ng-template #deviceCell let-row>
-  <div class="device-cell">
-    <ui-status-dot [status]="row.status ?? 'OFFLINE'"></ui-status-dot>
-    <div>
-      <div class="td-strong">{{ row.hostname ?? row.name ?? row.id }}</div>
-      <div class="td-mono dim">{{ row.deviceId }} · {{ row.deviceType }}</div>
-    </div>
-  </div>
-</ng-template>
-
-<ng-template #statusCell let-row>
-  <ui-status-badge [status]="row.status ?? 'OFFLINE'"></ui-status-badge>
-</ng-template>
-
-<!-- "+" chooser: manual entry vs BLE scan (short sheet, our design tokens) -->
+<!-- "+" chooser: manual entry vs BLE scan -->
 <ui-bottom-sheet
   #addSheet
   [title]="'components.add_device.title' | translate"
@@ -165,7 +202,7 @@
 <app-register-device-sheet (deviceClaimed)="onDeviceClaimed()"></app-register-device-sheet>
 <app-ble-claim-sheet></app-ble-claim-sheet>
 
-<ui-bottom-sheet #exportSheet [title]="'devices.export_sheet.title' | translate">
+<ui-bottom-sheet #exportSheet [title]="'devices.export_sheet.title' | translate" [breakpoint]="0.5" [showSave]="false">
   <div class="opt-list">
     <button class="opt-row" (click)="onExportXlsx(); exportSheet.close()">
       <ion-icon name="document-outline"></ion-icon>

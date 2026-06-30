@@ -1,3 +1,19 @@
+.platform-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: var(--primary-weak);
+  border: 1px solid var(--primary-line);
+  border-radius: var(--r-lg);
+  margin-bottom: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--primary);
+
+  ion-icon { font-size: 16px; flex-shrink: 0; }
+}
+
 .metric-skeleton {
   height: 88px;
   border-radius: var(--r-lg);
@@ -15,89 +31,6 @@
     ion-button { flex-shrink: 0; margin: 0; }
   }
 }
-
-.bulk-bar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 7px 12px;
-  background: var(--primary-weak);
-  border: 1px solid var(--primary-line);
-  border-radius: var(--r-lg);
-  margin-bottom: 12px;
-
-  &__label {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--primary);
-    flex: 1;
-  }
-}
-
-/* Desktop: data table; Mobile: card list */
-.devices-table {
-  display: block;
-  @media (max-width: 767px) { display: none; }
-}
-
-.devices-list {
-  display: none;
-  flex-direction: column;
-  gap: 1px;
-  background: var(--ui-border);
-  border: 1px solid var(--ui-border);
-  border-radius: var(--r-lg);
-  overflow: hidden;
-
-  @media (max-width: 767px) { display: flex; }
-}
-
-.device-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 14px;
-  background: var(--surface);
-  cursor: pointer;
-  transition: background 0.1s;
-
-  &:hover, &:focus-visible { background: var(--surface-2); }
-  &:focus-visible { outline: none; }
-
-  &__info {
-    flex: 1;
-    min-width: 0;
-  }
-
-  &__name {
-    font-size: 13px;
-    font-weight: 600;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  &__sub {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text-muted);
-    margin-top: 2px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-}
-
-/* Desktop table cell helpers */
-.device-cell {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.td-strong { font-size: 13px; font-weight: 600; }
-.td-mono   { font-family: var(--font-mono, monospace); font-size: 11px; }
-.dim       { color: var(--text-muted); }
 
 /* "+" add-device chooser (short bottom sheet) — design tokens, dark-mode aware. */
 .add-chooser {

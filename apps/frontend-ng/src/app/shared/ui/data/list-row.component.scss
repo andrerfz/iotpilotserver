@@ -1,0 +1,103 @@
+/* Ported from prototype .row + .cell + .kv patterns in app.css */
+:host { display: contents; }
+
+.list-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+  padding: 4px 0;
+
+  &__lead {
+    flex: none;
+    display: flex;
+    align-items: center;
+  }
+
+  &__body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__title {
+    font-size: 14px;
+    font-weight: 550;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    margin-top: 3px;
+
+    @media (min-width: 1080px) { display: none; }
+  }
+
+  &__meta-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  &__meta-key {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  &__meta-val {
+    font-size: 11.5px;
+    color: var(--text-muted);
+  }
+
+  &__cols {
+    display: none;
+
+    @media (min-width: 1080px) {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      margin-left: auto;
+      flex: none;
+    }
+  }
+
+  &__col {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 1px;
+    min-width: 80px;
+  }
+
+  &__col-label {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  &__col-value {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+}

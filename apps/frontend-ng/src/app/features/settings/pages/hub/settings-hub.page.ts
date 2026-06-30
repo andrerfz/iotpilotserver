@@ -5,11 +5,9 @@ import { AuthService } from '@ng/core/auth/auth.service';
 import { TenantContextService } from '@ng/core/auth/tenant-context.service';
 import { hasRole } from '@ng/core/auth/roles';
 
-interface SettingsTab {
+interface SettingsItem {
   label: string;
   path: string;
-  /** When true, hide while a SUPERADMIN is in platform mode (no active customer). */
-  tenantScoped?: boolean;
 }
 
 @Component({
@@ -23,21 +21,21 @@ export class SettingsHubPage {
   private readonly auth = inject(AuthService);
   private readonly tenant = inject(TenantContextService);
 
-  private readonly allTabs: readonly SettingsTab[] = [
+  readonly accountItems: readonly SettingsItem[] = [
     { label: 'settings.tabs.profile', path: 'profile' },
-    { label: 'settings.tabs.notifications', path: 'notifications' },
     { label: 'settings.tabs.security', path: 'security' },
-    { label: 'settings.tabs.system', path: 'system' },
-    { label: 'settings.tabs.api_keys', path: 'api-keys' },
-    { label: 'settings.tabs.thresholds', path: 'thresholds', tenantScoped: true },
+    { label: 'settings.tabs.notifications', path: 'notifications' },
+    { label: 'settings.tabs.preferences', path: 'preferences' },
   ];
 
-  /** Platform-mode SUPERADMIN (no active customer) has no tenant-scoped settings. */
-  private readonly platformSuperadmin = computed(
-    () => hasRole(this.auth.role(), 'SUPERADMIN') && !this.tenant.isActive(),
-  );
+  readonly orgItems: readonly SettingsItem[] = [
+    { label: 'settings.tabs.thresholds', path: 'thresholds' },
+    { label: 'settings.tabs.api_keys', path: 'api-keys' },
+    { label: 'settings.tabs.org', path: 'org' },
+  ];
 
-  readonly navItems = computed(() =>
-    this.allTabs.filter((t) => !(t.tenantScoped && this.platformSuperadmin())),
+  /** Org section requires ADMIN role + an active tenant context. */
+  readonly showOrg = computed(
+    () => hasRole(this.auth.role(), 'ADMIN') && this.tenant.isActive(),
   );
 }

@@ -1,11 +1,17 @@
 <ion-content class="ion-padding">
 
-  <div class="pagehead pagehead--mobile-hidden">
-    <div>
-      <div class="pagehead__title">{{ 'logs.title' | translate }}</div>
-      <div class="pagehead__sub">{{ 'logs.subtitle' | translate }}</div>
-    </div>
-  </div>
+  <!-- Tab selector (ADMIN+ only) -->
+  @if (showAudit()) {
+    <ion-segment [value]="activeTab()" class="logs-segment"
+      (ionChange)="onTabChange($any($event).detail.value)">
+      <ion-segment-button value="ops">
+        <ion-label>{{ 'logs.tabs.ops' | translate }}</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="audit">
+        <ion-label>{{ 'logs.tabs.audit' | translate }}</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+  }
 
   <!-- Filters -->
   <ion-card class="filter-bar">
@@ -14,7 +20,7 @@
         <ui-search-field [placeholder]="'logs.search_placeholder' | translate"
           [value]="searchQuery()" (valueChange)="onSearchInput($event)">
         </ui-search-field>
-        <ui-select [placeholder]="'logs.levels.all' | translate"  [options]="levelOptions"   [(ngModel)]="levelFilter"  (ngModelChange)="onFilterChange()"></ui-select>
+        <ui-select [placeholder]="'logs.levels.all' | translate" [options]="levelOptions" [(ngModel)]="levelFilter" (ngModelChange)="onFilterChange()"></ui-select>
         <ui-select [placeholder]="'logs.filters.all_devices' | translate" [options]="deviceOptions()" [(ngModel)]="deviceFilter" (ngModelChange)="onFilterChange()"></ui-select>
         @if (hasSourceFilter()) {
           <ui-select [placeholder]="'logs.filters.all_sources' | translate" [options]="sourceOptions()" [(ngModel)]="sourceFilter" (ngModelChange)="onFilterChange()"></ui-select>
@@ -23,16 +29,23 @@
           <ion-button fill="outline" color="medium" size="small" (click)="svc.reload()" [disabled]="svc.loading()">
             <ion-icon slot="icon-only" name="reload-outline"></ion-icon>
           </ion-button>
-          <ion-button fill="outline" size="small" (click)="exportCsv()" [disabled]="!svc.logs().length">
-            <ion-icon slot="start" name="download-outline"></ion-icon>
-            {{ 'logs.actions.export' | translate }}
-          </ion-button>
+          @if (activeTab() === 'audit') {
+            <ion-button fill="outline" size="small" (click)="onExportOpen()" [disabled]="!svc.logs().length">
+              <ion-icon slot="start" name="download-outline"></ion-icon>
+              {{ 'logs.actions.export' | translate }}
+            </ion-button>
+          } @else {
+            <ion-button fill="outline" size="small" (click)="exportCsv()" [disabled]="!svc.logs().length">
+              <ion-icon slot="start" name="download-outline"></ion-icon>
+              {{ 'logs.actions.export' | translate }}
+            </ion-button>
+          }
         </div>
       </div>
     </ion-card-content>
   </ion-card>
 
-  <!-- Table -->
+  <!-- Content: error state -->
   @if (svc.error() && !svc.logs().length) {
     <ui-empty-state [title]="'logs.failed.title' | translate" [hasAction]="true">
       <ion-button action fill="outline" size="small" (click)="svc.reload()">{{ 'logs.failed.retry' | translate }}</ion-button>
@@ -40,42 +53,111 @@
   } @else {
     <ion-card>
       <ion-card-content class="logs-table-wrap">
-        <table class="logs-table">
-          <thead>
-            <tr>
-              <th class="col-ts">{{ 'logs.table.timestamp' | translate }}</th>
-              <th class="col-level">{{ 'logs.table.level' | translate }}</th>
-              <th class="col-device">{{ 'logs.table.device' | translate }}</th>
-              <th class="col-source">{{ 'logs.table.source' | translate }}</th>
-              <th>{{ 'logs.table.message' | translate }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            @if (svc.loading()) {
-              @for (_ of [1,2,3,4,5]; track $index) {
-                <tr>
-                  <td colspan="5"><ion-skeleton-text [animated]="true" style="height:18px;border-radius:4px;"></ion-skeleton-text></td>
-                </tr>
-              }
-            } @else if (!svc.logs().length) {
+
+        <!-- Ops tab: desktop table only -->
+        @if (activeTab() === 'ops') {
+          <table class="logs-table">
+            <thead>
               <tr>
-                <td colspan="5" class="logs-empty">{{ 'logs.empty' | translate }}</td>
+                <th class="col-ts">{{ 'logs.table.timestamp' | translate }}</th>
+                <th class="col-level">{{ 'logs.table.level' | translate }}</th>
+                <th class="col-device">{{ 'logs.table.device' | translate }}</th>
+                <th class="col-source">{{ 'logs.table.source' | translate }}</th>
+                <th>{{ 'logs.table.message' | translate }}</th>
               </tr>
-            } @else {
-              @for (log of svc.logs(); track log.id) {
+            </thead>
+            <tbody>
+              @if (svc.loading()) {
+                @for (_ of [1,2,3,4,5]; track $index) {
+                  <tr>
+                    <td colspan="5"><ion-skeleton-text [animated]="true" style="height:18px;border-radius:4px;"></ion-skeleton-text></td>
+                  </tr>
+                }
+              } @else if (!svc.logs().length) {
                 <tr>
-                  <td class="col-ts">{{ formatTs(log.timestamp) }}</td>
-                  <td class="col-level">
-                    <ion-badge [color]="levelColor(log.level)">{{ log.level }}</ion-badge>
-                  </td>
-                  <td class="col-device">{{ log.device?.hostname ?? '—' }}</td>
-                  <td class="col-source">{{ log.source ?? 'system' }}</td>
-                  <td class="col-msg">{{ log.message }}</td>
+                  <td colspan="5" class="logs-empty">{{ 'logs.empty' | translate }}</td>
                 </tr>
+              } @else {
+                @for (log of svc.logs(); track log.id) {
+                  <tr>
+                    <td class="col-ts">{{ formatTs(log.timestamp) }}</td>
+                    <td class="col-level">
+                      <ion-badge [color]="levelColor(log.level)">{{ log.level }}</ion-badge>
+                    </td>
+                    <td class="col-device">{{ log.device?.hostname ?? '—' }}</td>
+                    <td class="col-source">{{ log.source ?? 'system' }}</td>
+                    <td class="col-msg">{{ log.message }}</td>
+                  </tr>
+                }
               }
-            }
-          </tbody>
-        </table>
+            </tbody>
+          </table>
+        }
+
+        <!-- Audit tab: responsive table on wide, cards on mobile -->
+        @if (activeTab() === 'audit') {
+          @if (vp.wide()) {
+            <table class="logs-table">
+              <thead>
+                <tr>
+                  <th class="col-ts">{{ 'logs.table.timestamp' | translate }}</th>
+                  <th class="col-level">{{ 'logs.table.level' | translate }}</th>
+                  <th class="col-device">{{ 'logs.table.device' | translate }}</th>
+                  <th class="col-source">{{ 'logs.table.source' | translate }}</th>
+                  <th>{{ 'logs.table.message' | translate }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @if (svc.loading()) {
+                  @for (_ of [1,2,3,4,5]; track $index) {
+                    <tr>
+                      <td colspan="5"><ion-skeleton-text [animated]="true" style="height:18px;border-radius:4px;"></ion-skeleton-text></td>
+                    </tr>
+                  }
+                } @else if (!svc.logs().length) {
+                  <tr>
+                    <td colspan="5" class="logs-empty">{{ 'logs.empty' | translate }}</td>
+                  </tr>
+                } @else {
+                  @for (log of svc.logs(); track log.id) {
+                    <tr>
+                      <td class="col-ts">{{ formatTs(log.timestamp) }}</td>
+                      <td class="col-level">
+                        <ion-badge [color]="levelColor(log.level)">{{ log.level }}</ion-badge>
+                      </td>
+                      <td class="col-device">{{ log.device?.hostname ?? '—' }}</td>
+                      <td class="col-source">{{ log.source ?? 'system' }}</td>
+                      <td class="col-msg">{{ log.message }}</td>
+                    </tr>
+                  }
+                }
+              </tbody>
+            </table>
+          } @else {
+            <div class="log-cards">
+              @if (svc.loading()) {
+                @for (_ of [1,2,3]; track $index) {
+                  <ion-skeleton-text [animated]="true" style="height:54px;border-radius:10px;"></ion-skeleton-text>
+                }
+              } @else if (!svc.logs().length) {
+                <div class="logs-empty">{{ 'logs.empty' | translate }}</div>
+              } @else {
+                @for (log of svc.logs(); track log.id) {
+                  <div class="log-card" role="button" tabindex="0"
+                    (click)="openDetail(log)" (keydown.enter)="openDetail(log)">
+                    <div class="log-card__head">
+                      <ion-badge [color]="levelColor(log.level)">{{ log.level }}</ion-badge>
+                      <span class="log-card__ts">{{ formatTs(log.timestamp) }}</span>
+                    </div>
+                    <div class="log-card__msg">{{ log.message }}</div>
+                    <div class="log-card__src">{{ log.device?.hostname ?? '—' }} · {{ log.source ?? 'system' }}</div>
+                  </div>
+                }
+              }
+            </div>
+          }
+        }
+
       </ion-card-content>
 
       @if (svc.pagination().pages > 1) {
@@ -94,5 +176,42 @@
       }
     </ion-card>
   }
+
+  <!-- Export bottom sheet (audit tab only) -->
+  <ui-bottom-sheet #exportSheet [title]="'logs.export_sheet.title' | translate" [breakpoint]="0.5" [showSave]="false">
+    <div class="opt-list">
+      <button class="opt-row" (click)="exportXlsx(); exportSheet.close()">
+        <ion-icon name="document-outline"></ion-icon>
+        <div class="opt-row__body">
+          <div class="opt-row__label">{{ 'logs.export_sheet.xlsx_label' | translate }}</div>
+        </div>
+      </button>
+      <button class="opt-row" (click)="exportCsv(); exportSheet.close()">
+        <ion-icon name="code-outline"></ion-icon>
+        <div class="opt-row__body">
+          <div class="opt-row__label">{{ 'logs.export_sheet.csv_label' | translate }}</div>
+        </div>
+      </button>
+      <button class="opt-row" (click)="exportPdf(); exportSheet.close()">
+        <ion-icon name="document-text-outline"></ion-icon>
+        <div class="opt-row__body">
+          <div class="opt-row__label">{{ 'logs.export_sheet.pdf_label' | translate }}</div>
+        </div>
+      </button>
+    </div>
+  </ui-bottom-sheet>
+
+  <!-- Log detail sheet (audit tab, mobile) -->
+  <ui-bottom-sheet #logSheet [title]="'logs.detail' | translate" [showSave]="false">
+    @if (selectedLog(); as log) {
+      <div class="detail-list">
+        <div class="detail-row"><span class="detail-row__k">{{ 'logs.table.timestamp' | translate }}</span><span class="detail-row__v detail-row__v--mono">{{ formatTs(log.timestamp) }}</span></div>
+        <div class="detail-row"><span class="detail-row__k">{{ 'logs.table.level' | translate }}</span><span class="detail-row__v">{{ log.level }}</span></div>
+        <div class="detail-row"><span class="detail-row__k">{{ 'logs.table.device' | translate }}</span><span class="detail-row__v">{{ log.device?.hostname ?? '—' }}</span></div>
+        <div class="detail-row"><span class="detail-row__k">{{ 'logs.table.source' | translate }}</span><span class="detail-row__v detail-row__v--mono">{{ log.source ?? 'system' }}</span></div>
+        <div class="detail-row"><span class="detail-row__k">{{ 'logs.table.message' | translate }}</span><span class="detail-row__v">{{ log.message }}</span></div>
+      </div>
+    }
+  </ui-bottom-sheet>
 
 </ion-content>

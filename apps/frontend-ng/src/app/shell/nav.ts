@@ -37,7 +37,7 @@ export const NAV: NavGroup[] = [
       { label: 'nav.dashboard', path: 'dashboard', icon: 'grid-outline', tenantScoped: true },
       { label: 'nav.devices', path: 'devices', icon: 'hardware-chip-outline', tenantScoped: true },
       { label: 'nav.monitoring', path: 'monitoring', icon: 'notifications-outline', tenantScoped: true },
-      { label: 'nav.logs', path: 'logs', icon: 'document-text-outline', adminOnly: true, tenantScoped: true },
+      { label: 'nav.logs', path: 'logs', icon: 'document-text-outline', adminOnly: true },
     ],
   },
   {
@@ -46,10 +46,8 @@ export const NAV: NavGroup[] = [
       {
         label: 'nav.overview', path: 'admin', icon: 'stats-chart-outline', exact: true, adminOnly: true,
         children: [
-          { label: 'nav.devices',   path: 'admin/devices',   icon: 'hardware-chip-outline', adminOnly: true, superAdminOnly: true },
           { label: 'nav.customers', path: 'admin/customers', icon: 'business-outline', adminOnly: true, superAdminOnly: true },
           { label: 'nav.users',     path: 'admin/users',     icon: 'people-outline', adminOnly: true },
-          { label: 'nav.logs',      path: 'admin/logs',      icon: 'document-text-outline', adminOnly: true },
           { label: 'nav.system',    path: 'admin/system',    icon: 'server-outline', adminOnly: true },
         ],
       },

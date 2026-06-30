@@ -11,13 +11,6 @@ export const ADMIN_ROUTES: Routes = [
     data: { breadcrumb: ['nav.administer', 'nav.overview'] },
   },
   {
-    path: 'devices',
-    canActivate: [roleGuard('SUPERADMIN')],
-    loadComponent: () =>
-      import('./pages/admin-devices/admin-devices.page').then(m => m.AdminDevicesPage),
-    data: { breadcrumb: ['nav.administer', 'nav.devices'] },
-  },
-  {
     path: 'customers',
     canActivate: [roleGuard('SUPERADMIN')],
     loadComponent: () =>
@@ -30,13 +23,6 @@ export const ADMIN_ROUTES: Routes = [
     loadComponent: () =>
       import('./pages/admin-users/admin-users.page').then(m => m.AdminUsersPage),
     data: { breadcrumb: ['nav.administer', 'nav.users'] },
-  },
-  {
-    path: 'logs',
-    canActivate: [roleGuard('ADMIN')],
-    loadComponent: () =>
-      import('./pages/admin-logs/admin-logs.page').then(m => m.AdminLogsPage),
-    data: { breadcrumb: ['nav.administer', 'nav.logs'] },
   },
   {
     path: 'system',

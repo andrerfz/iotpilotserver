@@ -108,7 +108,8 @@
     "system": "Système",
     "operate": "Exploiter",
     "administer": "Administrer",
-    "monitor": "Surveiller"
+    "monitor": "Surveiller",
+    "account": "Compte"
   },
   "dashboard": {
     "title": "Vue de la flotte",
@@ -150,6 +151,7 @@
       "title": "Échec du chargement des appareils",
       "desc": "Vérifiez votre connexion et réessayez."
     },
+    "platform_mode_banner": "Mode plateforme — affichage des appareils de tous les clients",
     "export_sheet": {
       "title": "Exporter les appareils",
       "xlsx_label": "Exporter XLSX",
@@ -501,7 +503,18 @@
     "level_debug": "Débogage (détaillé)",
     "level_info": "Info (standard)",
     "level_warning": "Avertissement (minimal)",
-    "level_error": "Erreur (critiques uniquement)"
+    "level_error": "Erreur (critiques uniquement)",
+    "tabs": {
+      "ops": "Opérationnel",
+      "audit": "Audit"
+    },
+    "export_sheet": {
+      "title": "Exporter les journaux",
+      "xlsx_label": "Excel (.xlsx)",
+      "csv_label": "CSV (.csv)",
+      "pdf_label": "PDF (.pdf)"
+    },
+    "detail": "Entrée de journal"
   },
   "settings": {
     "profile": {
@@ -673,7 +686,15 @@
       "security": "Sécurité",
       "system": "Système",
       "api_keys": "Clés API",
-      "thresholds": "Seuils par défaut"
+      "thresholds": "Seuils par défaut",
+      "preferences": "Préférences",
+      "org": "Organisation"
+    },
+    "hub": {
+      "account_title": "Compte",
+      "account_desc": "Vos paramètres personnels et sécurité.",
+      "org_title": "Organisation",
+      "org_desc": "Configuration du tenant. ADMIN uniquement."
     },
     "thresholds": {
       "title": "Seuils d'alerte par défaut",
@@ -1095,6 +1116,7 @@
     "email": "E-mail",
     "role": "Rôle",
     "hostname": "Nom d'hôte",
+    "customer": "Client",
     "ip_address": "Adresse IP",
     "device_id": "ID de l'appareil",
     "key": "Clé",

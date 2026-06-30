@@ -108,7 +108,8 @@
     "system": "Sistema",
     "operate": "Operare",
     "administer": "Amministrare",
-    "monitor": "Monitorare"
+    "monitor": "Monitorare",
+    "account": "Account"
   },
   "dashboard": {
     "title": "Panoramica flotta",
@@ -150,6 +151,7 @@
       "title": "Caricamento dispositivi non riuscito",
       "desc": "Controlla la connessione e riprova."
     },
+    "platform_mode_banner": "Modalità piattaforma — visualizzazione di tutti i dispositivi dei clienti",
     "export_sheet": {
       "title": "Esporta dispositivi",
       "xlsx_label": "Esporta XLSX",
@@ -501,7 +503,18 @@
     "level_debug": "Debug (dettagliato)",
     "level_info": "Info (standard)",
     "level_warning": "Avviso (minimo)",
-    "level_error": "Errore (solo critici)"
+    "level_error": "Errore (solo critici)",
+    "tabs": {
+      "ops": "Operativi",
+      "audit": "Audit"
+    },
+    "export_sheet": {
+      "title": "Esporta registri",
+      "xlsx_label": "Excel (.xlsx)",
+      "csv_label": "CSV (.csv)",
+      "pdf_label": "PDF (.pdf)"
+    },
+    "detail": "Voce di registro"
   },
   "settings": {
     "profile": {
@@ -673,7 +686,15 @@
       "security": "Sicurezza",
       "system": "Sistema",
       "api_keys": "Chiavi API",
-      "thresholds": "Soglie predefinite"
+      "thresholds": "Soglie predefinite",
+      "preferences": "Preferenze",
+      "org": "Organizzazione"
+    },
+    "hub": {
+      "account_title": "Account",
+      "account_desc": "Impostazioni personali e sicurezza.",
+      "org_title": "Organizzazione",
+      "org_desc": "Configurazione del tenant. Solo ADMIN."
     },
     "thresholds": {
       "title": "Soglie di avviso predefinite",
@@ -1095,6 +1116,7 @@
     "email": "E-mail",
     "role": "Ruolo",
     "hostname": "Nome host",
+    "customer": "Cliente",
     "ip_address": "Indirizzo IP",
     "device_id": "ID dispositivo",
     "key": "Chiave",

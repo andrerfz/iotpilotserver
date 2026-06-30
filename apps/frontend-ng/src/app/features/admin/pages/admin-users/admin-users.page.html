@@ -3,7 +3,6 @@
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
 
-
   <!-- Filters -->
   <ion-card class="filter-bar">
     <ion-card-content>
@@ -18,62 +17,25 @@
     </ion-card-content>
   </ion-card>
 
-  <!-- Cell templates -->
-  <ng-template #statusCell let-row>
-    <ui-status-badge [status]="row.status"></ui-status-badge>
-  </ng-template>
-
-  <ng-template #actionsCell let-row>
-    <div class="row-actions">
-      @if (row.status === 'PENDING' && isSuperAdmin()) {
-        <ion-button size="small" fill="outline" color="success"
-          [disabled]="actionLoading()" (click)="onApprove(row)">
-          <ion-icon slot="start" name="checkmark-outline"></ion-icon>
-          {{ 'admin.users.actions.approve' | translate }}
-        </ion-button>
-        <ion-button size="small" fill="outline" color="danger"
-          [disabled]="actionLoading()" (click)="onReject(row)">
-          <ion-icon slot="start" name="close-outline"></ion-icon>
-          {{ 'admin.users.actions.reject' | translate }}
-        </ion-button>
-      }
-      @if (row.status === 'ACTIVE' && isSuperAdmin() && !isSelf(row)) {
-        <ion-button size="small" fill="outline" color="warning"
-          [disabled]="actionLoading()" (click)="onSuspend(row)">
-          <ion-icon slot="start" name="ban-outline"></ion-icon>
-          {{ 'admin.users.actions.suspend' | translate }}
-        </ion-button>
-      }
-      @if (row.status === 'SUSPENDED' && isSuperAdmin()) {
-        <ion-button size="small" fill="outline" color="success"
-          [disabled]="actionLoading()" (click)="onActivate(row)">
-          <ion-icon slot="start" name="checkmark-outline"></ion-icon>
-          {{ 'admin.users.actions.activate' | translate }}
-        </ion-button>
-      }
-    </div>
-  </ng-template>
-
-  <!-- Table (desktop) / cards (mobile) -->
   @if (svc.error() && !svc.users().length) {
     <ui-empty-state [title]="'admin.users.failed.title' | translate" [hasAction]="true">
       <ion-button action fill="outline" size="small" (click)="svc.load()">{{ 'admin.users.failed.retry' | translate }}</ion-button>
     </ui-empty-state>
-  } @else if (vp.wide()) {
-    <ui-data-table [columns]="cols()" [rows]="filtered()" rowKey="id" [pageSize]="20">
-    </ui-data-table>
   } @else if (!filtered().length) {
     <ui-empty-state [title]="'admin.users.empty.title' | translate"></ui-empty-state>
   } @else {
-    <ui-swipe-list [items]="filtered()" [actions]="rowActions" (itemClick)="openDetail($any($event))" (action)="onSwipeAction($any($event))">
+    <ui-swipe-list [items]="filtered()" [actions]="rowActions"
+      (itemClick)="openDetail($any($event))" (action)="onSwipeAction($any($event))">
       <ng-template #itemContent let-u>
-        <div class="admin-li">
-          <div class="admin-li__info">
-            <div class="admin-li__title">{{ u.name ?? u.username ?? u.email }}</div>
-            <div class="admin-li__sub">{{ u.email }} · {{ u.role }}</div>
-          </div>
-          <ui-status-badge [status]="u.status"></ui-status-badge>
-        </div>
+        <ui-list-row
+          [title]="displayName(u)"
+          [subtitle]="u.email"
+          [meta]="['Role', u.role, 'Status', u.status]"
+          [cols]="[
+            { label: 'Role', value: u.role },
+            { label: 'Status', value: u.status }
+          ]">
+        </ui-list-row>
       </ng-template>
     </ui-swipe-list>
   }
@@ -95,7 +57,7 @@
   }
 </ui-bottom-sheet>
 
-<!-- New User Modal (sheet on mobile, centered card on desktop) -->
+<!-- New User Modal -->
 <ion-modal [isOpen]="showNewUserModal()" (ionModalDidDismiss)="onModalDismissed(false)"
   [breakpoints]="vp.wide() ? undefined : [0, 1]" [initialBreakpoint]="vp.wide() ? undefined : 1">
   <ng-template>

@@ -1,9 +1,6 @@
 import {
-  AfterViewInit,
   ChangeDetectionStrategy,
   Component,
-  TemplateRef,
-  ViewChild,
   computed,
   effect,
   inject,
@@ -26,11 +23,11 @@ import {
   checkmarkCircleOutline,
   qrCodeOutline,
   bluetoothOutline,
+  globeOutline,
 } from 'ionicons/icons';
 
 import {
   BottomSheetComponent,
-  DataTableComponent,
   DevicePickerComponent,
   EmptyStateComponent,
   IonButton,
@@ -41,14 +38,15 @@ import {
   MetricCardComponent,
   MetricGridComponent,
   MultiSelectPickerComponent,
-  StatusBadgeComponent,
   StatusDotComponent,
+  SwipeListComponent,
+  UiListRowComponent,
   UiSearchFieldComponent,
   ViewWillEnter,
   IonRefresher,
   IonRefresherContent,
 } from '@ng/shared/ui';
-import type { ColumnDef, DevicePickerItem, PickerOption } from '@ng/shared/ui';
+import type { DevicePickerItem, PickerOption, SwipeAction } from '@ng/shared/ui';
 import type { Device } from '@ng/core/api/generated/models/device';
 import { TranslatePipe } from '@ngx-translate/core';
 import { SocketService } from '@ng/core/realtime/socket.service';
@@ -59,6 +57,10 @@ import { BleClaimSheetComponent } from '../../components/ble-claim-sheet/ble-cla
 import { TopbarService } from '../../../../shell/topbar.service';
 import { TenantContextService } from '@ng/core/auth/tenant-context.service';
 import { DeviceExportService } from '../../services/device-export.service';
+import { AuthService } from '@ng/core/auth/auth.service';
+import { hasRole } from '@ng/core/auth/roles';
+import { AdminDevicesService } from '../../../admin/services/admin-devices.service';
+import type { AdminDevice } from '../../../admin/services/admin-devices.service';
 
 addIcons({
   addOutline,
@@ -72,6 +74,7 @@ addIcons({
   checkmarkCircleOutline,
   qrCodeOutline,
   bluetoothOutline,
+  globeOutline,
 });
 
 const STATUS_OPTIONS: PickerOption[] = [
@@ -97,8 +100,8 @@ const STATUS_OPTIONS: PickerOption[] = [
     UiSearchFieldComponent,
     MetricCardComponent,
     MetricGridComponent,
-    DataTableComponent,
-    StatusBadgeComponent,
+    SwipeListComponent,
+    UiListRowComponent,
     StatusDotComponent,
     EmptyStateComponent,
     DevicePickerComponent,
@@ -110,23 +113,30 @@ const STATUS_OPTIONS: PickerOption[] = [
     TranslatePipe,
   ],
 })
-export class DevicesPage implements AfterViewInit, ViewWillEnter {
+export class DevicesPage implements ViewWillEnter {
   private readonly dashService = inject(DashboardService);
   private readonly socketService = inject(SocketService);
   private readonly router = inject(Router);
   private readonly topbar = inject(TopbarService);
   private readonly tenantCtx = inject(TenantContextService);
   private readonly exportService = inject(DeviceExportService);
+  private readonly auth = inject(AuthService);
+  readonly adminSvc = inject(AdminDevicesService);
 
   private readonly exportSheet = viewChild<BottomSheetComponent>('exportSheet');
   readonly devicesLoading = this.dashService.devices.loading;
   readonly devicesError = this.dashService.devices.error;
 
   protected readonly _deviceRows = signal<Device[]>([]);
-  protected readonly _selectedIds = signal<string[]>([]);
 
   readonly search = signal('');
   readonly statusFilter = signal<string[]>([]);
+  readonly platformSearch = signal('');
+
+  /** True when SUPERADMIN has no active tenant — shows cross-tenant admin view. */
+  readonly platformMode = computed(
+    () => hasRole(this.auth.role(), 'SUPERADMIN') && !this.tenantCtx.isActive(),
+  );
 
   readonly filteredDevices = computed(() =>
     applyDeviceFilters(this._deviceRows(), {
@@ -134,6 +144,17 @@ export class DevicesPage implements AfterViewInit, ViewWillEnter {
       status: this.statusFilter(),
     }),
   );
+
+  readonly platformFiltered = computed(() => {
+    const q = this.platformSearch().toLowerCase();
+    const rows = this.adminSvc.devices();
+    if (!q) return rows;
+    return rows.filter(d =>
+      d.hostname.toLowerCase().includes(q) ||
+      d.deviceId.toLowerCase().includes(q) ||
+      (d.ipAddress?.toLowerCase().includes(q) ?? false),
+    );
+  });
 
   readonly devicePickerItems = computed<DevicePickerItem[]>(() =>
     this._deviceRows().map(d => ({
@@ -144,7 +165,7 @@ export class DevicesPage implements AfterViewInit, ViewWillEnter {
     })),
   );
 
-  // KPI counts
+  // Tenant mode KPI counts
   readonly onlineCount = computed(() =>
     this._deviceRows().filter(d => d.status === 'ONLINE').length,
   );
@@ -159,18 +180,12 @@ export class DevicesPage implements AfterViewInit, ViewWillEnter {
   );
   readonly totalCount = computed(() => this._deviceRows().length);
 
-  readonly selectedCount = computed(() => this._selectedIds().length);
-  readonly selectedDevices = computed(() =>
-    this._deviceRows().filter(d => this._selectedIds().includes(d.id ?? '')),
-  );
-
-  @ViewChild('deviceCell') private deviceCellTpl!: TemplateRef<{ $implicit: Device }>;
-  @ViewChild('statusCell') private statusCellTpl!: TemplateRef<{ $implicit: Device }>;
+  readonly deviceRowActions: SwipeAction<Device>[] = [];
+  readonly platformRowActions: SwipeAction<AdminDevice>[] = [];
 
   private readonly registerSheet = viewChild(RegisterDeviceSheetComponent);
   private readonly bleClaimSheet = viewChild(BleClaimSheetComponent);
   private readonly addSheet = viewChild<BottomSheetComponent>('addSheet');
-  readonly columns = signal<ColumnDef<Device>[]>([]);
 
   /** Web Bluetooth present (desktop Chrome/Edge / Electron) → offer the BLE option. */
   protected readonly bleAvailable = typeof navigator !== 'undefined' && 'bluetooth' in navigator;
@@ -193,60 +208,60 @@ export class DevicesPage implements AfterViewInit, ViewWillEnter {
       });
 
     toObservable(this.tenantCtx.customer)
-        .pipe(skip(1), takeUntilDestroyed())
-        .subscribe(() => void this.dashService.devices.load({ limit: 50 }));
+      .pipe(skip(1), takeUntilDestroyed())
+      .subscribe(() => {
+        if (this.platformMode()) {
+          void this.adminSvc.load();
+        } else {
+          void this.dashService.devices.load({ limit: 50 });
+        }
+      });
   }
 
   ionViewWillEnter(): void {
-    this.topbar.set('nav.devices', { icon: 'add-outline', handler: () => this.onRegisterDevice() });
-    void this.dashService.devices.load({ limit: 50 });
+    if (this.platformMode()) {
+      this.topbar.set('nav.devices');
+      void this.adminSvc.load();
+    } else {
+      this.topbar.set(
+        'nav.devices',
+        { icon: 'add-outline', handler: () => this.onRegisterDevice() },
+        [{ icon: 'download-outline', label: 'devices.export', handler: () => this.exportSheet()?.open() }],
+      );
+      void this.dashService.devices.load({ limit: 50 });
+    }
   }
 
   protected onRefresh(ev: Event): void {
-    void this.dashService.devices.load({ limit: 50 }).finally(() => {
-      ((ev as CustomEvent).target as HTMLIonRefresherElement | null)?.complete();
-    });
-  }
-
-  ngAfterViewInit(): void {
-    this.columns.set([
-      { key: 'hostname', label: 'fields.device', sortable: true, cellTemplate: this.deviceCellTpl },
-      { key: 'status', label: 'fields.status', sortable: true, cellTemplate: this.statusCellTpl },
-      { key: 'location', label: 'fields.location' },
-      { key: 'cpuUsage', label: 'metrics.cpu', sortable: true },
-      { key: 'memoryUsage', label: 'metrics.memory', sortable: true },
-      { key: 'lastSeen', label: 'fields.last_seen' },
-    ]);
+    const done = () => ((ev as CustomEvent).target as HTMLIonRefresherElement | null)?.complete();
+    if (this.platformMode()) {
+      void this.adminSvc.load().finally(done);
+    } else {
+      void this.dashService.devices.load({ limit: 50 }).finally(done);
+    }
   }
 
   onDeviceRowClick(device: Device): void {
     if (device.id) void this.router.navigate(['/app/devices', device.id]);
   }
 
-  onSelectionChange(devices: Device[]): void {
-    this._selectedIds.set(devices.map(d => d.id ?? ''));
-  }
-
-  onExportSelected(): void {
-    this.exportSheet()?.open();
+  onPlatformRowClick(device: AdminDevice): void {
+    void this.router.navigate(['/app/devices', device.id]);
   }
 
   onExportXlsx(): void {
-    void this.exportService.exportXlsx(this.selectedDevices(), 'devices');
+    void this.exportService.exportXlsx(this.filteredDevices(), 'devices');
   }
 
   onExportCsv(): void {
-    this.exportService.exportCsv(this.selectedDevices(), 'devices');
+    this.exportService.exportCsv(this.filteredDevices(), 'devices');
   }
 
   onExportPdf(): void {
-    void this.exportService.exportPdf(this.selectedDevices(), 'devices');
+    void this.exportService.exportPdf(this.filteredDevices(), 'devices');
   }
 
   onRegisterDevice(): void {
-    // Always show the chooser. If Web Bluetooth isn't available (iOS/Safari, or a
-    // non-Chrome/Edge desktop), the BLE option is shown disabled with the reason —
-    // so it's never a silent jump straight to manual.
     this.pendingAdd.set(null);
     this.addSheet()?.open();
   }

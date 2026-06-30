@@ -1,0 +1,33 @@
+<div class="actions-menu">
+  @if (primary()) {
+    <button class="actions-menu__primary" type="button"
+      [attr.aria-label]="(primary()!.label ?? '') | translate"
+      (click)="onPrimaryClick($event)">
+      <ion-icon [name]="primary()!.icon"></ion-icon>
+    </button>
+  }
+
+  @if (overflow().length > 0) {
+    <div class="actions-menu__overflow-wrap">
+      <button class="actions-menu__more" type="button"
+        [attr.aria-expanded]="overflowOpen()" aria-haspopup="menu"
+        (click)="toggleOverflow($event)">
+        <ion-icon name="ellipsis-horizontal"></ion-icon>
+      </button>
+
+      @if (overflowOpen()) {
+        <div class="actions-menu__dropdown" role="menu">
+          @for (action of overflow(); track action.icon) {
+            <button class="actions-menu__item" type="button" role="menuitem"
+              (click)="runOverflow(action, $event)">
+              <ion-icon [name]="action.icon"></ion-icon>
+              @if (action.label) {
+                <span>{{ action.label | translate }}</span>
+              }
+            </button>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>

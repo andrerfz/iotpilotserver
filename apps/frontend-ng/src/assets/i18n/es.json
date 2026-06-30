@@ -108,7 +108,8 @@
     "system": "Sistema",
     "operate": "Operar",
     "administer": "Administrar",
-    "monitor": "Monitorizar"
+    "monitor": "Monitorizar",
+    "account": "Cuenta"
   },
   "dashboard": {
     "title": "Resumen de la flota",
@@ -150,6 +151,7 @@
       "title": "Error al cargar los dispositivos",
       "desc": "Comprueba tu conexión e inténtalo de nuevo."
     },
+    "platform_mode_banner": "Modo plataforma — mostrando dispositivos de todos los clientes",
     "export_sheet": {
       "title": "Exportar dispositivos",
       "xlsx_label": "Exportar XLSX",
@@ -501,7 +503,18 @@
     "level_debug": "Depuración (detallado)",
     "level_info": "Info (estándar)",
     "level_warning": "Advertencia (mínimo)",
-    "level_error": "Error (solo críticos)"
+    "level_error": "Error (solo críticos)",
+    "tabs": {
+      "ops": "Operativos",
+      "audit": "Auditoría"
+    },
+    "export_sheet": {
+      "title": "Exportar registros",
+      "xlsx_label": "Excel (.xlsx)",
+      "csv_label": "CSV (.csv)",
+      "pdf_label": "PDF (.pdf)"
+    },
+    "detail": "Entrada de registro"
   },
   "settings": {
     "profile": {
@@ -673,7 +686,15 @@
       "security": "Seguridad",
       "system": "Sistema",
       "api_keys": "Claves API",
-      "thresholds": "Umbrales por defecto"
+      "thresholds": "Umbrales por defecto",
+      "preferences": "Preferencias",
+      "org": "Organización"
+    },
+    "hub": {
+      "account_title": "Cuenta",
+      "account_desc": "Tus ajustes personales y seguridad.",
+      "org_title": "Organización",
+      "org_desc": "Configuración del cliente. Solo para ADMIN."
     },
     "thresholds": {
       "title": "Umbrales de alerta por defecto",
@@ -1095,6 +1116,7 @@
     "email": "Correo",
     "role": "Rol",
     "hostname": "Nombre de host",
+    "customer": "Cliente",
     "ip_address": "Dirección IP",
     "device_id": "ID de dispositivo",
     "key": "Clave",

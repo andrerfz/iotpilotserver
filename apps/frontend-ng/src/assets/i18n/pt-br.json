@@ -108,7 +108,8 @@
     "system": "Sistema",
     "operate": "Operar",
     "administer": "Administrar",
-    "monitor": "Monitorar"
+    "monitor": "Monitorar",
+    "account": "Conta"
   },
   "dashboard": {
     "title": "Visão geral da frota",
@@ -150,6 +151,7 @@
       "title": "Falha ao carregar dispositivos",
       "desc": "Verifique sua conexão e tente novamente."
     },
+    "platform_mode_banner": "Modo plataforma — exibindo dispositivos de todos os clientes",
     "export_sheet": {
       "title": "Exportar dispositivos",
       "xlsx_label": "Exportar XLSX",
@@ -501,7 +503,18 @@
     "level_debug": "Depuração (detalhado)",
     "level_info": "Info (padrão)",
     "level_warning": "Aviso (mínimo)",
-    "level_error": "Erro (apenas críticos)"
+    "level_error": "Erro (apenas críticos)",
+    "tabs": {
+      "ops": "Operacional",
+      "audit": "Auditoria"
+    },
+    "export_sheet": {
+      "title": "Exportar registros",
+      "xlsx_label": "Excel (.xlsx)",
+      "csv_label": "CSV (.csv)",
+      "pdf_label": "PDF (.pdf)"
+    },
+    "detail": "Entrada de registro"
   },
   "settings": {
     "profile": {
@@ -673,7 +686,15 @@
       "security": "Segurança",
       "system": "Sistema",
       "api_keys": "Chaves de API",
-      "thresholds": "Limites padrão"
+      "thresholds": "Limites padrão",
+      "preferences": "Preferências",
+      "org": "Organização"
+    },
+    "hub": {
+      "account_title": "Conta",
+      "account_desc": "Suas configurações pessoais e segurança.",
+      "org_title": "Organização",
+      "org_desc": "Configuração do tenant. Somente ADMIN."
     },
     "thresholds": {
       "title": "Limites de alerta padrão",
@@ -1095,6 +1116,7 @@
     "email": "E-mail",
     "role": "Função",
     "hostname": "Nome do host",
+    "customer": "Cliente",
     "ip_address": "Endereço IP",
     "device_id": "ID do dispositivo",
     "key": "Chave",

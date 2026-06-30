@@ -167,3 +167,11 @@ export type { DateRangePreset } from './pickers/date-range-picker.component';
 export { AppLogoComponent } from './brand/app-logo.component';
 export { NetworkStatusComponent } from './feedback/network-status.component';
 export { MaintenanceBannerComponent } from './feedback/maintenance-banner.component';
+// nav-unification T9 — ListRow
+export { UiListRowComponent } from './data/list-row.component';
+export type { ListRowCol } from './data/list-row.component';
+// nav-unification T7 — NavSelect
+export { UiNavSelectComponent } from './nav-select/ui-nav-select.component';
+export type { NavSelectItem } from './nav-select/ui-nav-select.component';
+// nav-unification T8 — ActionsMenu
+export { UiActionsMenuComponent } from './actions-menu/ui-actions-menu.component';

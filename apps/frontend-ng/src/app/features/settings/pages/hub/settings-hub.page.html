@@ -1,12 +1,28 @@
 <div class="settings-hub">
-  <nav class="settings-tabs">
-    @for (item of navItems(); track item.path) {
+  <nav class="settings-tabs" aria-label="Settings navigation">
+    <span class="settings-tabs__section">{{ 'settings.hub.account_title' | translate }}</span>
+
+    @for (item of accountItems; track item.path) {
       <a
         class="settings-tabs__tab"
         [routerLink]="item.path"
         routerLinkActive="settings-tabs__tab--active"
         [routerLinkActiveOptions]="{ exact: false }"
       >{{ item.label | translate }}</a>
+    }
+
+    @if (showOrg()) {
+      <span class="settings-tabs__sep" aria-hidden="true"></span>
+      <span class="settings-tabs__section">{{ 'settings.hub.org_title' | translate }}</span>
+
+      @for (item of orgItems; track item.path) {
+        <a
+          class="settings-tabs__tab"
+          [routerLink]="item.path"
+          routerLinkActive="settings-tabs__tab--active"
+          [routerLinkActiveOptions]="{ exact: false }"
+        >{{ item.label | translate }}</a>
+      }
     }
   </nav>
 

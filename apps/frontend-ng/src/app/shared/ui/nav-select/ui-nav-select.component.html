@@ -1,0 +1,28 @@
+<div class="nav-select">
+  <button class="nav-select__trigger" type="button"
+    [attr.aria-expanded]="open()" aria-haspopup="listbox"
+    (click)="toggle($event)">
+    <span class="nav-select__label">{{ (activeItem()?.label ?? '') | translate }}</span>
+    @if (activeItem()?.badge) {
+      <span class="nav-select__badge">{{ activeItem()!.badge }}</span>
+    }
+    <ion-icon class="nav-select__chevron" [class.nav-select__chevron--open]="open()"
+      name="chevron-down-outline"></ion-icon>
+  </button>
+
+  @if (open()) {
+    <div class="nav-select__dropdown" role="listbox">
+      @for (item of items(); track item.value) {
+        <button class="nav-select__option" type="button" role="option"
+          [attr.aria-selected]="item.value === value()"
+          [class.nav-select__option--active]="item.value === value()"
+          (click)="select(item, $event)">
+          {{ item.label | translate }}
+          @if (item.badge) {
+            <span class="nav-select__badge nav-select__badge--sm">{{ item.badge }}</span>
+          }
+        </button>
+      }
+    </div>
+  }
+</div>

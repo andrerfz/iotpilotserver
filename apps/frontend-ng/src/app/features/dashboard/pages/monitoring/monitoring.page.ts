@@ -1,13 +1,11 @@
 import {
-  AfterViewInit,
   ChangeDetectionStrategy,
   Component,
-  TemplateRef,
-  ViewChild,
   computed,
   effect,
   inject,
   signal,
+  viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { skip } from 'rxjs';
@@ -22,7 +20,6 @@ import {
 } from 'ionicons/icons';
 
 import {
-  DataTableComponent,
   DateRangePickerComponent,
   DevicePickerComponent,
   EmptyStateComponent,
@@ -36,8 +33,7 @@ import {
   MetricGridComponent,
   MultiSelectPickerComponent,
   SeverityBadgeComponent,
-  StatusBadgeComponent,
-  StatusDotComponent,
+  UiListRowComponent,
   UiSearchFieldComponent,
   ViewWillEnter,
   IonRefresher,
@@ -45,9 +41,8 @@ import {
   SwipeListComponent,
 } from '@ng/shared/ui';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import type { ColumnDef, DevicePickerItem, PickerOption, SwipeAction } from '@ng/shared/ui';
+import type { DevicePickerItem, PickerOption, SwipeAction } from '@ng/shared/ui';
 import type { Alert } from '@ng/core/api/generated/models/alert';
-import { ViewportService } from '@ng/core/layout/viewport.service';
 import { AlertDetailSheetComponent } from '../../components/alert-detail-sheet/alert-detail-sheet.component';
 import { DashboardService } from '../../services/dashboard.service';
 import { applyAlertFilters, alertState } from '../../filters/alert-filters';
@@ -101,10 +96,8 @@ function presetToTimeRange(preset: string): { startTime?: string; endTime?: stri
     UiSearchFieldComponent,
     MetricCardComponent,
     MetricGridComponent,
-    DataTableComponent,
     SeverityBadgeComponent,
-    StatusBadgeComponent,
-    StatusDotComponent,
+    UiListRowComponent,
     EmptyStateComponent,
     DevicePickerComponent,
     MultiSelectPickerComponent,
@@ -115,7 +108,7 @@ function presetToTimeRange(preset: string): { startTime?: string; endTime?: stri
     TranslatePipe,
   ],
 })
-export class MonitoringPage implements AfterViewInit, ViewWillEnter {
+export class MonitoringPage implements ViewWillEnter {
   private readonly dashService = inject(DashboardService);
   private readonly router = inject(Router);
   private readonly topbar = inject(TopbarService);
@@ -128,8 +121,6 @@ export class MonitoringPage implements AfterViewInit, ViewWillEnter {
 
   protected readonly _liveAlerts = signal<Alert[]>([]);
   protected readonly _trendData = signal<TrendPoint[]>([]);
-  protected readonly _selectedIds = signal<string[]>([]);
-  protected readonly _bulkBusy = signal(false);
 
   readonly search = signal('');
   readonly severityFilter = signal<string[]>([]);
@@ -156,7 +147,6 @@ export class MonitoringPage implements AfterViewInit, ViewWillEnter {
     this._liveAlerts().filter(a => !!a.resolved).length,
   );
   readonly totalCount = computed(() => this._liveAlerts().length);
-  readonly selectedCount = computed(() => this._selectedIds().length);
 
   readonly trendChartOptions = computed<EChartsOption | null>(() => {
     const pts = this._trendData();
@@ -183,10 +173,6 @@ export class MonitoringPage implements AfterViewInit, ViewWillEnter {
     })) ?? [],
   );
 
-  @ViewChild('severityCell') private severityCellTpl!: TemplateRef<{ $implicit: Alert }>;
-  @ViewChild('deviceCell') private deviceCellTpl!: TemplateRef<{ $implicit: Alert }>;
-  @ViewChild('stateCell') private stateCellTpl!: TemplateRef<{ $implicit: Alert }>;
-  readonly columns = signal<ColumnDef<Alert>[]>([]);
 
   constructor() {
     effect(() => {
@@ -223,16 +209,6 @@ export class MonitoringPage implements AfterViewInit, ViewWillEnter {
     ]);
   }
 
-  ngAfterViewInit(): void {
-    this.columns.set([
-      { key: 'severity', label: 'fields.severity', sortable: true, cellTemplate: this.severityCellTpl },
-      { key: 'title', label: 'fields.alert', sortable: true },
-      { key: 'deviceId', label: 'fields.device', cellTemplate: this.deviceCellTpl },
-      { key: 'status', label: 'fields.state', cellTemplate: this.stateCellTpl },
-      { key: 'createdAt', label: 'fields.triggered', sortable: true },
-    ]);
-  }
-
   onPeriodChange(preset: string): void {
     this.period.set(preset);
     void this.dashService.alerts.load(presetToTimeRange(preset));
@@ -240,15 +216,10 @@ export class MonitoringPage implements AfterViewInit, ViewWillEnter {
     void this.dashService.alertsTrend.load({ period: trendPeriod });
   }
 
-  onSelectionChange(alerts: Alert[]): void {
-    this._selectedIds.set(alerts.map(a => a.id ?? ''));
-  }
-
-  @ViewChild('detailSheet') private detailSheet?: AlertDetailSheetComponent;
+  private readonly detailSheet = viewChild<AlertDetailSheetComponent>('detailSheet');
   readonly actionBusy = signal(false);
 
-  protected readonly vp = inject(ViewportService);
-  // Swipe actions for the mobile list (desktop uses the table + bulk bar).
+  // Swipe actions for per-row acknowledge/resolve.
   protected readonly alertActions: SwipeAction<Alert>[] = [
     { key: 'acknowledge', label: 'alerts.acknowledge', color: 'warning', show: (a) => !a.resolved && !a.acknowledgedAt },
     { key: 'resolve', label: 'alerts.resolve', color: 'success', show: (a) => !a.resolved },
@@ -259,7 +230,7 @@ export class MonitoringPage implements AfterViewInit, ViewWillEnter {
   }
 
   openDetail(alert: Alert): void {
-    this.detailSheet?.open(alert);
+    this.detailSheet()?.open(alert);
   }
 
   async onAlertAction(alert: Alert, action: 'acknowledge' | 'resolve'): Promise<void> {
@@ -275,7 +246,7 @@ export class MonitoringPage implements AfterViewInit, ViewWillEnter {
               : { ...a, acknowledgedAt: new Date().toISOString() })
           : a),
       );
-      this.detailSheet?.close();
+      this.detailSheet()?.close();
       void this.toast.success(
         this.t.instant(action === 'resolve' ? 'alerts.msg_resolved' : 'alerts.msg_acknowledged'),
       );
@@ -287,36 +258,6 @@ export class MonitoringPage implements AfterViewInit, ViewWillEnter {
       );
     } finally {
       this.actionBusy.set(false);
-    }
-  }
-
-  async onBulkAcknowledge(): Promise<void> {
-    const ids = this._selectedIds();
-    if (!ids.length) return;
-    this._bulkBusy.set(true);
-    try {
-      await this.dashService.batchUpdateAlerts('acknowledge', ids);
-      this._liveAlerts.update(rows =>
-        rows.map(a => ids.includes(a.id ?? '') ? { ...a, acknowledgedAt: new Date().toISOString() } : a),
-      );
-      this._selectedIds.set([]);
-    } finally {
-      this._bulkBusy.set(false);
-    }
-  }
-
-  async onBulkResolve(): Promise<void> {
-    const ids = this._selectedIds();
-    if (!ids.length) return;
-    this._bulkBusy.set(true);
-    try {
-      await this.dashService.batchUpdateAlerts('resolve', ids);
-      this._liveAlerts.update(rows =>
-        rows.map(a => ids.includes(a.id ?? '') ? { ...a, resolved: true, resolvedAt: new Date().toISOString() } : a),
-      );
-      this._selectedIds.set([]);
-    } finally {
-      this._bulkBusy.set(false);
     }
   }
 

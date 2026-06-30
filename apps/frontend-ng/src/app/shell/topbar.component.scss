@@ -65,24 +65,6 @@
   @media (min-width: 1080px) { display: none; }
 }
 
-/* Contextual action button (e.g. + New User) — right of search. */
-.topbar__action {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  flex-shrink: 0;
-  border-radius: var(--r-sm);
-  background: var(--primary);
-  border: none;
-  cursor: pointer;
-  color: var(--primary-ink);
-  transition: opacity .12s;
-
-  &:hover { opacity: .85; }
-  ion-icon { width: 18px; height: 18px; }
-}
 
 /* User menu slot: desktop only. */
 .topbar__user {

@@ -1,6 +1,6 @@
 import {
-  AfterViewInit, ChangeDetectionStrategy, Component,
-  computed, DestroyRef, inject, signal, TemplateRef, ViewChild, viewChild,
+  ChangeDetectionStrategy, Component,
+  computed, DestroyRef, inject, signal, viewChild,
 } from '@angular/core';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { FormsModule } from '@angular/forms';
@@ -11,15 +11,14 @@ import {
 import {
   IonContent, IonCard, IonCardContent, IonButton, IonIcon,
   AlertController,
-  DataTableComponent, EmptyStateComponent,
-  StatusBadgeComponent, StatusDotComponent,
+  EmptyStateComponent,
+  StatusDotComponent,
   UiSearchFieldComponent, UiSelectComponent, UiInputComponent,
-  BottomSheetComponent, SwipeListComponent,
+  BottomSheetComponent, SwipeListComponent, UiListRowComponent,
   ViewWillEnter,
   IonRefresher, IonRefresherContent,
 } from '@ng/shared/ui';
-import type { ColumnDef, SelectOption, SwipeAction } from '@ng/shared/ui';
-import { ViewportService } from '@ng/core/layout/viewport.service';
+import type { SelectOption, SwipeAction } from '@ng/shared/ui';
 import { AdminCustomersService, AdminCustomer } from '../../services/admin-customers.service';
 import { TopbarService } from '../../../../shell/topbar.service';
 
@@ -34,35 +33,30 @@ addIcons({ addOutline, pencilOutline, banOutline, businessOutline });
   imports: [
     FormsModule,
     IonContent, IonCard, IonCardContent, IonButton, IonIcon,
-    DataTableComponent, EmptyStateComponent,
-    StatusBadgeComponent, StatusDotComponent,
+    EmptyStateComponent,
+    StatusDotComponent,
     UiSearchFieldComponent, UiSelectComponent, UiInputComponent,
-    BottomSheetComponent, SwipeListComponent,
+    BottomSheetComponent, SwipeListComponent, UiListRowComponent,
     IonRefresher, IonRefresherContent,
     TranslatePipe,
   ],
 })
-export class AdminCustomersPage implements AfterViewInit, ViewWillEnter {
+export class AdminCustomersPage implements ViewWillEnter {
   protected readonly svc = inject(AdminCustomersService);
   private readonly alertCtrl = inject(AlertController);
   private readonly topbar = inject(TopbarService);
   private readonly destroy = inject(DestroyRef);
   private readonly t = inject(TranslateService);
-  protected readonly vp = inject(ViewportService);
 
   private readonly editSheet = viewChild<BottomSheetComponent>('editSheet');
   protected statusFilter = '';
   protected readonly searchQuery = signal('');
   protected readonly actionLoading = signal(false);
-  protected readonly cols = signal<ColumnDef<AdminCustomer>[]>([]);
 
   // Edit/add bottom-sheet state (replaces the AlertController prompt).
   protected readonly editingId = signal<string | null>(null);
   protected readonly formName = signal('');
   protected readonly formEmail = signal('');
-
-  @ViewChild('statusCell')  private statusCellTpl!: TemplateRef<{ $implicit: AdminCustomer }>;
-  @ViewChild('actionsCell') private actionsCellTpl!: TemplateRef<{ $implicit: AdminCustomer }>;
 
   protected readonly statusOptions: SelectOption[] = [
     { label: 'fields.all_statuses', value: '' },
@@ -94,16 +88,6 @@ export class AdminCustomersPage implements AfterViewInit, ViewWillEnter {
     this.topbar.set('nav.customers', { icon: 'add-outline', handler: () => void this.onAdd() });
     this.destroy.onDestroy(() => this.topbar.clear());
     void this.svc.load('', this.statusFilter || undefined);
-  }
-
-  ngAfterViewInit(): void {
-    this.cols.set([
-      { key: 'name',      label: 'fields.name',    sortable: true },
-      { key: 'slug',      label: 'fields.slug',    sortable: true },
-      { key: 'createdAt', label: 'fields.created', sortable: true },
-      { key: 'status',    label: 'fields.status',  cellTemplate: this.statusCellTpl },
-      { key: '__actions', label: '',        cellTemplate: this.actionsCellTpl },
-    ]);
   }
 
   protected onStatusChange(status: string): void {
