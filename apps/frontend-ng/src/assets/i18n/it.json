@@ -688,7 +688,8 @@
       "api_keys": "Chiavi API",
       "thresholds": "Soglie predefinite",
       "preferences": "Preferenze",
-      "org": "Organizzazione"
+      "org": "Organizzazione",
+      "app_config": "Config. App"
     },
     "hub": {
       "account_title": "Account",
@@ -704,7 +705,9 @@
       "col_metric": "Metrica",
       "col_value": "Valore",
       "col_unit": "Unità"
-    }
+    },
+    "account": "Account",
+    "org": "Organizzazione"
   },
   "admin": {
     "overview": {

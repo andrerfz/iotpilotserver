@@ -688,7 +688,8 @@
       "api_keys": "Claves API",
       "thresholds": "Umbrales por defecto",
       "preferences": "Preferencias",
-      "org": "Organización"
+      "org": "Organización",
+      "app_config": "Config. de App"
     },
     "hub": {
       "account_title": "Cuenta",
@@ -704,7 +705,9 @@
       "col_metric": "Métrica",
       "col_value": "Valor",
       "col_unit": "Unidad"
-    }
+    },
+    "account": "Cuenta",
+    "org": "Organización"
   },
   "admin": {
     "overview": {

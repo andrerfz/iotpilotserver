@@ -211,19 +211,26 @@ ion-menu {
 }
 
 /*
- * Settings hub uses Angular's <router-outlet> (not ion-router-outlet), so the
- * routed page component never receives Ionic's `.ion-page` sizing and collapses
- * to height:0 — its <ion-content> then clips everything but the card header.
- * These hosts are created by the router outside the hub's view-encapsulation
- * scope, so they must be sized from global CSS. Make each a flex column that
- * fills the hub's remaining height so the inner ion-content can size and scroll.
+ * Settings hubs and their routed page children use Angular's <router-outlet>
+ * (not ion-router-outlet), so components never receive Ionic's `.ion-page`
+ * sizing and would collapse to height:0. Size every host here so ion-content
+ * can fill and scroll. AccountHubPage / OrgHubPage are the direct children of
+ * the shell outlet; their sub-pages render inside each hub's own outlet.
  */
+app-account-hub,
+app-org-hub {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
 app-settings-profile,
 app-settings-notifications,
 app-settings-security,
 app-settings-system,
 app-settings-preferences,
-app-settings-org,
+app-settings-app-config,
 app-settings-api-keys,
 app-settings-thresholds {
   display: flex;

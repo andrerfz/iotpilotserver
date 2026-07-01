@@ -1,0 +1,13 @@
+<div class="settings-hub">
+  <nav class="settings-tabs" aria-label="{{ 'settings.hub.account_title' | translate }}">
+    @for (item of items; track item.path) {
+      <a
+        class="settings-tabs__tab"
+        [routerLink]="item.path"
+        routerLinkActive="settings-tabs__tab--active"
+        [routerLinkActiveOptions]="{ exact: false }"
+      >{{ item.label | translate }}</a>
+    }
+  </nav>
+  <router-outlet />
+</div>

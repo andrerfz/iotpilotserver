@@ -67,10 +67,6 @@ export const SHELL_CHILDREN: Routes = [
   },
   {
     path: 'settings',
-    loadComponent: () =>
-      import('../features/settings/pages/hub/settings-hub.page').then(
-        (m) => m.SettingsHubPage,
-      ),
     loadChildren: () =>
       import('../features/settings/settings.routes').then((m) => m.SETTINGS_ROUTES),
     data: { breadcrumb: ['nav.account', 'nav.settings'] },

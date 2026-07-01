@@ -688,7 +688,8 @@
       "api_keys": "Clés API",
       "thresholds": "Seuils par défaut",
       "preferences": "Préférences",
-      "org": "Organisation"
+      "org": "Organisation",
+      "app_config": "Config. App"
     },
     "hub": {
       "account_title": "Compte",
@@ -704,7 +705,9 @@
       "col_metric": "Métrique",
       "col_value": "Valeur",
       "col_unit": "Unité"
-    }
+    },
+    "account": "Compte",
+    "org": "Organisation"
   },
   "admin": {
     "overview": {
