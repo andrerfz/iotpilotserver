@@ -50,7 +50,7 @@ export const NAV: NavGroup[] = [
     items: [
       // SUPERADMIN: platform overview with all sub-pages as children
       {
-        label: 'nav.overview', path: 'admin', icon: 'stats-chart-outline', exact: true, superAdminOnly: true,
+        label: 'nav.overview', path: 'admin', icon: 'stats-chart-outline', exact: true, adminOnly: true, superAdminOnly: true,
         children: [
           { label: 'nav.customers', path: 'admin/customers', icon: 'business-outline', superAdminOnly: true },
           { label: 'nav.users',     path: 'users',           icon: 'people-outline',   superAdminOnly: true },

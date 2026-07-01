@@ -16,8 +16,8 @@
     </ui-empty-state>
   } @else {
     <ui-metric-grid>
-      @if (svc.data()?.customerCount !== undefined) {
-        <ui-metric-card [label]="'admin.overview.kpi.customers' | translate" [value]="svc.data()!.customerCount!">
+      @if ((svc.data()?.customerCount ?? -1) >= 0) {
+        <ui-metric-card [label]="'admin.overview.kpi.customers' | translate" [value]="svc.data()?.customerCount ?? 0">
           <ion-icon icon name="business-outline"></ion-icon>
         </ui-metric-card>
       }
