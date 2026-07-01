@@ -1162,5 +1162,11 @@
     "msg_resolved": "Avviso risolto",
     "msg_ack_failed": "Impossibile confermare l'avviso",
     "msg_resolve_failed": "Impossibile risolvere l'avviso"
+  },
+  "scope": {
+    "personal": "Personale",
+    "tenant": "Cliente",
+    "platform": "Piattaforma",
+    "device": "Dispositivo"
   }
 }

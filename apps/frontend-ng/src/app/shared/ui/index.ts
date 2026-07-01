@@ -176,3 +176,12 @@ export type { NavSelectItem } from './nav-select/ui-nav-select.component';
 // nav-unification T8 — ActionsMenu
 export { UiActionsMenuComponent } from './actions-menu/ui-actions-menu.component';
 export type { UiAction } from './actions-menu/ui-actions-menu.component';
+// kit.jsx — page scaffold + responsive collection
+export { UiPageComponent } from './data/ui-page.component';
+export { UiCollectionComponent } from './data/ui-collection.component';
+// kit.jsx — settings primitives
+export { UiSectionComponent } from './forms/ui-section.component';
+export { UiSettingRowComponent } from './forms/ui-setting-row.component';
+// kit.jsx — scope pill
+export { UiScopePillComponent } from './badges/ui-scope-pill.component';
+export type { Scope } from './badges/ui-scope-pill.component';

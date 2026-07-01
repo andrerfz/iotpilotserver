@@ -37,7 +37,7 @@ export const NAV: NavGroup[] = [
       { label: 'nav.dashboard', path: 'dashboard', icon: 'grid-outline', tenantScoped: true },
       { label: 'nav.devices', path: 'devices', icon: 'hardware-chip-outline', tenantScoped: true },
       { label: 'nav.monitoring', path: 'monitoring', icon: 'notifications-outline', tenantScoped: true },
-      { label: 'nav.logs', path: 'logs', icon: 'document-text-outline', adminOnly: true },
+      { label: 'nav.logs', path: 'logs', icon: 'document-text-outline', adminOnly: true, tenantScoped: true },
     ],
   },
   {

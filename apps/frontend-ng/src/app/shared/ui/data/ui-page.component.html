@@ -1,0 +1,25 @@
+<header class="page__head">
+  <div class="page__heading">
+    <h1 class="page__title">{{ title() | translate }}</h1>
+    @if (subtitle()) {
+      <p class="page__sub">{{ subtitle() | translate }}</p>
+    }
+  </div>
+  <div class="page__actions">
+    <ng-content select="[actions]"></ng-content>
+  </div>
+</header>
+
+<div class="page__tabs">
+  <ng-content select="[tabs]"></ng-content>
+</div>
+
+@if (loading()) {
+  <div class="page__loading">
+    <ui-skeleton [lines]="6"></ui-skeleton>
+  </div>
+} @else {
+  <div class="page__body">
+    <ng-content></ng-content>
+  </div>
+}

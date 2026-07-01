@@ -1162,5 +1162,11 @@
     "msg_resolved": "Alerte résolue",
     "msg_ack_failed": "Impossible d'accuser réception de l'alerte",
     "msg_resolve_failed": "Impossible de résoudre l'alerte"
+  },
+  "scope": {
+    "personal": "Personnel",
+    "tenant": "Client",
+    "platform": "Plateforme",
+    "device": "Appareil"
   }
 }

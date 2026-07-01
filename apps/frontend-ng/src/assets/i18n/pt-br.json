@@ -1162,5 +1162,11 @@
     "msg_resolved": "Alerta resolvido",
     "msg_ack_failed": "Não foi possível reconhecer o alerta",
     "msg_resolve_failed": "Não foi possível resolver o alerta"
+  },
+  "scope": {
+    "personal": "Pessoal",
+    "tenant": "Cliente",
+    "platform": "Plataforma",
+    "device": "Dispositivo"
   }
 }
