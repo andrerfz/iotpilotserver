@@ -63,7 +63,7 @@ describe('RailComponent', () => {
     expect(groupLabels).toContain('Administer');
   });
 
-  it('shows only Operate group for a non-admin user', async () => {
+  it('shows Operate and Settings groups for a non-admin user', async () => {
     const { container } = await render(RailComponent, {
       providers: [
         ...BASE_PROVIDERS,
@@ -72,7 +72,7 @@ describe('RailComponent', () => {
       ],
     });
     const groupLabels = Array.from(container.querySelectorAll('.nav-group__label')).map(g => g.textContent?.trim());
-    expect(groupLabels).toEqual(['Operate']);
+    expect(groupLabels).toEqual(['Operate', 'Settings']);
   });
 
   it('wires nav items to their (relative) routerLink targets', async () => {

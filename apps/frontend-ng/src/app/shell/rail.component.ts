@@ -64,6 +64,20 @@ addIcons({
             }
           </div>
         }
+
+        <div class="nav-group">
+          <div class="nav-group__label">{{ 'nav.settings' | translate }}</div>
+          <a class="nav-item" routerLink="settings/account" routerLinkActive="nav-item--active">
+            <ion-icon name="person-outline"></ion-icon>
+            <span>{{ 'settings.account' | translate }}</span>
+          </a>
+          @if (showAdmin()) {
+            <a class="nav-item" routerLink="settings/org" routerLinkActive="nav-item--active">
+              <ion-icon name="business-outline"></ion-icon>
+              <span>{{ 'settings.org' | translate }}</span>
+            </a>
+          }
+        </div>
       </div>
 
       <div class="rail__foot" [class.rail__foot--plain]="!isSuperAdmin()">
@@ -78,6 +92,7 @@ export class RailComponent {
   private readonly tenantCtx = inject(TenantContextService);
 
   protected readonly isSuperAdmin = computed(() => hasRole(this.auth.role(), 'SUPERADMIN'));
+  protected readonly showAdmin = computed(() => hasRole(this.auth.role(), 'ADMIN'));
 
   protected readonly visibleNav = computed(() => {
     const isAdmin = hasRole(this.auth.role(), 'ADMIN');
