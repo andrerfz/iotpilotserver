@@ -2,16 +2,14 @@ import { render, fireEvent } from '@testing-library/angular';
 import { describe, it, expect, vi } from 'vitest';
 import { signal } from '@angular/core';
 import { provideRouter } from '@angular/router';
-import { provideHttpClient } from '@angular/common/http';
 import { ThemeService } from '@ng/shared/ui';
 import { AuthService } from '../core/auth/auth.service';
-import { ToastService } from '../core/errors/toast.service';
 import { ApiConfiguration } from '@ng/core/api/generated/api-configuration';
-import { AdminStatsService } from '@ng/features/admin/services/admin-stats.service';
-import { TenantContextService } from '@ng/core/auth/tenant-context.service';
-import { HOST_IS_LOCAL } from './host';
 import { UserMenuComponent } from './user-menu.component';
 import { TenantMenuComponent } from './tenant-menu.component';
+import { AdminStatsService } from '@ng/features/admin/services/admin-stats.service';
+import { TenantContextService } from '@ng/core/auth/tenant-context.service';
+import { provideHttpClient } from '@angular/common/http';
 
 type Role = 'USER' | 'ADMIN' | 'SUPERADMIN' | 'READONLY';
 
@@ -45,15 +43,13 @@ function tenantCtxStub() {
   };
 }
 
-async function openMenu(role: Role, hostIsLocal: boolean) {
+async function openMenu(role: Role = 'USER') {
   const view = await render(UserMenuComponent, {
     providers: [
       ...BASE_PROVIDERS,
       provideRouter([]),
       { provide: AuthService, useValue: authStub(role) },
       { provide: ThemeService, useValue: { theme: signal('dark'), setTheme: vi.fn() } },
-      { provide: ToastService, useValue: { success: vi.fn() } },
-      { provide: HOST_IS_LOCAL, useValue: hostIsLocal },
     ],
   });
   fireEvent.click(view.container.querySelector('.avatar') as HTMLElement);
@@ -64,52 +60,42 @@ function itemText(container: HTMLElement): string {
   return Array.from(container.querySelectorAll('.menu__item')).map(i => i.textContent?.trim() ?? '').join(' | ');
 }
 
-// ─── UserMenu role × host matrix (legacy parity) ─────────────────────────────
+// ─── UserMenuComponent ────────────────────────────────────────────────────────
 
-describe('UserMenuComponent — role × host matrix', () => {
-  it('SUPERADMIN on localhost sees Grafana, InfluxDB, Debug and Admin panel', async () => {
-    const txt = itemText(await openMenu('SUPERADMIN', true));
-    expect(txt).toContain('Grafana');
-    expect(txt).toContain('InfluxDB');
-    expect(txt).toContain('Debug');
-    expect(txt).toContain('Admin panel');
-  });
-
-  it('SUPERADMIN on a remote host hides Grafana/InfluxDB/Debug (keeps Admin panel)', async () => {
-    const txt = itemText(await openMenu('SUPERADMIN', false));
-    expect(txt).not.toContain('Grafana');
-    expect(txt).not.toContain('InfluxDB');
-    expect(txt).not.toContain('Debug');
-    expect(txt).toContain('Admin panel');
-  });
-
-  it('ADMIN on localhost has no infra links but keeps Admin panel', async () => {
-    const txt = itemText(await openMenu('ADMIN', true));
-    expect(txt).not.toContain('Grafana');
-    expect(txt).not.toContain('InfluxDB');
-    expect(txt).not.toContain('Debug');
-    expect(txt).toContain('Admin panel');
-  });
-
-  it('USER on localhost has neither infra links nor Admin panel', async () => {
-    const txt = itemText(await openMenu('USER', true));
-    expect(txt).not.toContain('Grafana');
-    expect(txt).not.toContain('Admin panel');
-  });
-
+describe('UserMenuComponent', () => {
   it('renders the user name and email in the head', async () => {
-    const container = await openMenu('USER', true);
+    const container = await openMenu('USER');
     expect(container.querySelector('.menu__name')?.textContent?.trim()).toBe('Ada');
     expect(container.querySelector('.menu__mail')?.textContent?.trim()).toBe('ada@x.io');
   });
 
-  it('always offers Sign out', async () => {
-    const txt = itemText(await openMenu('USER', false));
+  it('offers Sign out', async () => {
+    const txt = itemText(await openMenu('USER'));
     expect(txt).toContain('Sign out');
+  });
+
+  it('shows profile link and theme toggle', async () => {
+    const txt = itemText(await openMenu('USER'));
+    expect(txt).toContain('profile');
+    expect(txt).toContain('mode');
+  });
+
+  it('does not show Grafana, InfluxDB, Debug or Admin panel for SUPERADMIN', async () => {
+    const txt = itemText(await openMenu('SUPERADMIN'));
+    expect(txt).not.toContain('Grafana');
+    expect(txt).not.toContain('InfluxDB');
+    expect(txt).not.toContain('Debug');
+    expect(txt).not.toContain('Admin panel');
+  });
+
+  it('does not show Grafana, InfluxDB, Debug or Admin panel for ADMIN', async () => {
+    const txt = itemText(await openMenu('ADMIN'));
+    expect(txt).not.toContain('Admin panel');
+    expect(txt).not.toContain('Grafana');
   });
 });
 
-// ─── TenantMenu ───────────────────────────────────────────────────────────────
+// ─── TenantMenuComponent ──────────────────────────────────────────────────────
 
 describe('TenantMenuComponent', () => {
   async function renderTenant(role: Role = 'USER', stats = statsStub()) {
