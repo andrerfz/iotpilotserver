@@ -37,7 +37,7 @@ async function renderSelect(
     inputs: { value, items },
     providers: [
       { provide: ViewportService, useValue: viewport },
-      { provide: BottomSheetComponent, useClass: BottomSheetStub },
+      { provide: BottomSheetComponent, useClass: BottomSheetStubComponent },
     ],
   });
 }
