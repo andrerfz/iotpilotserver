@@ -123,7 +123,9 @@ export class LogsPage implements ViewWillEnter {
   }
 
   ionViewWillEnter(): void {
-    this.topbar.set('nav.logs');
+    this.topbar.set('nav.logs', null, [
+      { icon: 'download-outline', label: 'logs.actions.export', handler: () => this.onExportOpen() },
+    ]);
     void this.load();
   }
 
@@ -168,7 +170,11 @@ export class LogsPage implements ViewWillEnter {
   }
 
   protected onExportOpen(): void {
-    this.exportSheet()?.open();
+    if (this.activeTab() === 'audit') {
+      this.exportSheet()?.open();
+    } else {
+      this.exportCsv();
+    }
   }
 
   // ── Export (ops tab: CSV only; audit tab: xlsx/csv/pdf) ──────────────────────

@@ -1,5 +1,6 @@
-import { Component, input, output, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, input, output, inject, computed, ChangeDetectionStrategy } from '@angular/core';
 import { IonIcon, AppLogoComponent, UiActionsMenuComponent } from '@ng/shared/ui';
+import type { UiAction } from '@ng/shared/ui';
 import { TranslatePipe } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
 import { chevronForward, search } from 'ionicons/icons';
@@ -43,8 +44,8 @@ addIcons({ chevronForward, search });
 
       @if (topbar.action() || topbar.overflowActions().length > 0) {
         <ui-actions-menu
-          [primary]="topbar.action()"
-          [overflow]="topbar.overflowActions()"
+          [primary]="primaryUiAction()"
+          [actions]="overflowUiActions()"
         ></ui-actions-menu>
       }
 
@@ -59,4 +60,13 @@ export class TopbarComponent {
   readonly breadcrumbs = input<string[]>([]);
   readonly openSearch = output<void>();
   protected readonly topbar = inject(TopbarService);
+
+  protected readonly primaryUiAction = computed<UiAction | null>(() => {
+    const a = this.topbar.action();
+    return a ? { label: a.label ?? '', icon: a.icon, handler: a.handler } : null;
+  });
+
+  protected readonly overflowUiActions = computed<UiAction[]>(() =>
+    this.topbar.overflowActions().map(a => ({ label: a.label ?? '', icon: a.icon, handler: a.handler })),
+  );
 }

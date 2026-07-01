@@ -183,7 +183,8 @@
       "network": "Red",
       "storage": "Almacenamiento",
       "terminal": "Terminal"
-    }
+    },
+    "nav_sheet_title": "Ir a"
   },
   "device_overview": {
     "metrics": {

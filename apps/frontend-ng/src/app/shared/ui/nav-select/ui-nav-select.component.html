@@ -26,3 +26,22 @@
     </div>
   }
 </div>
+
+<ui-bottom-sheet #mobileSheet [title]="sheetTitle() | translate" [showSave]="false" [breakpoint]="0.5">
+  <div class="optlist">
+    @for (item of items(); track item.value) {
+      <button type="button" class="opt" [class.opt--sel]="item.value === value()"
+        (click)="selectFromSheet(item)">
+        <span class="opt__radio"></span>
+        <span class="opt__main">
+          <span class="opt__title">
+            {{ item.label | translate }}
+            @if (item.badge) {
+              <span class="nav-select__badge nav-select__badge--sm">{{ item.badge }}</span>
+            }
+          </span>
+        </span>
+      </button>
+    }
+  </div>
+</ui-bottom-sheet>

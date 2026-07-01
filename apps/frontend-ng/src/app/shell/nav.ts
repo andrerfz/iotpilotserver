@@ -51,6 +51,8 @@ export const NAV: NavGroup[] = [
           { label: 'nav.system',    path: 'admin/system',    icon: 'server-outline', adminOnly: true },
         ],
       },
+      { label: 'settings.account', path: 'settings/account', icon: 'person-outline' },
+      { label: 'settings.org',     path: 'settings/org',     icon: 'business-outline', adminOnly: true },
     ],
   },
 ];

@@ -89,3 +89,65 @@
     &--active { color: var(--primary); font-weight: 600; }
   }
 }
+
+// ── Mobile sheet opt rows (1:1 from prototype .opt / .optlist) ───────────────
+
+.optlist {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 4px;
+}
+
+.opt {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 9px 10px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  border: 1px solid transparent;
+  background: none;
+  width: 100%;
+  text-align: left;
+  transition: background 0.1s;
+
+  &:hover { background: var(--surface-2); }
+
+  &--sel {
+    background: var(--primary-weak);
+    border-color: var(--primary-line);
+  }
+
+  &__main { min-width: 0; flex: 1; }
+
+  &__title {
+    font-size: 13.5px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text);
+  }
+
+  &__radio {
+    width: 18px;
+    height: 18px;
+    border-radius: 99px;
+    border: 1.5px solid var(--border-strong);
+    flex: none;
+    position: relative;
+  }
+
+  &--sel .opt__radio {
+    border-color: var(--primary);
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 3px;
+      border-radius: 99px;
+      background: var(--primary);
+    }
+  }
+}

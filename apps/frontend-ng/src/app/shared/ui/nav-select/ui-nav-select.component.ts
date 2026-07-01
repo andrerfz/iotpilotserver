@@ -1,13 +1,13 @@
 import {
   ChangeDetectionStrategy, Component, ElementRef,
-  computed, inject, input, output, signal,
+  computed, inject, input, output, signal, viewChild,
 } from '@angular/core';
 import { addIcons } from 'ionicons';
 import { chevronDownOutline } from 'ionicons/icons';
 import { IonIcon } from '@ionic/angular/standalone';
-import { ActionSheetController } from '@ionic/angular/standalone';
-import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ViewportService } from '@ng/core/layout/viewport.service';
+import { BottomSheetComponent } from '../sheets/bottom-sheet.component';
 
 addIcons({ chevronDownOutline });
 
@@ -30,17 +30,17 @@ export interface NavSelectItem {
     '(document:click)': 'onDocumentClick($event)',
     '(document:keydown.escape)': 'close()',
   },
-  imports: [IonIcon, TranslatePipe],
+  imports: [IonIcon, TranslatePipe, BottomSheetComponent],
 })
 export class UiNavSelectComponent {
   readonly items       = input<NavSelectItem[]>([]);
   readonly value       = input<string>('');
+  readonly sheetTitle  = input<string>('');
   readonly valueChange = output<string>();
 
-  private readonly el         = inject(ElementRef<HTMLElement>);
-  private readonly viewport   = inject(ViewportService);
-  private readonly sheetCtrl  = inject(ActionSheetController);
-  private readonly t          = inject(TranslateService);
+  private readonly el       = inject(ElementRef<HTMLElement>);
+  private readonly viewport = inject(ViewportService);
+  private readonly mobileSheet = viewChild<BottomSheetComponent>('mobileSheet');
 
   protected readonly open = signal(false);
 
@@ -53,20 +53,8 @@ export class UiNavSelectComponent {
     if (this.viewport.wide()) {
       this.open.update(o => !o);
     } else {
-      void this.openSheet();
+      this.mobileSheet()?.open();
     }
-  }
-
-  private async openSheet(): Promise<void> {
-    const sheet = await this.sheetCtrl.create({
-      buttons: this.items().map((item) => ({
-        text: this.t.instant(item.label),
-        handler: () => {
-          this.valueChange.emit(item.value);
-        },
-      })),
-    });
-    await sheet.present();
   }
 
   protected close(): void {
@@ -77,6 +65,11 @@ export class UiNavSelectComponent {
     event.stopPropagation();
     this.valueChange.emit(item.value);
     this.close();
+  }
+
+  protected selectFromSheet(item: NavSelectItem): void {
+    this.valueChange.emit(item.value);
+    this.mobileSheet()?.close();
   }
 
   onDocumentClick(event: MouseEvent): void {

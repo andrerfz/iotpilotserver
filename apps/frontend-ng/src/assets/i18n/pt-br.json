@@ -183,7 +183,8 @@
       "network": "Rede",
       "storage": "Armazenamento",
       "terminal": "Terminal"
-    }
+    },
+    "nav_sheet_title": "Ir para"
   },
   "device_overview": {
     "metrics": {

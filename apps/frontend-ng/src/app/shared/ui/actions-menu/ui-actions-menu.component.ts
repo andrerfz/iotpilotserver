@@ -1,13 +1,13 @@
 import {
   ChangeDetectionStrategy, Component, ElementRef,
-  inject, input, signal,
+  inject, input, signal, viewChild,
 } from '@angular/core';
 import { addIcons } from 'ionicons';
 import { ellipsisHorizontal } from 'ionicons/icons';
 import { IonIcon } from '@ionic/angular/standalone';
-import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { ActionSheetController } from '@ionic/angular/standalone';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ViewportService } from '@ng/core/layout/viewport.service';
+import { BottomSheetComponent } from '../sheets/bottom-sheet.component';
 
 addIcons({ ellipsisHorizontal });
 
@@ -31,16 +31,16 @@ export interface UiAction {
     '(document:click)': 'onDocumentClick($event)',
     '(document:keydown.escape)': 'closeDropdown()',
   },
-  imports: [IonIcon, TranslatePipe],
+  imports: [IonIcon, TranslatePipe, BottomSheetComponent],
 })
 export class UiActionsMenuComponent {
   readonly primary  = input<UiAction | null>(null);
   readonly actions  = input<UiAction[]>([]);
 
-  private readonly el          = inject(ElementRef<HTMLElement>);
-  private readonly sheetCtrl   = inject(ActionSheetController);
-  private readonly viewport    = inject(ViewportService);
-  private readonly t           = inject(TranslateService);
+  private readonly el       = inject(ElementRef<HTMLElement>);
+  private readonly viewport = inject(ViewportService);
+
+  private readonly mobileSheet = viewChild<BottomSheetComponent>('mobileSheet');
 
   protected readonly dropdownOpen = signal(false);
 
@@ -54,7 +54,7 @@ export class UiActionsMenuComponent {
     if (this.viewport.wide()) {
       this.dropdownOpen.update(o => !o);
     } else {
-      void this.openSheet();
+      this.mobileSheet()?.open();
     }
   }
 
@@ -68,21 +68,14 @@ export class UiActionsMenuComponent {
     this.closeDropdown();
   }
 
+  protected runSheetAction(action: UiAction): void {
+    this.mobileSheet()?.close();
+    action.handler();
+  }
+
   onDocumentClick(event: MouseEvent): void {
     if (!this.el.nativeElement.contains(event.target as Node)) {
       this.closeDropdown();
     }
-  }
-
-  private async openSheet(): Promise<void> {
-    const sheet = await this.sheetCtrl.create({
-      buttons: this.actions().map((a) => ({
-        text: this.t.instant(a.label),
-        role: a.role === 'danger' ? 'destructive' : undefined,
-        icon: a.icon,
-        handler: a.handler,
-      })),
-    });
-    await sheet.present();
   }
 }

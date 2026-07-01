@@ -16,7 +16,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { addIcons } from 'ionicons';
 import {
   gridOutline, hardwareChipOutline, notificationsOutline, settingsOutline,
-  ellipsisHorizontal, documentTextOutline, peopleOutline,
+  ellipsisHorizontal, documentTextOutline, peopleOutline, personOutline,
   moonOutline, sunnyOutline, logOutOutline, closeOutline, searchOutline, businessOutline,
 } from 'ionicons/icons';
 
@@ -24,7 +24,7 @@ import { NAV, NavItem, PRIMARY_PATHS, PLATFORM_PRIMARY } from './nav';
 
 addIcons({
   gridOutline, hardwareChipOutline, notificationsOutline, settingsOutline,
-  ellipsisHorizontal, documentTextOutline, peopleOutline,
+  ellipsisHorizontal, documentTextOutline, peopleOutline, personOutline,
   moonOutline, sunnyOutline, logOutOutline, closeOutline, searchOutline, businessOutline,
 });
 
@@ -61,10 +61,16 @@ addIcons({
       <div class="more-section">
         <div class="more-section__label">{{ 'shell.bottom_nav.account' | translate }}</div>
         <div class="more-grid">
-          <a class="more-tile" routerLink="settings" routerLinkActive="more-tile--active" (click)="close()">
-            <span class="more-tile__icon"><ion-icon name="settings-outline"></ion-icon></span>
-            <span class="more-tile__label">{{ 'shell.bottom_nav.settings' | translate }}</span>
+          <a class="more-tile" routerLink="settings/account" routerLinkActive="more-tile--active" (click)="close()">
+            <span class="more-tile__icon"><ion-icon name="person-outline"></ion-icon></span>
+            <span class="more-tile__label">{{ 'settings.account' | translate }}</span>
           </a>
+          @if (showAdmin()) {
+            <a class="more-tile" routerLink="settings/org" routerLinkActive="more-tile--active" (click)="close()">
+              <span class="more-tile__icon"><ion-icon name="business-outline"></ion-icon></span>
+              <span class="more-tile__label">{{ 'settings.org' | translate }}</span>
+            </a>
+          }
           <button class="more-tile" (click)="toggleTheme()">
             <span class="more-tile__icon"><ion-icon [name]="themeIcon()"></ion-icon></span>
             <span class="more-tile__label">{{ themeLabel() | translate }}</span>
@@ -181,7 +187,7 @@ export class BottomNavComponent {
 
   private readonly tenantPrimary = this.allItems.filter(it => PRIMARY_PATHS.has(it.path));
   protected readonly secondaryNav = this.allItems.filter(
-    it => !PRIMARY_PATHS.has(it.path) && !it.adminOnly && it.path !== 'settings',
+    it => !PRIMARY_PATHS.has(it.path) && !it.adminOnly && !it.path.startsWith('settings'),
   );
 
   protected readonly role = computed(() => this.auth.role() ?? 'USER');
@@ -201,6 +207,7 @@ export class BottomNavComponent {
     }
     return flat.filter(it =>
       !!it.adminOnly &&
+      !it.path.startsWith('settings') &&
       (!it.superAdminOnly || sa) &&
       (!it.tenantScoped || !sa || acting),
     );

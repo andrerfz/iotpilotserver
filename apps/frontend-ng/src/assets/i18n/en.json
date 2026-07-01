@@ -183,7 +183,8 @@
       "network": "Network",
       "storage": "Storage",
       "terminal": "Terminal"
-    }
+    },
+    "nav_sheet_title": "Go to"
   },
   "device_overview": {
     "metrics": {

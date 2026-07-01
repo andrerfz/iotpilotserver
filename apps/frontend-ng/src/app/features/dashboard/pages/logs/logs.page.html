@@ -29,17 +29,6 @@
           <ion-button fill="outline" color="medium" size="small" (click)="svc.reload()" [disabled]="svc.loading()">
             <ion-icon slot="icon-only" name="reload-outline"></ion-icon>
           </ion-button>
-          @if (activeTab() === 'audit') {
-            <ion-button fill="outline" size="small" (click)="onExportOpen()" [disabled]="!svc.logs().length">
-              <ion-icon slot="start" name="download-outline"></ion-icon>
-              {{ 'logs.actions.export' | translate }}
-            </ion-button>
-          } @else {
-            <ion-button fill="outline" size="small" (click)="exportCsv()" [disabled]="!svc.logs().length">
-              <ion-icon slot="start" name="download-outline"></ion-icon>
-              {{ 'logs.actions.export' | translate }}
-            </ion-button>
-          }
         </div>
       </div>
     </ion-card-content>

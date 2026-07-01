@@ -297,3 +297,6 @@ apps/frontend-ng/dist-electron/
 
 # Local device-flash logs (machine-specific, not for VCS)
 scripts/.flash-log-*.csv
+
+# Prototype frontend assets (design reference only, not versioned)
+docs/prototype frontend/

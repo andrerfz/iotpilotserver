@@ -1,3 +1,50 @@
+.optlist {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.opt {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 16px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--ui-border);
+  text-align: left;
+  cursor: pointer;
+  color: var(--text);
+  transition: background 0.12s;
+
+  &:last-child { border-bottom: none; }
+  &:hover { background: var(--surface-2); }
+
+  &--danger { color: var(--danger); }
+
+  &__icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    color: var(--text-dim);
+  }
+
+  &--danger &__icon { color: var(--danger); }
+
+  &__main {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  &__title {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: inherit;
+  }
+}
+
 .actions-menu {
   display: flex;
   align-items: center;

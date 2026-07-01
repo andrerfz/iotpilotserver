@@ -1,37 +1,30 @@
 import {Injectable} from '@nestjs/common';
 import {ComparisonOperator, Threshold} from '@iotpilot/core/monitoring/domain/entities/threshold.entity';
 import {ThresholdId} from '@iotpilot/core/monitoring/domain/value-objects/threshold-id.vo';
-import {AlertSeverity, SeverityLevel} from '@iotpilot/core/monitoring/domain/value-objects/alert-severity.vo';
+import {AlertSeverity} from '@iotpilot/core/monitoring/domain/value-objects/alert-severity.vo';
 import {DeviceId} from '@iotpilot/core/device/domain/value-objects/device-id.vo';
 import {CustomerId} from '@iotpilot/core/shared/domain/value-objects/customer-id.vo';
 import {CreateThresholdDto, ThresholdDto, UpdateThresholdDto} from '../dto/threshold.dto';
 
 @Injectable()
 export class ThresholdMapper {
-  /**
-   * Converts a string severity value to a valid SeverityLevel
-   * @param severity The severity string to convert
-   * @returns A valid SeverityLevel
-   */
-  private mapSeverity(severity: string): SeverityLevel {
-    // Map common severity strings to valid SeverityLevel values (lowercase for AlertSeverity type)
-    switch (severity.toLowerCase()) {
-      case 'critical':
-      case 'emergency':
-        return 'critical';
-      case 'high':
-      case 'warning':
-        return 'warning';
-      case 'medium':
-      case 'error':
-        return 'error';
-      case 'low':
-      case 'info':
-        return 'info';
+  private mapSeverity(severity: string): 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' {
+    switch (severity.toUpperCase()) {
+      case 'CRITICAL':
+      case 'EMERGENCY':
+        return 'CRITICAL';
+      case 'HIGH':
+      case 'WARNING':
+        return 'HIGH';
+      case 'MEDIUM':
+      case 'ERROR':
+        return 'MEDIUM';
+      case 'LOW':
+      case 'INFO':
+        return 'LOW';
       default:
-        // Default to 'info' for unknown values
-        console.warn(`Unknown severity level: ${severity}, defaulting to 'info'`);
-        return 'info';
+        console.warn(`Unknown severity level: ${severity}, defaulting to 'LOW'`);
+        return 'LOW';
     }
   }
 

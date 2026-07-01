@@ -12,6 +12,15 @@ import {UserRole} from '@iotpilot/core/shared/domain/value-objects/user-role.vo'
 
 type PrismaClient = ReturnType<PrismaService['getClient']>;
 
+function normalizeSeverity(s: string): string {
+  switch (s?.toUpperCase()) {
+    case 'CRITICAL': case 'EMERGENCY': return 'CRITICAL';
+    case 'HIGH':     case 'WARNING':   return 'HIGH';
+    case 'MEDIUM':   case 'ERROR':     return 'MEDIUM';
+    default:                           return 'LOW';
+  }
+}
+
 export class PrismaThresholdRepository implements ThresholdRepository {
     private readonly prismaService: PrismaService;
 
@@ -254,7 +263,7 @@ export class PrismaThresholdRepository implements ThresholdRepository {
             data.operator,
             data.value,
             data.unit,
-            AlertSeverity.create(data.severity),
+            AlertSeverity.create(normalizeSeverity(data.severity)),
             data.enabled,
             data.type as ThresholdType,
             data.cooldownMinutes,

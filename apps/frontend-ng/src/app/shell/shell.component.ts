@@ -47,7 +47,7 @@ import { PushNotificationService } from '../core/native/push-notification.servic
 
       <div class="ion-page main" id="shell-main">
         <app-topbar [breadcrumbs]="breadcrumbs()" (openSearch)="onSearch()">
-          <app-user-menu userMenu [base]="base()" (openPalette)="onSearch()"></app-user-menu>
+          <app-user-menu userMenu [base]="base()"></app-user-menu>
         </app-topbar>
         <ui-maintenance-banner [message]="maintenanceMessage()"></ui-maintenance-banner>
         <ui-network-status></ui-network-status>

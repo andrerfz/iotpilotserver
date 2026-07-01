@@ -33,3 +33,19 @@
     </div>
   }
 </div>
+
+<ui-bottom-sheet #mobileSheet [showSave]="false" [breakpoint]="0.5">
+  <div class="optlist">
+    @for (action of actions(); track action.label) {
+      <button type="button" class="opt" [class.opt--danger]="action.role === 'danger'"
+        (click)="runSheetAction(action)">
+        @if (action.icon) {
+          <ion-icon class="opt__icon" [name]="action.icon"></ion-icon>
+        }
+        <span class="opt__main">
+          <span class="opt__title">{{ action.label | translate }}</span>
+        </span>
+      </button>
+    }
+  </div>
+</ui-bottom-sheet>

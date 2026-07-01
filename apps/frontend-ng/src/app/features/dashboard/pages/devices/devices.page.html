@@ -55,11 +55,11 @@
           <ui-list-row
             [title]="d.hostname"
             [subtitle]="d.deviceType + (d.ipAddress ? ' · ' + d.ipAddress : '')"
-            [meta]="['Status', d.status, 'Customer', d.customerId, 'Alerts', String(d.alertCount ?? 0)]"
+            [meta]="['Status', d.status, 'Customer', d.customerId, 'Alerts', '' + (d.alertCount ?? 0)]"
             [cols]="[
               { label: 'Status', value: d.status },
               { label: 'Customer', value: d.customerId },
-              { label: 'Alerts', value: String(d.alertCount ?? 0) }
+              { label: 'Alerts', value: '' + (d.alertCount ?? 0) }
             ]">
             <ui-status-dot lead [status]="d.status"></ui-status-dot>
           </ui-list-row>

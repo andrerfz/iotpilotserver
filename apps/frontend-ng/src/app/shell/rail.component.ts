@@ -5,7 +5,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
 import {
   gridOutline, hardwareChipOutline, notificationsOutline,
-  documentTextOutline, peopleOutline,
+  documentTextOutline, peopleOutline, personOutline,
   statsChartOutline, serverOutline, businessOutline,
 } from 'ionicons/icons';
 import { NAV } from './nav';
@@ -15,7 +15,7 @@ import { TenantContextService } from '../core/auth/tenant-context.service';
 
 addIcons({
   gridOutline, hardwareChipOutline, notificationsOutline,
-  documentTextOutline, peopleOutline,
+  documentTextOutline, peopleOutline, personOutline,
   statsChartOutline, serverOutline, businessOutline,
 });
 

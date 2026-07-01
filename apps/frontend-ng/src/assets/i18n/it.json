@@ -183,7 +183,8 @@
       "network": "Rete",
       "storage": "Archiviazione",
       "terminal": "Terminale"
-    }
+    },
+    "nav_sheet_title": "Vai a"
   },
   "device_overview": {
     "metrics": {
