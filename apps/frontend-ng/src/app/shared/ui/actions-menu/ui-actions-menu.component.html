@@ -3,27 +3,29 @@
     <button class="actions-menu__primary" type="button"
       [attr.aria-label]="(primary()!.label ?? '') | translate"
       (click)="onPrimaryClick($event)">
-      <ion-icon [name]="primary()!.icon"></ion-icon>
+      <ion-icon [name]="primary()!.icon ?? 'add-outline'"></ion-icon>
     </button>
   }
 
-  @if (overflow().length > 0) {
+  @if (actions().length > 0) {
     <div class="actions-menu__overflow-wrap">
       <button class="actions-menu__more" type="button"
-        [attr.aria-expanded]="overflowOpen()" aria-haspopup="menu"
-        (click)="toggleOverflow($event)">
+        [attr.aria-expanded]="dropdownOpen()" aria-haspopup="menu"
+        (click)="toggleActions($event)">
         <ion-icon name="ellipsis-horizontal"></ion-icon>
       </button>
 
-      @if (overflowOpen()) {
+      @if (dropdownOpen()) {
         <div class="actions-menu__dropdown" role="menu">
-          @for (action of overflow(); track action.icon) {
-            <button class="actions-menu__item" type="button" role="menuitem"
-              (click)="runOverflow(action, $event)">
-              <ion-icon [name]="action.icon"></ion-icon>
-              @if (action.label) {
-                <span>{{ action.label | translate }}</span>
+          @for (action of actions(); track action.label) {
+            <button class="actions-menu__item"
+              [class.actions-menu__item--danger]="action.role === 'danger'"
+              type="button" role="menuitem"
+              (click)="runAction(action, $event)">
+              @if (action.icon) {
+                <ion-icon [name]="action.icon"></ion-icon>
               }
+              <span>{{ action.label | translate }}</span>
             </button>
           }
         </div>

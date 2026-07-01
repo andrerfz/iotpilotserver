@@ -175,3 +175,4 @@ export { UiNavSelectComponent } from './nav-select/ui-nav-select.component';
 export type { NavSelectItem } from './nav-select/ui-nav-select.component';
 // nav-unification T8 — ActionsMenu
 export { UiActionsMenuComponent } from './actions-menu/ui-actions-menu.component';
+export type { UiAction } from './actions-menu/ui-actions-menu.component';

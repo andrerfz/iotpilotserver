@@ -5,10 +5,21 @@ import {
 import { addIcons } from 'ionicons';
 import { ellipsisHorizontal } from 'ionicons/icons';
 import { IonIcon } from '@ionic/angular/standalone';
-import { TranslatePipe } from '@ngx-translate/core';
-import type { TopbarAction } from '../../../shell/topbar.service';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { ActionSheetController } from '@ionic/angular/standalone';
+import { ViewportService } from '@ng/core/layout/viewport.service';
 
 addIcons({ ellipsisHorizontal });
+
+export interface UiAction {
+  /** i18n key or plain label. */
+  label: string;
+  /** Ionic icon name. Optional. */
+  icon?: string;
+  /** 'danger' renders red / destructive styling. */
+  role?: 'default' | 'danger';
+  handler: () => void;
+}
 
 @Component({
   selector: 'ui-actions-menu',
@@ -18,41 +29,60 @@ addIcons({ ellipsisHorizontal });
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '(document:click)': 'onDocumentClick($event)',
-    '(document:keydown.escape)': 'closeOverflow()',
+    '(document:keydown.escape)': 'closeDropdown()',
   },
   imports: [IonIcon, TranslatePipe],
 })
 export class UiActionsMenuComponent {
-  readonly primary  = input<TopbarAction | null>(null);
-  readonly overflow = input<TopbarAction[]>([]);
+  readonly primary  = input<UiAction | null>(null);
+  readonly actions  = input<UiAction[]>([]);
 
-  private readonly el = inject(ElementRef<HTMLElement>);
+  private readonly el          = inject(ElementRef<HTMLElement>);
+  private readonly sheetCtrl   = inject(ActionSheetController);
+  private readonly viewport    = inject(ViewportService);
+  private readonly t           = inject(TranslateService);
 
-  protected readonly overflowOpen = signal(false);
+  protected readonly dropdownOpen = signal(false);
 
   protected onPrimaryClick(event: MouseEvent): void {
     event.stopPropagation();
     this.primary()?.handler();
   }
 
-  protected toggleOverflow(event: MouseEvent): void {
+  protected toggleActions(event: MouseEvent): void {
     event.stopPropagation();
-    this.overflowOpen.update(o => !o);
+    if (this.viewport.wide()) {
+      this.dropdownOpen.update(o => !o);
+    } else {
+      void this.openSheet();
+    }
   }
 
-  protected closeOverflow(): void {
-    this.overflowOpen.set(false);
+  protected closeDropdown(): void {
+    this.dropdownOpen.set(false);
   }
 
-  protected runOverflow(action: TopbarAction, event: MouseEvent): void {
+  protected runAction(action: UiAction, event: MouseEvent): void {
     event.stopPropagation();
     action.handler();
-    this.closeOverflow();
+    this.closeDropdown();
   }
 
   onDocumentClick(event: MouseEvent): void {
     if (!this.el.nativeElement.contains(event.target as Node)) {
-      this.closeOverflow();
+      this.closeDropdown();
     }
+  }
+
+  private async openSheet(): Promise<void> {
+    const sheet = await this.sheetCtrl.create({
+      buttons: this.actions().map((a) => ({
+        text: this.t.instant(a.label),
+        role: a.role === 'danger' ? 'destructive' : undefined,
+        icon: a.icon,
+        handler: a.handler,
+      })),
+    });
+    await sheet.present();
   }
 }
