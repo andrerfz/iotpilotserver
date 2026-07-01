@@ -8,6 +8,7 @@ export interface AdminStats {
   deviceCount: number;
   alertCount: number;
   activeDevices: number;
+  customerCount?: number;
 }
 
 @Injectable({ providedIn: 'root' })

@@ -714,6 +714,7 @@
     "overview": {
       "title": "Panoramica amministrazione",
       "kpi": {
+        "customers": "Totale clienti",
         "users": "Utenti totali",
         "devices": "Dispositivi totali",
         "active_devices": "Dispositivi attivi",

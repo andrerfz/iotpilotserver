@@ -100,9 +100,10 @@ export class RailComponent {
     // A SUPERADMIN in Platform mode (not acting as a customer) has no tenant, so
     // tenant-scoped views (Operate) are hidden until they pick a customer.
     const hideTenantScoped = isSuperAdmin && !this.tenantCtx.isActive();
-    const allowed = (it: { adminOnly?: boolean; superAdminOnly?: boolean; tenantScoped?: boolean }) =>
+    const allowed = (it: { adminOnly?: boolean; superAdminOnly?: boolean; superAdminExclude?: boolean; tenantScoped?: boolean }) =>
       (!it.adminOnly || isAdmin)
       && (!it.superAdminOnly || isSuperAdmin)
+      && (!it.superAdminExclude || !isSuperAdmin)
       && (!it.tenantScoped || !hideTenantScoped);
     return NAV.map(g => ({
       ...g,

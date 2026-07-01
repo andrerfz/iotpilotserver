@@ -620,14 +620,15 @@ adminRouter.get('/stats', requireAuth('ADMIN'), async (req: AuthenticatedRequest
     const customerId = req.user?.customerId;
     const where = isSuperAdmin ? {} : { customerId: customerId! };
 
-    const [userCount, deviceCount, alertCount, activeDevices] = await Promise.all([
+    const [userCount, deviceCount, alertCount, activeDevices, customerCount] = await Promise.all([
       prisma.user.count({ where }),
       prisma.device.count({ where }),
       prisma.alert.count({ where: { ...where, resolved: false } }),
       prisma.device.count({ where: { ...where, status: 'ONLINE' } }),
+      isSuperAdmin ? prisma.customer.count({ where: { deletedAt: null } }) : Promise.resolve(undefined),
     ]);
 
-    send.ok(res, { userCount, deviceCount, alertCount, activeDevices });
+    send.ok(res, { userCount, deviceCount, alertCount, activeDevices, ...(isSuperAdmin ? { customerCount } : {}) });
   } catch (err) {
     send.fromError(res, err);
   }

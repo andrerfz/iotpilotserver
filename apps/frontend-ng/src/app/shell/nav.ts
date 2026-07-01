@@ -14,6 +14,11 @@ export interface NavItem {
   /** Visible only to SUPERADMIN role. */
   superAdminOnly?: boolean;
   /**
+   * Hidden for SUPERADMIN even when they satisfy adminOnly. Used to expose items
+   * directly in the ADMIN rail that SUPERADMIN reaches through the Overview parent.
+   */
+  superAdminExclude?: boolean;
+  /**
    * Requires a tenant context. Hidden for a SUPERADMIN until they "act as" a
    * customer (these views 400/are empty without a tenant). Always shown to a
    * regular ADMIN/USER (who always have a tenant).
@@ -43,14 +48,18 @@ export const NAV: NavGroup[] = [
   {
     group: 'nav.administer',
     items: [
+      // SUPERADMIN: platform overview with all sub-pages as children
       {
-        label: 'nav.overview', path: 'admin', icon: 'stats-chart-outline', exact: true, adminOnly: true,
+        label: 'nav.overview', path: 'admin', icon: 'stats-chart-outline', exact: true, superAdminOnly: true,
         children: [
-          { label: 'nav.customers', path: 'admin/customers', icon: 'business-outline', adminOnly: true, superAdminOnly: true },
-          { label: 'nav.users',     path: 'users',           icon: 'people-outline', adminOnly: true },
-          { label: 'nav.system',    path: 'admin/system',    icon: 'server-outline', adminOnly: true },
+          { label: 'nav.customers', path: 'admin/customers', icon: 'business-outline', superAdminOnly: true },
+          { label: 'nav.users',     path: 'users',           icon: 'people-outline',   superAdminOnly: true },
+          { label: 'nav.system',    path: 'admin/system',    icon: 'server-outline',   superAdminOnly: true },
         ],
       },
+      // ADMIN: direct access (no overview — they have their own dashboard)
+      { label: 'nav.users',   path: 'users',        icon: 'people-outline', adminOnly: true, superAdminExclude: true },
+      { label: 'nav.system',  path: 'admin/system', icon: 'server-outline', adminOnly: true, superAdminExclude: true },
     ],
   },
 ];

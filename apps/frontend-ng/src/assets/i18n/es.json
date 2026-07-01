@@ -714,6 +714,7 @@
     "overview": {
       "title": "Resumen de administración",
       "kpi": {
+        "customers": "Total de clientes",
         "users": "Total de usuarios",
         "devices": "Total de dispositivos",
         "active_devices": "Dispositivos activos",

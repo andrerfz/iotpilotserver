@@ -209,6 +209,7 @@ export class BottomNavComponent {
       !!it.adminOnly &&
       !it.path.startsWith('settings') &&
       (!it.superAdminOnly || sa) &&
+      (!it.superAdminExclude || !sa) &&
       (!it.tenantScoped || !sa || acting),
     );
   });

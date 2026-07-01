@@ -714,6 +714,7 @@
     "overview": {
       "title": "Admin Overview",
       "kpi": {
+        "customers": "Total Customers",
         "users": "Total Users",
         "devices": "Total Devices",
         "active_devices": "Active Devices",

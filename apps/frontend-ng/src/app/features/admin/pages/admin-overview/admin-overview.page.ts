@@ -6,7 +6,7 @@ import { RouterLink } from '@angular/router';
 import { addIcons } from 'ionicons';
 import {
   hardwareChipOutline, peopleOutline, documentTextOutline,
-  serverOutline, statsChartOutline,
+  serverOutline, statsChartOutline, businessOutline,
 } from 'ionicons/icons';
 import {
   IonContent, IonCard, IonCardContent, IonIcon, IonButton, IonSkeletonText,
@@ -19,7 +19,7 @@ import { AdminStatsService } from '../../services/admin-stats.service';
 import { TopbarService } from '../../../../shell/topbar.service';
 import { TenantContextService } from '@ng/core/auth/tenant-context.service';
 
-addIcons({ hardwareChipOutline, peopleOutline, documentTextOutline, serverOutline, statsChartOutline });
+addIcons({ hardwareChipOutline, peopleOutline, documentTextOutline, serverOutline, statsChartOutline, businessOutline });
 
 @Component({
   selector: 'app-admin-overview',
