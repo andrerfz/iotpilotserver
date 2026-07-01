@@ -5,7 +5,9 @@ import {
 import { addIcons } from 'ionicons';
 import { chevronDownOutline } from 'ionicons/icons';
 import { IonIcon } from '@ionic/angular/standalone';
-import { TranslatePipe } from '@ngx-translate/core';
+import { ActionSheetController } from '@ionic/angular/standalone';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { ViewportService } from '@ng/core/layout/viewport.service';
 
 addIcons({ chevronDownOutline });
 
@@ -31,11 +33,14 @@ export interface NavSelectItem {
   imports: [IonIcon, TranslatePipe],
 })
 export class UiNavSelectComponent {
-  readonly items    = input<NavSelectItem[]>([]);
-  readonly value    = input<string>('');
+  readonly items       = input<NavSelectItem[]>([]);
+  readonly value       = input<string>('');
   readonly valueChange = output<string>();
 
-  private readonly el = inject(ElementRef<HTMLElement>);
+  private readonly el         = inject(ElementRef<HTMLElement>);
+  private readonly viewport   = inject(ViewportService);
+  private readonly sheetCtrl  = inject(ActionSheetController);
+  private readonly t          = inject(TranslateService);
 
   protected readonly open = signal(false);
 
@@ -45,7 +50,23 @@ export class UiNavSelectComponent {
 
   protected toggle(event: MouseEvent): void {
     event.stopPropagation();
-    this.open.update(o => !o);
+    if (this.viewport.wide()) {
+      this.open.update(o => !o);
+    } else {
+      void this.openSheet();
+    }
+  }
+
+  private async openSheet(): Promise<void> {
+    const sheet = await this.sheetCtrl.create({
+      buttons: this.items().map((item) => ({
+        text: this.t.instant(item.label),
+        handler: () => {
+          this.valueChange.emit(item.value);
+        },
+      })),
+    });
+    await sheet.present();
   }
 
   protected close(): void {
