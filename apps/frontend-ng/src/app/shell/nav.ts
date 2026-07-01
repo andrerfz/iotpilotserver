@@ -47,7 +47,7 @@ export const NAV: NavGroup[] = [
         label: 'nav.overview', path: 'admin', icon: 'stats-chart-outline', exact: true, adminOnly: true,
         children: [
           { label: 'nav.customers', path: 'admin/customers', icon: 'business-outline', adminOnly: true, superAdminOnly: true },
-          { label: 'nav.users',     path: 'admin/users',     icon: 'people-outline', adminOnly: true },
+          { label: 'nav.users',     path: 'users',           icon: 'people-outline', adminOnly: true },
           { label: 'nav.system',    path: 'admin/system',    icon: 'server-outline', adminOnly: true },
         ],
       },

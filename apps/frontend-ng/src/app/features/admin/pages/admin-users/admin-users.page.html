@@ -3,6 +3,13 @@
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
 
+  @if (platformMode()) {
+    <div class="platform-banner">
+      <ion-icon name="globe-outline"></ion-icon>
+      <span>{{ 'admin.users.platform_mode_banner' | translate }}</span>
+    </div>
+  }
+
   <!-- Filters -->
   <ion-card class="filter-bar">
     <ion-card-content>
@@ -30,11 +37,12 @@
         <ui-list-row
           [title]="displayName(u)"
           [subtitle]="u.email"
-          [meta]="['Role', u.role, 'Status', u.status]"
-          [cols]="[
-            { label: 'Role', value: u.role },
-            { label: 'Status', value: u.status }
-          ]">
+          [meta]="platformMode()
+            ? ['Role', u.role, 'Status', u.status, 'Customer', u.customerName ?? u.customerId ?? '—']
+            : ['Role', u.role, 'Status', u.status]"
+          [cols]="platformMode()
+            ? [{ label: 'Customer', value: u.customerName ?? u.customerId ?? '—' }, { label: 'Role', value: u.role }, { label: 'Status', value: u.status }]
+            : [{ label: 'Role', value: u.role }, { label: 'Status', value: u.status }]">
         </ui-list-row>
       </ng-template>
     </ui-swipe-list>

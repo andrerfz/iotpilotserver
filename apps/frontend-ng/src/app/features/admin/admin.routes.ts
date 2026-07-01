@@ -17,13 +17,7 @@ export const ADMIN_ROUTES: Routes = [
       import('./pages/admin-customers/admin-customers.page').then(m => m.AdminCustomersPage),
     data: { breadcrumb: ['nav.administer', 'nav.customers'] },
   },
-  {
-    path: 'users',
-    canActivate: [roleGuard('ADMIN')],
-    loadComponent: () =>
-      import('./pages/admin-users/admin-users.page').then(m => m.AdminUsersPage),
-    data: { breadcrumb: ['nav.administer', 'nav.users'] },
-  },
+  { path: 'users', redirectTo: '/app/users', pathMatch: 'full' },
   {
     path: 'system',
     canActivate: [roleGuard('ADMIN')],

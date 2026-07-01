@@ -777,7 +777,8 @@
       "empty": {
         "title": "Sem usuários"
       },
-      "detail": "Detalhes do usuário"
+      "detail": "Detalhes do usuário",
+      "platform_mode_banner": "Modo plataforma — exibindo usuários de todos os clientes"
     },
     "customers": {
       "search_placeholder": "Pesquisar nome ou slug",

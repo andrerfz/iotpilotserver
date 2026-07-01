@@ -8,7 +8,7 @@ import { skip } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { addIcons } from 'ionicons';
 import {
-  checkmarkOutline, closeOutline, banOutline, personOutline, addOutline,
+  checkmarkOutline, closeOutline, banOutline, personOutline, addOutline, globeOutline,
 } from 'ionicons/icons';
 import {
   IonContent, IonCard, IonCardContent, IonButton, IonIcon,
@@ -31,7 +31,7 @@ import { AdminUsersService, AdminUser } from '../../services/admin-users.service
 import { TopbarService } from '../../../../shell/topbar.service';
 import { TenantContextService } from '@ng/core/auth/tenant-context.service';
 
-addIcons({ checkmarkOutline, closeOutline, banOutline, personOutline, addOutline });
+addIcons({ checkmarkOutline, closeOutline, banOutline, personOutline, addOutline, globeOutline });
 
 @Component({
   selector: 'app-admin-users',
@@ -69,6 +69,11 @@ export class AdminUsersPage implements ViewWillEnter {
   private readonly userSheet = viewChild<BottomSheetComponent>('userSheet');
 
   protected readonly isSuperAdmin = computed(() => hasRole(this.auth.role(), 'SUPERADMIN'));
+
+  /** True when SUPERADMIN has no active tenant — shows cross-tenant platform view. */
+  readonly platformMode = computed(
+    () => hasRole(this.auth.role(), 'SUPERADMIN') && !this.tenantCtx.isActive(),
+  );
 
   /** Selected user for the read-only detail sheet (mobile tap). */
   protected readonly selectedUser = signal<AdminUser | null>(null);
@@ -119,7 +124,7 @@ export class AdminUsersPage implements ViewWillEnter {
 
   ionViewWillEnter(): void {
     this.topbar.set('nav.users', { icon: 'add-outline', handler: () => this.openNewUserModal() });
-    void this.svc.load();
+    void this.svc.load(this.statusFilter || undefined);
   }
 
   protected onRefresh(ev: Event): void {

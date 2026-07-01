@@ -53,6 +53,13 @@ export const SHELL_CHILDREN: Routes = [
     data: { breadcrumb: ['nav.operate', 'nav.logs'] },
   },
   {
+    path: 'users',
+    canActivate: [roleGuard('ADMIN')],
+    loadComponent: () =>
+      import('../features/admin/pages/admin-users/admin-users.page').then(m => m.AdminUsersPage),
+    data: { breadcrumb: ['nav.administer', 'nav.users'] },
+  },
+  {
     path: 'admin',
     canActivate: [roleGuard('ADMIN')],
     loadChildren: () =>

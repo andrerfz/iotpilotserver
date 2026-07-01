@@ -777,7 +777,8 @@
       "empty": {
         "title": "No users"
       },
-      "detail": "User details"
+      "detail": "User details",
+      "platform_mode_banner": "Platform mode — showing all customers' users"
     },
     "customers": {
       "search_placeholder": "Search name or slug",
