@@ -88,9 +88,19 @@ export class RegisterDeviceCompleteHandler implements CommandHandler<RegisterDev
 
       if (existingDevice) {
         if (existingDevice.deletedAt) {
-          // Restore soft-deleted device
-          console.log('🔄 DEVICE REGISTRATION: Restoring soft-deleted device');
-          
+          // Restore a soft-deleted device — but ONLY for the same tenant that
+          // owned it. A device must never silently change owner via
+          // re-registration: that would let another customer adopt a returned/
+          // deleted leased device just by holding a valid key, bypassing the
+          // explicit claim flow. Cross-tenant takeover must go through Release
+          // (SUPERADMIN) + claim. If the device had an owner and the registering
+          // key belongs to a different customer, reject.
+          if (existingDevice.customerId && existingDevice.customerId !== deviceData.customerId) {
+            throw new Error(
+              `Device ${deviceData.deviceId} belongs to another customer and must be claimed before use`
+            );
+          }
+
           const restoredDevice = await this.prismaClient.device.update({
             where: { id: existingDevice.id },
             data: {

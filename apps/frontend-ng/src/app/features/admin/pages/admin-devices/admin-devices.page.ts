@@ -10,7 +10,7 @@ import { FormsModule } from '@angular/forms';
 import { addIcons } from 'ionicons';
 import {
   refreshOutline, eyeOutline, reloadOutline, hardwareChipOutline,
-  checkmarkCircleOutline, closeCircleOutline, warningOutline,
+  checkmarkCircleOutline, closeCircleOutline, warningOutline, unlinkOutline,
 } from 'ionicons/icons';
 import {
   IonContent, IonCard, IonCardContent, IonButton, IonIcon, IonSkeletonText,
@@ -28,7 +28,7 @@ import { AdminDevicesService, AdminDevice } from '../../services/admin-devices.s
 import { TopbarService } from '../../../../shell/topbar.service';
 import { TenantContextService } from '@ng/core/auth/tenant-context.service';
 
-addIcons({ refreshOutline, eyeOutline, reloadOutline, hardwareChipOutline, checkmarkCircleOutline, closeCircleOutline, warningOutline });
+addIcons({ refreshOutline, eyeOutline, reloadOutline, hardwareChipOutline, checkmarkCircleOutline, closeCircleOutline, warningOutline, unlinkOutline });
 
 @Component({
   selector: 'app-admin-devices',
@@ -157,6 +157,34 @@ export class AdminDevicesPage implements AfterViewInit, ViewWillEnter {
     this.actionLoading.set(true);
     try {
       await this.svc.sendCommand(device.id, command);
+    } finally {
+      this.actionLoading.set(false);
+    }
+  }
+
+  async onRelease(device: AdminDevice): Promise<void> {
+    const alert = await this.alertCtrl.create({
+      header: this.t.instant('admin.dialogs.device_release'),
+      message: this.t.instant('admin.dialogs.device_release_msg', { hostname: device.hostname }),
+      buttons: [
+        { text: this.t.instant('common.cancel'), role: 'cancel' },
+        { text: this.t.instant('admin.dialogs.release'), role: 'confirm', handler: () => void this.doRelease(device) },
+      ],
+    });
+    await alert.present();
+  }
+
+  private async doRelease(device: AdminDevice): Promise<void> {
+    this.actionLoading.set(true);
+    try {
+      await this.svc.release(device.id);
+    } catch {
+      const err = await this.alertCtrl.create({
+        header: this.t.instant('admin.dialogs.release_failed'),
+        message: this.t.instant('admin.dialogs.release_failed_msg', { hostname: device.hostname }),
+        buttons: [this.t.instant('common.ok')],
+      });
+      await err.present();
     } finally {
       this.actionLoading.set(false);
     }

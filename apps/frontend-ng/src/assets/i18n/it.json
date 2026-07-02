@@ -39,7 +39,8 @@
     "last_7_days": "Ultimi 7 giorni",
     "period": "Periodo",
     "all": "Tutti",
-    "activate": "Attiva"
+    "activate": "Attiva",
+    "ok": "OK"
   },
   "errors": {
     "network": "Impossibile raggiungere il server. Controlla la connessione e riprova.",
@@ -760,7 +761,8 @@
       },
       "actions": {
         "view": "Visualizza",
-        "restart": "Riavvia"
+        "restart": "Riavvia",
+        "release": "Rilascia"
       },
       "empty": {
         "title": "Nessun dispositivo"
@@ -892,7 +894,12 @@
       "user_suspend_msg": "Sospendere {{email}}? Perderà subito l'accesso.",
       "suspend": "Sospendi",
       "user_activate": "Attiva utente",
-      "user_activate_msg": "Riattivare {{email}}?"
+      "user_activate_msg": "Riattivare {{email}}?",
+      "device_release": "Rilascia dispositivo",
+      "device_release_msg": "Rilasciare {{hostname}} nel pool non assegnato? Le sue chiavi API vengono revocate e un altro cliente potrà rivendicarlo. Lo storico viene mantenuto.",
+      "release": "Rilascia",
+      "release_failed": "Rilascio non riuscito",
+      "release_failed_msg": "Impossibile rilasciare {{hostname}}. Riprova."
     }
   },
   "components": {

@@ -1,5 +1,8 @@
 import { inject, Injectable, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 import { Api } from '@ng/core/api/generated/api';
+import { ApiConfiguration } from '@ng/core/api/generated/api-configuration';
 import { listAdminDevices } from '@ng/core/api/generated/fn/admin/list-admin-devices';
 import { createDeviceCommand } from '@ng/core/api/generated/fn/devices/create-device-command';
 import { ApiError } from '@ng/core/errors/api-error';
@@ -27,6 +30,8 @@ export interface AdminDeviceStats {
 @Injectable({ providedIn: 'root' })
 export class AdminDevicesService {
   private readonly api = inject(Api);
+  private readonly http = inject(HttpClient);
+  private readonly baseUrl = inject(ApiConfiguration).rootUrl;
   private readonly _devices = signal<AdminDevice[]>([]);
   private readonly _stats = signal<AdminDeviceStats>({ total: 0, online: 0, offline: 0, maintenance: 0, error: 0 });
   private readonly _loading = signal(false);
@@ -60,6 +65,16 @@ export class AdminDevicesService {
 
   async sendCommand(deviceId: string, command: 'REBOOT' | 'RESTART'): Promise<void> {
     await this.api.invoke(createDeviceCommand, { id: deviceId, body: { command } });
+    await this.load(this.lastStatus);
+  }
+
+  /**
+   * Release a device from its customer (SUPERADMIN, leasing hand-back): returns
+   * it to the unclaimed pool and invalidates its keys. `id` is the device's
+   * public id (AdminDevice.id). Not in the generated client, so called directly.
+   */
+  async release(id: string): Promise<void> {
+    await firstValueFrom(this.http.post(`${this.baseUrl}/devices/${id}/release`, {}));
     await this.load(this.lastStatus);
   }
 

@@ -39,7 +39,8 @@
     "last_7_days": "Últimos 7 días",
     "period": "Período",
     "all": "Todos",
-    "activate": "Activar"
+    "activate": "Activar",
+    "ok": "OK"
   },
   "errors": {
     "network": "No se puede conectar con el servidor. Comprueba tu conexión e inténtalo de nuevo.",
@@ -760,7 +761,8 @@
       },
       "actions": {
         "view": "Ver",
-        "restart": "Reiniciar"
+        "restart": "Reiniciar",
+        "release": "Liberar"
       },
       "empty": {
         "title": "Sin dispositivos"
@@ -892,7 +894,12 @@
       "user_suspend_msg": "¿Suspender a {{email}}? Perderá el acceso de inmediato.",
       "suspend": "Suspender",
       "user_activate": "Activar usuario",
-      "user_activate_msg": "¿Reactivar a {{email}}?"
+      "user_activate_msg": "¿Reactivar a {{email}}?",
+      "device_release": "Liberar dispositivo",
+      "device_release_msg": "¿Liberar {{hostname}} al pool sin asignar? Se revocan sus API keys y otro cliente podrá reclamarlo. El histórico se conserva.",
+      "release": "Liberar",
+      "release_failed": "Error al liberar",
+      "release_failed_msg": "No se pudo liberar {{hostname}}. Inténtalo de nuevo."
     }
   },
   "components": {

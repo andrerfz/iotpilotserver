@@ -39,7 +39,8 @@
     "last_7_days": "7 derniers jours",
     "period": "Période",
     "all": "Tous",
-    "activate": "Activer"
+    "activate": "Activer",
+    "ok": "OK"
   },
   "errors": {
     "network": "Impossible de joindre le serveur. Vérifiez votre connexion et réessayez.",
@@ -760,7 +761,8 @@
       },
       "actions": {
         "view": "Voir",
-        "restart": "Redémarrer"
+        "restart": "Redémarrer",
+        "release": "Libérer"
       },
       "empty": {
         "title": "Aucun appareil"
@@ -892,7 +894,12 @@
       "user_suspend_msg": "Suspendre {{email}} ? Il perdra l'accès immédiatement.",
       "suspend": "Suspendre",
       "user_activate": "Activer l'utilisateur",
-      "user_activate_msg": "Réactiver {{email}} ?"
+      "user_activate_msg": "Réactiver {{email}} ?",
+      "device_release": "Libérer l'appareil",
+      "device_release_msg": "Libérer {{hostname}} dans le pool non attribué ? Ses clés API sont révoquées et un autre client pourra le revendiquer. L'historique est conservé.",
+      "release": "Libérer",
+      "release_failed": "Échec de la libération",
+      "release_failed_msg": "Impossible de libérer {{hostname}}. Veuillez réessayer."
     }
   },
   "components": {

@@ -99,6 +99,8 @@ export class DeviceServiceProvider implements BoundedContextProvider {
     const {UpdateDeviceHandler} = require('@iotpilot/core/device/application/commands/update-device/update-device.handler');
     const {RemoveDeviceCommand} = require('@iotpilot/core/device/application/commands/remove-device/remove-device.command');
     const {RemoveDeviceHandler} = require('@iotpilot/core/device/application/commands/remove-device/remove-device.handler');
+    const {ReleaseDeviceCommand} = require('@iotpilot/core/device/application/commands/release-device/release-device.command');
+    const {ReleaseDeviceHandler} = require('@iotpilot/core/device/application/commands/release-device/release-device.handler');
     const {BulkRegisterDevicesCommand} = require('@iotpilot/core/device/application/commands/bulk-register-devices/bulk-register-devices.command');
     const {BulkRegisterDevicesHandler} = require('@iotpilot/core/device/application/commands/bulk-register-devices/bulk-register-devices.handler');
     const {ProcessHeartbeatCommand} = require('@iotpilot/core/device/application/commands/process-heartbeat/process-heartbeat.command');
@@ -142,6 +144,7 @@ export class DeviceServiceProvider implements BoundedContextProvider {
     commandBus.register(RegisterDeviceCompleteCommand, new RegisterDeviceCompleteHandler(deviceRepo, prisma));
     commandBus.register(UpdateDeviceCommand, new UpdateDeviceHandler(deviceRepo, logger, eventBus));
     commandBus.register(RemoveDeviceCommand, new RemoveDeviceHandler(deviceRemover, deviceRepo, eventBus));
+    commandBus.register(ReleaseDeviceCommand, new ReleaseDeviceHandler(prisma));
     commandBus.register(BulkRegisterDevicesCommand, new BulkRegisterDevicesHandler(deviceRepo, logger, cryptoService));
     commandBus.register(ProcessHeartbeatCommand, new ProcessHeartbeatHandler(prisma, eventBus));
     commandBus.register(RecordSensorReadingCommand, new RecordSensorReadingHandler(prisma));

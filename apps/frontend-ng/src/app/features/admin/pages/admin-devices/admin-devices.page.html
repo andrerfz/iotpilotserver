@@ -60,6 +60,13 @@
           {{ 'admin.devices.actions.restart' | translate }}
         </ion-button>
       }
+      @if (row.status !== 'UNCLAIMED') {
+        <ion-button size="small" fill="outline" color="danger"
+          [disabled]="actionLoading()" (click)="onRelease(row)">
+          <ion-icon slot="start" name="unlink-outline"></ion-icon>
+          {{ 'admin.devices.actions.release' | translate }}
+        </ion-button>
+      }
     </div>
   </ng-template>
 

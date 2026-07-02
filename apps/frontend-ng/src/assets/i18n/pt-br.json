@@ -39,7 +39,8 @@
     "last_7_days": "Últimos 7 dias",
     "period": "Período",
     "all": "Todos",
-    "activate": "Ativar"
+    "activate": "Ativar",
+    "ok": "OK"
   },
   "errors": {
     "network": "Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.",
@@ -760,7 +761,8 @@
       },
       "actions": {
         "view": "Visualizar",
-        "restart": "Reiniciar"
+        "restart": "Reiniciar",
+        "release": "Liberar"
       },
       "empty": {
         "title": "Sem dispositivos"
@@ -892,7 +894,12 @@
       "user_suspend_msg": "Suspender {{email}}? Perderá o acesso imediatamente.",
       "suspend": "Suspender",
       "user_activate": "Ativar usuário",
-      "user_activate_msg": "Reativar {{email}}?"
+      "user_activate_msg": "Reativar {{email}}?",
+      "device_release": "Liberar dispositivo",
+      "device_release_msg": "Liberar {{hostname}} de volta ao pool não atribuído? Suas chaves de API são revogadas e outro cliente poderá reivindicá-lo. O histórico é mantido.",
+      "release": "Liberar",
+      "release_failed": "Falha ao liberar",
+      "release_failed_msg": "Não foi possível liberar {{hostname}}. Tente novamente."
     }
   },
   "components": {

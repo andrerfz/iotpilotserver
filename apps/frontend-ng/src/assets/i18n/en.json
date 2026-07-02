@@ -39,7 +39,8 @@
     "last_7_days": "Last 7 Days",
     "period": "Period",
     "all": "All",
-    "activate": "Activate"
+    "activate": "Activate",
+    "ok": "OK"
   },
   "errors": {
     "network": "Unable to reach the server. Check your connection and try again.",
@@ -760,7 +761,8 @@
       },
       "actions": {
         "view": "View",
-        "restart": "Restart"
+        "restart": "Restart",
+        "release": "Release"
       },
       "empty": {
         "title": "No devices"
@@ -892,7 +894,12 @@
       "user_suspend_msg": "Suspend {{email}}? They will lose access immediately.",
       "suspend": "Suspend",
       "user_activate": "Activate User",
-      "user_activate_msg": "Reactivate {{email}}?"
+      "user_activate_msg": "Reactivate {{email}}?",
+      "device_release": "Release Device",
+      "device_release_msg": "Release {{hostname}} back to the unclaimed pool? Its API keys are revoked and another customer can then claim it. Historical data is kept.",
+      "release": "Release",
+      "release_failed": "Release Failed",
+      "release_failed_msg": "Could not release {{hostname}}. Please try again."
     }
   },
   "components": {

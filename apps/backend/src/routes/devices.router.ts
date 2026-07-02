@@ -1113,6 +1113,45 @@ devicesRouter.delete('/:id', requireAuth(), async (req: AuthenticatedRequest, re
 });
 
 // ---------------------------------------------------------------------------
+// POST /devices/:id/release - Release a device from its customer (SUPERADMIN)
+// Leasing hand-back: returns the device to the UNCLAIMED pool with no owner and
+// invalidates its API keys, so another customer can claim it fresh. Historical
+// metrics/alerts are kept, scoped to the customer that generated them.
+// ---------------------------------------------------------------------------
+
+devicesRouter.post('/:id/release', requireAuth('SUPERADMIN'), async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const serviceContainer = ServiceContainer.getInstance();
+        const commandBus = serviceContainer.getCommandBus();
+
+        const publicId = req.params.id;
+        const deviceId = await resolveDevicePublicId(publicId);
+        if (!deviceId) {
+            send.notFound(res, 'Device not found');
+            return;
+        }
+
+        // Use the tenant context built by the auth middleware so the audit log
+        // records the real SUPERADMIN actor (userId, correlationId), not a
+        // generic super-admin principal.
+        const tenantContext = req.tenant ?? TenantContextImpl.createSuperAdmin();
+
+        const { ReleaseDeviceCommand } = await import('@iotpilot/core/device/application/commands/release-device/release-device.command');
+        const command = ReleaseDeviceCommand.create(deviceId, tenantContext);
+        const result = await commandBus.execute<typeof command, { deviceId: string; invalidatedKeys: number }>(command);
+
+        send.ok(res, {
+            message: 'Device released and returned to the unclaimed pool',
+            deviceId: result.deviceId,
+            invalidatedKeys: result.invalidatedKeys,
+        });
+    } catch (err) {
+        console.error('❌ DEVICE RELEASE: Failed to release device:', err);
+        send.fromError(res, err);
+    }
+});
+
+// ---------------------------------------------------------------------------
 // GET /devices/:id/alerts - List alerts for a device
 // ---------------------------------------------------------------------------
 
