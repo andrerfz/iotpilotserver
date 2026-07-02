@@ -65,7 +65,7 @@ addIcons({
             <span class="more-tile__icon"><ion-icon name="person-outline"></ion-icon></span>
             <span class="more-tile__label">{{ 'settings.account' | translate }}</span>
           </a>
-          @if (showAdmin()) {
+          @if (showAdmin() && (!isSuperAdmin() || ctx.isActive())) {
             <a class="more-tile" routerLink="settings/org" routerLinkActive="more-tile--active" (click)="close()">
               <span class="more-tile__icon"><ion-icon name="business-outline"></ion-icon></span>
               <span class="more-tile__label">{{ 'settings.org' | translate }}</span>

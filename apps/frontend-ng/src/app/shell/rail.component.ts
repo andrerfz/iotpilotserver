@@ -71,7 +71,7 @@ addIcons({
             <ion-icon name="person-outline"></ion-icon>
             <span>{{ 'settings.account' | translate }}</span>
           </a>
-          @if (showAdmin()) {
+          @if (showAdmin() && (!isSuperAdmin() || tenantCtx.isActive())) {
             <a class="nav-item" routerLink="settings/org" routerLinkActive="nav-item--active">
               <ion-icon name="business-outline"></ion-icon>
               <span>{{ 'settings.org' | translate }}</span>
