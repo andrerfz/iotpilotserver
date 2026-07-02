@@ -248,7 +248,7 @@ export class DashboardPage implements AfterViewInit, ViewWillEnter {
   ngAfterViewInit(): void {
     this.columns.set([
       { key: 'hostname', label: 'fields.device', sortable: true, cellTemplate: this.deviceCellTpl },
-      { key: 'status', label: 'fields.status', sortable: true, cellTemplate: this.statusCellTpl },
+      { key: 'status', label: 'fields.status', sortable: true, cellTemplate: this.statusCellTpl, hideOnMobile: true },
       { key: 'location', label: 'fields.location', hideOnMobile: true },
       { key: 'cpuUsage', label: 'metrics.cpu', sortable: true, hideOnMobile: true },
       { key: 'lastSeen', label: 'fields.last_seen', cellTemplate: this.lastSeenCellTpl },
