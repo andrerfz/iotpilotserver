@@ -153,3 +153,50 @@
 .td-strong { font-size: 13px; font-weight: 600; }
 .td-mono   { font-family: var(--ion-font-family-mono, monospace); font-size: 11px; }
 .dim       { color: var(--ion-color-medium); }
+
+/* "+" add-device chooser (short bottom sheet) — ported 1:1 from devices.page.scss. */
+.add-chooser {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.add-chooser__opt {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--ui-border);
+  border-radius: 12px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.add-chooser__opt:hover {
+  background: var(--surface-2);
+}
+
+.add-chooser__icon {
+  font-size: 24px;
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.add-chooser__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.add-chooser__title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+.add-chooser__desc {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.add-chooser__opt[disabled] { opacity: 0.5; cursor: not-allowed; }

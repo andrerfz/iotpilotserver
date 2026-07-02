@@ -23,10 +23,13 @@ import {
   cloudDownloadOutline,
   flashOutline,
   hardwareChipOutline,
+  qrCodeOutline,
+  bluetoothOutline,
   wifiOutline,
 } from 'ionicons/icons';
 
 import {
+  BottomSheetComponent,
   DateRangePickerComponent,
   DataTableComponent,
   DevicePickerComponent,
@@ -52,6 +55,7 @@ import { SocketService } from '@ng/core/realtime/socket.service';
 import { DashboardService } from '../../services/dashboard.service';
 import { applyDeviceFilters } from '../../filters/device-filters';
 import { RegisterDeviceSheetComponent } from '../../components/register-device-sheet/register-device-sheet.component';
+import { BleClaimSheetComponent } from '../../components/ble-claim-sheet/ble-claim-sheet.component';
 import { TopbarService } from '@ng/shell/topbar.service';
 import { TenantContextService } from '@ng/core/auth/tenant-context.service';
 
@@ -62,6 +66,8 @@ addIcons({
   alertCircleOutline,
   hardwareChipOutline,
   flashOutline,
+  qrCodeOutline,
+  bluetoothOutline,
 });
 
 const STATUS_OPTIONS: PickerOption[] = [
@@ -94,6 +100,8 @@ const STATUS_OPTIONS: PickerOption[] = [
     MultiSelectPickerComponent,
     DateRangePickerComponent,
     RegisterDeviceSheetComponent,
+    BleClaimSheetComponent,
+    BottomSheetComponent,
     IonRefresher, IonRefresherContent,
     TranslatePipe,
   ],
@@ -172,6 +180,14 @@ export class DashboardPage implements AfterViewInit, ViewWillEnter {
   @ViewChild('statusCell') private statusCellTpl!: TemplateRef<{ $implicit: Device }>;
 
   private readonly registerSheet = viewChild(RegisterDeviceSheetComponent);
+  private readonly bleClaimSheet = viewChild(BleClaimSheetComponent);
+  private readonly addSheet = viewChild<BottomSheetComponent>('addSheet');
+
+  /** Web Bluetooth present (desktop Chrome/Edge / Electron) → offer the BLE option. */
+  protected readonly bleAvailable = typeof navigator !== 'undefined' && 'bluetooth' in navigator;
+  /** Which add-flow the operator picked; opened after the chooser dismisses. */
+  private readonly pendingAdd = signal<'manual' | 'ble' | null>(null);
+
   readonly columns = signal<ColumnDef<Device>[]>([]);
 
   constructor() {
@@ -249,7 +265,26 @@ export class DashboardPage implements AfterViewInit, ViewWillEnter {
   }
 
   onRegisterDevice(): void {
-    this.registerSheet()?.open();
+    this.pendingAdd.set(null);
+    this.addSheet()?.open();
+  }
+
+  protected chooseManual(): void {
+    this.pendingAdd.set('manual');
+    this.addSheet()?.close();
+  }
+
+  protected chooseBle(): void {
+    this.pendingAdd.set('ble');
+    this.addSheet()?.close();
+  }
+
+  /** After the chooser dismisses, open the picked flow (avoids stacked modals). */
+  protected onAddSheetDismiss(): void {
+    const choice = this.pendingAdd();
+    this.pendingAdd.set(null);
+    if (choice === 'manual') this.registerSheet()?.open();
+    else if (choice === 'ble') void this.bleClaimSheet()?.open();
   }
 
   onDeviceClaimed(): void {

@@ -9,6 +9,7 @@ import { DashboardPage } from './dashboard.page';
 import { DashboardService } from '../../services/dashboard.service';
 import { AlertsStream } from '@ng/core/realtime/alerts.stream';
 import { SocketService } from '@ng/core/realtime/socket.service';
+import { provideBle } from '@ng/core/ble/ble.providers';
 import type { Alert } from '@ng/core/api/generated/models/alert';
 import type { Device } from '@ng/core/api/generated/models/device';
 
@@ -50,6 +51,7 @@ function buildProviders(overrides: {
     { provide: DashboardService, useValue: dashService },
     { provide: AlertsStream, useValue: { alerts$: alertSubject.asObservable() } },
     { provide: SocketService, useValue: { on: socketOn } },
+    provideBle(),
   ];
 }
 
