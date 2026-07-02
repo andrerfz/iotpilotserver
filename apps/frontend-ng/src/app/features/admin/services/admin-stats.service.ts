@@ -26,8 +26,9 @@ export class AdminStatsService {
     this._loading.set(true);
     this._error.set(null);
     try {
-      const res = await this.api.invoke(getAdminStats, {});
-      this._data.set(res as AdminStats);
+      const raw = await this.api.invoke(getAdminStats, {}) as unknown;
+      const res = raw as { data?: AdminStats };
+      this._data.set(res.data ?? null);
     } catch (e) {
       this._error.set(e instanceof ApiError ? e : new ApiError(0, 'UNKNOWN', String(e)));
     } finally {

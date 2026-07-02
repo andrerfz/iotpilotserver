@@ -61,6 +61,7 @@ import { AuthService } from '@ng/core/auth/auth.service';
 import { hasRole } from '@ng/core/auth/roles';
 import { AdminDevicesService } from '../../../admin/services/admin-devices.service';
 import type { AdminDevice } from '../../../admin/services/admin-devices.service';
+import { hasSystemMetrics } from '../../device-capabilities';
 
 addIcons({
   addOutline,
@@ -243,6 +244,13 @@ export class DevicesPage implements ViewWillEnter {
 
   onDeviceRowClick(device: Device): void {
     if (device.id) void this.router.navigate(['/app/devices', device.id]);
+  }
+
+  /** Mobile meta pairs — only for device types that report system-level metrics. */
+  protected deviceMeta(d: Device): string[] {
+    if (!hasSystemMetrics(d.deviceType)) return [];
+    const cpu = d.cpuUsage !== null && d.cpuUsage !== undefined ? d.cpuUsage + '%' : '—';
+    return ['Ubic', d.location ?? '—', 'CPU', cpu];
   }
 
   onPlatformRowClick(device: AdminDevice): void {

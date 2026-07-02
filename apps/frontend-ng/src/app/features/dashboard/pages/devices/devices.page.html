@@ -139,7 +139,7 @@
           <ui-list-row
             [title]="d.hostname ?? d.name ?? d.id ?? ''"
             [subtitle]="(d.deviceType ?? 'Unknown') + (d.ipAddress ? ' · ' + d.ipAddress : '')"
-            [meta]="['Status', d.status ?? 'OFFLINE', 'Location', d.location ?? '—', 'CPU', d.cpuUsage !== null && d.cpuUsage !== undefined ? d.cpuUsage + '%' : '—']"
+            [meta]="deviceMeta(d)"
             [cols]="[
               { label: 'Location', value: d.location ?? '—' },
               { label: 'CPU', value: d.cpuUsage !== null && d.cpuUsage !== undefined ? d.cpuUsage + '%' : '—' },
