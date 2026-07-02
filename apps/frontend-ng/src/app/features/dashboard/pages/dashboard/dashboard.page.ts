@@ -1,9 +1,6 @@
 import {
-  AfterViewInit,
   ChangeDetectionStrategy,
   Component,
-  TemplateRef,
-  ViewChild,
   computed,
   effect,
   inject,
@@ -15,7 +12,7 @@ import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { skip } from 'rxjs';
 import { NgxEchartsDirective } from 'ngx-echarts';
 import type { EChartsOption } from 'echarts';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
 import {
   addOutline,
@@ -31,7 +28,6 @@ import {
 import {
   BottomSheetComponent,
   DateRangePickerComponent,
-  DataTableComponent,
   DevicePickerComponent,
   EmptyStateComponent,
   IonCard,
@@ -41,13 +37,15 @@ import {
   MetricCardComponent,
   MetricGridComponent,
   MultiSelectPickerComponent,
-  StatusBadgeComponent,
   StatusDotComponent,
+  SwipeListComponent,
+  UiListRowComponent,
   ViewWillEnter,
   IonRefresher,
   IonRefresherContent,
 } from '@ng/shared/ui';
-import type { ColumnDef, DevicePickerItem, PickerOption } from '@ng/shared/ui';
+import type { DevicePickerItem, PickerOption, ListRowCol } from '@ng/shared/ui';
+import { deviceMetricCols as metricCols, deviceMetricMeta as metricMeta } from '../../device-metrics';
 import type { Device } from '@ng/core/api/generated/models/device';
 import type { Alert } from '@ng/core/api/generated/models/alert';
 import { AlertsStream } from '@ng/core/realtime/alerts.stream';
@@ -92,9 +90,9 @@ const STATUS_OPTIONS: PickerOption[] = [
     IonSkeletonText,
     MetricCardComponent,
     MetricGridComponent,
-    DataTableComponent,
-    StatusBadgeComponent,
-    StatusDotComponent,
+    SwipeListComponent,
+    UiListRowComponent,
+      StatusDotComponent,
     EmptyStateComponent,
     DevicePickerComponent,
     MultiSelectPickerComponent,
@@ -106,13 +104,14 @@ const STATUS_OPTIONS: PickerOption[] = [
     TranslatePipe,
   ],
 })
-export class DashboardPage implements AfterViewInit, ViewWillEnter {
+export class DashboardPage implements ViewWillEnter {
   private readonly dashService = inject(DashboardService);
   private readonly alertsStream = inject(AlertsStream);
   private readonly socketService = inject(SocketService);
   private readonly router = inject(Router);
   private readonly topbar = inject(TopbarService);
   private readonly tenantCtx = inject(TenantContextService);
+  private readonly t = inject(TranslateService);
 
   // ── Service surfaces (read-only passthrough) ──────────────────────────────
   readonly devicesLoading = this.dashService.devices.loading;
@@ -175,11 +174,6 @@ export class DashboardPage implements AfterViewInit, ViewWillEnter {
     };
   });
 
-  // ── DataTable columns (set after view init) ───────────────────────────────
-  @ViewChild('deviceCell') private deviceCellTpl!: TemplateRef<{ $implicit: Device }>;
-  @ViewChild('statusCell') private statusCellTpl!: TemplateRef<{ $implicit: Device }>;
-  @ViewChild('lastSeenCell') private lastSeenCellTpl!: TemplateRef<{ $implicit: Device }>;
-
   private readonly registerSheet = viewChild(RegisterDeviceSheetComponent);
   private readonly bleClaimSheet = viewChild(BleClaimSheetComponent);
   private readonly addSheet = viewChild<BottomSheetComponent>('addSheet');
@@ -188,8 +182,6 @@ export class DashboardPage implements AfterViewInit, ViewWillEnter {
   protected readonly bleAvailable = typeof navigator !== 'undefined' && 'bluetooth' in navigator;
   /** Which add-flow the operator picked; opened after the chooser dismisses. */
   private readonly pendingAdd = signal<'manual' | 'ble' | null>(null);
-
-  readonly columns = signal<ColumnDef<Device>[]>([]);
 
   constructor() {
     // Sync mutable device rows from service when load completes
@@ -245,15 +237,14 @@ export class DashboardPage implements AfterViewInit, ViewWillEnter {
     ]);
   }
 
-  ngAfterViewInit(): void {
-    this.columns.set([
-      { key: 'hostname', label: 'fields.device', sortable: true, cellTemplate: this.deviceCellTpl },
-      { key: 'status', label: 'fields.status', sortable: true, cellTemplate: this.statusCellTpl, hideOnMobile: true },
-      { key: 'location', label: 'fields.location', hideOnMobile: true },
-      { key: 'cpuUsage', label: 'metrics.cpu', sortable: true, hideOnMobile: true },
-      { key: 'lastSeen', label: 'fields.last_seen', cellTemplate: this.lastSeenCellTpl },
-      { key: '_nav', label: '', width: '40px' },
-    ]);
+  /** Per-device metrics (shared with the devices list); see device-metrics.ts. */
+  protected deviceMetricCols(d: Device): ListRowCol[] {
+    return metricCols(d, this.t);
+  }
+
+  /** Same metrics flattened for the mobile meta row. */
+  protected deviceMeta(d: Device): string[] {
+    return metricMeta(d, this.t);
   }
 
   onPeriodChange(preset: string): void {
@@ -263,17 +254,6 @@ export class DashboardPage implements AfterViewInit, ViewWillEnter {
 
   onDeviceRowClick(device: Device): void {
     if (device.id) void this.router.navigate(['/app/devices', device.id]);
-  }
-
-  /** Compact relative "time since" for the last-seen column: —, <1m, 5m, 3h, 2d. */
-  protected relativeTime(ts: string | null | undefined): string {
-    if (!ts) return '—';
-    const mins = Math.floor((Date.now() - new Date(ts).getTime()) / 60_000);
-    if (mins < 1) return '<1m';
-    if (mins < 60) return `${mins}m`;
-    const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `${hrs}h`;
-    return `${Math.floor(hrs / 24)}d`;
   }
 
   onRegisterDevice(): void {

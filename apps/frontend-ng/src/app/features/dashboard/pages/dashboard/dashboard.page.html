@@ -80,13 +80,25 @@
           </div>
         </div>
 
-        <ui-data-table
-          [columns]="$any(columns())"
-          [rows]="$any(filteredDevices())"
-          [pageSize]="6"
-          [rowClickable]="true"
-          (rowClick)="onDeviceRowClick($event)">
-        </ui-data-table>
+        <ui-swipe-list
+          [items]="filteredDevices()"
+          [actions]="[]"
+          (itemClick)="onDeviceRowClick($any($event))">
+          <ng-template #itemContent let-d>
+            <ui-list-row
+              [title]="d.hostname ?? d.name ?? d.id ?? ''"
+              [subtitle]="(d.deviceType ?? 'Unknown') + (d.ipAddress ? ' · ' + d.ipAddress : '')"
+              [meta]="deviceMeta(d)"
+              [cols]="deviceMetricCols(d)">
+              <div lead class="row-lead">
+                <ui-status-dot [status]="d.status ?? 'OFFLINE'"></ui-status-dot>
+                @if (d.alertsCount) {
+                  <span class="row-alert-badge" [title]="'devices.alerts_active' | translate">{{ d.alertsCount }}</span>
+                }
+              </div>
+            </ui-list-row>
+          </ng-template>
+        </ui-swipe-list>
       </div>
 
       <!-- Right: alerts feed + chart -->
@@ -139,25 +151,6 @@
   }
 
 </ion-content>
-
-<!-- Cell templates (not rendered directly — referenced by DataTable) -->
-<ng-template #deviceCell let-row>
-  <div class="device-cell">
-    <ui-status-dot [status]="row.status ?? 'OFFLINE'"></ui-status-dot>
-    <div>
-      <div class="td-strong">{{ row.hostname ?? row.name ?? row.id }}</div>
-      <div class="td-mono dim">{{ row.deviceId }} · {{ row.deviceType }}</div>
-    </div>
-  </div>
-</ng-template>
-
-<ng-template #statusCell let-row>
-  <ui-status-badge [status]="row.status ?? 'OFFLINE'"></ui-status-badge>
-</ng-template>
-
-<ng-template #lastSeenCell let-row>
-  {{ relativeTime(row.lastSeen) }}
-</ng-template>
 
 <!-- "+" chooser: manual entry vs BLE scan -->
 <ui-bottom-sheet

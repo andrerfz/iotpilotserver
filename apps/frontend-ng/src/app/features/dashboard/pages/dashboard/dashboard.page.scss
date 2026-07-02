@@ -143,16 +143,6 @@
   color: var(--ion-color-medium);
 }
 
-// Device cell
-.device-cell {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.td-strong { font-size: 13px; font-weight: 600; }
-.td-mono   { font-family: var(--ion-font-family-mono, monospace); font-size: 11px; }
-.dim       { color: var(--ion-color-medium); }
 
 /* "+" add-device chooser (short bottom sheet) — ported 1:1 from devices.page.scss. */
 .add-chooser {
@@ -200,3 +190,26 @@
 }
 
 .add-chooser__opt[disabled] { opacity: 0.5; cursor: not-allowed; }
+
+/* Device row lead: status dot + optional alert badge (shared look with the
+   devices list) so devices with open alerts stand out. */
+.row-lead {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.row-alert-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}

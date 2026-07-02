@@ -49,6 +49,7 @@ import {
   AlertController,
 } from '@ng/shared/ui';
 import type { DevicePickerItem, PickerOption, SwipeAction, ListRowCol } from '@ng/shared/ui';
+import { deviceMetricCols as metricCols, deviceMetricMeta as metricMeta } from '../../device-metrics';
 import type { Device } from '@ng/core/api/generated/models/device';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { SocketService } from '@ng/core/realtime/socket.service';
@@ -261,41 +262,14 @@ export class DevicesPage implements ViewWillEnter {
   }
 
   /** Mobile meta pairs — only for device types that report system-level metrics. */
-  /**
-   * Metrics to show for a device, derived from whatever it actually reported
-   * (non-null values in its last record) rather than fixed columns: sensor
-   * devices surface Temp/Battery/Signal, system devices surface CPU/Mem/Disk.
-   * Always ends with "last seen". Empty metrics are omitted (no "—" noise).
-   */
+  /** Per-device metrics (shared with the dashboard); see device-metrics.ts. */
   protected deviceMetricCols(d: Device): ListRowCol[] {
-    const has = (v: number | null | undefined): v is number => v !== null && v !== undefined;
-    const cols: ListRowCol[] = [];
-    if (has(d.temperature))    cols.push({ label: this.t.instant('devices.metric.temp'),    value: `${Math.round(d.temperature)}°` });
-    if (has(d.batteryLevel))   cols.push({ label: this.t.instant('devices.metric.battery'), value: `${Math.round(d.batteryLevel)}%` });
-    if (has(d.signalStrength)) cols.push({ label: this.t.instant('devices.metric.signal'),  value: `${Math.round(d.signalStrength)}dBm` });
-    if (has(d.cpuUsage))       cols.push({ label: this.t.instant('devices.metric.cpu'),     value: `${Math.round(d.cpuUsage)}%` });
-    if (has(d.memoryUsage))    cols.push({ label: this.t.instant('devices.metric.mem'),     value: `${Math.round(d.memoryUsage)}%` });
-    if (has(d.diskUsage))      cols.push({ label: this.t.instant('devices.metric.disk'),    value: `${Math.round(d.diskUsage)}%` });
-    cols.push({ label: this.t.instant('devices.metric.last_seen'), value: this.relativeTime(d.lastSeen) });
-    return cols;
+    return metricCols(d, this.t);
   }
 
-  /** Same metrics as deviceMetricCols, flattened for the mobile meta row. */
+  /** Same metrics flattened for the mobile meta row. */
   protected deviceMeta(d: Device): string[] {
-    return this.deviceMetricCols(d).flatMap(c => [c.label, c.value]);
-  }
-
-  /** Compact relative "time since" for last-seen: —, now, 5m, 3h, 2d. */
-  protected relativeTime(ts: string | null | undefined): string {
-    if (!ts) return '—';
-    const diff = Date.now() - new Date(ts).getTime();
-    if (diff < 0) return this.t.instant('devices.time.now');
-    const mins = Math.floor(diff / 60_000);
-    if (mins < 1) return this.t.instant('devices.time.now');
-    if (mins < 60) return `${mins}m`;
-    const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `${hrs}h`;
-    return `${Math.floor(hrs / 24)}d`;
+    return metricMeta(d, this.t);
   }
 
   onPlatformRowClick(device: AdminDevice): void {
