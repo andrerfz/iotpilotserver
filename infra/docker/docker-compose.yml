@@ -88,6 +88,13 @@ services:
       - DEVICE_API_KEY=${DEVICE_API_KEY}
       - DOMAIN=${DOMAIN}
       - APP_URL=https://${NEXT_PUBLIC_DOMAIN_TUNEL}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_SECURE=${SMTP_SECURE}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+      - FROM_EMAIL=${FROM_EMAIL}
+      - FROM_NAME=${FROM_NAME}
     volumes:
       - ../../apps/backend/src:/app/apps/backend/src
       - ../../packages/core/src:/app/packages/core/src
@@ -126,6 +133,13 @@ services:
       - INFLUXDB_TOKEN=${INFLUXDB_TOKEN}
       - JWT_SECRET=${JWT_SECRET}
       - DEVICE_API_KEY=${DEVICE_API_KEY}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_SECURE=${SMTP_SECURE}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+      - FROM_EMAIL=${FROM_EMAIL}
+      - FROM_NAME=${FROM_NAME}
     volumes:
       - ../../apps/worker/src:/app/apps/worker/src
       - ../../packages/core/src:/app/packages/core/src
