@@ -62,3 +62,9 @@
   color: var(--text-muted); font-size: 12.5px; padding: 4px 8px;
 }
 .selbar__clear:hover { color: var(--text); }
+
+/* Columns opted out of small screens (ColumnDef.hideOnMobile) — keeps phone
+   tables from needing horizontal scroll. */
+@media (max-width: 640px) {
+  .col-hide-mobile { display: none; }
+}

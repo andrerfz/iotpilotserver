@@ -16,6 +16,8 @@ export interface ColumnDef<T extends object = Record<string, unknown>> {
   label: string;
   sortable?: boolean;
   width?: string;
+  /** Hide this column on narrow (phone) screens to avoid horizontal scroll. */
+  hideOnMobile?: boolean;
   /** Template reference for custom cell rendering. Receives the row as $implicit context. */
   cellTemplate?: TemplateRef<{ $implicit: T }>;
 }
@@ -64,6 +66,7 @@ interface SortState { key: string; dir: 1 | -1; }
               @for (col of columns(); track col.key) {
                 <th
                   [class.sortable]="col.sortable"
+                  [class.col-hide-mobile]="col.hideOnMobile"
                   [style.width]="col.width ?? null"
                   (click)="col.sortable ? doSort(col.key) : null"
                   (keydown.enter)="col.sortable ? doSort(col.key) : null"
@@ -108,7 +111,7 @@ interface SortState { key: string; dir: 1 | -1; }
                   </td>
                 }
                 @for (col of columns(); track col.key) {
-                  <td>
+                  <td [class.col-hide-mobile]="col.hideOnMobile">
                     @if (col.cellTemplate) {
                       <ng-container *ngTemplateOutlet="col.cellTemplate; context: { $implicit: row }"></ng-container>
                     } @else {

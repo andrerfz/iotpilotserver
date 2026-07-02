@@ -155,6 +155,10 @@
   <ui-status-badge [status]="row.status ?? 'OFFLINE'"></ui-status-badge>
 </ng-template>
 
+<ng-template #lastSeenCell let-row>
+  {{ relativeTime(row.lastSeen) }}
+</ng-template>
+
 <!-- "+" chooser: manual entry vs BLE scan -->
 <ui-bottom-sheet
   #addSheet

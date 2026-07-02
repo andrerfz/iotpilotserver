@@ -178,6 +178,7 @@ export class DashboardPage implements AfterViewInit, ViewWillEnter {
   // ── DataTable columns (set after view init) ───────────────────────────────
   @ViewChild('deviceCell') private deviceCellTpl!: TemplateRef<{ $implicit: Device }>;
   @ViewChild('statusCell') private statusCellTpl!: TemplateRef<{ $implicit: Device }>;
+  @ViewChild('lastSeenCell') private lastSeenCellTpl!: TemplateRef<{ $implicit: Device }>;
 
   private readonly registerSheet = viewChild(RegisterDeviceSheetComponent);
   private readonly bleClaimSheet = viewChild(BleClaimSheetComponent);
@@ -248,9 +249,9 @@ export class DashboardPage implements AfterViewInit, ViewWillEnter {
     this.columns.set([
       { key: 'hostname', label: 'fields.device', sortable: true, cellTemplate: this.deviceCellTpl },
       { key: 'status', label: 'fields.status', sortable: true, cellTemplate: this.statusCellTpl },
-      { key: 'location', label: 'fields.location' },
-      { key: 'cpuUsage', label: 'metrics.cpu', sortable: true },
-      { key: 'lastSeen', label: 'fields.last_seen' },
+      { key: 'location', label: 'fields.location', hideOnMobile: true },
+      { key: 'cpuUsage', label: 'metrics.cpu', sortable: true, hideOnMobile: true },
+      { key: 'lastSeen', label: 'fields.last_seen', cellTemplate: this.lastSeenCellTpl },
       { key: '_nav', label: '', width: '40px' },
     ]);
   }
@@ -262,6 +263,17 @@ export class DashboardPage implements AfterViewInit, ViewWillEnter {
 
   onDeviceRowClick(device: Device): void {
     if (device.id) void this.router.navigate(['/app/devices', device.id]);
+  }
+
+  /** Compact relative "time since" for the last-seen column: —, <1m, 5m, 3h, 2d. */
+  protected relativeTime(ts: string | null | undefined): string {
+    if (!ts) return '—';
+    const mins = Math.floor((Date.now() - new Date(ts).getTime()) / 60_000);
+    if (mins < 1) return '<1m';
+    if (mins < 60) return `${mins}m`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h`;
+    return `${Math.floor(hrs / 24)}d`;
   }
 
   onRegisterDevice(): void {
