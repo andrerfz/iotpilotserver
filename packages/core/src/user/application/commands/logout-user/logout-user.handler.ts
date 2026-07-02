@@ -31,14 +31,20 @@ export class LogoutUserHandler implements CommandHandler<LogoutUserCommand, void
                 console.log('🗑️ LOGOUT USER: All user sessions invalidated');
             }
 
-            // Publish domain event
-            const loggedOutEvent = new UserLoggedOutEvent(
-                command.userId,
-                command.sessionToken,
-                command.tenantCustomerId
-            );
-            
-            await this.eventBus.publish(loggedOutEvent);
+            // Publish domain event. It is tenant-scoped, so it only applies when
+            // the user belongs to a tenant. A SUPERADMIN has no customerId; there
+            // is no valid tenant to scope the event to (and the session is already
+            // invalidated above), so we skip it rather than fabricate an invalid
+            // CustomerId.
+            if (command.tenantCustomerId) {
+                const loggedOutEvent = new UserLoggedOutEvent(
+                    command.userId,
+                    command.sessionToken,
+                    command.tenantCustomerId
+                );
+
+                await this.eventBus.publish(loggedOutEvent);
+            }
 
             console.log('✅ LOGOUT USER: User logged out successfully', {
                 userId: command.userId.getValue(),

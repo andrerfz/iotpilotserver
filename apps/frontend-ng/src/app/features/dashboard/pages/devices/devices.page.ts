@@ -24,6 +24,7 @@ import {
   qrCodeOutline,
   bluetoothOutline,
   globeOutline,
+  unlinkOutline,
 } from 'ionicons/icons';
 
 import {
@@ -45,10 +46,11 @@ import {
   ViewWillEnter,
   IonRefresher,
   IonRefresherContent,
+  AlertController,
 } from '@ng/shared/ui';
 import type { DevicePickerItem, PickerOption, SwipeAction } from '@ng/shared/ui';
 import type { Device } from '@ng/core/api/generated/models/device';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { SocketService } from '@ng/core/realtime/socket.service';
 import { DashboardService } from '../../services/dashboard.service';
 import { applyDeviceFilters } from '../../filters/device-filters';
@@ -76,6 +78,7 @@ addIcons({
   qrCodeOutline,
   bluetoothOutline,
   globeOutline,
+  unlinkOutline,
 });
 
 const STATUS_OPTIONS: PickerOption[] = [
@@ -122,6 +125,8 @@ export class DevicesPage implements ViewWillEnter {
   private readonly tenantCtx = inject(TenantContextService);
   private readonly exportService = inject(DeviceExportService);
   private readonly auth = inject(AuthService);
+  private readonly alertCtrl = inject(AlertController);
+  private readonly t = inject(TranslateService);
   readonly adminSvc = inject(AdminDevicesService);
 
   private readonly exportSheet = viewChild<BottomSheetComponent>('exportSheet');
@@ -182,7 +187,17 @@ export class DevicesPage implements ViewWillEnter {
   readonly totalCount = computed(() => this._deviceRows().length);
 
   readonly deviceRowActions: SwipeAction<Device>[] = [];
-  readonly platformRowActions: SwipeAction<AdminDevice>[] = [];
+  // SUPERADMIN cross-tenant view: release a claimed device back to the unclaimed
+  // pool (leasing hand-back). Hidden for already-unclaimed devices.
+  readonly platformRowActions: SwipeAction<AdminDevice>[] = [
+    {
+      key: 'release',
+      label: 'admin.devices.actions.release',
+      icon: 'unlink-outline',
+      color: 'danger',
+      show: (d) => d.status !== 'UNCLAIMED',
+    },
+  ];
 
   private readonly registerSheet = viewChild(RegisterDeviceSheetComponent);
   private readonly bleClaimSheet = viewChild(BleClaimSheetComponent);
@@ -255,6 +270,35 @@ export class DevicesPage implements ViewWillEnter {
 
   onPlatformRowClick(device: AdminDevice): void {
     void this.router.navigate(['/app/devices', device.id]);
+  }
+
+  onPlatformAction(ev: { key: string; item: AdminDevice }): void {
+    if (ev.key === 'release') void this.onRelease(ev.item);
+  }
+
+  private async onRelease(device: AdminDevice): Promise<void> {
+    const alert = await this.alertCtrl.create({
+      header: this.t.instant('admin.dialogs.device_release'),
+      message: this.t.instant('admin.dialogs.device_release_msg', { hostname: device.hostname }),
+      buttons: [
+        { text: this.t.instant('common.cancel'), role: 'cancel' },
+        { text: this.t.instant('admin.dialogs.release'), role: 'confirm', handler: () => void this.doRelease(device) },
+      ],
+    });
+    await alert.present();
+  }
+
+  private async doRelease(device: AdminDevice): Promise<void> {
+    try {
+      await this.adminSvc.release(device.id);
+    } catch {
+      const err = await this.alertCtrl.create({
+        header: this.t.instant('admin.dialogs.release_failed'),
+        message: this.t.instant('admin.dialogs.release_failed_msg', { hostname: device.hostname }),
+        buttons: [this.t.instant('common.ok')],
+      });
+      await err.present();
+    }
   }
 
   onExportXlsx(): void {

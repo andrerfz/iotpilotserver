@@ -50,6 +50,7 @@
       <ui-swipe-list
         [items]="platformFiltered()"
         [actions]="platformRowActions"
+        (action)="onPlatformAction($any($event))"
         (itemClick)="onPlatformRowClick($any($event))">
         <ng-template #itemContent let-d>
           <ui-list-row
