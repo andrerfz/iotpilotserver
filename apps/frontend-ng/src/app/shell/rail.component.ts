@@ -89,7 +89,7 @@ addIcons({
 })
 export class RailComponent {
   private readonly auth = inject(AuthService);
-  private readonly tenantCtx = inject(TenantContextService);
+  protected readonly tenantCtx = inject(TenantContextService);
 
   protected readonly isSuperAdmin = computed(() => hasRole(this.auth.role(), 'SUPERADMIN'));
   protected readonly showAdmin = computed(() => hasRole(this.auth.role(), 'ADMIN'));
