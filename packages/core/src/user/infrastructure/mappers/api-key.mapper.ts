@@ -13,13 +13,10 @@ export class ApiKeyMapper {
      * Convert Prisma model to domain entity
      */
     toDomain(prismaApiKey: any): ApiKey {
-        let keyValue: ApiKeyValue;
-        try {
-            keyValue = ApiKeyValue.fromString(prismaApiKey.key);
-        } catch {
-            // Legacy keys stored before the iot_ prefix requirement — treat as revoked
-            keyValue = ApiKeyValue.fromString('iot_' + '0'.repeat(64));
-        }
+        // The persisted `key` is a SHA-256 hash, not a usable key — the plaintext
+        // is intentionally unrecoverable. Reads only ever need the display hint,
+        // so carry that in a display-only VO instead of the (hashed) secret.
+        const keyValue: ApiKeyValue = ApiKeyValue.forDisplay(prismaApiKey.keyHint ?? '****');
         const props: ApiKeyProps = {
             id: ApiKeyId.fromString(prismaApiKey.id),
             userId: UserId.fromString(prismaApiKey.userId),

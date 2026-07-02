@@ -5,6 +5,7 @@ import * as crypto from 'crypto';
 import { createId } from '@paralleldrive/cuid2';
 import { validator } from '@iotpilot/core/shared/infrastructure/validation/validation-helper';
 import { ServiceContainer } from '@iotpilot/core/shared/infrastructure/container/service-container';
+import { hashApiKey, apiKeyHint } from '@iotpilot/core/shared/infrastructure/crypto/api-key-hasher';
 import { ListDevicesQuery } from '@iotpilot/core/device/application/queries/list-devices/list-devices.query';
 import {
     DeviceRegistrationData as RegisterDeviceData,
@@ -2198,13 +2199,16 @@ devicesRouter.post('/:id/rotate-key', requireAuth('ADMIN'), async (req: Authenti
         const raw = crypto.randomBytes(24).toString('base64url');
         const newKey = `iotp_sensor_${raw}`;
 
+        // Persist only the hash + a display hint; newKey (plaintext) is returned
+        // to the caller once, below.
         await prisma.getClient().apiKey.create({
             data: {
                 id: createId(),
                 userId: device.userId,
                 customerId: device.customerId ?? undefined,
                 name: `Sensor ${device.deviceId}`,
-                key: newKey,
+                key: hashApiKey(newKey),
+                keyHint: apiKeyHint(newKey),
             },
         });
 

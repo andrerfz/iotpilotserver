@@ -4,6 +4,7 @@ import {PrismaService} from '@iotpilot/core/shared/infrastructure/database/prism
 import * as crypto from 'crypto';
 import {createId} from '@paralleldrive/cuid2';
 import {DeviceModelEnum} from '@iotpilot/core/device/domain/value-objects/device-type.vo';
+import {hashApiKey, apiKeyHint} from '@iotpilot/core/shared/infrastructure/crypto/api-key-hasher';
 
 type PrismaClient = ReturnType<PrismaService['getClient']>;
 
@@ -82,14 +83,16 @@ export class ProvisionDeviceHandler implements CommandHandler<ProvisionDeviceCom
         const baseUrl = domain;
         const webhookUrl = `${baseUrl}/api/webhook/temperature`;
 
-        // Store API key in api_keys table
+        // Store API key hashed (never plaintext); the raw key is returned to
+        // the device once, below.
         await this.prisma.apiKey.create({
             data: {
                 id: createId(),
                 userId: deviceUserId,
                 customerId: deviceCustomerId,
                 name: `Sensor ${data.deviceId}`,
-                key: apiKey
+                key: hashApiKey(apiKey),
+                keyHint: apiKeyHint(apiKey)
             }
         });
 

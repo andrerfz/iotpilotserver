@@ -306,7 +306,8 @@ model ApiKey {
   userId     String
   customerId String? // Inherited from user for easier validation
   name       String
-  key        String
+  key        String // SHA-256 hex digest of the raw key — never the plaintext
+  keyHint    String? // Non-secret display hint (e.g. "iotp_sen…4f2a")
   lastUsed   DateTime?
   expiresAt  DateTime?
   createdAt  DateTime  @default(now())

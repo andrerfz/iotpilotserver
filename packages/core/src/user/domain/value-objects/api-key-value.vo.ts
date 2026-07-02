@@ -9,9 +9,19 @@ export class ApiKeyValue extends ValueObject {
     private static readonly PREFIX = 'iot_';
     private static readonly KEY_LENGTH = 64; // 32 bytes = 64 hex characters
 
-    constructor(private readonly value: string) {
+    /**
+     * When true this VO carries only a non-secret display hint reconstructed
+     * from a persisted (hashed) key — the real plaintext is unrecoverable. Used
+     * on the read path so listing keys never needs the secret.
+     */
+    private readonly displayOnly: boolean;
+
+    constructor(private readonly value: string, displayOnly = false) {
         super();
-        this.validate(value);
+        this.displayOnly = displayOnly;
+        if (!displayOnly) {
+            this.validate(value);
+        }
     }
 
     getValue(): string {
@@ -19,10 +29,13 @@ export class ApiKeyValue extends ValueObject {
     }
 
     /**
-     * Returns a masked version of the key for display purposes
-     * Shows only the first 8 and last 4 characters
+     * Returns a masked version of the key for display purposes.
+     * Display-only VOs already hold a masked hint, so return it verbatim.
      */
     getMaskedValue(): string {
+        if (this.displayOnly) {
+            return this.value || '***';
+        }
         if (this.value.length <= 16) {
             return '***';
         }
@@ -67,6 +80,15 @@ export class ApiKeyValue extends ValueObject {
 
     static fromString(value: string): ApiKeyValue {
         return new ApiKeyValue(value);
+    }
+
+    /**
+     * Build a display-only VO from a stored, non-secret hint. Skips format
+     * validation because the underlying key is persisted hashed and its
+     * plaintext is intentionally unrecoverable.
+     */
+    static forDisplay(hint: string): ApiKeyValue {
+        return new ApiKeyValue(hint ?? '****', true);
     }
 
     /**

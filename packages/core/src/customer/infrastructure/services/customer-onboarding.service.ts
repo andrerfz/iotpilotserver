@@ -8,6 +8,7 @@ import {CustomerEntity} from '@iotpilot/core/customer/domain/entities/customer.e
 import {CustomerRepository} from '../persistence/customer.repository';
 import {TenantScopedLoggingService} from '@iotpilot/core/shared/infrastructure/logging/tenant-scoped-logging.service';
 import type {CryptoService} from '@iotpilot/core/shared/domain/interfaces/crypto-service.interface';
+import {hashApiKey, apiKeyHint} from '@iotpilot/core/shared/infrastructure/crypto/api-key-hasher';
 
 type PrismaClient = ReturnType<PrismaService['getClient']>;
 
@@ -151,12 +152,15 @@ export class CustomerOnboardingService {
     userId: string,
     adminContext: TenantContext
   ): Promise<void> {
-    // Create default API key for the customer
+    // Create default API key for the customer. Store only the hash + a display
+    // hint; the raw key is never persisted in plaintext.
+    const rawApiKey = this.generateApiKey();
     const apiKey = await this.prisma.apiKey.create({
       data: {
         id: this.cryptoService.randomUUID(),
         name: 'Default API Key',
-        key: this.generateApiKey(),
+        key: hashApiKey(rawApiKey),
+        keyHint: apiKeyHint(rawApiKey),
         userId: userId,
         customerId: customerId.getValue(),
         expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) // 1 year expiry

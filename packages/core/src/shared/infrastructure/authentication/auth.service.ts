@@ -3,6 +3,7 @@ import {UserRole, UserRoleType} from '@iotpilot/core/shared/domain/value-objects
 import {StructuredLogger} from '../logging/structured-logger';
 import {PrismaService} from '../database/prisma.service';
 import {ServiceContainer} from '../container/service-container';
+import {hashApiKey} from '../crypto/api-key-hasher';
 
 export interface AuthPayload {
     userId: string;
@@ -97,7 +98,7 @@ export class AuthenticationService {
         try {
             const key = await this.prisma.getClient().apiKey.findFirst({
                 where: {
-                    key: apiKey,
+                    key: hashApiKey(apiKey), // keys are stored hashed — match on digest
                     deletedAt: null,
                     OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
                 },

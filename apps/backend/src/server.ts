@@ -53,12 +53,18 @@ const io = new Server(httpServer, {
 
 app.set('trust proxy', ['loopback', 'linklocal', 'uniquelocal']);
 
+// Backend CSP. This app only serves JSON (the /api/* surface) plus the OpenAPI
+// documents — none of which execute scripts — so the policy is strict: no
+// 'unsafe-inline', no 'unsafe-eval'. The Angular SPA is served by nginx and
+// carries its own CSP (see infra/nginx/frontend-ng.conf). The Bull Board admin
+// UI is the one HTML surface here and gets a relaxed CSP scoped to its own
+// mount, below.
 app.use(
   helmet({
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+        scriptSrc: ["'self'"],
         styleSrc: ["'self'", "'unsafe-inline'"],
         imgSrc: ["'self'", 'data:', 'https:'],
         connectSrc: [
@@ -71,6 +77,8 @@ app.use(
         fontSrc: ["'self'"],
         objectSrc: ["'none'"],
         frameSrc: ["'none'"],
+        baseUri: ["'self'"],
+        frameAncestors: ["'none'"],
       },
     },
     crossOriginEmbedderPolicy: false,
@@ -133,33 +141,74 @@ app.get('/api/schedule', async (req, res) => {
 
 // Rate limiting — backed by Redis so limits survive restarts and work across replicas
 const RATE_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
-function buildRateLimiter() {
+
+// A client-supplied X-Tailscale-* header must NOT, on its own, grant a
+// rate-limit bypass — it is trivially spoofable by anyone hitting the API
+// directly. We only treat a request as Tailscale-sourced when its
+// (proxy-derived) source IP actually falls inside Tailscale's 100.64.0.0/10
+// CGNAT range AND it carries the identifying header. Fail-closed: if the IP
+// cannot be verified, the request is rate-limited normally.
+function isTailscaleSourced(req: express.Request): boolean {
+  if (!req.get('X-Tailscale-User')) return false;
+  const raw = (req.ip ?? '').replace(/^::ffff:/, '');
+  const m = raw.match(/^(\d+)\.(\d+)\.\d+\.\d+$/);
+  if (!m) return false;
+  const a = Number(m[1]);
+  const b = Number(m[2]);
+  return a === 100 && b >= 64 && b <= 127; // 100.64.0.0/10
+}
+
+interface LimiterOptions {
+  max: number;
+  prefix: string;
+  skipTailscale?: boolean;
+  skipSuccessfulRequests?: boolean;
+}
+
+function buildRateLimiter(opts: LimiterOptions) {
+  const base: Parameters<typeof rateLimit>[0] = {
+    windowMs: RATE_WINDOW_MS,
+    max: opts.max,
+    message: { error: 'Too many requests, please try again later.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+    ...(opts.skipTailscale ? { skip: (req: express.Request) => isTailscaleSourced(req) } : {}),
+    ...(opts.skipSuccessfulRequests ? { skipSuccessfulRequests: true } : {}),
+  };
   try {
     const redis = RedisConnectionFactory.getInstance().getGeneralConnection();
-    const store = new RateLimitRedisStore(redis, RATE_WINDOW_MS);
-    return rateLimit({
-      windowMs: RATE_WINDOW_MS,
-      max: process.env.NODE_ENV === 'production' ? 100 : 1000,
-      message: { error: 'Too many requests from this IP, please try again later.' },
-      standardHeaders: true,
-      legacyHeaders: false,
-      store,
-      skip: (req) => !!(req as any).tailscale?.user,
-    });
+    const store = new RateLimitRedisStore(redis, RATE_WINDOW_MS, opts.prefix);
+    return rateLimit({ ...base, store });
   } catch (err) {
     // Fallback to in-memory if Redis is unavailable at boot
-    console.warn('[RateLimit] Redis store unavailable, falling back to in-memory store:', (err as Error).message);
-    return rateLimit({
-      windowMs: RATE_WINDOW_MS,
-      max: process.env.NODE_ENV === 'production' ? 100 : 1000,
-      message: { error: 'Too many requests from this IP, please try again later.' },
-      standardHeaders: true,
-      legacyHeaders: false,
-      skip: (req) => !!(req as any).tailscale?.user,
-    });
+    console.warn(`[RateLimit] Redis store unavailable for ${opts.prefix}, falling back to in-memory store:`, (err as Error).message);
+    return rateLimit(base);
   }
 }
-const apiLimiter = buildRateLimiter();
+
+// General API limiter — generous; verified Tailscale-sourced traffic is exempt
+// so the device fleet is not throttled.
+const apiLimiter = buildRateLimiter({
+  max: process.env.NODE_ENV === 'production' ? 100 : 1000,
+  prefix: 'rl:',
+  skipTailscale: true,
+});
+
+// Auth limiter — strict brute-force / credential-stuffing protection for the
+// unauthenticated entry points. NEVER bypassed (no Tailscale skip): a spoofed
+// header must not open login / registration / 2FA to unlimited guessing.
+// skipSuccessfulRequests means only failed attempts count, so legitimate
+// logins are never throttled.
+const authLimiter = buildRateLimiter({
+  max: process.env.NODE_ENV === 'production' ? 10 : 100,
+  prefix: 'rl:auth:',
+  skipSuccessfulRequests: true,
+});
+
+// Mount the strict limiter on the brute-forceable auth entry points, before the
+// general limiter. The general '/api/' limiter continues to skip everything
+// under '/auth/', so these endpoints are covered by the auth limiter alone.
+app.use(['/api/auth/login', '/api/auth/register', '/api/auth/verify-2fa'], authLimiter);
 
 app.use('/api/', (req, res, next) => {
   if (req.path.startsWith('/auth/')) return next();
@@ -249,12 +298,35 @@ setTimeout(async () => {
       '../../../packages/core/src/shared/infrastructure/queue/bull-board'
     );
     const { authMiddleware } = await import('./middleware/auth.middleware');
+
+    // Bull Board ships its own bundled UI (same-origin JS/CSS) plus a Google
+    // Fonts stylesheet. Its scripts are same-origin so 'self' is enough, but it
+    // needs the font origins and inline styles. Scope this relaxed CSP to the
+    // dashboard route only — it overrides the strict global API policy here
+    // without loosening it anywhere else.
+    const bullBoardCsp = helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'"],
+          styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+          fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+          imgSrc: ["'self'", 'data:'],
+          connectSrc: ["'self'"],
+          objectSrc: ["'none'"],
+          baseUri: ["'self'"],
+          frameAncestors: ["'none'"],
+        },
+      },
+      crossOriginEmbedderPolicy: false,
+    });
+
     if (process.env.NODE_ENV !== 'production') {
       // Development: open access (no real sessions to validate locally)
-      app.use('/admin/queues', createBullBoardRouter());
+      app.use('/admin/queues', bullBoardCsp, createBullBoardRouter());
     } else {
       // Production: require SUPERADMIN session — Tailscale headers are not trusted
-      app.use('/admin/queues', authMiddleware({ requiredRole: 'SUPERADMIN' }), createBullBoardRouter());
+      app.use('/admin/queues', bullBoardCsp, authMiddleware({ requiredRole: 'SUPERADMIN' }), createBullBoardRouter());
     }
     logger.info('[BullBoard] Dashboard mounted at /admin/queues');
   } catch (err) {

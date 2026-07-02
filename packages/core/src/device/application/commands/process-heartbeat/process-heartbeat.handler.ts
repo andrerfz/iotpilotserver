@@ -79,6 +79,16 @@ export class ProcessHeartbeatHandler implements CommandHandler<ProcessHeartbeatC
             }
         }
 
+        // An UNCLAIMED device must not be silently promoted to ONLINE by
+        // telemetry. Claiming is an explicit, authorized action; until it
+        // happens the heartbeat is rejected so a device cannot re-adopt itself
+        // just by holding a key. This keeps an unclaimed device unclaimed even
+        // if its customerId was left intact. (PENDING_SETUP → ONLINE, the normal
+        // post-claim transition, is still allowed.)
+        if (device.status === 'UNCLAIMED') {
+            throw new Error('Device is not claimed. Claim the device before sending telemetry.');
+        }
+
         const updatedDevice = await this.prisma.device.update({
             where: { deviceId: data.deviceId },
             data: {

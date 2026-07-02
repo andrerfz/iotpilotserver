@@ -107,6 +107,14 @@ export class RecordSensorReadingHandler implements CommandHandler<RecordSensorRe
             }
         }
 
+        // An UNCLAIMED device must not be silently promoted to ONLINE by
+        // telemetry. Claiming is an explicit, authorized action; until it
+        // happens the reading is rejected so a device cannot re-adopt itself
+        // just by holding a key. Mirrors the ProcessHeartbeat guard.
+        if (device.status === 'UNCLAIMED') {
+            throw new Error('Device is not claimed. Claim the device before sending readings.');
+        }
+
         // Store each reading as individual DeviceMetric row.
         // offsetSeconds > 0 means the reading was buffered offline — backdate its timestamp.
         const now = new Date();

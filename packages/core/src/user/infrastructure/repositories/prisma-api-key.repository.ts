@@ -5,6 +5,7 @@ import {UserId} from '../../domain/value-objects/user-id.vo';
 import {ApiKeyMapper} from '../mappers/api-key.mapper';
 import {PrismaService} from '@iotpilot/core/shared/infrastructure/database/prisma.service';
 import {TenantContext} from '@iotpilot/core/shared/domain/tenant-context';
+import {hashApiKey, apiKeyHint} from '@iotpilot/core/shared/infrastructure/crypto/api-key-hasher';
 
 /**
  * Prisma implementation of the ApiKeyRepository interface
@@ -35,7 +36,7 @@ export class PrismaApiKeyRepository implements ApiKeyRepository {
 
     async findByKey(key: string, tenantContext?: TenantContext): Promise<ApiKey | null> {
         const where: any = {
-            key,
+            key: hashApiKey(key), // stored hashed — look up by digest, never plaintext
             deletedAt: null // Exclude soft-deleted
         };
 
@@ -123,14 +124,18 @@ export class PrismaApiKeyRepository implements ApiKeyRepository {
                 data: updateData
             });
         } else {
-            // Create new API key
+            // Create new API key — persist only the SHA-256 hash of the raw key
+            // plus a non-secret display hint. data.key holds the freshly
+            // generated plaintext, which is returned to the caller once and
+            // never stored.
             await this.prisma.getClient().apiKey.create({
                 data: {
                     id,
                     userId: data.userId,
                     customerId: data.customerId,
                     name: data.name,
-                    key: data.key,
+                    key: hashApiKey(data.key),
+                    keyHint: apiKeyHint(data.key),
                     expiresAt: data.expiresAt,
                     lastUsed: data.lastUsed,
                     createdAt: data.createdAt
@@ -179,7 +184,7 @@ export class PrismaApiKeyRepository implements ApiKeyRepository {
     async existsByKey(key: string): Promise<boolean> {
         const apiKey = await this.prisma.getClient().apiKey.findFirst({
             where: {
-                key,
+                key: hashApiKey(key), // stored hashed — compare digests
                 deletedAt: null
             }
         });

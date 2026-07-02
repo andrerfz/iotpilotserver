@@ -6,6 +6,7 @@ import { TenantContext, TenantContextImpl } from '@iotpilot/core/shared/domain/t
 import { CustomerId } from '@iotpilot/core/shared/domain/value-objects/customer-id.vo';
 import { UserId } from '@iotpilot/core/user/domain/value-objects/user-id.vo';
 import { withTenant } from '@iotpilot/core/tenant-middleware';
+import { hashApiKey } from '@iotpilot/core/shared/infrastructure/crypto/api-key-hasher';
 import { send } from '../http/response.util';
 
 export interface AuthUser {
@@ -63,7 +64,7 @@ async function resolveApiKeyUser(apiKey: string): Promise<AuthUser | null> {
   const prisma = ServiceContainer.getInstance().getPrismaClient();
   const key = await prisma.getClient().apiKey.findFirst({
     where: {
-      key: apiKey,
+      key: hashApiKey(apiKey), // keys are stored hashed — match on digest
       deletedAt: null,
       OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
     },

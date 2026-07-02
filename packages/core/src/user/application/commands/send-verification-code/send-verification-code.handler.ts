@@ -1,3 +1,4 @@
+import { randomInt } from 'crypto';
 import { CommandHandler } from '@iotpilot/core/shared/application/interfaces/command.interface';
 import { SendVerificationCodeCommand } from './send-verification-code.command';
 import { PrismaService } from '@iotpilot/core/shared/infrastructure/database/prisma.service';
@@ -10,7 +11,9 @@ export class SendVerificationCodeHandler implements CommandHandler<SendVerificat
     ) {}
 
     async handle(command: SendVerificationCodeCommand): Promise<void> {
-        const code = String(Math.floor(100000 + Math.random() * 900000));
+        // Cryptographically secure 6-digit code (100000–999999). randomInt is
+        // unbiased over the range; never use Math.random() for security tokens.
+        const code = String(randomInt(100000, 1000000));
 
         await this.prisma.getClient().verificationCode.updateMany({
             where: {
