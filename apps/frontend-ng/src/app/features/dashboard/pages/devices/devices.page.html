@@ -141,12 +141,13 @@
             [title]="d.hostname ?? d.name ?? d.id ?? ''"
             [subtitle]="(d.deviceType ?? 'Unknown') + (d.ipAddress ? ' · ' + d.ipAddress : '')"
             [meta]="deviceMeta(d)"
-            [cols]="[
-              { label: 'Location', value: d.location ?? '—' },
-              { label: 'CPU', value: d.cpuUsage !== null && d.cpuUsage !== undefined ? d.cpuUsage + '%' : '—' },
-              { label: 'Memory', value: d.memoryUsage !== null && d.memoryUsage !== undefined ? d.memoryUsage + '%' : '—' }
-            ]">
-            <ui-status-dot lead [status]="d.status ?? 'OFFLINE'"></ui-status-dot>
+            [cols]="deviceMetricCols(d)">
+            <div lead class="row-lead">
+              <ui-status-dot [status]="d.status ?? 'OFFLINE'"></ui-status-dot>
+              @if (d.alertsCount) {
+                <span class="row-alert-badge" [title]="'devices.alerts_active' | translate">{{ d.alertsCount }}</span>
+              }
+            </div>
           </ui-list-row>
         </ng-template>
       </ui-swipe-list>

@@ -53,6 +53,10 @@ export class DeviceEntity extends TenantScopedEntity<DeviceId> {
   public memoryTotal?: number;
   public diskTotal?: string;
   public loadAverage?: string;
+  // Latest sensor reading (denormalized), for the device list
+  public temperature?: number;
+  public batteryLevel?: number;
+  public signalStrength?: number;
   public appStatus?: string;
   public agentVersion?: string;
 

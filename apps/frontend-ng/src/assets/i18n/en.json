@@ -161,7 +161,20 @@
       "csv_sub": "Comma-separated values",
       "pdf_label": "Export PDF",
       "pdf_sub": "Printable document"
-    }
+    },
+    "metric": {
+      "temp": "Temp",
+      "battery": "Battery",
+      "signal": "Signal",
+      "cpu": "CPU",
+      "mem": "Memory",
+      "disk": "Disk",
+      "last_seen": "Seen"
+    },
+    "time": {
+      "now": "now"
+    },
+    "alerts_active": "Active alerts"
   },
   "device_detail": {
     "pending_title": "Device pending activation",

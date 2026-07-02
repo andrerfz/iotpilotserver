@@ -6,6 +6,7 @@ export interface Device {
   alertsCount?: number | null;
   appStatus?: string | null;
   architecture?: string | null;
+  batteryLevel?: number | null;
   cpuTemp?: number | null;
   cpuUsage?: number | null;
   customerId?: string;
@@ -28,7 +29,9 @@ export interface Device {
   name?: string;
   rawStatus?: ('ONLINE' | 'OFFLINE' | 'MAINTENANCE' | 'ERROR' | 'UNCLAIMED') | null;
   registeredAt?: string | null;
+  signalStrength?: number | null;
   status?: 'ONLINE' | 'OFFLINE' | 'MAINTENANCE' | 'ERROR' | 'UNCLAIMED';
   tailscaleIp?: string | null;
+  temperature?: number | null;
   updatedAt?: string | null;
 }

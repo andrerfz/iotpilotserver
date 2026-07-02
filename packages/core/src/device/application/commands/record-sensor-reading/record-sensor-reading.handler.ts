@@ -149,10 +149,21 @@ export class RecordSensorReadingHandler implements CommandHandler<RecordSensorRe
             await this.prisma.deviceMetric.createMany({ data: extraMetrics });
         }
 
-        // Update device lastSeen and set ONLINE (device is actively reporting)
+        // Update device lastSeen and set ONLINE (device is actively reporting),
+        // and denormalize the latest sensor reading onto the device row so the
+        // device list can show a sensor's own metrics without joining
+        // device_metrics. Use the most recent reading in the batch.
+        const latestReading = (data.readings ?? [])[data.readings?.length ? data.readings.length - 1 : 0];
         await this.prisma.device.update({
             where: { id: device.id },
-            data: { lastSeen: new Date(), status: 'ONLINE', updatedAt: new Date() }
+            data: {
+                lastSeen: new Date(),
+                status: 'ONLINE',
+                updatedAt: new Date(),
+                ...(latestReading?.temperature !== undefined ? { temperature: latestReading.temperature } : {}),
+                ...(data.batteryLevel !== undefined ? { batteryLevel: data.batteryLevel } : {}),
+                ...(data.rssi !== undefined ? { signalStrength: data.rssi } : {}),
+            }
         });
 
         // Alert logic — requires customerId (UNCLAIMED devices have none)

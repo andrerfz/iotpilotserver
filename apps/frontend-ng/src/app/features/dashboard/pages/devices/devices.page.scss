@@ -26,10 +26,36 @@
     display: flex;
     align-items: center;
     gap: 8px;
+    /* Wrap on narrow screens so the search + status + button never overflow
+       the viewport and force horizontal scroll on mobile. */
+    flex-wrap: wrap;
 
-    ui-search-field { flex: 1; min-width: 160px; }
+    ui-search-field { flex: 1 1 160px; min-width: 0; }
     ion-button { flex-shrink: 0; margin: 0; }
   }
+}
+
+/* Row lead: status dot + optional alert badge that stands out so devices with
+   open alerts are immediately noticeable in the list. */
+.row-lead {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.row-alert-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
 }
 
 /* "+" add-device chooser (short bottom sheet) — design tokens, dark-mode aware. */

@@ -150,6 +150,9 @@ export class DeviceMapper {
     device.memoryTotal = persistence.memoryTotal ?? undefined;
     device.diskTotal = persistence.diskTotal || undefined;
     device.loadAverage = persistence.loadAverage || undefined;
+    device.temperature = persistence.temperature ?? undefined;
+    device.batteryLevel = persistence.batteryLevel ?? undefined;
+    device.signalStrength = persistence.signalStrength ?? undefined;
     device.appStatus = persistence.appStatus || undefined;
     device.agentVersion = persistence.agentVersion || undefined;
 

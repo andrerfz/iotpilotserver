@@ -277,6 +277,20 @@ devicesRouter.get('/', requireAuth(), async (req: AuthenticatedRequest, res: Res
 
         const deviceListResult = await queryBus.execute(listDevicesQuery);
 
+        // Unresolved-alert count per device (single query for the page) so
+        // devices with open alerts stand out in the list. Keyed by publicId,
+        // which is what the DTO exposes as `id`.
+        const listPublicIds = deviceListResult.devices.map((d: any) => d.id).filter(Boolean);
+        const alertRows = listPublicIds.length
+            ? await prisma.getClient().device.findMany({
+                where: { publicId: { in: listPublicIds } },
+                select: { publicId: true, _count: { select: { alerts: { where: { resolved: false } } } } },
+            })
+            : [];
+        const alertCountByPublicId = new Map<string, number>(
+            alertRows.map((r: { publicId: string; _count: { alerts: number } }) => [r.publicId, r._count.alerts]),
+        );
+
         const formattedDevices = deviceListResult.devices.map((device: any) => ({
             id: device.id,
             deviceId: device.id,
@@ -304,6 +318,9 @@ devicesRouter.get('/', requireAuth(), async (req: AuthenticatedRequest, res: Res
             diskUsage: device.metrics?.diskUsage ?? null,
             diskTotal: device.diskTotal || null,
             loadAverage: device.loadAverage || null,
+            temperature: device.temperature ?? null,
+            batteryLevel: device.batteryLevel ?? null,
+            signalStrength: device.signalStrength ?? null,
             appStatus: device.appStatus || (device.status?.connectivity === 'online' ? 'RUNNING' : 'STOPPED'),
             agentVersion: device.agentVersion || null,
             registeredAt: device.createdAt,
@@ -317,7 +334,7 @@ devicesRouter.get('/', requireAuth(), async (req: AuthenticatedRequest, res: Res
                 name: 'Customer',
                 slug: 'customer',
             } : null,
-            alertsCount: 0,
+            alertsCount: alertCountByPublicId.get(device.id) ?? 0,
         }));
 
         const stats = {

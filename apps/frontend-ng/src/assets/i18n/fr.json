@@ -161,7 +161,20 @@
       "csv_sub": "Valeurs séparées par des virgules",
       "pdf_label": "Exporter PDF",
       "pdf_sub": "Document imprimable"
-    }
+    },
+    "metric": {
+      "temp": "Temp",
+      "battery": "Batterie",
+      "signal": "Signal",
+      "cpu": "CPU",
+      "mem": "Mémoire",
+      "disk": "Disque",
+      "last_seen": "Vu"
+    },
+    "time": {
+      "now": "maintenant"
+    },
+    "alerts_active": "Alertes actives"
   },
   "device_detail": {
     "pending_title": "Appareil en attente d'activation",

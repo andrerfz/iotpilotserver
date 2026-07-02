@@ -380,6 +380,12 @@ model Device {
   diskTotal   String?
   loadAverage String?
 
+  // Latest sensor reading (denormalized from the last record-sensor-reading, so
+  // the device list can show a sensor's own metrics without joining device_metrics)
+  temperature    Float?
+  batteryLevel   Float?
+  signalStrength Float?
+
   // Application status
   appStatus    AppStatus @default(UNKNOWN)
   agentVersion String?

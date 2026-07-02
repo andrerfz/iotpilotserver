@@ -161,7 +161,20 @@
       "csv_sub": "Valores separados por vírgula",
       "pdf_label": "Exportar PDF",
       "pdf_sub": "Documento para impressão"
-    }
+    },
+    "metric": {
+      "temp": "Temp",
+      "battery": "Bateria",
+      "signal": "Sinal",
+      "cpu": "CPU",
+      "mem": "Memória",
+      "disk": "Disco",
+      "last_seen": "Visto"
+    },
+    "time": {
+      "now": "agora"
+    },
+    "alerts_active": "Alertas ativos"
   },
   "device_detail": {
     "pending_title": "Dispositivo aguardando ativação",

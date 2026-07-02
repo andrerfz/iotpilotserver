@@ -47,6 +47,7 @@ export const RESPONSE_SCHEMAS: Record<string, JsonSchema> = {
         customerId: str, lastSeen: dtN, architecture: strN, description: strN,
         cpuUsage: numN, cpuTemp: numN, memoryUsage: numN, memoryTotal: numN, diskUsage: numN,
         diskTotal: strN, loadAverage: strN, appStatus: strN, lastBoot: dtN, registeredAt: dtN,
+        temperature: numN, batteryLevel: numN, signalStrength: numN,
         updatedAt: dtN, alertsCount: {type: 'integer', nullable: true},
     }),
     Alert: obj({

@@ -58,6 +58,9 @@ export class ListDevicesHandler implements QueryHandler<ListDevicesQuery, ListDe
       memoryTotal: device.memoryTotal ?? null,
       diskTotal: device.diskTotal || null,
       loadAverage: device.loadAverage || null,
+      temperature: device.temperature ?? null,
+      batteryLevel: device.batteryLevel ?? null,
+      signalStrength: device.signalStrength ?? null,
       appStatus: device.appStatus || null,
       agentVersion: device.agentVersion || null,
       sshCredentials: device.sshCredentials ? {

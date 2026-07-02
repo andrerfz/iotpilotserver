@@ -1804,6 +1804,18 @@
                         "format": "date-time",
                         "nullable": true
                     },
+                    "temperature": {
+                        "type": "number",
+                        "nullable": true
+                    },
+                    "batteryLevel": {
+                        "type": "number",
+                        "nullable": true
+                    },
+                    "signalStrength": {
+                        "type": "number",
+                        "nullable": true
+                    },
                     "updatedAt": {
                         "type": "string",
                         "format": "date-time",

@@ -161,7 +161,20 @@
       "csv_sub": "Valores separados por comas",
       "pdf_label": "Exportar PDF",
       "pdf_sub": "Documento imprimible"
-    }
+    },
+    "metric": {
+      "temp": "Temp",
+      "battery": "Batería",
+      "signal": "Señal",
+      "cpu": "CPU",
+      "mem": "Memoria",
+      "disk": "Disco",
+      "last_seen": "Visto"
+    },
+    "time": {
+      "now": "ahora"
+    },
+    "alerts_active": "Alertas activas"
   },
   "device_detail": {
     "pending_title": "Dispositivo pendiente de activación",
