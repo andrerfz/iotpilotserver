@@ -90,6 +90,10 @@ export class SettingsPreferencesPage implements OnInit {
         dashboardLayout: data.dashboardLayout ?? 'default',
         itemsPerPage: data.itemsPerPage ?? '10',
       });
+      // Apply the theme persisted server-side so it follows the user across devices.
+      if (data.theme) {
+        this.themeService.setTheme(data.theme as Theme);
+      }
     } catch {
       this.saveError.set(this.t.instant('settings.system.msg_load_failed'));
     } finally {
@@ -117,6 +121,7 @@ export class SettingsPreferencesPage implements OnInit {
       const body: SystemSettings = {
         dashboardLayout: dashboardLayout as SystemSettings['dashboardLayout'],
         itemsPerPage,
+        theme: this.currentTheme(),
       };
       await this.api.invoke(updateSystemSettings, { body });
       this.saveSuccess.set(this.t.instant('settings.system.msg_display_updated'));

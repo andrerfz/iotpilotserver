@@ -70,7 +70,7 @@ describe('SettingsPreferencesPage', () => {
     expect(api.invoke.mock.calls.length).toBe(invokesBeforeChange);
   });
 
-  it('save sends payload without theme field', async () => {
+  it('save sends payload including the current theme', async () => {
     const invokeSpy = vi.fn().mockImplementation((() => {
       let n = 0;
       return () => ++n === 1 ? Promise.resolve(MOCK_DATA) : Promise.resolve(undefined);
@@ -89,6 +89,6 @@ describe('SettingsPreferencesPage', () => {
     const body = invokeSpy.mock.calls.at(-1)?.[1]?.body as SystemSettings;
     expect(body.dashboardLayout).toBe('compact');
     expect(body.itemsPerPage).toBe('25');
-    expect(body.theme).toBeUndefined();
+    expect(body.theme).toBe('dark');
   });
 });
