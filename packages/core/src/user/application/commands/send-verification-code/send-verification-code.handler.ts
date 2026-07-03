@@ -3,6 +3,7 @@ import { CommandHandler } from '@iotpilot/core/shared/application/interfaces/com
 import { SendVerificationCodeCommand } from './send-verification-code.command';
 import { PrismaService } from '@iotpilot/core/shared/infrastructure/database/prisma.service';
 import type { EmailService } from '@iotpilot/core/shared/domain/interfaces/email-service.interface';
+import { renderEmailLayout } from '@iotpilot/core/shared/infrastructure/services/email-layout';
 
 export class SendVerificationCodeHandler implements CommandHandler<SendVerificationCodeCommand, void> {
     constructor(
@@ -39,19 +40,20 @@ export class SendVerificationCodeHandler implements CommandHandler<SendVerificat
             EMAIL_VERIFY: 'Verify your email address',
         };
 
+        const content = `
+  <div style="font-size:16px;font-weight:600;margin-bottom:6px;">Verification code</div>
+  <p style="color:#555;font-size:14px;margin:0 0 20px;">Enter this code to continue:</p>
+  <div style="background:#f4f4f5;border-radius:8px;padding:20px;text-align:center;">
+    <span style="font-size:32px;font-weight:bold;letter-spacing:8px;color:#1a1a1a;">${code}</span>
+  </div>`;
+
         await this.emailService.send({
             to: command.email,
             subject: `IoT Pilot — ${subjectMap[command.codeType]}`,
-            html: `
-                <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
-                    <h2 style="color: #1a1a1a; margin-bottom: 16px;">Verification Code</h2>
-                    <p style="color: #555; margin-bottom: 24px;">Enter this code to continue:</p>
-                    <div style="background: #f4f4f5; border-radius: 8px; padding: 20px; text-align: center; margin-bottom: 24px;">
-                        <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #1a1a1a;">${code}</span>
-                    </div>
-                    <p style="color: #888; font-size: 14px;">This code expires in 10 minutes. If you didn't request this, you can safely ignore this email.</p>
-                </div>
-            `,
+            html: renderEmailLayout(
+                content,
+                "This code expires in 10 minutes. If you didn't request it, you can safely ignore this email.",
+            ),
         });
     }
 }

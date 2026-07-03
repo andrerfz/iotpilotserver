@@ -2,6 +2,7 @@ import { EventHandler } from '@iotpilot/core/shared/application/bus/event.bus';
 import { AlertTriggeredEvent } from '@iotpilot/core/monitoring/domain/events/alert-triggered.event';
 import { CommandBus } from '@iotpilot/core/shared/application/bus/command.bus';
 import { DispatchNotificationCommand } from '../commands/dispatch-notification/dispatch-notification.command';
+import { renderEmailLayout } from '@iotpilot/core/shared/infrastructure/services/email-layout';
 import { NotificationRoutingService } from '../../domain/services/notification-routing.service';
 import { TenantContextImpl } from '@iotpilot/core/shared/application/context/tenant-context.vo';
 import { CustomerId } from '@iotpilot/core/shared/domain/value-objects/customer-id.vo';
@@ -29,8 +30,7 @@ export class OnAlertTriggeredHandler implements EventHandler<AlertTriggeredEvent
       .replace('T', ' ').slice(0, 19) + ' UTC';
 
     const subject = `${emoji} ${title}`;
-    const body = `
-<div style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;color:#1a1a1a;">
+    const content = `
   <div style="border-left:4px solid ${accent};background:#f6f6f7;border-radius:8px;padding:16px 18px;">
     <div style="font-size:18px;font-weight:600;">${emoji} ${esc(title)}</div>
     ${message ? `<div style="margin-top:6px;color:#555;font-size:14px;line-height:1.4;">${esc(message)}</div>` : ''}
@@ -39,11 +39,8 @@ export class OnAlertTriggeredHandler implements EventHandler<AlertTriggeredEvent
     <tr><td style="padding:4px 16px 4px 0;color:#888;">Device</td><td style="font-weight:500;">${esc(deviceName)}</td></tr>
     <tr><td style="padding:4px 16px 4px 0;color:#888;">Severity</td><td><strong style="color:${accent};">${esc(severity)}</strong></td></tr>
     <tr><td style="padding:4px 16px 4px 0;color:#888;">Time</td><td>${esc(when)}</td></tr>
-  </table>
-  <div style="margin-top:24px;padding-top:14px;border-top:1px solid #eee;font-size:12px;color:#999;">
-    IoT Pilot · automated alert. Manage alert emails in Settings → Notifications.
-  </div>
-</div>`.trim();
+  </table>`;
+    const body = renderEmailLayout(content, 'IoT Pilot · automated alert. Manage alert emails in Settings → Notifications.');
 
     const routes = await this.routingService.resolveRoutesForTenant(
       { value: 'ALERT_TRIGGERED' } as any,
