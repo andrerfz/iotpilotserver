@@ -622,7 +622,8 @@
         "disable_msg": "Désactiver la 2FA ? Votre compte sera moins protégé.",
         "disable_confirm": "Désactiver",
         "disabled": "Authentification à deux facteurs désactivée.",
-        "disable_failed": "Impossible de désactiver l'authentification à deux facteurs."
+        "disable_failed": "Impossible de désactiver la 2FA. Vérifiez votre mot de passe et réessayez.",
+        "disable_password_placeholder": "Mot de passe actuel"
       }
     },
     "notifications": {

@@ -622,7 +622,8 @@
         "disable_msg": "Disattivare la 2FA? Il tuo account sarà meno protetto.",
         "disable_confirm": "Disattiva",
         "disabled": "Verifica in due passaggi disattivata.",
-        "disable_failed": "Impossibile disattivare la verifica in due passaggi."
+        "disable_failed": "Impossibile disattivare la 2FA. Controlla la password e riprova.",
+        "disable_password_placeholder": "Password attuale"
       }
     },
     "notifications": {

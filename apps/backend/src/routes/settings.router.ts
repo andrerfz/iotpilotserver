@@ -5,6 +5,8 @@ import { tenantPrisma } from '@iotpilot/core/tenant-middleware';
 import { getUserPreferences } from '@iotpilot/core/user-preferences';
 import { prisma } from '@iotpilot/core/shared/infrastructure/database/prisma.service';
 import { AuthenticatedRequest, requireAuth } from '../middleware/auth.middleware';
+import { BcryptPasswordHasher } from '@iotpilot/core/user/infrastructure/services/bcrypt-password-hasher';
+import { Password } from '@iotpilot/core/user/domain/value-objects/password.vo';
 import { send } from '../http/response.util';
 
 function isoTimestamp(): string {
@@ -362,18 +364,44 @@ settingsRouter.post('/security/2fa/verify', requireAuth(), async (req: Authentic
   }
 });
 
-// POST /settings/security/2fa/disable — turn 2FA off
+// POST /settings/security/2fa/disable — turn 2FA off (step-up: current password)
 settingsRouter.post('/security/2fa/disable', requireAuth(), async (req: AuthenticatedRequest, res: Response) => {
   try {
     const user = req.user;
     if (!user) { send.unauthorized(res, 'Authentication required'); return; }
+
+    // Step-up verification: disabling 2FA is a security downgrade, so require the
+    // current password. A hijacked session alone must not be able to turn it off.
+    const password = typeof req.body?.password === 'string' ? req.body.password : '';
+    if (!password) { send.badRequest(res, 'Current password is required to disable 2FA'); return; }
+
     const client = prisma.getClient();
+    const row = await client.user.findUnique({ where: { id: user.id }, select: { password: true } });
+    const isValid = row?.password
+      ? await new BcryptPasswordHasher().verify(Password.create(password), row.password)
+      : false;
+    if (!isValid) { send.badRequest(res, 'Current password is incorrect'); return; }
+
     await client.user.update({ where: { id: user.id }, data: { twoFactorEnabled: false } });
     await client.userPreference.upsert({
       where: { userId_category_key: { userId: user.id, category: 'SECURITY', key: 'twoFactorAuth' } },
       update: { value: 'false' },
       create: { userId: user.id, category: 'SECURITY', key: 'twoFactorAuth', value: 'false' },
     });
+
+    // Revoke the user's OTHER sessions (keep the current one) so a hijacked
+    // session cannot survive the 2FA downgrade.
+    const currentToken = req.cookies?.['auth-token']
+      || (req.headers['authorization'] as string | undefined)?.replace('Bearer ', '');
+    await client.session.updateMany({
+      where: {
+        userId: user.id,
+        deletedAt: null,
+        ...(currentToken ? { token: { not: currentToken } } : {}),
+      },
+      data: { deletedAt: new Date() },
+    });
+
     send.ok(res, { message: 'Two-factor authentication disabled', twoFactorEnabled: false });
   } catch (err) {
     console.error('Failed to disable 2FA:', err);

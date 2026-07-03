@@ -622,7 +622,8 @@
         "disable_msg": "Desativar a 2FA? Sua conta ficará menos protegida.",
         "disable_confirm": "Desativar",
         "disabled": "Verificação em duas etapas desativada.",
-        "disable_failed": "Não foi possível desativar a verificação em duas etapas."
+        "disable_failed": "Não foi possível desativar a 2FA. Verifique sua senha e tente novamente.",
+        "disable_password_placeholder": "Senha atual"
       }
     },
     "notifications": {

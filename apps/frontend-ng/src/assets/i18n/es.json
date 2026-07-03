@@ -622,7 +622,8 @@
         "disable_msg": "¿Desactivar 2FA? Tu cuenta quedará menos protegida.",
         "disable_confirm": "Desactivar",
         "disabled": "Verificación en dos pasos desactivada.",
-        "disable_failed": "No se pudo desactivar la verificación en dos pasos."
+        "disable_failed": "No se pudo desactivar 2FA. Comprueba la contraseña e inténtalo de nuevo.",
+        "disable_password_placeholder": "Contraseña actual"
       }
     },
     "notifications": {

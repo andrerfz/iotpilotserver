@@ -242,21 +242,27 @@ export class SettingsSecurityPage implements OnInit {
     const alert = await this.alertCtrl.create({
       header: this.t.instant('settings.security.two_factor.disable_title'),
       message: this.t.instant('settings.security.two_factor.disable_msg'),
+      // Step-up: require the current password to disable (verified server-side).
+      inputs: [{
+        name: 'password',
+        type: 'password',
+        placeholder: this.t.instant('settings.security.two_factor.disable_password_placeholder'),
+      }],
       buttons: [
         { text: this.t.instant('common.cancel'), role: 'cancel', handler: () => this.setTwoFactor(true) },
         {
           text: this.t.instant('settings.security.two_factor.disable_confirm'),
           role: 'destructive',
-          handler: () => { void this.confirmDisable2fa(); },
+          handler: (d: { password?: string }) => { void this.confirmDisable2fa(d.password ?? ''); },
         },
       ],
     });
     await alert.present();
   }
 
-  private async confirmDisable2fa(): Promise<void> {
+  private async confirmDisable2fa(password: string): Promise<void> {
     try {
-      await firstValueFrom(this.http.post(`${this.baseUrl}/settings/security/2fa/disable`, {}));
+      await firstValueFrom(this.http.post(`${this.baseUrl}/settings/security/2fa/disable`, { password }));
       this.setTwoFactor(false);
       this.securitySuccess.set(this.t.instant('settings.security.two_factor.disabled'));
     } catch {

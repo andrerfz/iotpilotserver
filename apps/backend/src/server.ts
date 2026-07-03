@@ -208,7 +208,10 @@ const authLimiter = buildRateLimiter({
 // Mount the strict limiter on the brute-forceable auth entry points, before the
 // general limiter. The general '/api/' limiter continues to skip everything
 // under '/auth/', so these endpoints are covered by the auth limiter alone.
-app.use(['/api/auth/login', '/api/auth/register', '/api/auth/verify-2fa'], authLimiter);
+app.use(
+  ['/api/auth/login', '/api/auth/register', '/api/auth/verify-2fa', '/api/settings/security/2fa'],
+  authLimiter,
+);
 
 app.use('/api/', (req, res, next) => {
   if (req.path.startsWith('/auth/')) return next();

@@ -622,7 +622,8 @@
         "disable_msg": "Turn off 2FA? Your account will be less protected.",
         "disable_confirm": "Disable",
         "disabled": "Two-factor authentication disabled.",
-        "disable_failed": "Could not disable two-factor authentication."
+        "disable_failed": "Could not disable 2FA. Check your password and try again.",
+        "disable_password_placeholder": "Current password"
       }
     },
     "notifications": {
