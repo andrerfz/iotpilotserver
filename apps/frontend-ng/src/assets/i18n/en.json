@@ -610,7 +610,20 @@
       "msg_password_changed": "Password changed successfully",
       "msg_sessions_load_failed": "Failed to load sessions",
       "msg_session_revoke_failed": "Failed to revoke session",
-      "msg_sessions_revoke_failed": "Failed to revoke sessions"
+      "msg_sessions_revoke_failed": "Failed to revoke sessions",
+      "two_factor": {
+        "enable_title": "Enable two-factor authentication",
+        "enable_msg": "Enter the 6-digit code we emailed you to confirm.",
+        "enable_confirm": "Enable",
+        "enabled": "Two-factor authentication enabled.",
+        "invalid_code": "Invalid or expired code. Please try again.",
+        "send_failed": "Could not send the verification code. Please try again.",
+        "disable_title": "Disable two-factor authentication",
+        "disable_msg": "Turn off 2FA? Your account will be less protected.",
+        "disable_confirm": "Disable",
+        "disabled": "Two-factor authentication disabled.",
+        "disable_failed": "Could not disable two-factor authentication."
+      }
     },
     "notifications": {
       "title": "Notification Preferences",

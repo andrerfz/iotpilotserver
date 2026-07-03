@@ -30,7 +30,9 @@ export const profileSettingsSchema = v.object({
 // Security settings schema
 const regexNumericString = z.string().regex(/^\d+$/);
 export const securitySettingsSchema = v.object({
-  twoFactorAuth: v.enum(['true', 'false'] as const),
+  // 2FA is managed by the dedicated /security/2fa/* endpoints, so it is optional
+  // here and ignored for enablement — this PUT only persists the other prefs.
+  twoFactorAuth: v.optional(v.enum(['true', 'false'] as const)),
   sessionTimeout: (v as any).fromZodSchema(regexNumericString), // numeric string
   loginNotifications: v.enum(['true', 'false'] as const),
 });
@@ -216,7 +218,14 @@ settingsRouter.get('/security', requireAuth(), async (req: AuthenticatedRequest,
 
     const preferences = await getUserPreferences(user.id, 'SECURITY');
 
-    send.ok(res, preferences);
+    // twoFactorEnabled is the single source of truth (User row / login gate),
+    // not the SECURITY pref — the pref can diverge, so drive the UI from this.
+    const row = await prisma.getClient().user.findUnique({
+      where: { id: user.id },
+      select: { twoFactorEnabled: true },
+    });
+
+    send.ok(res, { ...preferences, twoFactorEnabled: row?.twoFactorEnabled ?? false });
     return;
   } catch (err) {
     console.error('Failed to fetch security settings:', err);
@@ -281,41 +290,10 @@ settingsRouter.put('/security', requireAuth(), async (req: AuthenticatedRequest,
 
     await Promise.all(updatePromises);
 
-    // Sync twoFactorEnabled to User record (source of truth for login gate)
-    if (validatedData.twoFactorAuth !== undefined) {
-      const enabled = validatedData.twoFactorAuth === 'true';
-      await tenantPrisma.client.user.update({
-        where: { id: user.id },
-        data: { twoFactorEnabled: enabled },
-      });
-
-      if (enabled) {
-        try {
-          const { ServiceContainer } = await import(
-            '@iotpilot/core/shared/infrastructure/container/service-container'
-          );
-          const serviceContainer = ServiceContainer.getInstance();
-          const commandBus = serviceContainer.getCommandBus();
-          const { SendVerificationCodeCommand } = await import(
-            '@iotpilot/core/user/application/commands/send-verification-code/send-verification-code.command'
-          );
-          await commandBus.execute(
-            SendVerificationCodeCommand.create(user.id, user.email, 'TWO_FACTOR'),
-          );
-          console.log(`[Security] 2FA enabled for user ${user.id}, test code sent`);
-        } catch (err) {
-          console.warn('Failed to send test verification code:', (err as Error).message);
-        }
-      } else {
-        // Invalidate all sessions so the next login goes through fresh auth
-        // without 2FA — avoids sessions that were created under 2FA bypass
-        await tenantPrisma.client.session.updateMany({
-          where: { userId: user.id, deletedAt: null },
-          data: { deletedAt: new Date() },
-        });
-        console.log(`[Security] 2FA disabled for user ${user.id}; all sessions invalidated`);
-      }
-    }
+    // NOTE: 2FA enable/disable is NOT handled here. It is a verified flow via the
+    // dedicated /security/2fa/* endpoints (send-code → verify → enable), so it is
+    // never turned on without confirming a code. This PUT only persists the other
+    // security preferences (session timeout, login notifications).
 
     send.ok(res, {
       message: 'Security settings updated successfully',
@@ -324,6 +302,81 @@ settingsRouter.put('/security', requireAuth(), async (req: AuthenticatedRequest,
     return;
   } catch (err) {
     console.error('Failed to update security settings:', err);
+    send.fromError(res, err);
+  }
+});
+
+// ---------------------------------------------------------------------------
+// 2FA enrollment — verified flow. Enabling requires confirming an emailed code,
+// so 2FA is never turned on without proof, and the toggle state stays truthful.
+// ---------------------------------------------------------------------------
+const twoFactorCodeSchema = z.object({ code: z.string().regex(/^\d{6}$/) });
+
+// POST /settings/security/2fa/send-code — email a fresh 2FA code to the user
+settingsRouter.post('/security/2fa/send-code', requireAuth(), async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const user = req.user;
+    if (!user) { send.unauthorized(res, 'Authentication required'); return; }
+    const { ServiceContainer } = await import('@iotpilot/core/shared/infrastructure/container/service-container');
+    const { SendVerificationCodeCommand } = await import(
+      '@iotpilot/core/user/application/commands/send-verification-code/send-verification-code.command'
+    );
+    await ServiceContainer.getInstance().getCommandBus().execute(
+      SendVerificationCodeCommand.create(user.id, user.email, 'TWO_FACTOR'),
+    );
+    send.ok(res, { message: 'Verification code sent' });
+  } catch (err) {
+    console.error('Failed to send 2FA code:', err);
+    send.fromError(res, err);
+  }
+});
+
+// POST /settings/security/2fa/verify — verify the emailed code and enable 2FA
+settingsRouter.post('/security/2fa/verify', requireAuth(), async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const user = req.user;
+    if (!user) { send.unauthorized(res, 'Authentication required'); return; }
+    const parsed = twoFactorCodeSchema.safeParse(req.body);
+    if (!parsed.success) { send.badRequest(res, 'A 6-digit code is required'); return; }
+
+    const client = prisma.getClient();
+    const record = await client.verificationCode.findFirst({
+      where: {
+        userId: user.id, code: parsed.data.code, type: 'TWO_FACTOR',
+        usedAt: null, expiresAt: { gt: new Date() },
+      },
+    });
+    if (!record) { send.badRequest(res, 'Invalid or expired code'); return; }
+
+    await client.verificationCode.update({ where: { id: record.id }, data: { usedAt: new Date() } });
+    await client.user.update({ where: { id: user.id }, data: { twoFactorEnabled: true } });
+    await client.userPreference.upsert({
+      where: { userId_category_key: { userId: user.id, category: 'SECURITY', key: 'twoFactorAuth' } },
+      update: { value: 'true' },
+      create: { userId: user.id, category: 'SECURITY', key: 'twoFactorAuth', value: 'true' },
+    });
+    send.ok(res, { message: 'Two-factor authentication enabled', twoFactorEnabled: true });
+  } catch (err) {
+    console.error('Failed to verify 2FA code:', err);
+    send.fromError(res, err);
+  }
+});
+
+// POST /settings/security/2fa/disable — turn 2FA off
+settingsRouter.post('/security/2fa/disable', requireAuth(), async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const user = req.user;
+    if (!user) { send.unauthorized(res, 'Authentication required'); return; }
+    const client = prisma.getClient();
+    await client.user.update({ where: { id: user.id }, data: { twoFactorEnabled: false } });
+    await client.userPreference.upsert({
+      where: { userId_category_key: { userId: user.id, category: 'SECURITY', key: 'twoFactorAuth' } },
+      update: { value: 'false' },
+      create: { userId: user.id, category: 'SECURITY', key: 'twoFactorAuth', value: 'false' },
+    });
+    send.ok(res, { message: 'Two-factor authentication disabled', twoFactorEnabled: false });
+  } catch (err) {
+    console.error('Failed to disable 2FA:', err);
     send.fromError(res, err);
   }
 });

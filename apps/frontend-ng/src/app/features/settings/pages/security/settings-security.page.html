@@ -16,7 +16,7 @@
               <h3>{{ 'settings.security.two_fa.title' | translate }}</h3>
               <p>{{ 'settings.security.two_fa.desc' | translate }}</p>
             </ion-label>
-            <ion-toggle formControlName="twoFactorAuth" slot="end" />
+            <ion-toggle formControlName="twoFactorAuth" slot="end" (ionChange)="onTwoFactorToggle($event)" />
           </ion-item>
 
           <ion-item lines="full">

@@ -2,8 +2,19 @@ import { render } from '@testing-library/angular';
 import { describe, it, expect, vi } from 'vitest';
 import { provideRouter, Router } from '@angular/router';
 import { TestBed } from '@angular/core/testing';
+import { HttpClient } from '@angular/common/http';
 import { Api } from '@ng/core/api/generated/api';
+import { AlertController } from '@ng/shared/ui';
+import { ApiConfiguration } from '@ng/core/api/generated/api-configuration';
 import { AuthService } from '@ng/core/auth/auth.service';
+
+// Providers the page needs for the verified 2FA flow (no test triggers it, so
+// these just need to be injectable).
+const twoFaProviders = [
+  { provide: HttpClient, useValue: { post: vi.fn() } },
+  { provide: AlertController, useValue: { create: vi.fn().mockResolvedValue({ present: vi.fn() }) } },
+  { provide: ApiConfiguration, useValue: { rootUrl: '' } },
+];
 import type { SecuritySettings } from '@ng/core/api/generated/models/security-settings';
 import type { Session } from '@ng/core/api/generated/models/session';
 import { SettingsSecurityPage } from './settings-security.page';
@@ -47,6 +58,7 @@ async function setup(
   return render(SettingsSecurityPage, {
     providers: [
       provideRouter([]),
+      ...twoFaProviders,
       { provide: Api, useValue: api },
       { provide: AuthService, useValue: auth },
     ],
@@ -107,6 +119,7 @@ describe('SettingsSecurityPage', () => {
     const { fixture } = await render(SettingsSecurityPage, {
       providers: [
         provideRouter([]),
+      ...twoFaProviders,
         { provide: Api, useValue: api },
         { provide: AuthService, useValue: auth },
       ],
@@ -150,6 +163,7 @@ describe('SettingsSecurityPage', () => {
     const { fixture } = await render(SettingsSecurityPage, {
       providers: [
         provideRouter([{ path: 'login', component: SettingsSecurityPage }]),
+        ...twoFaProviders,
         { provide: Api, useValue: { invoke: invokeSpy } },
         { provide: AuthService, useValue: auth },
       ],
@@ -183,6 +197,7 @@ describe('SettingsSecurityPage', () => {
     const { fixture } = await render(SettingsSecurityPage, {
       providers: [
         provideRouter([]),
+      ...twoFaProviders,
         { provide: Api, useValue: { invoke: invokeSpy } },
         { provide: AuthService, useValue: makeAuth() },
       ],
@@ -210,6 +225,7 @@ describe('SettingsSecurityPage', () => {
     const { fixture } = await render(SettingsSecurityPage, {
       providers: [
         provideRouter([]),
+      ...twoFaProviders,
         { provide: Api, useValue: { invoke: invokeSpy } },
         { provide: AuthService, useValue: makeAuth() },
       ],
@@ -240,6 +256,7 @@ describe('SettingsSecurityPage', () => {
     const { fixture } = await render(SettingsSecurityPage, {
       providers: [
         provideRouter([]),
+      ...twoFaProviders,
         { provide: Api, useValue: { invoke: invokeSpy } },
         { provide: AuthService, useValue: makeAuth() },
       ],
@@ -270,6 +287,7 @@ describe('SettingsSecurityPage', () => {
     const { fixture } = await render(SettingsSecurityPage, {
       providers: [
         provideRouter([]),
+      ...twoFaProviders,
         { provide: Api, useValue: { invoke: invokeSpy } },
         { provide: AuthService, useValue: makeAuth() },
       ],
@@ -315,6 +333,7 @@ describe('SettingsSecurityPage', () => {
     const { fixture, findByText } = await render(SettingsSecurityPage, {
       providers: [
         provideRouter([]),
+      ...twoFaProviders,
         { provide: Api, useValue: api },
         { provide: AuthService, useValue: makeAuth() },
       ],

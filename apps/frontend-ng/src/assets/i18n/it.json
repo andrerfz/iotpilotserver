@@ -610,7 +610,20 @@
       "msg_password_changed": "Password modificata correttamente",
       "msg_sessions_load_failed": "Impossibile caricare le sessioni",
       "msg_session_revoke_failed": "Impossibile revocare la sessione",
-      "msg_sessions_revoke_failed": "Impossibile revocare le sessioni"
+      "msg_sessions_revoke_failed": "Impossibile revocare le sessioni",
+      "two_factor": {
+        "enable_title": "Attiva la verifica in due passaggi",
+        "enable_msg": "Inserisci il codice di 6 cifre inviato via email per confermare.",
+        "enable_confirm": "Attiva",
+        "enabled": "Verifica in due passaggi attivata.",
+        "invalid_code": "Codice non valido o scaduto. Riprova.",
+        "send_failed": "Impossibile inviare il codice di verifica. Riprova.",
+        "disable_title": "Disattiva la verifica in due passaggi",
+        "disable_msg": "Disattivare la 2FA? Il tuo account sarà meno protetto.",
+        "disable_confirm": "Disattiva",
+        "disabled": "Verifica in due passaggi disattivata.",
+        "disable_failed": "Impossibile disattivare la verifica in due passaggi."
+      }
     },
     "notifications": {
       "title": "Preferenze notifiche",

@@ -610,7 +610,20 @@
       "msg_password_changed": "Contraseña cambiada correctamente",
       "msg_sessions_load_failed": "No se pudieron cargar las sesiones",
       "msg_session_revoke_failed": "No se pudo revocar la sesión",
-      "msg_sessions_revoke_failed": "No se pudieron revocar las sesiones"
+      "msg_sessions_revoke_failed": "No se pudieron revocar las sesiones",
+      "two_factor": {
+        "enable_title": "Activar verificación en dos pasos",
+        "enable_msg": "Introduce el código de 6 dígitos que te hemos enviado por correo.",
+        "enable_confirm": "Activar",
+        "enabled": "Verificación en dos pasos activada.",
+        "invalid_code": "Código inválido o caducado. Inténtalo de nuevo.",
+        "send_failed": "No se pudo enviar el código de verificación. Inténtalo de nuevo.",
+        "disable_title": "Desactivar verificación en dos pasos",
+        "disable_msg": "¿Desactivar 2FA? Tu cuenta quedará menos protegida.",
+        "disable_confirm": "Desactivar",
+        "disabled": "Verificación en dos pasos desactivada.",
+        "disable_failed": "No se pudo desactivar la verificación en dos pasos."
+      }
     },
     "notifications": {
       "title": "Preferencias de notificaciones",

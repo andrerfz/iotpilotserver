@@ -610,7 +610,20 @@
       "msg_password_changed": "Senha alterada com sucesso",
       "msg_sessions_load_failed": "Falha ao carregar as sessões",
       "msg_session_revoke_failed": "Falha ao revogar a sessão",
-      "msg_sessions_revoke_failed": "Falha ao revogar as sessões"
+      "msg_sessions_revoke_failed": "Falha ao revogar as sessões",
+      "two_factor": {
+        "enable_title": "Ativar verificação em duas etapas",
+        "enable_msg": "Digite o código de 6 dígitos que enviamos por e-mail para confirmar.",
+        "enable_confirm": "Ativar",
+        "enabled": "Verificação em duas etapas ativada.",
+        "invalid_code": "Código inválido ou expirado. Tente novamente.",
+        "send_failed": "Não foi possível enviar o código de verificação. Tente novamente.",
+        "disable_title": "Desativar verificação em duas etapas",
+        "disable_msg": "Desativar a 2FA? Sua conta ficará menos protegida.",
+        "disable_confirm": "Desativar",
+        "disabled": "Verificação em duas etapas desativada.",
+        "disable_failed": "Não foi possível desativar a verificação em duas etapas."
+      }
     },
     "notifications": {
       "title": "Preferências de notificação",

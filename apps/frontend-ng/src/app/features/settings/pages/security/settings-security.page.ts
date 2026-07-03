@@ -13,10 +13,13 @@ import {
   signal,
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 import { Router } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { TopbarService } from '@ng/shell/topbar.service';
 import {
+  AlertController,
   IonButton,
   IonCard,
   IonCardContent,
@@ -31,6 +34,7 @@ import {
   IonSpinner,
   IonToggle,
 } from '@ng/shared/ui';
+import { ApiConfiguration } from '@ng/core/api/generated/api-configuration';
 import { Api } from '@ng/core/api/generated/api';
 import { AuthService } from '@ng/core/auth/auth.service';
 import { getSecuritySettings } from '@ng/core/api/generated/fn/settings/get-security-settings';
@@ -81,6 +85,9 @@ export class SettingsSecurityPage implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly t = inject(TranslateService);
+  private readonly http = inject(HttpClient);
+  private readonly alertCtrl = inject(AlertController);
+  private readonly baseUrl = inject(ApiConfiguration).rootUrl;
 
   readonly isLoading = signal(true);
 
@@ -120,11 +127,13 @@ export class SettingsSecurityPage implements OnInit {
     this.topbar.set('settings.tabs.security');
     try {
       const data = await this.api.invoke(getSecuritySettings, {});
+      // twoFactorEnabled (User row) is the source of truth — not the pref.
+      const twoFactorOn = (data as { twoFactorEnabled?: boolean }).twoFactorEnabled === true;
       this.securityForm.patchValue({
-        twoFactorAuth: data.twoFactorAuth === 'true',
+        twoFactorAuth: twoFactorOn,
         sessionTimeout: parseInt(data.sessionTimeout ?? '30', 10) || 30,
         loginNotifications: data.loginNotifications === 'true',
-      });
+      }, { emitEvent: false });
     } catch {
       this.securityError.set(this.t.instant('settings.security.msg_load_failed'));
     } finally {
@@ -156,6 +165,9 @@ export class SettingsSecurityPage implements OnInit {
     this.securitySuccess.set('');
     try {
       const vals = this.securityForm.getRawValue();
+      // 2FA is managed by its own verified flow (onTwoFactorToggle); the backend
+      // ignores twoFactorAuth here for enable/disable. We still send the current
+      // (real) value so the persisted pref matches the actual state.
       const body: SecuritySettings = {
         twoFactorAuth: String(vals.twoFactorAuth) as 'true' | 'false',
         sessionTimeout: String(vals.sessionTimeout),
@@ -170,6 +182,86 @@ export class SettingsSecurityPage implements OnInit {
       );
     } finally {
       this.isSavingSecurity.set(false);
+    }
+  }
+
+  private setTwoFactor(on: boolean): void {
+    this.securityForm.controls.twoFactorAuth.setValue(on, { emitEvent: false });
+  }
+
+  /**
+   * 2FA toggle. Enabling emails a code and requires confirming it in a modal
+   * (never enabled without proof); disabling asks for confirmation. The toggle
+   * reverts if the flow is cancelled or fails, so its state always matches
+   * reality on the server.
+   */
+  async onTwoFactorToggle(event: Event): Promise<void> {
+    const checked = (event as CustomEvent<{ checked: boolean }>).detail?.checked;
+    if (checked === undefined) return;
+    this.securityError.set('');
+    this.securitySuccess.set('');
+    if (checked) await this.startEnable2fa();
+    else await this.startDisable2fa();
+  }
+
+  private async startEnable2fa(): Promise<void> {
+    try {
+      await firstValueFrom(this.http.post(`${this.baseUrl}/settings/security/2fa/send-code`, {}));
+    } catch {
+      this.setTwoFactor(false);
+      this.securityError.set(this.t.instant('settings.security.two_factor.send_failed'));
+      return;
+    }
+    const alert = await this.alertCtrl.create({
+      header: this.t.instant('settings.security.two_factor.enable_title'),
+      message: this.t.instant('settings.security.two_factor.enable_msg'),
+      inputs: [{ name: 'code', type: 'text', placeholder: '000000', attributes: { inputmode: 'numeric', maxlength: 6 } }],
+      buttons: [
+        { text: this.t.instant('common.cancel'), role: 'cancel', handler: () => this.setTwoFactor(false) },
+        {
+          text: this.t.instant('settings.security.two_factor.enable_confirm'),
+          handler: (d: { code?: string }) => { void this.confirmEnable2fa((d.code ?? '').trim()); },
+        },
+      ],
+    });
+    await alert.present();
+  }
+
+  private async confirmEnable2fa(code: string): Promise<void> {
+    try {
+      await firstValueFrom(this.http.post(`${this.baseUrl}/settings/security/2fa/verify`, { code }));
+      this.setTwoFactor(true);
+      this.securitySuccess.set(this.t.instant('settings.security.two_factor.enabled'));
+    } catch {
+      this.setTwoFactor(false);
+      this.securityError.set(this.t.instant('settings.security.two_factor.invalid_code'));
+    }
+  }
+
+  private async startDisable2fa(): Promise<void> {
+    const alert = await this.alertCtrl.create({
+      header: this.t.instant('settings.security.two_factor.disable_title'),
+      message: this.t.instant('settings.security.two_factor.disable_msg'),
+      buttons: [
+        { text: this.t.instant('common.cancel'), role: 'cancel', handler: () => this.setTwoFactor(true) },
+        {
+          text: this.t.instant('settings.security.two_factor.disable_confirm'),
+          role: 'destructive',
+          handler: () => { void this.confirmDisable2fa(); },
+        },
+      ],
+    });
+    await alert.present();
+  }
+
+  private async confirmDisable2fa(): Promise<void> {
+    try {
+      await firstValueFrom(this.http.post(`${this.baseUrl}/settings/security/2fa/disable`, {}));
+      this.setTwoFactor(false);
+      this.securitySuccess.set(this.t.instant('settings.security.two_factor.disabled'));
+    } catch {
+      this.setTwoFactor(true);
+      this.securityError.set(this.t.instant('settings.security.two_factor.disable_failed'));
     }
   }
 

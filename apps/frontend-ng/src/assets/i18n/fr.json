@@ -610,7 +610,20 @@
       "msg_password_changed": "Mot de passe modifié avec succès",
       "msg_sessions_load_failed": "Échec du chargement des sessions",
       "msg_session_revoke_failed": "Échec de la révocation de la session",
-      "msg_sessions_revoke_failed": "Échec de la révocation des sessions"
+      "msg_sessions_revoke_failed": "Échec de la révocation des sessions",
+      "two_factor": {
+        "enable_title": "Activer l'authentification à deux facteurs",
+        "enable_msg": "Saisissez le code à 6 chiffres envoyé par e-mail pour confirmer.",
+        "enable_confirm": "Activer",
+        "enabled": "Authentification à deux facteurs activée.",
+        "invalid_code": "Code invalide ou expiré. Veuillez réessayer.",
+        "send_failed": "Impossible d'envoyer le code de vérification. Veuillez réessayer.",
+        "disable_title": "Désactiver l'authentification à deux facteurs",
+        "disable_msg": "Désactiver la 2FA ? Votre compte sera moins protégé.",
+        "disable_confirm": "Désactiver",
+        "disabled": "Authentification à deux facteurs désactivée.",
+        "disable_failed": "Impossible de désactiver l'authentification à deux facteurs."
+      }
     },
     "notifications": {
       "title": "Préférences de notification",
