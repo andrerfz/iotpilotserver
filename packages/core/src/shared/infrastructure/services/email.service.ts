@@ -1,6 +1,7 @@
 import * as nodemailer from 'nodemailer';
 import type { EmailMessage, EmailService } from '@iotpilot/core/shared/domain/interfaces/email-service.interface';
 import { StructuredLogger } from '@iotpilot/core/shared/infrastructure/logging/structured-logger';
+import { brandLogoAttachment } from '@iotpilot/core/shared/infrastructure/services/brand-logo';
 
 export class NodemailerEmailService implements EmailService {
     private transporter: nodemailer.Transporter;
@@ -33,6 +34,8 @@ export class NodemailerEmailService implements EmailService {
                 subject: message.subject,
                 html: message.html,
                 text: message.text,
+                // Brand logo referenced via cid:iotpilot-logo in the shared email layout.
+                attachments: [brandLogoAttachment()],
             });
             this.logger.info('Email sent', { to: message.to, subject: message.subject });
         } catch (error) {
