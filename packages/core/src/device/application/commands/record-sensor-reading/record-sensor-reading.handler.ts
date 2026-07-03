@@ -52,6 +52,7 @@ export class RecordSensorReadingHandler implements CommandHandler<RecordSensorRe
      */
     private async publishAlertTriggered(
         alertId: string, deviceBizId: string, customerId: string, severity: string,
+        title: string, message: string, deviceName: string,
     ): Promise<void> {
         if (!this.eventBus) return;
         try {
@@ -61,6 +62,9 @@ export class RecordSensorReadingHandler implements CommandHandler<RecordSensorRe
                 ThresholdId.create(),
                 AlertSeverity.fromString(severity),
                 CustomerId.create(customerId),
+                title,
+                message,
+                deviceName,
             ));
         } catch {
             // notifications are best-effort; ingestion must not fail because of them
@@ -246,7 +250,7 @@ export class RecordSensorReadingHandler implements CommandHandler<RecordSensorRe
                         }
                     });
                     alertCreated = true;
-                    await this.publishAlertTriggered(created.id, device.deviceId, alertCustomerId, severity);
+                    await this.publishAlertTriggered(created.id, device.deviceId, alertCustomerId, severity, created.title, created.message, device.name ?? device.hostname ?? device.deviceId);
                 } else if (existing.severity === 'WARNING' && severity === 'CRITICAL') {
                     // Escalate from WARNING to CRITICAL
                     await this.prisma.alert.update({
@@ -298,7 +302,7 @@ export class RecordSensorReadingHandler implements CommandHandler<RecordSensorRe
                             }
                         });
                         alertCreated = true;
-                        await this.publishAlertTriggered(created.id, device.deviceId, alertCustomerId, severity);
+                        await this.publishAlertTriggered(created.id, device.deviceId, alertCustomerId, severity, created.title, created.message, device.name ?? device.hostname ?? device.deviceId);
                     } else if (
                         existingBattery.severity === 'WARNING' &&
                         data.batteryLevel <= thresholds.batteryCrit

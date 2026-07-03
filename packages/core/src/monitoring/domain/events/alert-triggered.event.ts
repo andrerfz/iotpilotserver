@@ -14,10 +14,14 @@ export class AlertTriggeredEvent extends DomainEventBase {
     public readonly deviceId: DeviceId,
     public readonly thresholdId: ThresholdId,
     public readonly severity: AlertSeverity,
-    public readonly tenantId: CustomerId
+    public readonly tenantId: CustomerId,
+    // Human-readable context for notifications (optional; falls back to IDs).
+    public readonly title?: string,
+    public readonly message?: string,
+    public readonly deviceName?: string,
   ) {
     super();
-    
+
     // Add any additional properties or logic here
     this.eventData = {
       alertId: alertId.value,
@@ -25,6 +29,9 @@ export class AlertTriggeredEvent extends DomainEventBase {
       thresholdId: thresholdId.value,
       severity: severity.value,
       tenantId: tenantId.value,
+      title,
+      message,
+      deviceName,
       timestamp: new Date().toISOString()
     };
   }

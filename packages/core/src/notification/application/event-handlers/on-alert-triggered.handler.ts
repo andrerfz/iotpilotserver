@@ -18,8 +18,32 @@ export class OnAlertTriggeredHandler implements EventHandler<AlertTriggeredEvent
 
     const severity = event.severity.value;
     const isCritical = severity === 'CRITICAL' || severity === 'HIGH';
-    const subject = `${isCritical ? '🔴' : '🟡'} ${severity} Alert Triggered`;
-    const body = `Alert ID: ${event.alertId.value}\nDevice: ${event.deviceId.value}\nThreshold: ${event.thresholdId.value}\nSeverity: ${severity}`;
+    const emoji = isCritical ? '🔴' : '🟡';
+    const accent = isCritical ? '#c5000f' : '#e0ac08';
+    const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    const title = event.title ?? `${severity} Alert`;
+    const deviceName = event.deviceName ?? event.deviceId.value;
+    const message = event.message ?? '';
+    const when = String((event.eventData?.timestamp as string) ?? new Date().toISOString())
+      .replace('T', ' ').slice(0, 19) + ' UTC';
+
+    const subject = `${emoji} ${title}`;
+    const body = `
+<div style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;color:#1a1a1a;">
+  <div style="border-left:4px solid ${accent};background:#f6f6f7;border-radius:8px;padding:16px 18px;">
+    <div style="font-size:18px;font-weight:600;">${emoji} ${esc(title)}</div>
+    ${message ? `<div style="margin-top:6px;color:#555;font-size:14px;line-height:1.4;">${esc(message)}</div>` : ''}
+  </div>
+  <table style="margin-top:18px;font-size:14px;border-collapse:collapse;">
+    <tr><td style="padding:4px 16px 4px 0;color:#888;">Device</td><td style="font-weight:500;">${esc(deviceName)}</td></tr>
+    <tr><td style="padding:4px 16px 4px 0;color:#888;">Severity</td><td><strong style="color:${accent};">${esc(severity)}</strong></td></tr>
+    <tr><td style="padding:4px 16px 4px 0;color:#888;">Time</td><td>${esc(when)}</td></tr>
+  </table>
+  <div style="margin-top:24px;padding-top:14px;border-top:1px solid #eee;font-size:12px;color:#999;">
+    IoT Pilot · automated alert. Manage alert emails in Settings → Notifications.
+  </div>
+</div>`.trim();
 
     const routes = await this.routingService.resolveRoutesForTenant(
       { value: 'ALERT_TRIGGERED' } as any,
