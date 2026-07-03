@@ -12,13 +12,15 @@
  */
 const BRAND = '#0054e9'; // --ion-color-primary
 
-/** Brand icon: a rounded gradient tile with white signal bars (image-free). */
+/**
+ * Brand icon — an image-free reproduction of the app favicon (favicon.svg):
+ * a dark rounded tile with the "IP" monogram in the brand magenta→cyan.
+ * Email clients don't support gradient text (background-clip:text is stripped),
+ * so the gradient is approximated by colouring "I" magenta and "P" cyan — same
+ * left→right feel, guaranteed to render. Only solid bg + text, no images.
+ */
 const BRAND_MARK = `
-<span style="display:inline-block;vertical-align:middle;width:32px;height:32px;border-radius:8px;background:${BRAND};background:linear-gradient(135deg,${BRAND} 0%,#17c8c0 100%);text-align:center;line-height:32px;margin-right:10px;">
-  <span style="display:inline-block;vertical-align:middle;line-height:0;">
-    <span style="display:inline-block;width:3px;height:7px;background:#ffffff;border-radius:1px;margin:0 1px;vertical-align:bottom;"></span><span style="display:inline-block;width:3px;height:11px;background:#ffffff;border-radius:1px;margin:0 1px;vertical-align:bottom;"></span><span style="display:inline-block;width:3px;height:15px;background:#ffffff;border-radius:1px;margin:0 1px;vertical-align:bottom;"></span>
-  </span>
-</span>`.trim();
+<span style="display:inline-block;vertical-align:middle;width:32px;height:32px;border-radius:6px;background:#1a1a2e;text-align:center;line-height:32px;margin-right:10px;font-family:'Arial Black',Arial,sans-serif;font-weight:900;font-size:15px;letter-spacing:-0.5px;"><span style="color:#e040fb;">I</span><span style="color:#00bcd4;">P</span></span>`.trim();
 
 export function renderEmailLayout(contentHtml: string, footerNote?: string): string {
   const footer = footerNote ?? 'Automated message from IoT Pilot.';
