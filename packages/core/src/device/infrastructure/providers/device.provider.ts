@@ -147,7 +147,7 @@ export class DeviceServiceProvider implements BoundedContextProvider {
     commandBus.register(ReleaseDeviceCommand, new ReleaseDeviceHandler(prisma));
     commandBus.register(BulkRegisterDevicesCommand, new BulkRegisterDevicesHandler(deviceRepo, logger, cryptoService));
     commandBus.register(ProcessHeartbeatCommand, new ProcessHeartbeatHandler(prisma, eventBus));
-    commandBus.register(RecordSensorReadingCommand, new RecordSensorReadingHandler(prisma));
+    commandBus.register(RecordSensorReadingCommand, new RecordSensorReadingHandler(prisma, eventBus));
     commandBus.register(ClaimDeviceCommand, new ClaimDeviceHandler(prisma));
     commandBus.register(ProvisionDeviceCommand, new ProvisionDeviceHandler(prisma));
     commandBus.register(MarkStaleDevicesOfflineCommand, new MarkStaleDevicesOfflineHandler(prisma));

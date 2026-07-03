@@ -1,6 +1,13 @@
 import {CommandHandler} from '@iotpilot/core/shared/application/interfaces/command.interface';
 import {RecordSensorReadingCommand} from './record-sensor-reading.command';
 import {PrismaService} from '@iotpilot/core/shared/infrastructure/database/prisma.service';
+import type {EventBus} from '@iotpilot/core/shared/application/bus/event.bus';
+import {AlertTriggeredEvent} from '@iotpilot/core/monitoring/domain/events/alert-triggered.event';
+import {AlertId} from '@iotpilot/core/monitoring/domain/value-objects/alert-id.vo';
+import {ThresholdId} from '@iotpilot/core/monitoring/domain/value-objects/threshold-id.vo';
+import {AlertSeverity} from '@iotpilot/core/monitoring/domain/value-objects/alert-severity.vo';
+import {DeviceId} from '@iotpilot/core/device/domain/value-objects/device-id.vo';
+import {CustomerId} from '@iotpilot/core/shared/domain/value-objects/customer-id.vo';
 
 type PrismaClient = ReturnType<PrismaService['getClient']>;
 
@@ -31,9 +38,33 @@ interface DeviceThresholds {
 
 export class RecordSensorReadingHandler implements CommandHandler<RecordSensorReadingCommand, SensorReadingResult> {
     private readonly prismaService: PrismaService;
+    private readonly eventBus?: EventBus;
 
-    constructor(prismaService: PrismaService) {
+    constructor(prismaService: PrismaService, eventBus?: EventBus) {
         this.prismaService = prismaService;
+        this.eventBus = eventBus;
+    }
+
+    /**
+     * Publish AlertTriggeredEvent so the notification pipeline (routing →
+     * dispatch → email) fires. Gated downstream by the user's alertNotifications
+     * toggle. Never let a notification failure break reading ingestion.
+     */
+    private async publishAlertTriggered(
+        alertId: string, deviceBizId: string, customerId: string, severity: string,
+    ): Promise<void> {
+        if (!this.eventBus) return;
+        try {
+            await this.eventBus.publish(new AlertTriggeredEvent(
+                AlertId.fromString(alertId),
+                DeviceId.create(deviceBizId),
+                ThresholdId.create(),
+                AlertSeverity.fromString(severity),
+                CustomerId.create(customerId),
+            ));
+        } catch {
+            // notifications are best-effort; ingestion must not fail because of them
+        }
     }
 
     private get prisma(): PrismaClient {
@@ -203,7 +234,7 @@ export class RecordSensorReadingHandler implements CommandHandler<RecordSensorRe
                 });
 
                 if (!existing) {
-                    await this.prisma.alert.create({
+                    const created = await this.prisma.alert.create({
                         data: {
                             deviceId: device.id,
                             userId: device.userId ?? undefined,
@@ -215,6 +246,7 @@ export class RecordSensorReadingHandler implements CommandHandler<RecordSensorRe
                         }
                     });
                     alertCreated = true;
+                    await this.publishAlertTriggered(created.id, device.deviceId, alertCustomerId, severity);
                 } else if (existing.severity === 'WARNING' && severity === 'CRITICAL') {
                     // Escalate from WARNING to CRITICAL
                     await this.prisma.alert.update({
@@ -254,7 +286,7 @@ export class RecordSensorReadingHandler implements CommandHandler<RecordSensorRe
                     });
 
                     if (!existingBattery) {
-                        await this.prisma.alert.create({
+                        const created = await this.prisma.alert.create({
                             data: {
                                 deviceId: device.id,
                                 userId: device.userId ?? undefined,
@@ -266,6 +298,7 @@ export class RecordSensorReadingHandler implements CommandHandler<RecordSensorRe
                             }
                         });
                         alertCreated = true;
+                        await this.publishAlertTriggered(created.id, device.deviceId, alertCustomerId, severity);
                     } else if (
                         existingBattery.severity === 'WARNING' &&
                         data.batteryLevel <= thresholds.batteryCrit
