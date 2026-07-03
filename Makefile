@@ -91,6 +91,7 @@ help:
 	@echo ""
 	@echo "🔧 Development:"
 	@echo "  dev                  - Start development (alias for local-start)"
+	@echo "  route-list           - List all backend routes (method, path, source file)"
 	@echo "  openapi-check        - (legacy no-op) route coverage check"
 	@echo "  openapi-diff         - Same as openapi-check but exits 1 on missing docs (CI use)"
 	@echo "  openapi              - Write the auto-generated spec → docs/openapi.generated.json"
@@ -786,6 +787,9 @@ fake-device-heartbeat:
 fake-device-ssh:
 	@echo "🔑 SSH into fake device (pass: raspberry)..."
 	@ssh -p 2222 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null pi@localhost
+
+route-list:
+	@node scripts/route-list.mjs
 
 openapi-check:
 	@echo "🔍 Checking OpenAPI spec endpoint coverage..."
