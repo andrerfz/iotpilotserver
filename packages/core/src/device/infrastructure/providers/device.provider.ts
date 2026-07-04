@@ -150,7 +150,7 @@ export class DeviceServiceProvider implements BoundedContextProvider {
     commandBus.register(RecordSensorReadingCommand, new RecordSensorReadingHandler(prisma, eventBus));
     commandBus.register(ClaimDeviceCommand, new ClaimDeviceHandler(prisma));
     commandBus.register(ProvisionDeviceCommand, new ProvisionDeviceHandler(prisma));
-    commandBus.register(MarkStaleDevicesOfflineCommand, new MarkStaleDevicesOfflineHandler(prisma));
+    commandBus.register(MarkStaleDevicesOfflineCommand, new MarkStaleDevicesOfflineHandler(prisma, eventBus));
     commandBus.register(RequestFirmwareUpdateCommand, new RequestFirmwareUpdateHandler(prisma));
 
     // SSH — server-side only to avoid bundling ssh2 in client
