@@ -25,6 +25,14 @@ const COARSE_TOGGLE: Record<string, string> = {
   USER_LOGIN_ALERT: 'loginNotifications',
 };
 
+// Maps delivery channel → channel-level master switch (NOTIFICATIONS category).
+// Independent of, and applied on top of, the per-type COARSE_TOGGLE above: a user
+// can turn off email entirely while still receiving push, or vice versa.
+const CHANNEL_TOGGLE: Record<string, string> = {
+  EMAIL: 'emailNotifications',
+  PUSH:  'pushNotifications',
+};
+
 export class NotificationRoutingService {
   constructor(
     private readonly preferenceRepo: NotificationPreferenceRepository,
@@ -52,22 +60,23 @@ export class NotificationRoutingService {
 
     const preferences = await this.preferenceRepo.findByUserAndType(userId, customerId, type);
 
+    let routes: RoutingEntry[];
     if (preferences.length > 0) {
-      return preferences
+      routes = preferences
         .filter(p => p.enabled)
         .map((pref: NotificationPreferenceEntity): RoutingEntry => ({
           userId,
           channel: pref.channel.value,
           destination: pref.destination?.getValue() ?? userEmail,
         }));
+    } else if (CRITICAL_TYPES.has(type.value) && userEmail !== null) {
+      // ADR-009 fallback: critical types always reach the user via EMAIL
+      routes = [{ userId, channel: 'EMAIL', destination: userEmail }];
+    } else {
+      routes = [];
     }
 
-    // ADR-009 fallback: critical types always reach the user via EMAIL
-    if (CRITICAL_TYPES.has(type.value) && userEmail !== null) {
-      return [{ userId, channel: 'EMAIL', destination: userEmail }];
-    }
-
-    return [];
+    return this.filterByChannelToggle(routes);
   }
 
   /**
@@ -106,7 +115,7 @@ export class NotificationRoutingService {
       }
     }
 
-    return routes;
+    return this.filterByChannelToggle(routes);
   }
 
   /**
@@ -120,5 +129,21 @@ export class NotificationRoutingService {
     const value = await this.targetRepo.getUserNotificationToggle(userId, toggleKey);
     // Default is true — only block if explicitly set to 'false'
     return value !== 'false';
+  }
+
+  /**
+   * Drops routes whose channel the user has explicitly turned off via the
+   * per-channel master switch (default: allowed when no preference set).
+   */
+  private async filterByChannelToggle(routes: RoutingEntry[]): Promise<RoutingEntry[]> {
+    const allowed = await Promise.all(
+      routes.map(async (route) => {
+        const toggleKey = CHANNEL_TOGGLE[route.channel];
+        if (!toggleKey) return true;
+        const value = await this.targetRepo.getUserNotificationToggle(route.userId, toggleKey);
+        return value !== 'false';
+      }),
+    );
+    return routes.filter((_, i) => allowed[i]);
   }
 }
