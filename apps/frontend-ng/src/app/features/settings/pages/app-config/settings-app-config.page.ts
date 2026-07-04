@@ -8,6 +8,7 @@ import {
   IonCardHeader,
   IonCardTitle,
   IonContent,
+  IonLabel,
   IonSpinner,
 } from '@ng/shared/ui';
 import { Api } from '@ng/core/api/generated/api';
@@ -38,6 +39,7 @@ const LOG_LEVEL_OPTIONS: SelectOption[] = [
     IonCardHeader,
     IonCardTitle,
     IonButton,
+    IonLabel,
     IonSpinner,
     UiSelectComponent,
   ],
