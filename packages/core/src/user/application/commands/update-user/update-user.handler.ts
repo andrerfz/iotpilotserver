@@ -45,6 +45,17 @@ export class UpdateUserHandler implements CommandHandler<UpdateUserCommand, User
       throw new UserNotFoundException(id);
     }
 
+    // A SUPERADMIN account can only be touched by another SUPERADMIN — no
+    // field, not just role. Without this, the tenant-membership check below
+    // is skipped entirely for SUPERADMIN targets (they belong to no tenant),
+    // and the role-change guard further down only blocked *assigning*
+    // SUPERADMIN, not modifying/demoting an *existing* one — a tenant ADMIN
+    // (now allowed to update other users at all) could otherwise edit or
+    // demote the platform SUPERADMIN's account with zero restriction.
+    if (user.isSuperAdmin() && !tenantContext.isSuperAdmin()) {
+      throw new CannotDowngradeSuperadminException(id);
+    }
+
     // Validate tenant access
     const customerId = tenantContext.getCustomerId();
     if (customerId && !user.isSuperAdmin()) {
