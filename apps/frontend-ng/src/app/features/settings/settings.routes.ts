@@ -57,7 +57,15 @@ export const SETTINGS_ROUTES: Routes = [
     loadComponent: () =>
       import('./pages/org-hub/org-hub.page').then((m) => m.OrgHubPage),
     children: [
-      { path: '', redirectTo: 'thresholds', pathMatch: 'full' },
+      { path: '', redirectTo: 'organization', pathMatch: 'full' },
+      {
+        path: 'organization',
+        loadComponent: () =>
+          import('./pages/organization/settings-organization.page').then(
+            (m) => m.SettingsOrganizationPage,
+          ),
+        data: { breadcrumb: ['nav.settings', 'settings.org', 'settings.tabs.organization'] },
+      },
       {
         path: 'thresholds',
         loadComponent: () =>

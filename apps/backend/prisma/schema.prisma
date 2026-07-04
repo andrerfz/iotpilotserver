@@ -219,6 +219,8 @@ model Customer {
   name             String
   slug             String
   domain           String?
+  description      String?
+  contactEmail     String?
   status           CustomerStatus @default(ACTIVE)
   subscriptionTier String         @default("FREE")
   createdAt        DateTime       @default(now())

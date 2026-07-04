@@ -8,6 +8,10 @@ import { AuthenticatedRequest, requireAuth } from '../middleware/auth.middleware
 import { BcryptPasswordHasher } from '@iotpilot/core/user/infrastructure/services/bcrypt-password-hasher';
 import { Password } from '@iotpilot/core/user/domain/value-objects/password.vo';
 import { send } from '../http/response.util';
+import { ServiceContainer } from '@iotpilot/core/shared/infrastructure/container/service-container';
+import { UpdateCustomerCommand } from '@iotpilot/core/customer/application/commands/update-customer/update-customer.command';
+import { TenantContextImpl } from '@iotpilot/core/shared/domain/tenant-context';
+import { CustomerId } from '@iotpilot/core/shared/domain/value-objects/customer-id.vo';
 
 function isoTimestamp(): string {
   return new Date().toISOString();
@@ -62,6 +66,19 @@ export const notificationsSettingsSchema = v.object({
   alertNotifications: v.enum(['true', 'false'] as const),
   deviceOfflineNotifications: v.enum(['true', 'false'] as const),
 });
+
+// Organization profile settings schema
+export const organizationProfileSchema = v.object({
+  name: v.string({ min: 1, max: 255 }),
+  contactEmail: v.optional(v.nullable(v.string({ email: true }))),
+  description: v.optional(v.nullable(v.string({ max: 1000 }))),
+});
+
+// Resolves the effective tenant ID for a request — prefers the SUPERADMIN
+// "act as" tenant (X-Customer-Id / session) over the caller's own JWT tenant.
+function resolveTenantId(req: AuthenticatedRequest): string | undefined {
+  return req.tenant?.getCustomerId()?.getValue() ?? req.user?.customerId ?? undefined;
+}
 
 // ---------------------------------------------------------------------------
 // Router
@@ -661,6 +678,93 @@ settingsRouter.put('/notifications', requireAuth(), async (req: AuthenticatedReq
     return;
   } catch (err) {
     console.error('Failed to update notifications settings:', err);
+    send.fromError(res, err);
+  }
+});
+
+// ---------------------------------------------------------------------------
+// GET /settings/org — Get the caller's own organization profile. ADMIN+.
+// ---------------------------------------------------------------------------
+settingsRouter.get('/org', requireAuth('ADMIN'), async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const tenantId = resolveTenantId(req);
+    if (!tenantId) {
+      send.badRequest(res, 'No active organization for this account');
+      return;
+    }
+
+    const customer = await prisma.getClient().customer.findFirst({
+      where: { id: tenantId, deletedAt: null },
+      select: {
+        id: true, name: true, slug: true, domain: true,
+        contactEmail: true, description: true, status: true, createdAt: true,
+      },
+    });
+
+    if (!customer) {
+      send.notFound(res, 'Organization not found');
+      return;
+    }
+
+    send.ok(res, customer);
+  } catch (err) {
+    console.error('Failed to fetch organization profile:', err);
+    send.fromError(res, err);
+  }
+});
+
+// ---------------------------------------------------------------------------
+// PUT /settings/org — Update the caller's own organization profile. ADMIN+.
+// ---------------------------------------------------------------------------
+settingsRouter.put('/org', requireAuth('ADMIN'), async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const tenantId = resolveTenantId(req);
+    if (!tenantId) {
+      send.badRequest(res, 'No active organization for this account');
+      return;
+    }
+
+    let validatedData: { name: string; contactEmail?: string | null; description?: string | null };
+    try {
+      validatedData = organizationProfileSchema.parse(req.body) as typeof validatedData;
+    } catch (e) {
+      if (e instanceof z.ZodError) {
+        send.badRequest(
+          res,
+          'Invalid input',
+          (e as z.ZodError).errors.map((err: z.ZodIssue) => ({
+            path: err.path.join('.'),
+            message: err.message,
+          })),
+        );
+        return;
+      }
+      throw e;
+    }
+
+    const tenantContext = TenantContextImpl.create(CustomerId.create(tenantId));
+    const commandBus = ServiceContainer.getInstance().getCommandBus();
+    await commandBus.execute(
+      new UpdateCustomerCommand(
+        tenantContext,
+        tenantId,
+        validatedData.name,
+        validatedData.description ?? undefined,
+        validatedData.contactEmail ?? undefined,
+      ),
+    );
+
+    const updated = await prisma.getClient().customer.findFirst({
+      where: { id: tenantId, deletedAt: null },
+      select: {
+        id: true, name: true, slug: true, domain: true,
+        contactEmail: true, description: true, status: true, createdAt: true,
+      },
+    });
+
+    send.ok(res, updated);
+  } catch (err) {
+    console.error('Failed to update organization profile:', err);
     send.fromError(res, err);
   }
 });

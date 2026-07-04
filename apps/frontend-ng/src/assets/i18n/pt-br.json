@@ -718,7 +718,24 @@
       "thresholds": "Limites padrão",
       "preferences": "Preferências",
       "org": "Organização",
+      "organization": "Organização",
       "app_config": "Config. do App"
+    },
+    "organization": {
+      "title": "Perfil da organização",
+      "name": "Nome da organização",
+      "contact_email": "Email de contato",
+      "contact_email_ph": "contato@suaempresa.com",
+      "description": "Descrição",
+      "description_ph": "Uma breve descrição da sua organização",
+      "domain": "Domínio de email",
+      "domain_hint": "Novos cadastros com um email correspondente são atribuídos automaticamente à sua organização. Entre em contato com o suporte para alterá-lo.",
+      "status": "Status",
+      "save": "Salvar alterações",
+      "saving": "Salvando...",
+      "msg_load_failed": "Falha ao carregar o perfil da organização",
+      "msg_saved": "Perfil da organização atualizado",
+      "msg_save_failed": "Falha ao atualizar o perfil da organização"
     },
     "hub": {
       "account_title": "Conta",

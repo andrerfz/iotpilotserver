@@ -718,7 +718,24 @@
       "thresholds": "Default thresholds",
       "preferences": "Preferences",
       "org": "Organization",
+      "organization": "Organization",
       "app_config": "App Config"
+    },
+    "organization": {
+      "title": "Organization Profile",
+      "name": "Organization name",
+      "contact_email": "Contact email",
+      "contact_email_ph": "contact@yourcompany.com",
+      "description": "Description",
+      "description_ph": "A short description of your organization",
+      "domain": "Email domain",
+      "domain_hint": "New sign-ups with a matching email are auto-assigned to your organization. Contact support to change it.",
+      "status": "Status",
+      "save": "Save changes",
+      "saving": "Saving...",
+      "msg_load_failed": "Failed to load organization profile",
+      "msg_saved": "Organization profile updated",
+      "msg_save_failed": "Failed to update organization profile"
     },
     "hub": {
       "account_title": "Account",

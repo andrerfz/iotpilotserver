@@ -33,7 +33,7 @@ import {
     createUserSchema, updateUserSchema, updateProfileSchema, updatePreferenceSchema, pushTokenSchema,
 } from '../routes/users.router';
 import {
-    profileSettingsSchema, securitySettingsSchema, notificationsSettingsSchema,
+    profileSettingsSchema, securitySettingsSchema, notificationsSettingsSchema, organizationProfileSchema,
 } from '../routes/settings.router';
 import {RESPONSE_SCHEMAS} from './response-schemas';
 import {OPERATION_IDS} from './operation-ids';
@@ -94,6 +94,7 @@ export function registerRoutes(): void {
     const ProfileSettingsInput = registry.registerSchema('ProfileSettingsInput', toJson(profileSettingsSchema));
     const SecuritySettingsInput = registry.registerSchema('SecuritySettingsInput', toJson(securitySettingsSchema));
     const NotificationsSettingsInput = registry.registerSchema('NotificationsSettingsInput', toJson(notificationsSettingsSchema));
+    const OrganizationProfileInput = registry.registerSchema('OrganizationProfileInput', toJson(organizationProfileSchema));
     // From the router's own validators (T1: v.* → toJsonSchema())
     const HeartbeatInput = registry.registerSchema('HeartbeatInput', toJson(heartbeatSchema));
     const IotRegisterInput = registry.registerSchema('IotRegisterInput', toJson(iotDeviceRegistrationSchema));
@@ -366,6 +367,10 @@ export function registerRoutes(): void {
         security: bearer, response: R.NotificationSettings, responseDescription: 'Notification settings'});
     registry.registerPath({method: 'put', path: '/settings/notifications', summary: 'Update notification settings', tags: ['Settings'],
         security: bearer, request: NotificationsSettingsInput, response: R.NotificationSettings, responseDescription: 'Updated'});
+    registry.registerPath({method: 'get', path: '/settings/org', summary: 'Get organization profile', tags: ['Settings'],
+        security: bearer, response: R.OrganizationProfile, responseDescription: 'Organization profile'});
+    registry.registerPath({method: 'put', path: '/settings/org', summary: 'Update organization profile', tags: ['Settings'],
+        security: bearer, request: OrganizationProfileInput, response: R.OrganizationProfile, responseDescription: 'Updated'});
 
     // ── Notifications ───────────────────────────────────────────
     registry.registerPath({method: 'get', path: '/notifications', summary: 'List notifications', tags: ['Notifications'],

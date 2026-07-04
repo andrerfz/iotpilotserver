@@ -191,6 +191,10 @@ export type { GetNotificationSettings$Params as GetNotificationSettings$Params }
 export { getNotificationSettings as getNotificationSettings } from './fn/settings/get-notification-settings';
 export type { UpdateNotificationSettings$Params as UpdateNotificationSettings$Params } from './fn/settings/update-notification-settings';
 export { updateNotificationSettings as updateNotificationSettings } from './fn/settings/update-notification-settings';
+export type { GetOrganizationProfile$Params as GetOrganizationProfile$Params } from './fn/settings/get-organization-profile';
+export { getOrganizationProfile as getOrganizationProfile } from './fn/settings/get-organization-profile';
+export type { UpdateOrganizationProfile$Params as UpdateOrganizationProfile$Params } from './fn/settings/update-organization-profile';
+export { updateOrganizationProfile as updateOrganizationProfile } from './fn/settings/update-organization-profile';
 export type { ListNotifications$Params as ListNotifications$Params } from './fn/notifications/list-notifications';
 export { listNotifications as listNotifications } from './fn/notifications/list-notifications';
 export type { GetNotification$Params as GetNotification$Params } from './fn/notifications/get-notification';

@@ -18,6 +18,8 @@ type PrismaCustomer = {
   name: string;
   slug: string;
   domain: string | null;
+  description: string | null;
+  contactEmail: string | null;
   status: PrismaCustomerStatus;
   createdAt: Date;
   updatedAt: Date;
@@ -109,6 +111,8 @@ export class PrismaCustomerRepository implements CustomerRepository {
     // Use the entity's domain field (set during registration from email domain),
     // falling back to settings custom domain for backwards compatibility
     const domain = customer.domain ?? settings.getCustomDomain() ?? null;
+    const description = customer.description ?? null;
+    const contactEmail = customer.contactEmail ?? null;
 
     await this.prisma.customer.upsert({
       where: { id: customerId },
@@ -118,13 +122,17 @@ export class PrismaCustomerRepository implements CustomerRepository {
         slug: customer.getSlug().getValue(),
         status,
         domain,
+        description,
+        contactEmail,
         subscriptionTier: 'FREE'
       },
       update: {
         name: customer.getName().getValue(),
         slug: customer.getSlug().getValue(),
         status,
-        domain
+        domain,
+        description,
+        contactEmail
       }
     });
   }
@@ -173,6 +181,8 @@ export class PrismaCustomerRepository implements CustomerRepository {
 
     const customer = CustomerEntity.create(id, name, slug, status, settings);
     customer.updateDomain(data.domain ?? undefined);
+    customer.updateDescription(data.description ?? undefined);
+    customer.updateContact(data.contactEmail ?? undefined);
     customer.setTimestamps(data.createdAt, data.updatedAt, data.deletedAt ?? undefined);
     customer.clearEvents();
     return customer;

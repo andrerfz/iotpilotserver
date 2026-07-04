@@ -1,0 +1,77 @@
+<ion-content class="ion-padding">
+  <ion-card class="org-card">
+    <ion-card-header>
+      <ion-card-title>{{ 'settings.organization.title' | translate }}</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <div class="org-form">
+
+        <ui-input
+          [loading]="isLoading()"
+          [formControl]="form.controls.name"
+          [label]="'settings.organization.name' | translate" />
+
+        <ui-input
+          [loading]="isLoading()"
+          [formControl]="form.controls.contactEmail"
+          type="email"
+          [label]="'settings.organization.contact_email' | translate"
+          [placeholder]="'settings.organization.contact_email_ph' | translate" />
+
+        <ui-input
+          [loading]="isLoading()"
+          [formControl]="form.controls.description"
+          [label]="'settings.organization.description' | translate"
+          [placeholder]="'settings.organization.description_ph' | translate" />
+
+        <div class="org-readonly">
+          <ion-item lines="none" class="org-readonly__item">
+            <ion-label>
+              <p class="org-readonly__label">{{ 'settings.organization.domain' | translate }}</p>
+              @if (isLoading()) {
+                <span class="sk org-sk-text"></span>
+              } @else {
+                <p class="org-readonly__value">{{ domain() || '—' }}</p>
+              }
+              <ion-note>{{ 'settings.organization.domain_hint' | translate }}</ion-note>
+            </ion-label>
+          </ion-item>
+          <ion-item lines="none" class="org-readonly__item">
+            <ion-label>
+              <p class="org-readonly__label">{{ 'settings.organization.status' | translate }}</p>
+              @if (isLoading()) {
+                <span class="sk org-sk-text"></span>
+              } @else {
+                <p class="org-readonly__value">{{ status() }}</p>
+              }
+            </ion-label>
+          </ion-item>
+        </div>
+
+      </div>
+
+      @if (error()) {
+        <p class="org-msg org-msg--error">{{ error() }}</p>
+      }
+      @if (success()) {
+        <p class="org-msg org-msg--success">{{ success() }}</p>
+      }
+      <div class="settings-actions">
+        <ion-button
+          type="button"
+          fill="solid"
+          color="primary"
+          [disabled]="form.invalid || form.pristine || isSaving() || isLoading()"
+          (click)="onSave()"
+        >
+          @if (isSaving()) {
+            <ion-spinner name="crescent" slot="start" />
+            {{ 'settings.organization.saving' | translate }}
+          } @else {
+            {{ 'settings.organization.save' | translate }}
+          }
+        </ion-button>
+      </div>
+    </ion-card-content>
+  </ion-card>
+</ion-content>

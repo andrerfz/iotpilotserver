@@ -51,6 +51,8 @@ export type { MonitoringReport } from './models/monitoring-report';
 export type { NotificationRecord } from './models/notification-record';
 export type { NotificationSettings } from './models/notification-settings';
 export type { NotificationsSettingsInput } from './models/notifications-settings-input';
+export type { OrganizationProfile } from './models/organization-profile';
+export type { OrganizationProfileInput } from './models/organization-profile-input';
 export type { PreregisterDevicesInput } from './models/preregister-devices-input';
 export type { PreregisterDevicesResponse } from './models/preregister-devices-response';
 export type { ProfileSettings } from './models/profile-settings';

@@ -718,7 +718,24 @@
       "thresholds": "Umbrales por defecto",
       "preferences": "Preferencias",
       "org": "Organización",
+      "organization": "Organización",
       "app_config": "Config. de App"
+    },
+    "organization": {
+      "title": "Perfil de la organización",
+      "name": "Nombre de la organización",
+      "contact_email": "Correo de contacto",
+      "contact_email_ph": "contacto@tuempresa.com",
+      "description": "Descripción",
+      "description_ph": "Una breve descripción de tu organización",
+      "domain": "Dominio de correo",
+      "domain_hint": "Los nuevos registros con un correo coincidente se asignan automáticamente a tu organización. Contacta con soporte para cambiarlo.",
+      "status": "Estado",
+      "save": "Guardar cambios",
+      "saving": "Guardando...",
+      "msg_load_failed": "No se pudo cargar el perfil de la organización",
+      "msg_saved": "Perfil de la organización actualizado",
+      "msg_save_failed": "No se pudo actualizar el perfil de la organización"
     },
     "hub": {
       "account_title": "Cuenta",

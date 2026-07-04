@@ -122,6 +122,10 @@ export const RESPONSE_SCHEMAS: Record<string, JsonSchema> = {
     NotificationSettings: objR({
         emailNotifications: boolStr, pushNotifications: boolStr, alertNotifications: boolStr, deviceOfflineNotifications: boolStr,
     }, ['emailNotifications', 'pushNotifications', 'alertNotifications', 'deviceOfflineNotifications']),
+    OrganizationProfile: objR({
+        id: str, name: str, slug: str, domain: strN, contactEmail: strN, description: strN,
+        status: {type: 'string', enum: ['ACTIVE', 'INACTIVE', 'SUSPENDED', 'PENDING']}, createdAt: dt,
+    }, ['id', 'name', 'slug', 'status', 'createdAt']),
     ChangePasswordResult: obj({message: str, wasCurrentSession: bool}),
     AdminStats: obj({
         totalDevices: int, onlineDevices: int, totalUsers: int, totalCustomers: int, openAlerts: int,

@@ -1,0 +1,45 @@
+.org-card {
+  margin-bottom: 16px;
+}
+
+.org-form {
+  ui-input {
+    display: block;
+    margin-bottom: 12px;
+  }
+}
+
+.org-sk-text { display: block; height: 15px; width: 160px; border-radius: var(--r-sm); margin: 4px 0; }
+
+.org-readonly {
+  margin-top: 8px;
+
+  &__item {
+    --padding-start: 0;
+    --inner-padding-end: 0;
+  }
+
+  &__label {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+  }
+
+  &__value {
+    font-size: 15px;
+    color: var(--text-muted);
+  }
+}
+
+.org-msg {
+  margin: 12px 0 4px;
+  font-size: 13px;
+
+  &--error {
+    color: var(--ion-color-danger);
+  }
+
+  &--success {
+    color: var(--ion-color-success);
+  }
+}

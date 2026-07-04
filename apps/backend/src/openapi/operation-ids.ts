@@ -90,6 +90,8 @@ export const OPERATION_IDS: Record<string, string> = {
     'put /settings/system': 'updateSystemSettings',
     'get /settings/notifications': 'getNotificationSettings',
     'put /settings/notifications': 'updateNotificationSettings',
+    'get /settings/org': 'getOrganizationProfile',
+    'put /settings/org': 'updateOrganizationProfile',
     'get /notifications': 'listNotifications',
     'get /notifications/{id}': 'getNotification',
     'delete /notifications/{id}': 'deleteNotification',
