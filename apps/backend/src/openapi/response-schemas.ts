@@ -103,16 +103,16 @@ export const RESPONSE_SCHEMAS: Record<string, JsonSchema> = {
         recipient: str, subject: str, attemptCount: int, createdAt: dt,
     }),
     ProfileSettings: objR({
-        language: str, timezone: str, dateFormat: {type: 'string', enum: ['MM/DD/YYYY', 'DD/MM/YYYY', 'YYYY-MM-DD']},
+        language: str,
         firstName: str, lastName: str, phoneNumber: str,
-    }, ['language', 'timezone', 'dateFormat']),
+    }, ['language']),
     ProfileSettingsResponse: objR({
-        language: str, timezone: str, dateFormat: {type: 'string', enum: ['MM/DD/YYYY', 'DD/MM/YYYY', 'YYYY-MM-DD']},
+        language: str,
         firstName: str, lastName: str, phoneNumber: str,
         email: {type: 'string', format: 'email'}, username: str,
-    }, ['language', 'timezone', 'dateFormat']),
-    SecuritySettings: objR({twoFactorAuth: boolStr, sessionTimeout: str, loginNotifications: boolStr},
-        ['twoFactorAuth', 'sessionTimeout', 'loginNotifications']),
+    }, ['language']),
+    SecuritySettings: objR({twoFactorAuth: boolStr, loginNotifications: boolStr},
+        ['twoFactorAuth', 'loginNotifications']),
     SystemSettings: obj({
         theme: {type: 'string', enum: ['light', 'dark', 'system']},
         isAdmin: str,

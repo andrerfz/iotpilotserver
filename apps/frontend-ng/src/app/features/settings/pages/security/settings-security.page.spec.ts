@@ -27,7 +27,6 @@ const MOCK_SESSIONS: Session[] = [
 
 const MOCK_DATA: SecuritySettings = {
   twoFactorAuth: 'false',
-  sessionTimeout: '30',
   loginNotifications: 'true',
 };
 
@@ -72,40 +71,7 @@ describe('SettingsSecurityPage', () => {
 
     const comp = fixture.componentInstance;
     expect(comp.securityForm.getRawValue().twoFactorAuth).toBe(false);
-    expect(comp.securityForm.getRawValue().sessionTimeout).toBe(30);
     expect(comp.securityForm.getRawValue().loginNotifications).toBe(true);
-  });
-
-  it('sessionTimeout slider and input stay in sync', async () => {
-    const { fixture } = await setup();
-    await fixture.whenStable();
-
-    const comp = fixture.componentInstance;
-    comp.onSessionTimeoutSliderChange(
-      new CustomEvent('ionChange', { detail: { value: 60 } }),
-    );
-    expect(comp.securityForm.controls.sessionTimeout.value).toBe(60);
-
-    comp.onSessionTimeoutInputChange(
-      new CustomEvent('ionChange', { detail: { value: '120' } }),
-    );
-    expect(comp.securityForm.controls.sessionTimeout.value).toBe(120);
-  });
-
-  it('clamps sessionTimeout input to valid range', async () => {
-    const { fixture } = await setup();
-    await fixture.whenStable();
-
-    const comp = fixture.componentInstance;
-    comp.onSessionTimeoutInputChange(
-      new CustomEvent('ionChange', { detail: { value: '9999' } }),
-    );
-    expect(comp.securityForm.controls.sessionTimeout.value).toBe(1440);
-
-    comp.onSessionTimeoutInputChange(
-      new CustomEvent('ionChange', { detail: { value: '1' } }),
-    );
-    expect(comp.securityForm.controls.sessionTimeout.value).toBe(5);
   });
 
   it('save sends string-converted security payload', async () => {
@@ -132,7 +98,6 @@ describe('SettingsSecurityPage', () => {
 
     const body = invokeSpy.mock.calls.at(-1)?.[1]?.body as SecuritySettings;
     expect(body.twoFactorAuth).toBe('false');
-    expect(body.sessionTimeout).toBe('30');
     expect(body.loginNotifications).toBe('true');
   });
 

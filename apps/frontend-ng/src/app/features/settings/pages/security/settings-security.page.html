@@ -27,32 +27,6 @@
             <ion-toggle formControlName="loginNotifications" slot="end" />
           </ion-item>
 
-          <div class="sec-timeout">
-            <ion-label class="sec-timeout__label">
-              <h3>{{ 'settings.security.session_timeout.title' | translate }}</h3>
-              <p>{{ 'settings.security.session_timeout.desc' | translate }}</p>
-            </ion-label>
-            <ion-range
-              class="sec-timeout__range"
-              [min]="5"
-              [max]="1440"
-              [step]="5"
-              [value]="securityForm.controls.sessionTimeout.value"
-              (ionChange)="onSessionTimeoutSliderChange($event)"
-            />
-            <div class="sec-timeout__input-row">
-              <span class="sec-timeout__label-min">{{ securityForm.controls.sessionTimeout.value }} {{ 'settings.security.session_timeout.unit' | translate }}</span>
-              <ion-input
-                class="sec-timeout__input"
-                type="number"
-                [min]="5"
-                [max]="1440"
-                [value]="securityForm.controls.sessionTimeout.value"
-                (ionChange)="onSessionTimeoutInputChange($event)"
-              />
-            </div>
-          </div>
-
           @if (securityError()) {
             <p class="sec-msg sec-msg--error">{{ securityError() }}</p>
           }

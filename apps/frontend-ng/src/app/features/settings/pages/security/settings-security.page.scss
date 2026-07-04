@@ -13,42 +13,6 @@
   margin-bottom: 16px;
 }
 
-.sec-timeout {
-  padding: 12px 0;
-
-  &__label {
-    display: block;
-    margin-bottom: 8px;
-  }
-
-  &__range {
-    padding: 0;
-  }
-
-  &__input-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin-top: 4px;
-  }
-
-  &__label-min {
-    font-size: 13px;
-    color: var(--text-muted);
-    min-width: 60px;
-  }
-
-  &__input {
-    max-width: 80px;
-    --padding-start: 8px;
-    --padding-end: 8px;
-    border: 1px solid var(--ui-border);
-    border-radius: var(--r-sm);
-    font-size: 14px;
-  }
-}
-
 .sec-pw-fields {
   display: flex;
   flex-direction: column;

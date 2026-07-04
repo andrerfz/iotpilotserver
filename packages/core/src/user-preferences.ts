@@ -7,8 +7,6 @@ function getDefaultPreferences(category: PreferenceCategory): Record<string, str
     case 'PROFILE':
       return {
         language: 'en',
-        timezone: 'UTC',
-        dateFormat: 'MM/DD/YYYY'
       };
     case 'NOTIFICATIONS':
       return {
@@ -20,26 +18,11 @@ function getDefaultPreferences(category: PreferenceCategory): Record<string, str
     case 'SECURITY':
       return {
         twoFactorAuth: 'false',
-        sessionTimeout: '30', // minutes
         loginNotifications: 'true'
       };
     case 'SYSTEM':
       return {
         theme: 'light',
-        dashboardLayout: 'default',
-        itemsPerPage: '10'
-      };
-    case 'APPEARANCE':
-      return {
-        theme: 'light',
-        fontSize: 'medium',
-        colorScheme: 'default'
-      };
-    case 'ACCESSIBILITY':
-      return {
-        highContrast: 'false',
-        reducedMotion: 'false',
-        largeText: 'false'
       };
     case 'DEVICE_SETTINGS':
       return {

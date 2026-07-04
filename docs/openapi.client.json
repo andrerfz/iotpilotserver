@@ -1156,14 +1156,6 @@
                         "minLength": 2,
                         "maxLength": 5
                     },
-                    "timezone": {
-                        "type": "string",
-                        "minLength": 1
-                    },
-                    "dateFormat": {
-                        "type": "string",
-                        "minLength": 1
-                    },
                     "firstName": {
                         "type": "string",
                         "maxLength": 100
@@ -1178,9 +1170,7 @@
                     }
                 },
                 "required": [
-                    "language",
-                    "timezone",
-                    "dateFormat"
+                    "language"
                 ],
                 "additionalProperties": false
             },
@@ -1194,10 +1184,6 @@
                             "false"
                         ]
                     },
-                    "sessionTimeout": {
-                        "type": "string",
-                        "pattern": "^\\d+$"
-                    },
                     "loginNotifications": {
                         "type": "string",
                         "enum": [
@@ -1207,7 +1193,6 @@
                     }
                 },
                 "required": [
-                    "sessionTimeout",
                     "loginNotifications"
                 ],
                 "additionalProperties": false
@@ -2388,17 +2373,6 @@
                     "language": {
                         "type": "string"
                     },
-                    "timezone": {
-                        "type": "string"
-                    },
-                    "dateFormat": {
-                        "type": "string",
-                        "enum": [
-                            "MM/DD/YYYY",
-                            "DD/MM/YYYY",
-                            "YYYY-MM-DD"
-                        ]
-                    },
                     "firstName": {
                         "type": "string"
                     },
@@ -2410,9 +2384,7 @@
                     }
                 },
                 "required": [
-                    "language",
-                    "timezone",
-                    "dateFormat"
+                    "language"
                 ]
             },
             "ProfileSettingsResponse": {
@@ -2420,17 +2392,6 @@
                 "properties": {
                     "language": {
                         "type": "string"
-                    },
-                    "timezone": {
-                        "type": "string"
-                    },
-                    "dateFormat": {
-                        "type": "string",
-                        "enum": [
-                            "MM/DD/YYYY",
-                            "DD/MM/YYYY",
-                            "YYYY-MM-DD"
-                        ]
                     },
                     "firstName": {
                         "type": "string"
@@ -2450,9 +2411,7 @@
                     }
                 },
                 "required": [
-                    "language",
-                    "timezone",
-                    "dateFormat"
+                    "language"
                 ]
             },
             "SecuritySettings": {
@@ -2465,9 +2424,6 @@
                             "false"
                         ]
                     },
-                    "sessionTimeout": {
-                        "type": "string"
-                    },
                     "loginNotifications": {
                         "type": "string",
                         "enum": [
@@ -2478,7 +2434,6 @@
                 },
                 "required": [
                     "twoFactorAuth",
-                    "sessionTimeout",
                     "loginNotifications"
                 ]
             },

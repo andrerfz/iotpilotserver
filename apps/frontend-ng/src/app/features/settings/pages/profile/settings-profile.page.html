@@ -59,18 +59,6 @@
           [label]="'settings.profile.language' | translate"
           [options]="languageOptions" />
 
-        <ui-select
-          [loading]="isLoading()"
-          [formControl]="form.controls.timezone"
-          [label]="'settings.profile.timezone' | translate"
-          [options]="timezoneOptions" />
-
-        <ui-select
-          [loading]="isLoading()"
-          [formControl]="form.controls.dateFormat"
-          [label]="'settings.profile.date_format' | translate"
-          [options]="dateFormatOptions" />
-
       </div>
 
       @if (error()) {

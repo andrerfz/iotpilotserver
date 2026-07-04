@@ -12,8 +12,6 @@ const MOCK_PROFILE: ProfileSettingsResponse = {
   lastName: 'Lovelace',
   phoneNumber: '555-0100',
   language: 'en',
-  timezone: 'UTC',
-  dateFormat: 'MM/DD/YYYY',
 };
 
 function makeApi(getFn = vi.fn().mockResolvedValue(MOCK_PROFILE)) {

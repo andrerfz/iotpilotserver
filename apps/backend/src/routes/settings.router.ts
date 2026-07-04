@@ -27,20 +27,16 @@ const v = validator();
 // Profile settings schema
 export const profileSettingsSchema = v.object({
   language: v.string({ min: 2, max: 5 }),
-  timezone: v.string({ min: 1 }),
-  dateFormat: v.string({ min: 1 }),
   firstName: v.optional(v.string({ max: 100 })),
   lastName: v.optional(v.string({ max: 100 })),
   phoneNumber: v.optional(v.string({ max: 30 })),
 });
 
 // Security settings schema
-const regexNumericString = z.string().regex(/^\d+$/);
 export const securitySettingsSchema = v.object({
   // 2FA is managed by the dedicated /security/2fa/* endpoints, so it is optional
   // here and ignored for enablement — this PUT only persists the other prefs.
   twoFactorAuth: v.optional(v.enum(['true', 'false'] as const)),
-  sessionTimeout: (v as any).fromZodSchema(regexNumericString), // numeric string
   loginNotifications: v.enum(['true', 'false'] as const),
 });
 
@@ -166,8 +162,6 @@ settingsRouter.put('/profile', requireAuth(), async (req: AuthenticatedRequest, 
 
     let validatedData: {
       language: string;
-      timezone: string;
-      dateFormat: string;
       firstName?: string;
       lastName?: string;
       phoneNumber?: string;
@@ -261,7 +255,7 @@ settingsRouter.put('/security', requireAuth(), async (req: AuthenticatedRequest,
 
     const body = req.body;
 
-    let validatedData: { twoFactorAuth: string; sessionTimeout: string; loginNotifications: string };
+    let validatedData: { twoFactorAuth: string; loginNotifications: string };
     try {
       validatedData = securitySettingsSchema.parse(body) as typeof validatedData;
     } catch (e) {
@@ -274,13 +268,6 @@ settingsRouter.put('/security', requireAuth(), async (req: AuthenticatedRequest,
         return;
       }
       throw e;
-    }
-
-    // Additional validation for sessionTimeout
-    const sessionTimeout = parseInt(validatedData.sessionTimeout as string);
-    if (isNaN(sessionTimeout) || sessionTimeout < 5 || sessionTimeout > 1440) {
-      send.badRequest(res, 'Session timeout must be between 5 and 1440 minutes');
-      return;
     }
 
     // Update each preference

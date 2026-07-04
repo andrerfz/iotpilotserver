@@ -28,23 +28,6 @@ const LANGUAGE_OPTIONS: SelectOption[] = SUPPORTED_LANGS.map((lang) => ({
   label: LANG_LABELS[lang],
 }));
 
-const TIMEZONE_OPTIONS: SelectOption[] = [
-  { value: 'UTC', label: 'UTC' },
-  { value: 'America/New_York', label: 'Eastern Time (US & Canada)' },
-  { value: 'America/Chicago', label: 'Central Time (US & Canada)' },
-  { value: 'America/Denver', label: 'Mountain Time (US & Canada)' },
-  { value: 'America/Los_Angeles', label: 'Pacific Time (US & Canada)' },
-  { value: 'Europe/London', label: 'London' },
-  { value: 'Europe/Paris', label: 'Paris' },
-  { value: 'Asia/Tokyo', label: 'Tokyo' },
-];
-
-const DATE_FORMAT_OPTIONS: SelectOption[] = [
-  { value: 'MM/DD/YYYY', label: 'MM/DD/YYYY' },
-  { value: 'DD/MM/YYYY', label: 'DD/MM/YYYY' },
-  { value: 'YYYY-MM-DD', label: 'YYYY-MM-DD' },
-];
-
 @Component({
   selector: 'app-settings-profile',
   templateUrl: 'settings-profile.page.html',
@@ -83,8 +66,6 @@ export class SettingsProfilePage implements OnInit {
     lastName: ['', Validators.maxLength(100)],
     phoneNumber: ['', Validators.maxLength(20)],
     language: ['en'],
-    timezone: ['UTC'],
-    dateFormat: ['MM/DD/YYYY'],
   });
 
   readonly isSaving = signal(false);
@@ -92,8 +73,6 @@ export class SettingsProfilePage implements OnInit {
   readonly success = signal('');
 
   readonly languageOptions = LANGUAGE_OPTIONS;
-  readonly timezoneOptions = TIMEZONE_OPTIONS;
-  readonly dateFormatOptions = DATE_FORMAT_OPTIONS;
 
   async ngOnInit(): Promise<void> {
     this.topbar.set('settings.tabs.profile');
@@ -112,8 +91,6 @@ export class SettingsProfilePage implements OnInit {
         language: SUPPORTED_LANGS.includes(data.language as (typeof SUPPORTED_LANGS)[number])
           ? data.language
           : this.lang.current,
-        timezone: data.timezone ?? 'UTC',
-        dateFormat: data.dateFormat ?? 'MM/DD/YYYY',
       });
     } catch {
       // silently skip — legacy also only logs to console on load failure

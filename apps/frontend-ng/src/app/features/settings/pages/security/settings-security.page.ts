@@ -26,11 +26,9 @@ import {
   IonCardHeader,
   IonCardTitle,
   IonContent,
-  IonInput,
   IonItem,
   IonLabel,
   IonList,
-  IonRange,
   IonSpinner,
   IonToggle,
 } from '@ng/shared/ui';
@@ -73,8 +71,6 @@ function passwordMatchValidator(group: AbstractControl): ValidationErrors | null
     IonLabel,
     IonList,
     IonToggle,
-    IonRange,
-    IonInput,
     UiInputComponent,
   ],
 })
@@ -93,7 +89,6 @@ export class SettingsSecurityPage implements OnInit {
 
   readonly securityForm = this.fb.nonNullable.group({
     twoFactorAuth: [false],
-    sessionTimeout: [30, [Validators.min(5), Validators.max(1440)]],
     loginNotifications: [true],
   });
 
@@ -131,31 +126,12 @@ export class SettingsSecurityPage implements OnInit {
       const twoFactorOn = (data as { twoFactorEnabled?: boolean }).twoFactorEnabled === true;
       this.securityForm.patchValue({
         twoFactorAuth: twoFactorOn,
-        sessionTimeout: parseInt(data.sessionTimeout ?? '30', 10) || 30,
         loginNotifications: data.loginNotifications === 'true',
       }, { emitEvent: false });
     } catch {
       this.securityError.set(this.t.instant('settings.security.msg_load_failed'));
     } finally {
       this.isLoading.set(false);
-    }
-  }
-
-  onSessionTimeoutSliderChange(event: Event): void {
-    const value = (event as CustomEvent<{ value: number }>).detail?.value;
-    if (typeof value === 'number') {
-      this.securityForm.controls.sessionTimeout.setValue(value);
-      this.securityForm.markAsDirty();
-    }
-  }
-
-  onSessionTimeoutInputChange(event: Event): void {
-    const raw = (event as CustomEvent<{ value: string }>).detail?.value ?? '';
-    const parsed = parseInt(raw, 10);
-    if (!isNaN(parsed)) {
-      const clamped = Math.min(1440, Math.max(5, parsed));
-      this.securityForm.controls.sessionTimeout.setValue(clamped);
-      this.securityForm.markAsDirty();
     }
   }
 
@@ -170,7 +146,6 @@ export class SettingsSecurityPage implements OnInit {
       // (real) value so the persisted pref matches the actual state.
       const body: SecuritySettings = {
         twoFactorAuth: String(vals.twoFactorAuth) as 'true' | 'false',
-        sessionTimeout: String(vals.sessionTimeout),
         loginNotifications: String(vals.loginNotifications) as 'true' | 'false',
       };
       await this.api.invoke(updateSecuritySettings, { body });

@@ -3,6 +3,5 @@
 
 export interface SecuritySettingsInput {
   loginNotifications: 'true' | 'false';
-  sessionTimeout: string;
   twoFactorAuth?: 'true' | 'false';
 }
