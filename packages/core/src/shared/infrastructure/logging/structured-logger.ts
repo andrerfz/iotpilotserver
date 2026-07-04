@@ -10,7 +10,31 @@ export interface LogContext {
   service: string;
 }
 
+type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+
+const LEVEL_RANK: Record<LogLevel, number> = { debug: 0, info: 1, warn: 2, error: 3 };
+
 export class StructuredLogger {
+  // Shared across every instance — set once from env at boot, mutable at runtime
+  // so the admin "Log Level" setting (Settings → App Config) can take effect
+  // without a restart.
+  private static currentLevel: LogLevel =
+    (process.env.LOG_LEVEL as LogLevel) in LEVEL_RANK ? (process.env.LOG_LEVEL as LogLevel) : 'info';
+
+  static setLevel(level: string): void {
+    if (level in LEVEL_RANK) {
+      StructuredLogger.currentLevel = level as LogLevel;
+    }
+  }
+
+  static getLevel(): LogLevel {
+    return StructuredLogger.currentLevel;
+  }
+
+  private static shouldLog(level: LogLevel): boolean {
+    return LEVEL_RANK[level] >= LEVEL_RANK[StructuredLogger.currentLevel];
+  }
+
   constructor(
     private readonly serviceName: string = 'iotpilot',
     private readonly context?: TenantContext
@@ -41,23 +65,27 @@ export class StructuredLogger {
   }
 
   debug(message: string, context?: any): void {
+    if (!StructuredLogger.shouldLog('debug')) return;
     const logEntry = this.getLogContext(message, { ...context, level: 'debug' });
     console.debug(JSON.stringify(logEntry));
   }
 
   info(message: string, context?: any): void {
+    if (!StructuredLogger.shouldLog('info')) return;
     const logEntry = this.getLogContext(message, { ...context, level: 'info' });
     console.info(JSON.stringify(logEntry));
   }
 
   warn(message: string, context?: any): void {
+    if (!StructuredLogger.shouldLog('warn')) return;
     const logEntry = this.getLogContext(message, { ...context, level: 'warn' });
     console.warn(JSON.stringify(logEntry));
   }
 
   error(message: string, context?: any, error?: Error): void {
-    const logEntry = this.getLogContext(message, { 
-      ...context, 
+    if (!StructuredLogger.shouldLog('error')) return;
+    const logEntry = this.getLogContext(message, {
+      ...context,
       level: 'error',
       ...(error && { error: error.message, stack: error.stack })
     });

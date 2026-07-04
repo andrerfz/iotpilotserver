@@ -16,24 +16,9 @@ import {
 import { Api } from '@ng/core/api/generated/api';
 import { TopbarService } from '@ng/shell/topbar.service';
 import { ThemeService, type Theme } from '@ng/shared/ui/theme/theme.service';
-import { UiSelectComponent, type SelectOption } from '@ng/shared/ui';
 import { getSystemSettings } from '@ng/core/api/generated/fn/settings/get-system-settings';
 import { updateSystemSettings } from '@ng/core/api/generated/fn/settings/update-system-settings';
 import type { SystemSettings } from '@ng/core/api/generated/models/system-settings';
-
-const DASHBOARD_LAYOUT_OPTIONS: SelectOption[] = [
-  { label: 'settings.system.layout_default', value: 'default' },
-  { label: 'settings.system.layout_compact', value: 'compact' },
-  { label: 'settings.system.layout_expanded', value: 'expanded' },
-];
-
-const ITEMS_PER_PAGE_OPTIONS: SelectOption[] = [
-  { label: '5', value: '5' },
-  { label: '10', value: '10' },
-  { label: '25', value: '25' },
-  { label: '50', value: '50' },
-  { label: '100', value: '100' },
-];
 
 @Component({
   selector: 'app-settings-preferences',
@@ -53,7 +38,6 @@ const ITEMS_PER_PAGE_OPTIONS: SelectOption[] = [
     IonLabel,
     IonSegment,
     IonSegmentButton,
-    UiSelectComponent,
   ],
 })
 export class SettingsPreferencesPage implements OnInit {
@@ -69,14 +53,11 @@ export class SettingsPreferencesPage implements OnInit {
   readonly saveSuccess = signal('');
   readonly isSaving = signal(false);
 
-  readonly form = this.fb.nonNullable.group({
-    dashboardLayout: ['default'],
-    itemsPerPage: ['10'],
-  });
+  // No controls of its own — exists purely to track dirty/pristine for the
+  // Save button, flipped by onThemeChange() below.
+  readonly form = this.fb.nonNullable.group({});
 
   readonly currentTheme = this.themeService.theme;
-  readonly dashboardLayoutOptions = DASHBOARD_LAYOUT_OPTIONS;
-  readonly itemsPerPageOptions = ITEMS_PER_PAGE_OPTIONS;
 
   private _ready = false;
 
@@ -86,10 +67,6 @@ export class SettingsPreferencesPage implements OnInit {
     try {
       const res = await this.api.invoke(getSystemSettings, {});
       const data = (res as unknown as { data?: typeof res }).data ?? res;
-      this.form.patchValue({
-        dashboardLayout: data.dashboardLayout ?? 'default',
-        itemsPerPage: data.itemsPerPage ?? '10',
-      });
       // Apply the theme persisted server-side so it follows the user across devices.
       if (data.theme) {
         this.themeService.setTheme(data.theme as Theme);
@@ -117,10 +94,7 @@ export class SettingsPreferencesPage implements OnInit {
     this.saveError.set('');
     this.saveSuccess.set('');
     try {
-      const { dashboardLayout, itemsPerPage } = this.form.getRawValue();
       const body: SystemSettings = {
-        dashboardLayout: dashboardLayout as SystemSettings['dashboardLayout'],
-        itemsPerPage,
         theme: this.currentTheme(),
       };
       await this.api.invoke(updateSystemSettings, { body });

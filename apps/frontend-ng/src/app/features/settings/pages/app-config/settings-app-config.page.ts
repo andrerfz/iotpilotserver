@@ -8,10 +8,7 @@ import {
   IonCardHeader,
   IonCardTitle,
   IonContent,
-  IonItem,
-  IonLabel,
   IonSpinner,
-  IonToggle,
 } from '@ng/shared/ui';
 import { Api } from '@ng/core/api/generated/api';
 import { TopbarService } from '@ng/shell/topbar.service';
@@ -42,9 +39,6 @@ const LOG_LEVEL_OPTIONS: SelectOption[] = [
     IonCardTitle,
     IonButton,
     IonSpinner,
-    IonItem,
-    IonLabel,
-    IonToggle,
     UiSelectComponent,
   ],
 })
@@ -61,8 +55,6 @@ export class SettingsAppConfigPage implements OnInit {
   readonly isSaving = signal(false);
 
   readonly form = this.fb.nonNullable.group({
-    enableAdvancedMetrics: [false],
-    enableBetaFeatures: [false],
     logLevel: ['info'],
   });
 
@@ -75,8 +67,6 @@ export class SettingsAppConfigPage implements OnInit {
       const res = await this.api.invoke(getSystemSettings, {});
       const data = (res as unknown as { data?: typeof res }).data ?? res;
       this.form.patchValue({
-        enableAdvancedMetrics: data.enableAdvancedMetrics === 'true',
-        enableBetaFeatures: data.enableBetaFeatures === 'true',
         logLevel: data.logLevel ?? 'info',
       });
     } catch {
@@ -93,8 +83,6 @@ export class SettingsAppConfigPage implements OnInit {
     try {
       const vals = this.form.getRawValue();
       const body: SystemSettings = {
-        enableAdvancedMetrics: String(vals.enableAdvancedMetrics) as 'true' | 'false',
-        enableBetaFeatures: String(vals.enableBetaFeatures) as 'true' | 'false',
         logLevel: vals.logLevel as SystemSettings['logLevel'],
       };
       await this.api.invoke(updateSystemSettings, { body });

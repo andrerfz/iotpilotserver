@@ -367,6 +367,24 @@ httpServer.listen(port, (err?: Error) => {
   });
 });
 
+// Seed StructuredLogger's runtime level from the admin-configured SystemConfig
+// value (falls back to LOG_LEVEL env / 'info' if unset) so a level chosen before
+// this process started is honored — it's overwritten live on every save after.
+setTimeout(async () => {
+  try {
+    const { prisma } = await import('../../../packages/core/src/shared/infrastructure/database/prisma.service');
+    const { StructuredLogger } = await import(
+      '../../../packages/core/src/shared/infrastructure/logging/structured-logger'
+    );
+    const config = await prisma.getClient().systemConfig.findUnique({ where: { key: 'logLevel' } });
+    if (config?.value) {
+      StructuredLogger.setLevel(config.value);
+    }
+  } catch (err) {
+    logger.warn('Failed to seed log level from SystemConfig:', (err as Error).message);
+  }
+}, 1000);
+
 const gracefulShutdown = async () => {
   logger.info('Backend shutting down...');
   httpServer.close();

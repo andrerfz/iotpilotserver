@@ -1542,18 +1542,6 @@
                     "theme": {
                         "type": "string"
                     },
-                    "dashboardLayout": {
-                        "type": "string"
-                    },
-                    "itemsPerPage": {
-                        "type": "string"
-                    },
-                    "enableAdvancedMetrics": {
-                        "type": "string"
-                    },
-                    "enableBetaFeatures": {
-                        "type": "string"
-                    },
                     "logLevel": {
                         "type": "string"
                     }
@@ -2505,24 +2493,7 @@
                             "system"
                         ]
                     },
-                    "dashboardLayout": {
-                        "type": "string",
-                        "enum": [
-                            "default",
-                            "compact",
-                            "expanded"
-                        ]
-                    },
-                    "itemsPerPage": {
-                        "type": "string"
-                    },
                     "isAdmin": {
-                        "type": "string"
-                    },
-                    "enableAdvancedMetrics": {
-                        "type": "string"
-                    },
-                    "enableBetaFeatures": {
                         "type": "string"
                     },
                     "logLevel": {

@@ -10,22 +10,6 @@
       </ion-card-header>
       <ion-card-content>
         <form [formGroup]="form" (ngSubmit)="onSave()">
-          <ion-item lines="full">
-            <ion-label>
-              <h3>{{ 'settings.system.admin.advanced_metrics.label' | translate }}</h3>
-              <p>{{ 'settings.system.admin.advanced_metrics.desc' | translate }}</p>
-            </ion-label>
-            <ion-toggle formControlName="enableAdvancedMetrics" slot="end" />
-          </ion-item>
-
-          <ion-item lines="full">
-            <ion-label>
-              <h3>{{ 'settings.system.admin.beta.label' | translate }}</h3>
-              <p>{{ 'settings.system.admin.beta.desc' | translate }}</p>
-            </ion-label>
-            <ion-toggle formControlName="enableBetaFeatures" slot="end" />
-          </ion-item>
-
           <div class="org-field">
             <ion-label class="org-field__label">
               <h3>{{ 'settings.system.admin.log_level.label' | translate }}</h3>

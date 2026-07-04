@@ -9,8 +9,6 @@ import { SettingsPreferencesPage } from './settings-preferences.page';
 
 const MOCK_DATA: SystemSettings = {
   theme: 'dark',
-  dashboardLayout: 'compact',
-  itemsPerPage: '25',
   isAdmin: 'false',
 };
 
@@ -51,14 +49,6 @@ describe('SettingsPreferencesPage', () => {
     expect(await findByText('Display Settings')).toBeTruthy();
   });
 
-  it('patches form from GET response', async () => {
-    const { fixture } = await setup();
-    await fixture.whenStable();
-    const comp = fixture.componentInstance;
-    expect(comp.form.getRawValue().dashboardLayout).toBe('compact');
-    expect(comp.form.getRawValue().itemsPerPage).toBe('25');
-  });
-
   it('theme change calls ThemeService.setTheme, not api.invoke directly', async () => {
     const { fixture, api, theme } = await setup();
     await fixture.whenStable();
@@ -87,8 +77,6 @@ describe('SettingsPreferencesPage', () => {
     comp.form.markAsDirty();
     await comp.onSave();
     const body = invokeSpy.mock.calls.at(-1)?.[1]?.body as SystemSettings;
-    expect(body.dashboardLayout).toBe('compact');
-    expect(body.itemsPerPage).toBe('25');
     expect(body.theme).toBe('dark');
   });
 });

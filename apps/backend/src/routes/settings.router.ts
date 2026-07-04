@@ -12,6 +12,7 @@ import { ServiceContainer } from '@iotpilot/core/shared/infrastructure/container
 import { UpdateCustomerCommand } from '@iotpilot/core/customer/application/commands/update-customer/update-customer.command';
 import { TenantContextImpl } from '@iotpilot/core/shared/domain/tenant-context';
 import { CustomerId } from '@iotpilot/core/shared/domain/value-objects/customer-id.vo';
+import { StructuredLogger } from '@iotpilot/core/shared/infrastructure/logging/structured-logger';
 
 function isoTimestamp(): string {
   return new Date().toISOString();
@@ -44,17 +45,12 @@ export const securitySettingsSchema = v.object({
 });
 
 // System settings schemas
-const regexStringSchema = z.string().regex(/^\d+$/);
 const systemSettingsSchemaZod = z.object({
   theme: z.enum(['light', 'dark', 'system']).optional(),
-  dashboardLayout: z.enum(['default', 'compact', 'expanded']).optional(),
-  itemsPerPage: regexStringSchema.optional(),
 });
 const systemSettingsSchema = (v as any).fromZodSchema(systemSettingsSchemaZod);
 
 const adminSystemSettingsSchemaZod = systemSettingsSchemaZod.extend({
-  enableAdvancedMetrics: z.enum(['true', 'false']).optional(),
-  enableBetaFeatures: z.enum(['true', 'false']).optional(),
   logLevel: z.enum(['debug', 'info', 'warn', 'error']).optional(),
 });
 const adminSystemSettingsSchema = (v as any).fromZodSchema(adminSystemSettingsSchemaZod);
@@ -455,12 +451,6 @@ settingsRouter.get('/system', requireAuth(), async (req: AuthenticatedRequest, r
       );
 
       // Add default admin settings if not present
-      if (!adminSettings.enableAdvancedMetrics) {
-        adminSettings.enableAdvancedMetrics = 'false';
-      }
-      if (!adminSettings.enableBetaFeatures) {
-        adminSettings.enableBetaFeatures = 'false';
-      }
       if (!adminSettings.logLevel) {
         adminSettings.logLevel = 'info';
       }
@@ -518,21 +508,13 @@ settingsRouter.put('/system', requireAuth(), async (req: AuthenticatedRequest, r
       throw e;
     }
 
-    // Additional validation for itemsPerPage (only if provided)
-    if (validatedData.itemsPerPage !== undefined) {
-      const itemsPerPage = parseInt(validatedData.itemsPerPage);
-      if (isNaN(itemsPerPage) || itemsPerPage < 5 || itemsPerPage > 100) {
-        send.badRequest(res, 'Items per page must be between 5 and 100');
-        return;
-      }
-    }
 
     // Separate user preferences from system config settings
     const userPrefs: Record<string, string> = {};
     const systemConfigSettings: Record<string, string> = {};
 
     Object.entries(validatedData).forEach(([key, value]: [string, any]) => {
-      if (isAdmin && ['enableAdvancedMetrics', 'enableBetaFeatures', 'logLevel'].includes(key)) {
+      if (isAdmin && key === 'logLevel') {
         systemConfigSettings[key] = String(value);
       } else {
         userPrefs[key] = String(value);
@@ -583,6 +565,14 @@ settingsRouter.put('/system', requireAuth(), async (req: AuthenticatedRequest, r
       );
 
       await Promise.all(systemConfigPromises);
+
+      // Apply immediately in this process — see the matching seed-on-boot in
+      // server.ts/worker/index.ts. The worker process picks up the change on
+      // its own next restart/deploy (no cross-process broadcast); acceptable
+      // for an admin-only, infrequently-changed setting.
+      if (systemConfigSettings.logLevel) {
+        StructuredLogger.setLevel(systemConfigSettings.logLevel);
+      }
     }
 
     send.ok(res, {

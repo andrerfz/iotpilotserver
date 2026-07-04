@@ -115,8 +115,7 @@ export const RESPONSE_SCHEMAS: Record<string, JsonSchema> = {
         ['twoFactorAuth', 'sessionTimeout', 'loginNotifications']),
     SystemSettings: obj({
         theme: {type: 'string', enum: ['light', 'dark', 'system']},
-        dashboardLayout: {type: 'string', enum: ['default', 'compact', 'expanded']},
-        itemsPerPage: str, isAdmin: str, enableAdvancedMetrics: str, enableBetaFeatures: str,
+        isAdmin: str,
         logLevel: {type: 'string', enum: ['debug', 'info', 'warn', 'error']},
     }),
     NotificationSettings: objR({

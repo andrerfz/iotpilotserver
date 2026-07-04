@@ -122,8 +122,7 @@ export function registerRoutes(): void {
     const SystemSettingsInput = registry.registerSchema('SystemSettingsInput', {
         type: 'object',
         properties: {
-            theme: {type: 'string'}, dashboardLayout: {type: 'string'}, itemsPerPage: {type: 'string'},
-            enableAdvancedMetrics: {type: 'string'}, enableBetaFeatures: {type: 'string'}, logLevel: {type: 'string'},
+            theme: {type: 'string'}, logLevel: {type: 'string'},
         },
     });
     // SUPERADMIN "act as" tenant (server-side session). The FE drives tenant switching
