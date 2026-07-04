@@ -13,6 +13,12 @@ export const UserResponseSchema = z.object({
     username: z.string(),
     role: UserRoleEnum,
     customerId: z.string().nullable(),
+    status: z.enum(['ACTIVE', 'INACTIVE', 'PENDING', 'SUSPENDED']).optional(),
+    firstName: z.string().nullable().optional(),
+    lastName: z.string().nullable().optional(),
+    createdAt: z.string().optional(),
+    updatedAt: z.string().optional(),
+    lastLoginAt: z.string().nullable().optional(),
 });
 
 export const LoginResponseSchema = z.object({

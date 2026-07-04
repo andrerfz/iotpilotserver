@@ -5,6 +5,7 @@ import { prisma } from '@iotpilot/core/shared/infrastructure/database/prisma.ser
 import { ServiceContainer } from '@iotpilot/core/shared/infrastructure/container/service-container';
 import { ListUsersQuery } from '@iotpilot/core/user/application/queries/list-users/list-users.query';
 import { RegisterUserCommand } from '@iotpilot/core/user/application/commands/register-user/register-user.command';
+import { InviteUserCommand } from '@iotpilot/core/user/application/commands/invite-user/invite-user.command';
 import { GetCurrentUserQuery } from '@iotpilot/core/user/application/queries/get-current-user/get-current-user.query';
 import { GetUserByIdQuery } from '@iotpilot/core/user/application/queries/get-user-by-id/get-user-by-id.query';
 import { UpdateUserCommand } from '@iotpilot/core/user/application/commands/update-user/update-user.command';
@@ -42,6 +43,11 @@ export const updateUserSchema = v.object({
     phoneNumber: v.optional(v.string({ max: 30 })),
     role: v.optional(v.enum(['USER', 'ADMIN', 'READONLY'] as const)),
     status: v.optional(v.enum(['ACTIVE', 'INACTIVE', 'PENDING', 'SUSPENDED'] as const))
+});
+
+export const inviteUserSchema = v.object({
+    email: v.string({ email: true }),
+    role: v.optional(v.enum(['ADMIN', 'USER', 'READONLY'] as const))
 });
 
 export const updateProfileSchema = v.object({
@@ -118,12 +124,23 @@ usersRouter.get('/', requireAuth(), async (req: AuthenticatedRequest, res: Respo
             customerId: targetCustomerId
         });
 
+        // ListUsersHandler goes through the domain UserEntity, whose `isActive`
+        // boolean collapses the real ACTIVE/PENDING/SUSPENDED/INACTIVE status
+        // into just two states — fetch the actual column so the Members UI can
+        // tell "invited, not yet accepted" (PENDING) apart from "deactivated".
+        const realStatusById = new Map(
+            (await prisma.getClient().user.findMany({
+                where: { publicId: { in: result.users.map((u: any) => u.id) } },
+                select: { publicId: true, status: true },
+            })).map((u: { publicId: string; status: string }) => [u.publicId, u.status]),
+        );
+
         const usersResponse = result.users.map((user: any) => ({
             id: user.id,
             email: user.email,
             username: user.displayName || user.fullName || user.email,
             role: user.role,
-            status: user.isActive ? 'ACTIVE' : 'INACTIVE',
+            status: realStatusById.get(user.id) ?? (user.isActive ? 'ACTIVE' : 'INACTIVE'),
             customerId: user.customerId || null,
             firstName: user.firstName || null,
             lastName: user.lastName || null,
@@ -217,6 +234,31 @@ usersRouter.post('/', requireAuth('SUPERADMIN'), async (req: AuthenticatedReques
 
     } catch (err) {
         console.error('❌ USERS POST: Failed to create user with DDD:', err);
+        send.fromError(res, err);
+    }
+});
+
+// POST /users/invite - Invite a team member by email. ADMIN+, own tenant only.
+usersRouter.post('/invite', requireAuth('ADMIN'), async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const parsed = inviteUserSchema.parse(req.body);
+
+        const tenantId = req.tenant?.getCustomerId()?.getValue() ?? req.user?.customerId;
+        if (!tenantId) {
+            send.badRequest(res, 'No active organization for this account');
+            return;
+        }
+
+        const tenantContext = TenantContextImpl.create(CustomerId.create(tenantId));
+        const commandBus = ServiceContainer.getInstance().getCommandBus();
+
+        const result = await commandBus.execute(
+            new InviteUserCommand(tenantContext, parsed.email, parsed.role ?? 'USER'),
+        );
+
+        send.created(res, result);
+    } catch (err) {
+        console.error('❌ USERS INVITE: Failed to invite user:', err);
         send.fromError(res, err);
     }
 });
@@ -374,9 +416,11 @@ usersRouter.put('/:id', requireAuth(), async (req: AuthenticatedRequest, res: Re
             return;
         }
 
-        // Only SUPERADMIN can update other users
-        if (req.user?.role !== 'SUPERADMIN' && req.user?.id !== userId) {
-            send.forbidden(res, 'Only superadmin can update other users');
+        // SUPERADMIN or ADMIN (own tenant, enforced downstream by the handler's
+        // validateBelongsToTenant) may update other users; anyone may update self.
+        const canManageOthers = req.user?.role === 'SUPERADMIN' || req.user?.role === 'ADMIN';
+        if (!canManageOthers && req.user?.id !== userId) {
+            send.forbidden(res, 'Only an admin can update other users');
             return;
         }
 
@@ -385,8 +429,12 @@ usersRouter.put('/:id', requireAuth(), async (req: AuthenticatedRequest, res: Re
 
         const updateData = { ...req.body };
         if (req.user?.role !== 'SUPERADMIN') {
-            delete (updateData as Record<string, unknown>).role;
+            // Status changes (suspend/deactivate) stay SUPERADMIN-only — the
+            // handler enforces this too, but stripping here keeps the error clean.
             delete (updateData as Record<string, unknown>).status;
+        }
+        if (!canManageOthers) {
+            delete (updateData as Record<string, unknown>).role;
         }
 
         // Create tenant context
@@ -423,7 +471,7 @@ usersRouter.put('/:id', requireAuth(), async (req: AuthenticatedRequest, res: Re
 });
 
 // DELETE /users/:id - Remove user
-usersRouter.delete('/:id', requireAuth('SUPERADMIN'), async (req: AuthenticatedRequest, res: Response) => {
+usersRouter.delete('/:id', requireAuth('ADMIN'), async (req: AuthenticatedRequest, res: Response) => {
     try {
         console.log('🗑️ USER DELETE: Starting user removal with DDD architecture');
 
@@ -436,9 +484,10 @@ usersRouter.delete('/:id', requireAuth('SUPERADMIN'), async (req: AuthenticatedR
         }
         const userId = internalId;
 
-        // Only SUPERADMIN can delete users, and users cannot delete themselves
-        if (req.user?.role !== 'SUPERADMIN') {
-            send.forbidden(res, 'Only superadmin can delete users');
+        // SUPERADMIN or ADMIN (own tenant, enforced by the handler below) may
+        // remove a member; nobody can delete themselves this way.
+        if (req.user?.role !== 'SUPERADMIN' && req.user?.role !== 'ADMIN') {
+            send.forbidden(res, 'Only an admin can delete users');
             return;
         }
 
@@ -456,8 +505,11 @@ usersRouter.delete('/:id', requireAuth('SUPERADMIN'), async (req: AuthenticatedR
             requestUserRole: req.user?.role
         });
 
-        // Create tenant context
-        const tenantContext = TenantContextImpl.createSuperAdmin();
+        // Create tenant context — ADMIN gets their own tenant (handler enforces
+        // the target belongs to it); only a true SUPERADMIN bypasses tenant checks.
+        const tenantContext = req.user?.role === 'SUPERADMIN'
+            ? TenantContextImpl.createSuperAdmin()
+            : TenantContextImpl.create(CustomerId.create(req.user!.customerId!));
 
         const removeUserCommand = RemoveUserCommand.create(
             userId,

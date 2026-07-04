@@ -94,6 +94,19 @@
       "have_account": "Already have an account?",
       "sign_in": "Sign in",
       "tagline": "Secure IoT device management platform"
+    },
+    "accept_invite": {
+      "title": "Accept your invitation",
+      "subtitle": "Set a password to join your organization",
+      "password": "Password",
+      "password_placeholder": "Create a password",
+      "confirm_password": "Confirm password",
+      "submit": "Accept invitation",
+      "submitting": "Setting up your account...",
+      "back_to_login": "Back to login",
+      "toast_success": "Invitation accepted. You can now log in.",
+      "error_invalid_token": "This invitation link is invalid or has expired.",
+      "error_already_accepted": "This invitation has already been accepted."
     }
   },
   "nav": {
@@ -719,7 +732,27 @@
       "preferences": "Preferences",
       "org": "Organization",
       "organization": "Organization",
+      "members": "Members",
       "app_config": "App Config"
+    },
+    "members": {
+      "title": "Team Members",
+      "role_admin": "Admin",
+      "role_user": "User",
+      "role_readonly": "Read-only",
+      "invite_title": "Invite a member",
+      "invite_email": "Email",
+      "invite_email_ph": "colleague@yourcompany.com",
+      "invite_role": "Role",
+      "invite_submit": "Send invitation",
+      "inviting": "Sending...",
+      "remove_title": "Remove member",
+      "remove_msg": "Remove {{name}} from the organization? They will lose access immediately.",
+      "remove_confirm": "Remove",
+      "msg_load_failed": "Failed to load members",
+      "msg_invite_failed": "Failed to send invitation",
+      "msg_role_failed": "Failed to update role",
+      "msg_remove_failed": "Failed to remove member"
     },
     "organization": {
       "title": "Organization Profile",
@@ -1137,7 +1170,10 @@
     "timeout": "Timeout",
     "open": "Open",
     "acknowledged": "Acknowledged",
-    "resolved": "Resolved"
+    "resolved": "Resolved",
+    "active": "Active",
+    "inactive": "Inactive",
+    "suspended": "Suspended"
   },
   "severity": {
     "critical": "Critical",

@@ -67,6 +67,12 @@ export const SETTINGS_ROUTES: Routes = [
         data: { breadcrumb: ['nav.settings', 'settings.org', 'settings.tabs.organization'] },
       },
       {
+        path: 'members',
+        loadComponent: () =>
+          import('./pages/members/settings-members.page').then((m) => m.SettingsMembersPage),
+        data: { breadcrumb: ['nav.settings', 'settings.org', 'settings.tabs.members'] },
+      },
+      {
         path: 'thresholds',
         loadComponent: () =>
           import('./pages/thresholds/settings-thresholds.page').then(

@@ -30,6 +30,12 @@ export const RESPONSE_SCHEMAS: Record<string, JsonSchema> = {
         _count: obj({devices: int, alerts: int}),
     }),
     Session: obj({id: str, createdAt: dt, expiresAt: dt, isCurrent: bool}),
+    InvitedUser: objR({
+        id: str, email: {type: 'string', format: 'email'},
+        role: {type: 'string', enum: ['ADMIN', 'USER', 'READONLY']},
+        status: {type: 'string', enum: ['PENDING']},
+    }, ['id', 'email', 'role', 'status']),
+    AcceptInviteResult: objR({message: str, email: {type: 'string', format: 'email'}}, ['message', 'email']),
     // Auth payload (the `data` of the envelope) — FE reads res.data.user/token.
     AuthData: obj({
         user: ref('User'), token: str,

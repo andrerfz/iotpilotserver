@@ -94,6 +94,19 @@
       "have_account": "¿Ya tienes cuenta?",
       "sign_in": "Iniciar sesión",
       "tagline": "Plataforma segura de gestión de dispositivos IoT"
+    },
+    "accept_invite": {
+      "title": "Acepta tu invitación",
+      "subtitle": "Define una contraseña para unirte a tu organización",
+      "password": "Contraseña",
+      "password_placeholder": "Crea una contraseña",
+      "confirm_password": "Confirmar contraseña",
+      "submit": "Aceptar invitación",
+      "submitting": "Configurando tu cuenta...",
+      "back_to_login": "Volver a iniciar sesión",
+      "toast_success": "Invitación aceptada. Ya puedes iniciar sesión.",
+      "error_invalid_token": "Este enlace de invitación no es válido o ha caducado.",
+      "error_already_accepted": "Esta invitación ya ha sido aceptada."
     }
   },
   "nav": {
@@ -719,7 +732,27 @@
       "preferences": "Preferencias",
       "org": "Organización",
       "organization": "Organización",
+      "members": "Miembros",
       "app_config": "Config. de App"
+    },
+    "members": {
+      "title": "Miembros del equipo",
+      "role_admin": "Admin",
+      "role_user": "Usuario",
+      "role_readonly": "Solo lectura",
+      "invite_title": "Invitar a un miembro",
+      "invite_email": "Correo electrónico",
+      "invite_email_ph": "colega@tuempresa.com",
+      "invite_role": "Rol",
+      "invite_submit": "Enviar invitación",
+      "inviting": "Enviando...",
+      "remove_title": "Eliminar miembro",
+      "remove_msg": "¿Eliminar a {{name}} de la organización? Perderá el acceso de inmediato.",
+      "remove_confirm": "Eliminar",
+      "msg_load_failed": "No se pudieron cargar los miembros",
+      "msg_invite_failed": "No se pudo enviar la invitación",
+      "msg_role_failed": "No se pudo actualizar el rol",
+      "msg_remove_failed": "No se pudo eliminar al miembro"
     },
     "organization": {
       "title": "Perfil de la organización",
@@ -1137,7 +1170,10 @@
     "timeout": "Tiempo agotado",
     "open": "Abierto",
     "acknowledged": "Visto",
-    "resolved": "Resuelto"
+    "resolved": "Resuelto",
+    "active": "Activo",
+    "inactive": "Inactivo",
+    "suspended": "Suspendido"
   },
   "severity": {
     "critical": "Crítico",

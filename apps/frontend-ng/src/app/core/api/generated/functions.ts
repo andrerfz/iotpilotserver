@@ -9,6 +9,8 @@ export type { Login$Params as Login$Params } from './fn/auth/login';
 export { login as login } from './fn/auth/login';
 export type { Register$Params as Register$Params } from './fn/auth/register';
 export { register as register } from './fn/auth/register';
+export type { AcceptInvite$Params as AcceptInvite$Params } from './fn/auth/accept-invite';
+export { acceptInvite as acceptInvite } from './fn/auth/accept-invite';
 export type { Logout$Params as Logout$Params } from './fn/auth/logout';
 export { logout as logout } from './fn/auth/logout';
 export type { GetMe$Params as GetMe$Params } from './fn/auth/get-me';
@@ -153,6 +155,8 @@ export type { ListUsers$Params as ListUsers$Params } from './fn/users/list-users
 export { listUsers as listUsers } from './fn/users/list-users';
 export type { CreateUser$Params as CreateUser$Params } from './fn/users/create-user';
 export { createUser as createUser } from './fn/users/create-user';
+export type { InviteUser$Params as InviteUser$Params } from './fn/users/invite-user';
+export { inviteUser as inviteUser } from './fn/users/invite-user';
 export type { GetCurrentUser$Params as GetCurrentUser$Params } from './fn/users/get-current-user';
 export { getCurrentUser as getCurrentUser } from './fn/users/get-current-user';
 export type { GetUser$Params as GetUser$Params } from './fn/users/get-user';

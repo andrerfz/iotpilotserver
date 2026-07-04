@@ -91,7 +91,20 @@ export class UpdateUserHandler implements CommandHandler<UpdateUserCommand, User
       if (isSameUser && user.isSuperAdmin() && !newRole.isSuperAdmin()) {
         throw new CannotDowngradeSuperadminException(id);
       }
-      
+
+      // Cannot demote the last active ADMIN of a tenant — mirrors the same
+      // protection in remove-user.handler.ts, extended to cover role changes
+      // now that ADMINs (not just SUPERADMIN) can update other members.
+      if (user.getRole().getValue() === 'ADMIN' && !newRole.isAdmin() && user.getCustomerId()) {
+        const tenantUsers = await this.userRepository.findAllInTenant(user.getCustomerId()!);
+        const activeAdmins = tenantUsers.filter(
+          (u) => u.getRole().getValue() === 'ADMIN' && u.isActive,
+        );
+        if (activeAdmins.length <= 1) {
+          throw new Error('Cannot demote the last admin user of the organization');
+        }
+      }
+
       user.updateRole(newRole);
     }
 

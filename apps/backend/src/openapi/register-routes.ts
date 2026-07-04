@@ -19,7 +19,7 @@ import * as user from '@iotpilot/core/user/infrastructure/dto/user.schemas';
 import {heartbeatSchema, iotDeviceRegistrationSchema, logsSchema} from '../routes/iot.router';
 import {
     loginSchema, registrationSchema, refreshSchema, changePasswordSchema,
-    createApiKeySchema, verifySchema,
+    createApiKeySchema, verifySchema, acceptInviteSchema,
 } from '../routes/auth.router';
 import {
     deviceRegisterSchema, activateSchema, claimDeviceSchema, bulkDeviceSchema,
@@ -31,6 +31,7 @@ import {
 import {preregisterSchema} from '../routes/admin.router';
 import {
     createUserSchema, updateUserSchema, updateProfileSchema, updatePreferenceSchema, pushTokenSchema,
+    inviteUserSchema,
 } from '../routes/users.router';
 import {
     profileSettingsSchema, securitySettingsSchema, notificationsSettingsSchema, organizationProfileSchema,
@@ -80,6 +81,7 @@ export function registerRoutes(): void {
     const ChangePasswordInput = registry.registerSchema('ChangePasswordInput', toJson(changePasswordSchema));
     const CreateApiKeyInput = registry.registerSchema('CreateApiKeyInput', toJson(createApiKeySchema));
     const Verify2faInput = registry.registerSchema('Verify2faInput', toJson(verifySchema));
+    const AcceptInviteInput = registry.registerSchema('AcceptInviteInput', toJson(acceptInviteSchema));
     const UserResponse = registry.registerSchema('UserResponse', toJson(user.UserResponseSchema));
     const CreateAlertInput = registry.registerSchema('CreateAlertInput', toJson(createAlertSchema));
     const AlertActionInput = registry.registerSchema('AlertActionInput', toJson(alertActionSchema));
@@ -87,6 +89,7 @@ export function registerRoutes(): void {
     const CreateThresholdInput = registry.registerSchema('CreateThresholdInput', toJson(createThresholdSchema));
     const UpdateThresholdInput = registry.registerSchema('UpdateThresholdInput', toJson(updateThresholdSchema));
     const CreateUserInput = registry.registerSchema('CreateUserInput', toJson(createUserSchema));
+    const InviteUserInput = registry.registerSchema('InviteUserInput', toJson(inviteUserSchema));
     const UpdateUserInput = registry.registerSchema('UpdateUserInput', toJson(updateUserSchema));
     const UpdateProfileInput = registry.registerSchema('UpdateProfileInput', toJson(updateProfileSchema));
     const UpdatePreferenceInput = registry.registerSchema('UpdatePreferenceInput', toJson(updatePreferenceSchema));
@@ -163,6 +166,8 @@ export function registerRoutes(): void {
         request: LoginInput, response: R.AuthData, clientWrap: true, responseDescription: 'Login successful'});
     registry.registerPath({method: 'post', path: '/auth/register', summary: 'Register new user', tags: ['Auth'],
         request: RegisterInput, response: R.RegisterData, clientWrap: true, status: 201, responseDescription: 'Registration successful'});
+    registry.registerPath({method: 'post', path: '/auth/accept-invite', summary: 'Accept an organization invitation', tags: ['Auth'],
+        request: AcceptInviteInput, response: R.AcceptInviteResult, responseDescription: 'Invitation accepted'});
     registry.registerPath({method: 'post', path: '/auth/logout', summary: 'Log out (clear session cookie)', tags: ['Auth'],
         response: MessageResponse, responseDescription: 'Logged out'});
     registry.registerPath({method: 'get', path: '/auth/me', summary: 'Get current user', tags: ['Auth'],
@@ -326,6 +331,8 @@ export function registerRoutes(): void {
         security: bearer, params: pagination, response: UserResponse, envelope: 'paginated', responseDescription: 'Users'});
     registry.registerPath({method: 'post', path: '/users', summary: 'Create a user', tags: ['Users'],
         security: bearer, request: CreateUserInput, response: UserResponse, status: 201, responseDescription: 'User created'});
+    registry.registerPath({method: 'post', path: '/users/invite', summary: 'Invite a team member', tags: ['Users'],
+        security: bearer, request: InviteUserInput, response: R.InvitedUser, status: 201, responseDescription: 'Invitation sent'});
     registry.registerPath({method: 'get', path: '/users/current', summary: 'Get the current user', tags: ['Users'],
         security: bearer, response: UserResponse, responseDescription: 'Current user'});
     registry.registerPath({method: 'get', path: '/users/{id}', summary: 'Get a user', tags: ['Users'],

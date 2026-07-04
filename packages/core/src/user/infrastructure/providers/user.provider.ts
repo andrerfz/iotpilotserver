@@ -146,7 +146,11 @@ export class UserServiceProvider implements BoundedContextProvider {
     const {VerifyTwoFactorHandler} = require('@iotpilot/core/user/application/commands/verify-two-factor/verify-two-factor.handler');
     commandBus.register(VerifyTwoFactorCommand, new VerifyTwoFactorHandler(prisma, sessionService));
 
-    // Email-dependent handlers (send verification code)
+    const {AcceptInviteCommand} = require('@iotpilot/core/user/application/commands/accept-invite/accept-invite.command');
+    const {AcceptInviteHandler} = require('@iotpilot/core/user/application/commands/accept-invite/accept-invite.handler');
+    commandBus.register(AcceptInviteCommand, new AcceptInviteHandler(prisma, passwordHasher));
+
+    // Email-dependent handlers (send verification code, invite)
     let emailService = null;
     try { emailService = container.resolve('EmailService'); } catch { /* not available client-side */ }
 
@@ -154,6 +158,10 @@ export class UserServiceProvider implements BoundedContextProvider {
         const {SendVerificationCodeCommand} = require('@iotpilot/core/user/application/commands/send-verification-code/send-verification-code.command');
         const {SendVerificationCodeHandler} = require('@iotpilot/core/user/application/commands/send-verification-code/send-verification-code.handler');
         commandBus.register(SendVerificationCodeCommand, new SendVerificationCodeHandler(prisma, emailService));
+
+        const {InviteUserCommand} = require('@iotpilot/core/user/application/commands/invite-user/invite-user.command');
+        const {InviteUserHandler} = require('@iotpilot/core/user/application/commands/invite-user/invite-user.handler');
+        commandBus.register(InviteUserCommand, new InviteUserHandler(prisma, emailService));
     }
   }
 

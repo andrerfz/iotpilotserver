@@ -12,6 +12,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 export class OrgHubPage {
   readonly items = [
     { label: 'settings.tabs.organization', path: 'organization' },
+    { label: 'settings.tabs.members', path: 'members' },
     { label: 'settings.tabs.thresholds', path: 'thresholds' },
     { label: 'settings.tabs.api_keys',   path: 'api-keys' },
     { label: 'settings.tabs.app_config', path: 'app-config' },

@@ -721,6 +721,38 @@
                 ],
                 "additionalProperties": false
             },
+            "AcceptInviteInput": {
+                "type": "object",
+                "properties": {
+                    "token": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "password": {
+                        "type": "string",
+                        "minLength": 12,
+                        "allOf": [
+                            {
+                                "pattern": "[A-Z]"
+                            },
+                            {
+                                "pattern": "[a-z]"
+                            },
+                            {
+                                "pattern": "\\d"
+                            },
+                            {
+                                "pattern": "[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?]"
+                            }
+                        ]
+                    }
+                },
+                "required": [
+                    "token",
+                    "password"
+                ],
+                "additionalProperties": false
+            },
             "UserResponse": {
                 "type": "object",
                 "properties": {
@@ -743,6 +775,33 @@
                         ]
                     },
                     "customerId": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "ACTIVE",
+                            "INACTIVE",
+                            "PENDING",
+                            "SUSPENDED"
+                        ]
+                    },
+                    "firstName": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "lastName": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    },
+                    "lastLoginAt": {
                         "type": "string",
                         "nullable": true
                     }
@@ -1037,6 +1096,27 @@
                     "username",
                     "password",
                     "customerId"
+                ],
+                "additionalProperties": false
+            },
+            "InviteUserInput": {
+                "type": "object",
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "format": "email"
+                    },
+                    "role": {
+                        "type": "string",
+                        "enum": [
+                            "ADMIN",
+                            "USER",
+                            "READONLY"
+                        ]
+                    }
+                },
+                "required": [
+                    "email"
                 ],
                 "additionalProperties": false
             },
@@ -1617,6 +1697,54 @@
                         "type": "boolean"
                     }
                 }
+            },
+            "InvitedUser": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email"
+                    },
+                    "role": {
+                        "type": "string",
+                        "enum": [
+                            "ADMIN",
+                            "USER",
+                            "READONLY"
+                        ]
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "PENDING"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "email",
+                    "role",
+                    "status"
+                ]
+            },
+            "AcceptInviteResult": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email"
+                    }
+                },
+                "required": [
+                    "message",
+                    "email"
+                ]
             },
             "AuthData": {
                 "type": "object",
@@ -2838,6 +2966,37 @@
                                         "data",
                                         "timestamp"
                                     ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/accept-invite": {
+            "post": {
+                "summary": "Accept an organization invitation",
+                "tags": [
+                    "Auth"
+                ],
+                "operationId": "acceptInvite",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AcceptInviteInput"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Invitation accepted",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AcceptInviteResult"
                                 }
                             }
                         }
@@ -5725,6 +5884,42 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/UserResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/users/invite": {
+            "post": {
+                "summary": "Invite a team member",
+                "tags": [
+                    "Users"
+                ],
+                "operationId": "inviteUser",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/InviteUserInput"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Invitation sent",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InvitedUser"
                                 }
                             }
                         }

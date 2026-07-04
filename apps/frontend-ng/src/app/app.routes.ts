@@ -42,6 +42,15 @@ export const routes: Routes = [
       import('./features/auth/pages/register/register.page').then((m) => m.RegisterPage),
   },
   {
+    // No loggedInGuard: an invite can arrive for a different email than the
+    // session currently active in this browser — always reachable via the link.
+    path: 'accept-invite',
+    loadComponent: () =>
+      import('./features/auth/pages/accept-invite/accept-invite.page').then(
+        (m) => m.AcceptInvitePage,
+      ),
+  },
+  {
     path: 'home',
     loadComponent: () => import('./home/home.page').then((m) => m.HomePage),
   },

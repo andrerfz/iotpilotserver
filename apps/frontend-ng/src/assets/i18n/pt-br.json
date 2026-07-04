@@ -94,6 +94,19 @@
       "have_account": "Já tem uma conta?",
       "sign_in": "Entrar",
       "tagline": "Plataforma segura de gerenciamento de dispositivos IoT"
+    },
+    "accept_invite": {
+      "title": "Aceite seu convite",
+      "subtitle": "Defina uma senha para entrar na sua organização",
+      "password": "Senha",
+      "password_placeholder": "Crie uma senha",
+      "confirm_password": "Confirmar senha",
+      "submit": "Aceitar convite",
+      "submitting": "Configurando sua conta...",
+      "back_to_login": "Voltar ao login",
+      "toast_success": "Convite aceito. Você já pode fazer login.",
+      "error_invalid_token": "Este link de convite é inválido ou expirou.",
+      "error_already_accepted": "Este convite já foi aceito."
     }
   },
   "nav": {
@@ -719,7 +732,27 @@
       "preferences": "Preferências",
       "org": "Organização",
       "organization": "Organização",
+      "members": "Membros",
       "app_config": "Config. do App"
+    },
+    "members": {
+      "title": "Membros da equipe",
+      "role_admin": "Admin",
+      "role_user": "Usuário",
+      "role_readonly": "Somente leitura",
+      "invite_title": "Convidar um membro",
+      "invite_email": "E-mail",
+      "invite_email_ph": "colega@suaempresa.com",
+      "invite_role": "Função",
+      "invite_submit": "Enviar convite",
+      "inviting": "Enviando...",
+      "remove_title": "Remover membro",
+      "remove_msg": "Remover {{name}} da organização? Ele perderá o acesso imediatamente.",
+      "remove_confirm": "Remover",
+      "msg_load_failed": "Falha ao carregar membros",
+      "msg_invite_failed": "Falha ao enviar convite",
+      "msg_role_failed": "Falha ao atualizar função",
+      "msg_remove_failed": "Falha ao remover membro"
     },
     "organization": {
       "title": "Perfil da organização",
@@ -1137,7 +1170,10 @@
     "timeout": "Tempo esgotado",
     "open": "Aberto",
     "acknowledged": "Reconhecido",
-    "resolved": "Resolvido"
+    "resolved": "Resolvido",
+    "active": "Ativo",
+    "inactive": "Inativo",
+    "suspended": "Suspenso"
   },
   "severity": {
     "critical": "Crítico",

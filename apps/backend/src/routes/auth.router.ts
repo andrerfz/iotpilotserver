@@ -601,6 +601,29 @@ authRouter.post('/register', async (req: AuthenticatedRequest, res: Response) =>
     }
 });
 
+export const acceptInviteSchema = v.object({
+    token: v.string({ min: 1 }),
+    password: (v as any).fromZodSchema(complexPasswordSchema),
+});
+
+// POST /auth/accept-invite — public, driven by the token in the emailed link.
+// Sets the invitee's password and activates their account (PENDING → ACTIVE).
+authRouter.post('/accept-invite', async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const parsed = acceptInviteSchema.parse(req.body);
+
+        const { AcceptInviteCommand } = await import('@iotpilot/core/user/application/commands/accept-invite/accept-invite.command');
+        const commandBus = ServiceContainer.getInstance().getCommandBus();
+
+        const command = new AcceptInviteCommand(parsed.token, parsed.password as string);
+        const result = await commandBus.execute<typeof command, { email: string }>(command);
+
+        send.ok(res, { message: 'Invitation accepted. You can now log in.', email: result.email });
+    } catch (err) {
+        send.fromError(res, err);
+    }
+});
+
 // POST /auth/refresh
 authRouter.post('/refresh', async (req: AuthenticatedRequest, res: Response) => {
     try {

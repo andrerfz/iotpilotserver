@@ -5,7 +5,8 @@ import { TranslatePipe } from '@ngx-translate/core';
 export type DeviceStatus = 'ONLINE' | 'OFFLINE' | 'MAINTENANCE' | 'ERROR' | 'UNCLAIMED' | 'PENDING_SETUP';
 export type CommandStatus = 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED' | 'TIMEOUT';
 export type AlertStatus = 'OPEN' | 'ACK' | 'RESOLVED';
-export type AnyStatus = DeviceStatus | CommandStatus | AlertStatus;
+export type UserStatus = 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
+export type AnyStatus = DeviceStatus | CommandStatus | AlertStatus | UserStatus;
 
 type BadgeColor = 'success' | 'danger' | 'warning' | 'info' | 'primary' | 'neutral';
 
@@ -29,6 +30,10 @@ const STATUS_META: Record<string, StatusMeta> = {
   OPEN:         { color: 'danger',  label: 'status.open' },
   ACK:          { color: 'warning', label: 'status.acknowledged' },
   RESOLVED:     { color: 'success', label: 'status.resolved' },
+  // User
+  ACTIVE:       { color: 'success', label: 'status.active' },
+  INACTIVE:     { color: 'neutral', label: 'status.inactive' },
+  SUSPENDED:    { color: 'danger',  label: 'status.suspended' },
 };
 
 const FALLBACK: StatusMeta = { color: 'neutral', label: '' };

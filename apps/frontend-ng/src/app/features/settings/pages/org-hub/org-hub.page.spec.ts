@@ -26,14 +26,15 @@ describe('OrgHubPage', () => {
   it('renders org tab items', async () => {
     const { getByText } = await setup();
     expect(getByText('Organization')).toBeTruthy();
+    expect(getByText('Members')).toBeTruthy();
     expect(getByText('Default thresholds')).toBeTruthy();
     expect(getByText('API Keys')).toBeTruthy();
     expect(getByText('App Config')).toBeTruthy();
   });
 
-  it('items contains the 4 expected paths in order', async () => {
+  it('items contains the 5 expected paths in order', async () => {
     const { fixture } = await setup();
     const paths = fixture.componentInstance.items.map((i) => i.path);
-    expect(paths).toEqual(['organization', 'thresholds', 'api-keys', 'app-config']);
+    expect(paths).toEqual(['organization', 'members', 'thresholds', 'api-keys', 'app-config']);
   });
 });

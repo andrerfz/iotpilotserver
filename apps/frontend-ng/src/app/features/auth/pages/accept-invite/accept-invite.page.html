@@ -1,0 +1,55 @@
+<ion-content class="accept-invite-content">
+  <div class="accept-invite-wrap">
+    <div class="accept-invite-logo">
+      <ui-app-logo layout="v" [size]="100" />
+    </div>
+
+    <ion-card class="accept-invite-card">
+      <ion-card-content>
+        @if (!hasToken()) {
+          <div class="accept-invite-card__header">
+            <h2 class="accept-invite-card__title">{{ 'auth.accept_invite.title' | translate }}</h2>
+            <p class="accept-invite-card__subtitle">{{ 'auth.accept_invite.error_invalid_token' | translate }}</p>
+          </div>
+          <div class="accept-invite-footer">
+            <a routerLink="/login">{{ 'auth.accept_invite.back_to_login' | translate }}</a>
+          </div>
+        } @else {
+          <div class="accept-invite-card__header">
+            <h2 class="accept-invite-card__title">{{ 'auth.accept_invite.title' | translate }}</h2>
+            <p class="accept-invite-card__subtitle">{{ 'auth.accept_invite.subtitle' | translate }}</p>
+          </div>
+
+          <form [formGroup]="form" (ngSubmit)="onSubmit()" class="accept-invite-form">
+            <ui-input
+              formControlName="password"
+              [label]="'auth.accept_invite.password' | translate"
+              type="password"
+              [placeholder]="'auth.accept_invite.password_placeholder' | translate"
+              [error]="passwordError()" />
+
+            <app-password-strength [password]="passwordValue" />
+
+            <ui-input
+              formControlName="confirmPassword"
+              [label]="'auth.accept_invite.confirm_password' | translate"
+              type="password"
+              [placeholder]="'auth.accept_invite.confirm_password' | translate"
+              [error]="confirmPasswordError()" />
+
+            @if (errorMessage()) {
+              <p class="accept-invite-error">{{ errorMessage() }}</p>
+            }
+
+            <ion-button type="submit" expand="block" [disabled]="isLoading()">
+              @if (isLoading()) {
+                <ion-spinner name="crescent" slot="start" />
+              }
+              {{ isLoading() ? ('auth.accept_invite.submitting' | translate) : ('auth.accept_invite.submit' | translate) }}
+            </ion-button>
+          </form>
+        }
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>

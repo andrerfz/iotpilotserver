@@ -94,6 +94,19 @@
       "have_account": "Vous avez déjà un compte ?",
       "sign_in": "Se connecter",
       "tagline": "Plateforme sécurisée de gestion d'appareils IoT"
+    },
+    "accept_invite": {
+      "title": "Acceptez votre invitation",
+      "subtitle": "Définissez un mot de passe pour rejoindre votre organisation",
+      "password": "Mot de passe",
+      "password_placeholder": "Créer un mot de passe",
+      "confirm_password": "Confirmer le mot de passe",
+      "submit": "Accepter l'invitation",
+      "submitting": "Configuration du compte...",
+      "back_to_login": "Retour à la connexion",
+      "toast_success": "Invitation acceptée. Vous pouvez maintenant vous connecter.",
+      "error_invalid_token": "Ce lien d'invitation est invalide ou a expiré.",
+      "error_already_accepted": "Cette invitation a déjà été acceptée."
     }
   },
   "nav": {
@@ -719,7 +732,27 @@
       "preferences": "Préférences",
       "org": "Organisation",
       "organization": "Organisation",
+      "members": "Membres",
       "app_config": "Config. App"
+    },
+    "members": {
+      "title": "Membres de l'équipe",
+      "role_admin": "Admin",
+      "role_user": "Utilisateur",
+      "role_readonly": "Lecture seule",
+      "invite_title": "Inviter un membre",
+      "invite_email": "E-mail",
+      "invite_email_ph": "collegue@votreentreprise.com",
+      "invite_role": "Rôle",
+      "invite_submit": "Envoyer l'invitation",
+      "inviting": "Envoi en cours...",
+      "remove_title": "Supprimer le membre",
+      "remove_msg": "Supprimer {{name}} de l'organisation ? Il perdra l'accès immédiatement.",
+      "remove_confirm": "Supprimer",
+      "msg_load_failed": "Échec du chargement des membres",
+      "msg_invite_failed": "Échec de l'envoi de l'invitation",
+      "msg_role_failed": "Échec de la mise à jour du rôle",
+      "msg_remove_failed": "Échec de la suppression du membre"
     },
     "organization": {
       "title": "Profil de l'organisation",
@@ -1137,7 +1170,10 @@
     "timeout": "Délai dépassé",
     "open": "Ouvert",
     "acknowledged": "Acquitté",
-    "resolved": "Résolu"
+    "resolved": "Résolu",
+    "active": "Actif",
+    "inactive": "Inactif",
+    "suspended": "Suspendu"
   },
   "severity": {
     "critical": "Critique",

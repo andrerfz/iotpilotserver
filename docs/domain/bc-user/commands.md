@@ -15,6 +15,39 @@
 | `CreateApiKey` | ✅ exists | — |
 | `SendVerificationCode` | ✅ exists | 2FA email code |
 | `VerifyTwoFactor` | ✅ exists | validates code, returns session |
+| `InviteUser` | ✅ exists | ADMIN invites a teammate by email — see below |
+| `AcceptInvite` | ✅ exists | public, token-driven — see below |
+
+## InviteUser / AcceptInvite (team member invitations)
+
+Both write directly via Prisma rather than through `UserRepository`/
+`UserEntity`: the domain entity's `isActive` boolean collapses the real
+ACTIVE/PENDING/SUSPENDED/INACTIVE `status` column into two states
+(`UserMapper`), so it cannot express "invited, not yet accepted". Reusing
+`RegisterUserCommand` would always persist ACTIVE or INACTIVE, never PENDING
+— this is a known modeling gap in the User aggregate (isActive: boolean should
+eventually become a real UserStatus VO), not something these two commands
+attempt to fix.
+
+- **InviteUser** (`user/application/commands/invite-user/`) — ADMIN+, tenant-
+  scoped. Creates a `status: PENDING` user with an unusable random placeholder
+  password hash (login is already blocked by `UserAuthenticator.
+  checkIsActive()` regardless of the placeholder), a `VerificationCode` row
+  (`type: 'ORG_INVITE'`, a `crypto.randomBytes(24).toString('base64url')`
+  token — not the 6-digit OTP used for 2FA, since a URL token needs far more
+  entropy and no code the user has to type), and emails a branded accept-
+  invite link (`renderEmailLayout`). Route: `POST /users/invite`.
+- **AcceptInvite** (`user/application/commands/accept-invite/`) — public, no
+  tenant context (driven purely by the emailed token). Validates the token
+  (unused, unexpired), sets the real password (`Password.create` — same
+  strength rules as everywhere else), flips `status` to ACTIVE, marks the
+  code used. Route: `POST /auth/accept-invite`.
+- `PUT /users/:id` and `DELETE /users/:id` were SUPERADMIN-only; loosened to
+  ADMIN (own tenant, enforced by `UserEntity.validateBelongsToTenant`) so an
+  ADMIN can change a member's role or remove them. Added a last-active-ADMIN
+  guard to `UpdateUserHandler`'s role-change branch, mirroring the one that
+  already existed in `RemoveUserHandler`, so a role change can't zero out a
+  tenant's admins the way removal already couldn't.
 
 ## Existing queries (do not re-scaffold)
 
@@ -90,8 +123,10 @@
 ## Sensitive operations
 | Command | Requires |
 |---|---|
-| `UpdateUser` | ADMIN or self |
+| `UpdateUser` | ADMIN (own tenant) or self (own profile fields only, not role/status) |
 | `ApproveUser` | ADMIN or SUPERADMIN |
-| `RemoveUser` | SUPERADMIN (cannot self-delete) |
+| `RemoveUser` | ADMIN (own tenant) or SUPERADMIN (cannot self-delete, cannot remove the last active ADMIN) |
+| `InviteUser` | ADMIN (own tenant only) |
+| `AcceptInvite` | public (gated by a single-use, time-limited token, not a role) |
 | `UpdateUserPreferences` | self only |
 | `GetNotificationPreferences` | internal (no HTTP) |
