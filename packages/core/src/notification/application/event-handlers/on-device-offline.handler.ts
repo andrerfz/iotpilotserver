@@ -19,7 +19,7 @@ export class OnDeviceOfflineHandler implements EventHandler<DeviceDisconnectedEv
 
     const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const deviceName = event.deviceName.getValue();
-    const reason = event.disconnectionReason ? ` Reason: ${event.disconnectionReason}.` : '';
+    const reason = event.disconnectionReason ? ` Reason: ${esc(event.disconnectionReason)}.` : '';
     const graceful = event.wasGraceful ? ' (graceful)' : ' (unexpected)';
     const when = event.disconnectionTimestamp.toISOString().replace('T', ' ').slice(0, 19) + ' UTC';
 
