@@ -749,10 +749,15 @@
       "remove_title": "Remove member",
       "remove_msg": "Remove {{name}} from the organization? They will lose access immediately.",
       "remove_confirm": "Remove",
+      "cancel_invite_title": "Cancel invitation",
+      "cancel_invite_msg": "Cancel the invitation sent to {{name}}? They won't be able to accept it.",
+      "cancel_invite_confirm": "Cancel invitation",
       "msg_load_failed": "Failed to load members",
       "msg_invite_failed": "Failed to send invitation",
       "msg_role_failed": "Failed to update role",
-      "msg_remove_failed": "Failed to remove member"
+      "msg_remove_failed": "Failed to remove member",
+      "msg_resend_success": "Invitation resent to {{email}}",
+      "msg_resend_failed": "Failed to resend invitation"
     },
     "organization": {
       "title": "Organization Profile",

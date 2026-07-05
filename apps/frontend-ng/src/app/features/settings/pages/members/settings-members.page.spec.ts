@@ -78,4 +78,30 @@ describe('SettingsMembersPage', () => {
     await fixture.whenStable();
     expect(fixture.componentInstance.listError()).toBe('boom');
   });
+
+  it('onResend calls resend-invite for the row and shows success', async () => {
+    const invokeSpy = vi.fn().mockImplementation((fn: { PATH?: string }) => {
+      if (fn?.PATH === '/users/{id}/resend-invite') return Promise.resolve({ data: { email: 'invitee@example.com' } });
+      return Promise.resolve({ data: MOCK_MEMBERS });
+    });
+    const { fixture } = await render(SettingsMembersPage, {
+      providers: [
+        provideRouter([]),
+        { provide: Api, useValue: { invoke: invokeSpy } },
+        { provide: AuthService, useValue: makeAuth() },
+        { provide: AlertController, useValue: { create: vi.fn() } },
+      ],
+    });
+    await fixture.whenStable();
+
+    const comp = fixture.componentInstance;
+    await comp.onResend(MOCK_MEMBERS[1]);
+
+    const resendCall = invokeSpy.mock.calls.find((c) => (c[0] as { PATH?: string })?.PATH === '/users/{id}/resend-invite');
+    expect(resendCall?.[1]).toEqual({ id: 'u-2' });
+    // The shared TranslateService test mock doesn't interpolate params (see
+    // test-setup.ts) — assert a message was set, not the final rendered text.
+    expect(comp.rowSuccess()).toBeTruthy();
+    expect(comp.rowError()).toBe('');
+  });
 });

@@ -6,6 +6,7 @@ import { ServiceContainer } from '@iotpilot/core/shared/infrastructure/container
 import { ListUsersQuery } from '@iotpilot/core/user/application/queries/list-users/list-users.query';
 import { RegisterUserCommand } from '@iotpilot/core/user/application/commands/register-user/register-user.command';
 import { InviteUserCommand } from '@iotpilot/core/user/application/commands/invite-user/invite-user.command';
+import { ResendInviteCommand } from '@iotpilot/core/user/application/commands/resend-invite/resend-invite.command';
 import { GetCurrentUserQuery } from '@iotpilot/core/user/application/queries/get-current-user/get-current-user.query';
 import { GetUserByIdQuery } from '@iotpilot/core/user/application/queries/get-user-by-id/get-user-by-id.query';
 import { UpdateUserCommand } from '@iotpilot/core/user/application/commands/update-user/update-user.command';
@@ -259,6 +260,33 @@ usersRouter.post('/invite', requireAuth('ADMIN'), async (req: AuthenticatedReque
         send.created(res, result);
     } catch (err) {
         console.error('❌ USERS INVITE: Failed to invite user:', err);
+        send.fromError(res, err);
+    }
+});
+
+// POST /users/:id/resend-invite - Re-send a still-pending invite. ADMIN+, own tenant only.
+usersRouter.post('/:id/resend-invite', requireAuth('ADMIN'), async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const internalId = await resolveUserPublicId(req.params.id);
+        if (!internalId) {
+            send.notFound(res, 'User not found');
+            return;
+        }
+
+        const tenantId = req.tenant?.getCustomerId()?.getValue() ?? req.user?.customerId;
+        if (!tenantId) {
+            send.badRequest(res, 'No active organization for this account');
+            return;
+        }
+
+        const tenantContext = TenantContextImpl.create(CustomerId.create(tenantId));
+        const commandBus = ServiceContainer.getInstance().getCommandBus();
+
+        const result = await commandBus.execute(new ResendInviteCommand(tenantContext, internalId));
+
+        send.ok(res, result);
+    } catch (err) {
+        console.error('❌ USERS RESEND INVITE: Failed to resend invite:', err);
         send.fromError(res, err);
     }
 });

@@ -333,6 +333,8 @@ export function registerRoutes(): void {
         security: bearer, request: CreateUserInput, response: UserResponse, status: 201, responseDescription: 'User created'});
     registry.registerPath({method: 'post', path: '/users/invite', summary: 'Invite a team member', tags: ['Users'],
         security: bearer, request: InviteUserInput, response: R.InvitedUser, status: 201, responseDescription: 'Invitation sent'});
+    registry.registerPath({method: 'post', path: '/users/{id}/resend-invite', summary: 'Resend a pending invite', tags: ['Users'],
+        security: bearer, params: [idParam], response: R.ResendInviteResult, responseDescription: 'Invitation resent'});
     registry.registerPath({method: 'get', path: '/users/current', summary: 'Get the current user', tags: ['Users'],
         security: bearer, response: UserResponse, responseDescription: 'Current user'});
     registry.registerPath({method: 'get', path: '/users/{id}', summary: 'Get a user', tags: ['Users'],

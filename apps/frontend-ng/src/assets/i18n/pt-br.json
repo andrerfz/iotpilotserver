@@ -749,10 +749,15 @@
       "remove_title": "Remover membro",
       "remove_msg": "Remover {{name}} da organização? Ele perderá o acesso imediatamente.",
       "remove_confirm": "Remover",
+      "cancel_invite_title": "Cancelar convite",
+      "cancel_invite_msg": "Cancelar o convite enviado para {{name}}? Ele não poderá aceitá-lo.",
+      "cancel_invite_confirm": "Cancelar convite",
       "msg_load_failed": "Falha ao carregar membros",
       "msg_invite_failed": "Falha ao enviar convite",
       "msg_role_failed": "Falha ao atualizar função",
-      "msg_remove_failed": "Falha ao remover membro"
+      "msg_remove_failed": "Falha ao remover membro",
+      "msg_resend_success": "Convite reenviado para {{email}}",
+      "msg_resend_failed": "Falha ao reenviar convite"
     },
     "organization": {
       "title": "Perfil da organização",

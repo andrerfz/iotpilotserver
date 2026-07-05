@@ -72,6 +72,7 @@ const ERROR_STATUS_MAP: Record<string, number> = {
     'UserAlreadyExistsException': HttpStatus.CONFLICT,
     'UserAlreadyInvitedException': HttpStatus.CONFLICT,
     'InviteAlreadyAcceptedException': HttpStatus.CONFLICT,
+    'InviteNotPendingException': HttpStatus.CONFLICT,
     'EmailAlreadyInUseException': HttpStatus.CONFLICT,
     'DeviceAlreadyExistsException': HttpStatus.CONFLICT,
     'DeviceAlreadyActiveException': HttpStatus.CONFLICT,

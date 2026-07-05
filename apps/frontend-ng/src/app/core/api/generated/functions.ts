@@ -157,6 +157,8 @@ export type { CreateUser$Params as CreateUser$Params } from './fn/users/create-u
 export { createUser as createUser } from './fn/users/create-user';
 export type { InviteUser$Params as InviteUser$Params } from './fn/users/invite-user';
 export { inviteUser as inviteUser } from './fn/users/invite-user';
+export type { ResendInvite$Params as ResendInvite$Params } from './fn/users/resend-invite';
+export { resendInvite as resendInvite } from './fn/users/resend-invite';
 export type { GetCurrentUser$Params as GetCurrentUser$Params } from './fn/users/get-current-user';
 export { getCurrentUser as getCurrentUser } from './fn/users/get-current-user';
 export type { GetUser$Params as GetUser$Params } from './fn/users/get-user';

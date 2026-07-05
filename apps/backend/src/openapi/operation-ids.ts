@@ -73,6 +73,7 @@ export const OPERATION_IDS: Record<string, string> = {
     'get /users': 'listUsers',
     'post /users': 'createUser',
     'post /users/invite': 'inviteUser',
+    'post /users/{id}/resend-invite': 'resendInvite',
     'get /users/current': 'getCurrentUser',
     'get /users/{id}': 'getUser',
     'put /users/{id}': 'updateUser',

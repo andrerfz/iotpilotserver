@@ -66,6 +66,7 @@ export type { PushTokenInput } from './models/push-token-input';
 export type { RefreshInput } from './models/refresh-input';
 export type { RegisterData } from './models/register-data';
 export type { RegisterInput } from './models/register-input';
+export type { ResendInviteResult } from './models/resend-invite-result';
 export type { RevokeSessionResult } from './models/revoke-session-result';
 export type { RevokeSessionsResult } from './models/revoke-sessions-result';
 export type { RotateKeyResult } from './models/rotate-key-result';

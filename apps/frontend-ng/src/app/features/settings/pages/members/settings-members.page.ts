@@ -14,7 +14,7 @@ import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angu
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
-import { addOutline, closeOutline, trashOutline } from 'ionicons/icons';
+import { addOutline, closeOutline, trashOutline, mailOutline } from 'ionicons/icons';
 import { TopbarService } from '@ng/shell/topbar.service';
 import { AuthService } from '@ng/core/auth/auth.service';
 import {
@@ -39,9 +39,10 @@ import { listUsers } from '@ng/core/api/generated/fn/users/list-users';
 import { inviteUser } from '@ng/core/api/generated/fn/users/invite-user';
 import { updateUser } from '@ng/core/api/generated/fn/users/update-user';
 import { deleteUser } from '@ng/core/api/generated/fn/users/delete-user';
+import { resendInvite } from '@ng/core/api/generated/fn/users/resend-invite';
 import type { UserResponse } from '@ng/core/api/generated/models/user-response';
 
-addIcons({ addOutline, closeOutline, trashOutline });
+addIcons({ addOutline, closeOutline, trashOutline, mailOutline });
 
 const ROLE_OPTIONS: SelectOption[] = [
   { value: 'ADMIN', label: 'settings.members.role_admin' },
@@ -95,7 +96,9 @@ export class SettingsMembersPage implements OnInit, AfterViewInit {
 
   readonly roleUpdatingId = signal<string | null>(null);
   readonly removingId = signal<string | null>(null);
+  readonly resendingId = signal<string | null>(null);
   readonly rowError = signal('');
+  readonly rowSuccess = signal('');
 
   readonly roleOptions = ROLE_OPTIONS;
   readonly currentUserId = computed(() => this.auth.currentUser()?.id ?? null);
@@ -202,19 +205,34 @@ export class SettingsMembersPage implements OnInit, AfterViewInit {
   }
 
   async onRemove(row: UserResponse): Promise<void> {
+    const isPending = row.status === 'PENDING';
     const alert = await this.alertCtrl.create({
-      header: this.t.instant('settings.members.remove_title'),
-      message: this.t.instant('settings.members.remove_msg', { name: row.username }),
+      header: this.t.instant(isPending ? 'settings.members.cancel_invite_title' : 'settings.members.remove_title'),
+      message: this.t.instant(isPending ? 'settings.members.cancel_invite_msg' : 'settings.members.remove_msg', { name: row.username }),
       buttons: [
         { text: this.t.instant('common.cancel'), role: 'cancel' },
         {
-          text: this.t.instant('settings.members.remove_confirm'),
+          text: this.t.instant(isPending ? 'settings.members.cancel_invite_confirm' : 'settings.members.remove_confirm'),
           role: 'destructive',
           handler: () => void this.doRemove(row.id),
         },
       ],
     });
     await alert.present();
+  }
+
+  async onResend(row: UserResponse): Promise<void> {
+    this.resendingId.set(row.id);
+    this.rowError.set('');
+    this.rowSuccess.set('');
+    try {
+      await this.api.invoke(resendInvite, { id: row.id });
+      this.rowSuccess.set(this.t.instant('settings.members.msg_resend_success', { email: row.email }));
+    } catch (err) {
+      this.rowError.set(err instanceof Error ? err.message : this.t.instant('settings.members.msg_resend_failed'));
+    } finally {
+      this.resendingId.set(null);
+    }
   }
 
   private async doRemove(id: string): Promise<void> {

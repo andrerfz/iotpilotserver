@@ -18,6 +18,17 @@
 
   <ng-template #actionsCell let-row>
     @if (canManage(row)) {
+      @if (row.status === 'PENDING') {
+        <ion-button fill="clear" color="medium" size="small"
+          [disabled]="resendingId() === row.id"
+          (click)="onResend(row)">
+          @if (resendingId() === row.id) {
+            <ion-spinner name="crescent" slot="icon-only" />
+          } @else {
+            <ion-icon slot="icon-only" name="mail-outline" />
+          }
+        </ion-button>
+      }
       <ion-button fill="clear" color="danger" size="small"
         [disabled]="removingId() === row.id"
         (click)="onRemove(row)">
@@ -38,6 +49,9 @@
 
   @if (rowError()) {
     <p class="members-msg members-msg--error">{{ rowError() }}</p>
+  }
+  @if (rowSuccess()) {
+    <p class="members-msg members-msg--success">{{ rowSuccess() }}</p>
   }
 
 </ion-content>

@@ -36,6 +36,7 @@ export const RESPONSE_SCHEMAS: Record<string, JsonSchema> = {
         status: {type: 'string', enum: ['PENDING']},
     }, ['id', 'email', 'role', 'status']),
     AcceptInviteResult: objR({message: str, email: {type: 'string', format: 'email'}}, ['message', 'email']),
+    ResendInviteResult: objR({email: {type: 'string', format: 'email'}}, ['email']),
     // Auth payload (the `data` of the envelope) — FE reads res.data.user/token.
     AuthData: obj({
         user: ref('User'), token: str,

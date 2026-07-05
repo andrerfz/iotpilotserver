@@ -71,6 +71,7 @@ export type { PushTokenInput } from './models/push-token-input';
 export type { RefreshInput } from './models/refresh-input';
 export type { RegisterData } from './models/register-data';
 export type { RegisterInput } from './models/register-input';
+export type { ResendInviteResult } from './models/resend-invite-result';
 export type { RevokeSessionResult } from './models/revoke-session-result';
 export type { RevokeSessionsResult } from './models/revoke-sessions-result';
 export type { RotateKeyResult } from './models/rotate-key-result';
@@ -252,6 +253,8 @@ export type { CreateUser$Params as CreateUser$Params } from './fn/users/create-u
 export { createUser as createUser } from './fn/users/create-user';
 export type { InviteUser$Params as InviteUser$Params } from './fn/users/invite-user';
 export { inviteUser as inviteUser } from './fn/users/invite-user';
+export type { ResendInvite$Params as ResendInvite$Params } from './fn/users/resend-invite';
+export { resendInvite as resendInvite } from './fn/users/resend-invite';
 export type { GetCurrentUser$Params as GetCurrentUser$Params } from './fn/users/get-current-user';
 export { getCurrentUser as getCurrentUser } from './fn/users/get-current-user';
 export type { GetUser$Params as GetUser$Params } from './fn/users/get-user';

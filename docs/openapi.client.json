@@ -1746,6 +1746,18 @@
                     "email"
                 ]
             },
+            "ResendInviteResult": {
+                "type": "object",
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "format": "email"
+                    }
+                },
+                "required": [
+                    "email"
+                ]
+            },
             "AuthData": {
                 "type": "object",
                 "properties": {
@@ -5920,6 +5932,43 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/InvitedUser"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{id}/resend-invite": {
+            "post": {
+                "summary": "Resend a pending invite",
+                "tags": [
+                    "Users"
+                ],
+                "operationId": "resendInvite",
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Device public ID"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Invitation resent",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResendInviteResult"
                                 }
                             }
                         }

@@ -162,6 +162,10 @@ export class UserServiceProvider implements BoundedContextProvider {
         const {InviteUserCommand} = require('@iotpilot/core/user/application/commands/invite-user/invite-user.command');
         const {InviteUserHandler} = require('@iotpilot/core/user/application/commands/invite-user/invite-user.handler');
         commandBus.register(InviteUserCommand, new InviteUserHandler(prisma, emailService));
+
+        const {ResendInviteCommand} = require('@iotpilot/core/user/application/commands/resend-invite/resend-invite.command');
+        const {ResendInviteHandler} = require('@iotpilot/core/user/application/commands/resend-invite/resend-invite.handler');
+        commandBus.register(ResendInviteCommand, new ResendInviteHandler(prisma, emailService));
     }
   }
 

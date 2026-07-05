@@ -749,10 +749,15 @@
       "remove_title": "Eliminar miembro",
       "remove_msg": "¿Eliminar a {{name}} de la organización? Perderá el acceso de inmediato.",
       "remove_confirm": "Eliminar",
+      "cancel_invite_title": "Cancelar invitación",
+      "cancel_invite_msg": "¿Cancelar la invitación enviada a {{name}}? No podrá aceptarla.",
+      "cancel_invite_confirm": "Cancelar invitación",
       "msg_load_failed": "No se pudieron cargar los miembros",
       "msg_invite_failed": "No se pudo enviar la invitación",
       "msg_role_failed": "No se pudo actualizar el rol",
-      "msg_remove_failed": "No se pudo eliminar al miembro"
+      "msg_remove_failed": "No se pudo eliminar al miembro",
+      "msg_resend_success": "Invitación reenviada a {{email}}",
+      "msg_resend_failed": "No se pudo reenviar la invitación"
     },
     "organization": {
       "title": "Perfil de la organización",
