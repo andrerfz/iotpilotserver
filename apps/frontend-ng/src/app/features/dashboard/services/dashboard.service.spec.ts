@@ -130,4 +130,39 @@ describe('DashboardService', () => {
       expect(service.monitoringMetrics.data()).toEqual({});
     });
   });
+
+  describe('alertsTrend surface', () => {
+    it('unwraps the { success, data, timestamp } envelope', async () => {
+      const trend = [{ date: '2026-06-01', bySeverity: { WARNING: 2 } }];
+      const api = makeApi();
+      api.invoke.mockResolvedValue({ success: true, data: trend, timestamp: '2026-06-12T00:00:00Z' });
+      const { service } = setup(api);
+
+      await service.alertsTrend.load({ days: 7 });
+
+      expect(service.alertsTrend.data()).toEqual(trend);
+    });
+
+    it('falls back to an empty array when data is absent', async () => {
+      const api = makeApi();
+      api.invoke.mockResolvedValue({ success: true, timestamp: '2026-06-12T00:00:00Z' });
+      const { service } = setup(api);
+
+      await service.alertsTrend.load({ days: 7 });
+
+      expect(service.alertsTrend.data()).toEqual([]);
+    });
+  });
+
+  describe('batchUpdateAlerts', () => {
+    it('unwraps the envelope to return processed/skipped counts', async () => {
+      const api = makeApi();
+      api.invoke.mockResolvedValue({ success: true, data: { processed: 3, skipped: 1 }, timestamp: '2026-06-12T00:00:00Z' });
+      const { service } = setup(api);
+
+      const result = await service.batchUpdateAlerts('acknowledge', ['a1', 'a2', 'a3', 'a4']);
+
+      expect(result).toEqual({ processed: 3, skipped: 1 });
+    });
+  });
 });

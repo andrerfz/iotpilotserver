@@ -7,6 +7,7 @@ export interface Device {
   appStatus?: string | null;
   architecture?: string | null;
   batteryLevel?: number | null;
+  connectionQuality?: ('good' | 'fair' | 'poor' | 'disconnected') | null;
   cpuTemp?: number | null;
   cpuUsage?: number | null;
   customerId?: string;

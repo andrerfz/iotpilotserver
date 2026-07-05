@@ -3,4 +3,7 @@
 
 export interface RotateKeyResult {
   apiKey?: string;
+  deviceId?: string;
+  message?: string;
+  rotatedAt?: string;
 }

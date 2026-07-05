@@ -226,7 +226,8 @@ export class DeviceDetailService {
 
   async rotateKey(id: string): Promise<{ apiKey: string; deviceId: string; rotatedAt: string }> {
     const res = await this.api.invoke(rotateDeviceKey, { id });
-    const result = res as { apiKey?: string; deviceId?: string; rotatedAt?: string };
+    const result = (res as { data?: { apiKey?: string; deviceId?: string; rotatedAt?: string } }).data
+      ?? (res as { apiKey?: string; deviceId?: string; rotatedAt?: string });
     if (!result.apiKey) throw new Error('No API key returned');
     return { apiKey: result.apiKey, deviceId: result.deviceId ?? id, rotatedAt: result.rotatedAt ?? '' };
   }

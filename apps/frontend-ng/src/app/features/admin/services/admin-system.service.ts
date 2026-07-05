@@ -60,7 +60,7 @@ export class AdminSystemService implements OnDestroy {
     this._error.set(null);
     try {
       const res = await this.api.invoke(getAdminSystem, {});
-      const body = res as unknown as AdminSystemInfo;
+      const body = (res as unknown as { data?: AdminSystemInfo }).data ?? (res as unknown as AdminSystemInfo);
       this._data.set(body);
       this._lastUpdated.set(new Date());
     } catch (e) {

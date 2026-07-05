@@ -1957,6 +1957,16 @@
                         "type": "number",
                         "nullable": true
                     },
+                    "connectionQuality": {
+                        "type": "string",
+                        "enum": [
+                            "good",
+                            "fair",
+                            "poor",
+                            "disconnected"
+                        ],
+                        "nullable": true
+                    },
                     "updatedAt": {
                         "type": "string",
                         "format": "date-time",
@@ -2235,8 +2245,18 @@
             "RotateKeyResult": {
                 "type": "object",
                 "properties": {
+                    "message": {
+                        "type": "string"
+                    },
                     "apiKey": {
                         "type": "string"
+                    },
+                    "deviceId": {
+                        "type": "string"
+                    },
+                    "rotatedAt": {
+                        "type": "string",
+                        "format": "date-time"
                     }
                 }
             },

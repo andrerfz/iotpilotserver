@@ -55,6 +55,7 @@ export const RESPONSE_SCHEMAS: Record<string, JsonSchema> = {
         cpuUsage: numN, cpuTemp: numN, memoryUsage: numN, memoryTotal: numN, diskUsage: numN,
         diskTotal: strN, loadAverage: strN, appStatus: strN, lastBoot: dtN, registeredAt: dtN,
         temperature: numN, batteryLevel: numN, signalStrength: numN,
+        connectionQuality: {type: 'string', enum: ['good', 'fair', 'poor', 'disconnected'], nullable: true},
         updatedAt: dtN, alertsCount: {type: 'integer', nullable: true},
     }),
     Alert: obj({
@@ -80,7 +81,7 @@ export const RESPONSE_SCHEMAS: Record<string, JsonSchema> = {
         updateChannel: {type: 'string', enum: ['stable', 'beta', 'nightly']}, sshEnabled: bool, apiKeyRotationDays: int,
     }),
     DeviceStatusInfo: obj({status: str, lastSeen: dtN, uptime: numN}),
-    RotateKeyResult: obj({apiKey: str}),
+    RotateKeyResult: obj({message: str, apiKey: str, deviceId: str, rotatedAt: dt}),
     BulkResult: obj({processed: int, succeeded: int, failed: int}),
     Threshold: obj({
         id: str, deviceId: strN, name: str, description: str, metricName: str,

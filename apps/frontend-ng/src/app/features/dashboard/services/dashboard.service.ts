@@ -91,7 +91,7 @@ export class DashboardService {
   readonly alertsTrend = makeSurface<TrendPoint[], GetAlertsTrend$Params>(
     async (params) => {
       const res = await this.api.invoke(getAlertsTrend, params);
-      return res as TrendPoint[];
+      return (res as { data?: TrendPoint[] }).data ?? [];
     },
   );
 
@@ -101,7 +101,8 @@ export class DashboardService {
     resolutionNote?: string,
   ): Promise<{ processed?: number; skipped?: number }> {
     const res = await this.api.invoke(batchUpdateAlerts, { body: { action, alertIds, resolutionNote } });
-    return res as { processed?: number; skipped?: number };
+    return (res as { data?: { processed?: number; skipped?: number } }).data
+      ?? (res as { processed?: number; skipped?: number });
   }
 
   async claimDevice(deviceId: string, name?: string): Promise<ClaimResult> {

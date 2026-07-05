@@ -171,6 +171,30 @@ describe('DeviceDetailService', () => {
     });
   });
 
+  describe('rotateKey', () => {
+    it('unwraps the { success, data, timestamp } envelope (regression: always threw "No API key returned")', async () => {
+      const api = makeApi();
+      api.invoke.mockResolvedValue({
+        success: true,
+        data: { message: 'rotated', apiKey: 'iotp_sensor_abc123', deviceId: 'RPI-001', rotatedAt: '2026-06-12T00:00:00Z' },
+        timestamp: '2026-06-12T00:00:00Z',
+      });
+      const { service } = setup(api);
+
+      const result = await service.rotateKey('RPI-001');
+
+      expect(result).toEqual({ apiKey: 'iotp_sensor_abc123', deviceId: 'RPI-001', rotatedAt: '2026-06-12T00:00:00Z' });
+    });
+
+    it('throws when the envelope has no apiKey', async () => {
+      const api = makeApi();
+      api.invoke.mockResolvedValue({ success: true, data: {}, timestamp: '2026-06-12T00:00:00Z' });
+      const { service } = setup(api);
+
+      await expect(service.rotateKey('RPI-001')).rejects.toThrow('No API key returned');
+    });
+  });
+
   describe('sendCommand', () => {
     it('dispatches createDeviceCommand with correct payload', async () => {
       const api = makeApi();
