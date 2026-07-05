@@ -21,7 +21,10 @@
   flex-direction: column;
   overflow: hidden;
 
-  ::ng-deep > * {
+  // router-outlet itself stays in the DOM as an empty element (not just a
+  // comment anchor) — `> *` alone would also flex it, splitting the space
+  // with an empty box. Target only the routed component, its next sibling.
+  ::ng-deep > router-outlet + * {
     flex: 1;
     min-height: 0;
     display: flex;
