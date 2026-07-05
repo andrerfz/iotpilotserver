@@ -28,6 +28,7 @@ const MOCK_SESSIONS: Session[] = [
 const MOCK_DATA: SecuritySettings = {
   twoFactorAuth: 'false',
   loginNotifications: 'true',
+  sessionTimeout: '30',
 };
 
 function makeApi(
@@ -72,6 +73,44 @@ describe('SettingsSecurityPage', () => {
     const comp = fixture.componentInstance;
     expect(comp.securityForm.getRawValue().twoFactorAuth).toBe(false);
     expect(comp.securityForm.getRawValue().loginNotifications).toBe(true);
+    expect(comp.securityForm.getRawValue().sessionTimeout).toBe(30);
+  });
+
+  it('falls back to 30 when sessionTimeout is missing from GET response', async () => {
+    const api = makeApi(vi.fn().mockResolvedValue({ twoFactorAuth: 'false', loginNotifications: 'true' }));
+    const { fixture } = await render(SettingsSecurityPage, {
+      providers: [
+        provideRouter([]),
+      ...twoFaProviders,
+        { provide: Api, useValue: api },
+        { provide: AuthService, useValue: makeAuth() },
+      ],
+    });
+    await fixture.whenStable();
+
+    expect(fixture.componentInstance.securityForm.getRawValue().sessionTimeout).toBe(30);
+  });
+
+  it('slider change of 0 clamps and marks form dirty (disabled state)', async () => {
+    const { fixture } = await setup();
+    await fixture.whenStable();
+
+    const comp = fixture.componentInstance;
+    comp.onSessionTimeoutSliderChange({ detail: { value: 0 } } as unknown as Event);
+    expect(comp.securityForm.controls.sessionTimeout.value).toBe(0);
+    expect(comp.securityForm.dirty).toBe(true);
+  });
+
+  it('input change clamps out-of-range values', async () => {
+    const { fixture } = await setup();
+    await fixture.whenStable();
+
+    const comp = fixture.componentInstance;
+    comp.onSessionTimeoutInputChange({ detail: { value: '9999' } } as unknown as Event);
+    expect(comp.securityForm.controls.sessionTimeout.value).toBe(1440);
+
+    comp.onSessionTimeoutInputChange({ detail: { value: '-5' } } as unknown as Event);
+    expect(comp.securityForm.controls.sessionTimeout.value).toBe(0);
   });
 
   it('save sends string-converted security payload', async () => {
@@ -99,6 +138,7 @@ describe('SettingsSecurityPage', () => {
     const body = invokeSpy.mock.calls.at(-1)?.[1]?.body as SecuritySettings;
     expect(body.twoFactorAuth).toBe('false');
     expect(body.loginNotifications).toBe('true');
+    expect(body.sessionTimeout).toBe('30');
   });
 
   it('cross-field validator blocks mismatched passwords', async () => {

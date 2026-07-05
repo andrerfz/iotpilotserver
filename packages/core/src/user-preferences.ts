@@ -18,7 +18,12 @@ function getDefaultPreferences(category: PreferenceCategory): Record<string, str
     case 'SECURITY':
       return {
         twoFactorAuth: 'false',
-        loginNotifications: 'true'
+        loginNotifications: 'true',
+        // Idle-timeout minutes, enforced client-side (IdleTimeoutService). 30
+        // is a deliberate default, not a placeholder — chosen to auto-close
+        // forgotten sessions on this device-management/SSH-access platform
+        // without surprising anyone mid-task.
+        sessionTimeout: '30',
       };
     case 'SYSTEM':
       return {

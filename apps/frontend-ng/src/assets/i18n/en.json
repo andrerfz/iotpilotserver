@@ -58,6 +58,7 @@
   "auth": {
     "login": {
       "toast_code_sent": "Verification code sent to your email.",
+      "toast_idle_expired": "You were signed out due to inactivity.",
       "title": "Welcome back",
       "subtitle": "Sign in to your account to continue",
       "email": "Email",
@@ -578,7 +579,8 @@
       "session_timeout": {
         "title": "Session Timeout",
         "desc": "Automatically log out after a period of inactivity.",
-        "unit": "min"
+        "unit": "min",
+        "disabled": "Disabled"
       },
       "save": "Save Changes",
       "saving": "Saving...",
@@ -1069,6 +1071,11 @@
   },
   "shell": {
     "search": "Search devices, alerts, users…",
+    "idle": {
+      "title": "Are you still there?",
+      "body": "You'll be signed out in {{seconds}}s due to inactivity.",
+      "stay_signed_in": "Stay signed in"
+    },
     "theme": {
       "light": "Light mode",
       "dark": "Dark mode"

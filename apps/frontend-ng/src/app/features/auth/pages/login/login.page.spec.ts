@@ -1,6 +1,6 @@
 import { render } from '@testing-library/angular';
-import { describe, it, expect, vi } from 'vitest';
-import { provideRouter, Router } from '@angular/router';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { ActivatedRoute, provideRouter, Router } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { AuthService } from '@ng/core/auth/auth.service';
 import { ToastService } from '@ng/core/errors/toast.service';
@@ -16,11 +16,12 @@ const fakeUser: User = {
   customerId: 'c1',
 };
 
-const fakeToast = { success: vi.fn().mockResolvedValue(undefined) };
+const fakeToast = { success: vi.fn().mockResolvedValue(undefined), error: vi.fn().mockResolvedValue(undefined) };
 
 async function setup(
   loginFn: ReturnType<typeof vi.fn>,
   verifyFn: ReturnType<typeof vi.fn> = vi.fn(),
+  queryParams: Record<string, string> = {},
 ) {
   return render(LoginPage, {
     providers: [
@@ -29,9 +30,15 @@ async function setup(
       { provide: ApiConfiguration, useValue: { rootUrl: '/api' } },
       { provide: AuthService, useValue: { login: loginFn, verifyTwoFactor: verifyFn } },
       { provide: ToastService, useValue: fakeToast },
+      { provide: ActivatedRoute, useValue: { snapshot: { queryParams } } },
     ],
   });
 }
+
+beforeEach(() => {
+  fakeToast.success.mockClear();
+  fakeToast.error.mockClear();
+});
 
 // ─── Credentials step ─────────────────────────────────────────────────────────
 
@@ -135,5 +142,19 @@ describe('LoginPage — 2FA step', () => {
 
     expect(page.code()).toBe('');
     expect(view.container.textContent).toContain('Invalid code');
+  });
+});
+
+// ─── Idle-timeout redirect ─────────────────────────────────────────────────────
+
+describe('LoginPage — idle-timeout redirect', () => {
+  it('shows a toast when reached via ?reason=idle', async () => {
+    await setup(vi.fn(), vi.fn(), { reason: 'idle' });
+    expect(fakeToast.error).toHaveBeenCalledWith('You were signed out due to inactivity.');
+  });
+
+  it('does not show the idle toast on a normal visit', async () => {
+    await setup(vi.fn());
+    expect(fakeToast.error).not.toHaveBeenCalled();
   });
 });

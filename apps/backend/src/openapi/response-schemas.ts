@@ -118,8 +118,8 @@ export const RESPONSE_SCHEMAS: Record<string, JsonSchema> = {
         firstName: str, lastName: str, phoneNumber: str,
         email: {type: 'string', format: 'email'}, username: str,
     }, ['language']),
-    SecuritySettings: objR({twoFactorAuth: boolStr, loginNotifications: boolStr},
-        ['twoFactorAuth', 'loginNotifications']),
+    SecuritySettings: objR({twoFactorAuth: boolStr, loginNotifications: boolStr, sessionTimeout: str},
+        ['twoFactorAuth', 'loginNotifications', 'sessionTimeout']),
     SystemSettings: obj({
         theme: {type: 'string', enum: ['light', 'dark', 'system']},
         isAdmin: str,

@@ -1270,10 +1270,15 @@
                             "true",
                             "false"
                         ]
+                    },
+                    "sessionTimeout": {
+                        "type": "string",
+                        "pattern": "^\\d+$"
                     }
                 },
                 "required": [
-                    "loginNotifications"
+                    "loginNotifications",
+                    "sessionTimeout"
                 ],
                 "additionalProperties": false
             },
@@ -2570,11 +2575,15 @@
                             "true",
                             "false"
                         ]
+                    },
+                    "sessionTimeout": {
+                        "type": "string"
                     }
                 },
                 "required": [
                     "twoFactorAuth",
-                    "loginNotifications"
+                    "loginNotifications",
+                    "sessionTimeout"
                 ]
             },
             "SystemSettings": {

@@ -26,9 +26,11 @@ import {
   IonCardHeader,
   IonCardTitle,
   IonContent,
+  IonInput,
   IonItem,
   IonLabel,
   IonList,
+  IonRange,
   IonSpinner,
   IonToggle,
 } from '@ng/shared/ui';
@@ -70,6 +72,8 @@ function passwordMatchValidator(group: AbstractControl): ValidationErrors | null
     IonItem,
     IonLabel,
     IonList,
+    IonRange,
+    IonInput,
     IonToggle,
     UiInputComponent,
   ],
@@ -90,6 +94,8 @@ export class SettingsSecurityPage implements OnInit {
   readonly securityForm = this.fb.nonNullable.group({
     twoFactorAuth: [false],
     loginNotifications: [true],
+    // 0 = disabled. Enforced by IdleTimeoutService, not this page.
+    sessionTimeout: [30, [Validators.min(0), Validators.max(1440)]],
   });
 
   readonly isSavingSecurity = signal(false);
@@ -127,11 +133,30 @@ export class SettingsSecurityPage implements OnInit {
       this.securityForm.patchValue({
         twoFactorAuth: twoFactorOn,
         loginNotifications: data.loginNotifications === 'true',
+        sessionTimeout: parseInt(data.sessionTimeout ?? '30', 10) || 30,
       }, { emitEvent: false });
     } catch {
       this.securityError.set(this.t.instant('settings.security.msg_load_failed'));
     } finally {
       this.isLoading.set(false);
+    }
+  }
+
+  onSessionTimeoutSliderChange(event: Event): void {
+    const value = (event as CustomEvent<{ value: number }>).detail?.value;
+    if (typeof value === 'number') {
+      this.securityForm.controls.sessionTimeout.setValue(value);
+      this.securityForm.markAsDirty();
+    }
+  }
+
+  onSessionTimeoutInputChange(event: Event): void {
+    const raw = (event as CustomEvent<{ value: string }>).detail?.value ?? '';
+    const parsed = parseInt(raw, 10);
+    if (!isNaN(parsed)) {
+      const clamped = Math.min(1440, Math.max(0, parsed));
+      this.securityForm.controls.sessionTimeout.setValue(clamped);
+      this.securityForm.markAsDirty();
     }
   }
 
@@ -147,6 +172,7 @@ export class SettingsSecurityPage implements OnInit {
       const body: SecuritySettings = {
         twoFactorAuth: String(vals.twoFactorAuth) as 'true' | 'false',
         loginNotifications: String(vals.loginNotifications) as 'true' | 'false',
+        sessionTimeout: String(vals.sessionTimeout),
       };
       await this.api.invoke(updateSecuritySettings, { body });
       this.securitySuccess.set(this.t.instant('settings.security.msg_updated'));

@@ -1,8 +1,9 @@
-import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
+import { Component, DestroyRef, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { filter, skip } from 'rxjs/operators';
 import { Router, NavigationEnd } from '@angular/router';
-import { IonSplitPane, IonMenu, IonContent, IonRouterOutlet, MaintenanceBannerComponent, NetworkStatusComponent, MenuController } from '@ng/shared/ui';
+import { TranslatePipe } from '@ngx-translate/core';
+import { IonSplitPane, IonMenu, IonContent, IonRouterOutlet, IonModal, IonButton, MaintenanceBannerComponent, NetworkStatusComponent, MenuController } from '@ng/shared/ui';
 import { RailComponent } from './rail.component';
 import { TopbarComponent } from './topbar.component';
 import { UserMenuComponent } from './user-menu.component';
@@ -15,6 +16,7 @@ import { AuthService } from '../core/auth/auth.service';
 import { hasRole } from '../core/auth/roles';
 import { SplashService } from '../core/native/splash.service';
 import { PushNotificationService } from '../core/native/push-notification.service';
+import { IdleTimeoutService } from '../core/auth/idle-timeout.service';
 
 /**
  * App shell — `ion-split-pane` with the rail inline ≥1080px and an overlay
@@ -26,10 +28,10 @@ import { PushNotificationService } from '../core/native/push-notification.servic
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    IonSplitPane, IonMenu, IonContent, IonRouterOutlet,
+    IonSplitPane, IonMenu, IonContent, IonRouterOutlet, IonModal, IonButton,
     RailComponent, TopbarComponent, UserMenuComponent, TenantMenuComponent,
     BottomNavComponent, CommandPaletteComponent,
-    MaintenanceBannerComponent, NetworkStatusComponent,
+    MaintenanceBannerComponent, NetworkStatusComponent, TranslatePipe,
   ],
   template: `
     <ion-split-pane contentId="shell-main" when="(min-width: 1080px)">
@@ -57,6 +59,18 @@ import { PushNotificationService } from '../core/native/push-notification.servic
     </ion-split-pane>
 
     <app-command-palette [(open)]="paletteOpen" [commands]="commands()"></app-command-palette>
+
+    <ion-modal [isOpen]="idleTimeout.warningVisible()" [backdropDismiss]="false" class="idle-modal">
+      <ng-template>
+        <div class="idle-modal__content">
+          <h2 class="idle-modal__title">{{ 'shell.idle.title' | translate }}</h2>
+          <p class="idle-modal__body">{{ 'shell.idle.body' | translate: { seconds: idleTimeout.secondsRemaining() } }}</p>
+          <ion-button expand="block" fill="solid" color="primary" (click)="idleTimeout.stayConnected()">
+            {{ 'shell.idle.stay_signed_in' | translate }}
+          </ion-button>
+        </div>
+      </ng-template>
+    </ion-modal>
   `,
   styleUrl: './shell.component.scss',
 })
@@ -66,6 +80,7 @@ export class ShellComponent {
   private readonly auth = inject(AuthService);
   private readonly splash = inject(SplashService);
   private readonly push = inject(PushNotificationService);
+  protected readonly idleTimeout = inject(IdleTimeoutService);
 
   protected readonly isSuperAdmin = computed(() => hasRole(this.auth.role(), 'SUPERADMIN'));
   protected readonly showTenantMenu = computed(() => hasRole(this.auth.role(), 'SUPERADMIN'));
@@ -105,6 +120,11 @@ export class ShellComponent {
 
     // Hide splash once the shell is constructed (Angular has bootstrapped).
     void this.splash.hide();
+
+    // Idle auto-logout — armed for the lifetime of the authenticated shell,
+    // torn down when it's destroyed (logout navigates away from /app).
+    void this.idleTimeout.start();
+    inject(DestroyRef).onDestroy(() => this.idleTimeout.stop());
 
     // Request push permission and register on native platforms (T5).
     void this.push.init();

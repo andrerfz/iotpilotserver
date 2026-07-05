@@ -58,6 +58,7 @@
   "auth": {
     "login": {
       "toast_code_sent": "Codice di verifica inviato alla tua email.",
+      "toast_idle_expired": "Sei stato disconnesso per inattività.",
       "title": "Bentornato",
       "subtitle": "Accedi al tuo account per continuare",
       "email": "Email",
@@ -578,7 +579,8 @@
       "session_timeout": {
         "title": "Timeout sessione",
         "desc": "Disconnessione automatica dopo un periodo di inattività.",
-        "unit": "min"
+        "unit": "min",
+        "disabled": "Disattivato"
       },
       "save": "Salva modifiche",
       "saving": "Salvataggio...",
@@ -1069,6 +1071,11 @@
   },
   "shell": {
     "search": "Cerca dispositivi, avvisi, utenti…",
+    "idle": {
+      "title": "Sei ancora lì?",
+      "body": "Verrai disconnesso tra {{seconds}}s per inattività.",
+      "stay_signed_in": "Rimani connesso"
+    },
     "theme": {
       "light": "Modalità chiara",
       "dark": "Modalità scura"

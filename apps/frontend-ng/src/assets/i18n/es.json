@@ -58,6 +58,7 @@
   "auth": {
     "login": {
       "toast_code_sent": "Código de verificación enviado a tu correo electrónico.",
+      "toast_idle_expired": "Se cerró tu sesión por inactividad.",
       "title": "Bienvenido de nuevo",
       "subtitle": "Inicia sesión en tu cuenta para continuar",
       "email": "Correo electrónico",
@@ -578,7 +579,8 @@
       "session_timeout": {
         "title": "Tiempo de espera de sesión",
         "desc": "Cierra sesión automáticamente tras un período de inactividad.",
-        "unit": "min"
+        "unit": "min",
+        "disabled": "Desactivado"
       },
       "save": "Guardar cambios",
       "saving": "Guardando...",
@@ -1069,6 +1071,11 @@
   },
   "shell": {
     "search": "Buscar dispositivos, alertas, usuarios…",
+    "idle": {
+      "title": "¿Sigues ahí?",
+      "body": "Se cerrará tu sesión en {{seconds}}s por inactividad.",
+      "stay_signed_in": "Mantener sesión iniciada"
+    },
     "theme": {
       "light": "Modo claro",
       "dark": "Modo oscuro"

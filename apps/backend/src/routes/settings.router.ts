@@ -33,11 +33,16 @@ export const profileSettingsSchema = v.object({
 });
 
 // Security settings schema
+const regexNumericString = z.string().regex(/^\d+$/);
 export const securitySettingsSchema = v.object({
   // 2FA is managed by the dedicated /security/2fa/* endpoints, so it is optional
   // here and ignored for enablement — this PUT only persists the other prefs.
   twoFactorAuth: v.optional(v.enum(['true', 'false'] as const)),
   loginNotifications: v.enum(['true', 'false'] as const),
+  // Idle-timeout minutes. 0 = disabled. Enforced client-side by IdleTimeoutService
+  // (apps/frontend-ng/src/app/core/auth/idle-timeout.service.ts), read once per
+  // session from GET /settings/security.
+  sessionTimeout: (v as any).fromZodSchema(regexNumericString),
 });
 
 // System settings schemas
@@ -255,7 +260,7 @@ settingsRouter.put('/security', requireAuth(), async (req: AuthenticatedRequest,
 
     const body = req.body;
 
-    let validatedData: { twoFactorAuth: string; loginNotifications: string };
+    let validatedData: { twoFactorAuth: string; loginNotifications: string; sessionTimeout: string };
     try {
       validatedData = securitySettingsSchema.parse(body) as typeof validatedData;
     } catch (e) {
@@ -268,6 +273,13 @@ settingsRouter.put('/security', requireAuth(), async (req: AuthenticatedRequest,
         return;
       }
       throw e;
+    }
+
+    // 0 = disabled; cap at 24h so a typo can't leave a session open indefinitely.
+    const sessionTimeout = parseInt(validatedData.sessionTimeout, 10);
+    if (isNaN(sessionTimeout) || sessionTimeout < 0 || sessionTimeout > 1440) {
+      send.badRequest(res, 'Session timeout must be between 0 (disabled) and 1440 minutes');
+      return;
     }
 
     // Update each preference

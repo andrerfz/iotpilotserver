@@ -59,6 +59,12 @@ export class LoginPage {
 
   private userId = '';
 
+  constructor() {
+    if (this.route.snapshot.queryParams['reason'] === 'idle') {
+      void this.toast.error(this.translate.instant('auth.login.toast_idle_expired'));
+    }
+  }
+
   async onSubmit(): Promise<void> {
     if (this.form.invalid) return;
     this.isLoading.set(true);

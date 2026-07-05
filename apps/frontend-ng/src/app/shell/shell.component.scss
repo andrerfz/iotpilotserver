@@ -24,3 +24,26 @@ ion-router-outlet ::ng-deep > .ion-page {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
+
+.idle-modal {
+  --width: 340px;
+  --height: auto;
+  --border-radius: 12px;
+
+  &__content {
+    padding: 24px;
+    text-align: center;
+  }
+
+  &__title {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 8px;
+  }
+
+  &__body {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin: 0 0 20px;
+  }
+}

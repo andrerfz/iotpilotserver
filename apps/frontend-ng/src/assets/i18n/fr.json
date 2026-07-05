@@ -58,6 +58,7 @@
   "auth": {
     "login": {
       "toast_code_sent": "Code de vérification envoyé à votre adresse e-mail.",
+      "toast_idle_expired": "Vous avez été déconnecté en raison de l'inactivité.",
       "title": "Bon retour",
       "subtitle": "Connectez-vous à votre compte pour continuer",
       "email": "E-mail",
@@ -578,7 +579,8 @@
       "session_timeout": {
         "title": "Expiration de session",
         "desc": "Se déconnecter automatiquement après une période d'inactivité.",
-        "unit": "min"
+        "unit": "min",
+        "disabled": "Désactivé"
       },
       "save": "Enregistrer les modifications",
       "saving": "Enregistrement...",
@@ -1069,6 +1071,11 @@
   },
   "shell": {
     "search": "Rechercher appareils, alertes, utilisateurs…",
+    "idle": {
+      "title": "Êtes-vous toujours là ?",
+      "body": "Vous serez déconnecté dans {{seconds}}s en raison de l'inactivité.",
+      "stay_signed_in": "Rester connecté"
+    },
     "theme": {
       "light": "Mode clair",
       "dark": "Mode sombre"
