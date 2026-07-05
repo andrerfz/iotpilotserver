@@ -127,9 +127,14 @@ export class SettingsSecurityPage implements OnInit {
   async ngOnInit(): Promise<void> {
     this.topbar.set('settings.tabs.security');
     try {
-      const data = await this.api.invoke(getSecuritySettings, {});
+      const res = await this.api.invoke(getSecuritySettings, {});
+      // The backend always wraps responses in { success, data, timestamp } —
+      // api.invoke() returns the raw body, so it must be unwrapped here (every
+      // field below was silently reading undefined off the envelope itself).
+      const data = (res as unknown as { data?: SecuritySettings & { twoFactorEnabled?: boolean } }).data
+        ?? (res as SecuritySettings & { twoFactorEnabled?: boolean });
       // twoFactorEnabled (User row) is the source of truth — not the pref.
-      const twoFactorOn = (data as { twoFactorEnabled?: boolean }).twoFactorEnabled === true;
+      const twoFactorOn = data.twoFactorEnabled === true;
       this.securityForm.patchValue({
         twoFactorAuth: twoFactorOn,
         loginNotifications: data.loginNotifications === 'true',

@@ -76,6 +76,34 @@ describe('SettingsSecurityPage', () => {
     expect(comp.securityForm.getRawValue().sessionTimeout).toBe(30);
   });
 
+  it('unwraps the real backend envelope ({ success, data, timestamp }) instead of reading undefined off it', async () => {
+    // The backend always wraps GET responses this way (send.ok()) — this is
+    // the actual runtime shape, unlike the flat MOCK_DATA used elsewhere in
+    // this file for brevity. Regression test for a bug where twoFactorAuth/
+    // loginNotifications/sessionTimeout always read as undefined→false/default
+    // because the envelope itself was never unwrapped.
+    const envelope = {
+      success: true,
+      data: { twoFactorEnabled: true, loginNotifications: 'true', sessionTimeout: '45' },
+      timestamp: '2026-01-01T00:00:00Z',
+    };
+    const api = makeApi(vi.fn().mockResolvedValue(envelope));
+    const { fixture } = await render(SettingsSecurityPage, {
+      providers: [
+        provideRouter([]),
+        ...twoFaProviders,
+        { provide: Api, useValue: api },
+        { provide: AuthService, useValue: makeAuth() },
+      ],
+    });
+    await fixture.whenStable();
+
+    const comp = fixture.componentInstance;
+    expect(comp.securityForm.getRawValue().twoFactorAuth).toBe(true);
+    expect(comp.securityForm.getRawValue().loginNotifications).toBe(true);
+    expect(comp.securityForm.getRawValue().sessionTimeout).toBe(45);
+  });
+
   it('falls back to 30 when sessionTimeout is missing from GET response', async () => {
     const api = makeApi(vi.fn().mockResolvedValue({ twoFactorAuth: 'false', loginNotifications: 'true' }));
     const { fixture } = await render(SettingsSecurityPage, {
