@@ -2,6 +2,19 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-height: 0;
+}
+
+/* This hub uses a plain <router-outlet>, not <ion-router-outlet> — it gets none
+   of Ionic's automatic page-sizing, so the routed tab content (whatever wraps
+   its ion-content) must be sized explicitly or it defaults to auto/shrink-to-fit
+   height and its ion-content can't scroll internally (content silently clips). */
+router-outlet + * {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .settings-tabs {
