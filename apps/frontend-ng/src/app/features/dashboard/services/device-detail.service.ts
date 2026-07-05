@@ -32,6 +32,7 @@ import type { DeviceCommand } from '@ng/core/api/generated/models/device-command
 import type { DeviceLogEntry } from '@ng/core/api/generated/models/device-log-entry';
 import type { DeviceMetrics } from '@ng/core/api/generated/models/device-metrics';
 import type { DeviceSettings } from '@ng/core/api/generated/models/device-settings';
+import type { DeviceSettingsInput } from '@ng/core/api/generated/models/device-settings-input';
 import type { SshResult } from '@ng/core/api/generated/models/ssh-result';
 import type { Threshold } from '@ng/core/api/generated/models/threshold';
 import type { ClaimResult } from '@ng/core/api/generated/models/claim-result';
@@ -218,7 +219,7 @@ export class DeviceDetailService {
     return result;
   }
 
-  async updateSettings(id: string, payload: DeviceSettings): Promise<void> {
+  async updateSettings(id: string, payload: DeviceSettingsInput): Promise<void> {
     await this.api.invoke(updateDeviceSettings, { id, body: payload });
     void this.deviceSettings.reload();
   }

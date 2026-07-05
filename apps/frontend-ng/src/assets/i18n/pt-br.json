@@ -376,6 +376,11 @@
     "fields": {
       "type": "Tipo",
       "ip_address": "Endereço IP",
+      "hostname": "Nome do host",
+      "location": "Localização",
+      "description": "Descrição",
+      "tags": "Tags",
+      "tags_placeholder": "ex. telhado, prod, array-sensores",
       "ssh_enabled": "SSH habilitado",
       "auto_update": "Atualização automática",
       "metrics_enabled": "Métricas habilitadas",

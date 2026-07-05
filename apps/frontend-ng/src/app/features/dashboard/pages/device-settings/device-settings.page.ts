@@ -34,6 +34,7 @@ import {
 } from '@ng/shared/ui';
 import type { SelectOption } from '@ng/shared/ui';
 import type { DeviceSettings } from '../../services/device-detail.service';
+import type { DeviceSettingsInput } from '@ng/core/api/generated/models/device-settings-input';
 import { DeviceDetailService } from '../../services/device-detail.service';
 import { ToastService } from '@ng/core/errors/toast.service';
 import { hasHeartbeat, hasSSH, hasSystemInfo } from '../../device-capabilities';
@@ -112,6 +113,10 @@ export class DeviceSettingsPage implements OnInit {
   // Reporting interval stepper (seconds, sensor devices only)
   readonly reportingIntervalSec = signal(0);
 
+  // Tags are edited as a comma-separated string, converted to/from the array
+  // DeviceSettings.tags expects.
+  tagsText = '';
+
   // Mutable form model — populated once settings load
   formData: DeviceSettings = {};
 
@@ -124,6 +129,7 @@ export class DeviceSettingsPage implements OnInit {
       if (s) {
         this.formData = { ...s };
         this.reportingIntervalSec.set(Number(s.reportingInterval ?? 0));
+        this.tagsText = (s.tags ?? []).join(', ');
       }
     });
   }
@@ -163,11 +169,14 @@ export class DeviceSettingsPage implements OnInit {
       // Alert thresholds (cpu/memory/disk/temperature/sensorTemp/battery) are no
       // longer set here — they live in the "Umbrales" modal (Alerts tab), the
       // single source of truth read by the alert evaluator.
-      const payload: DeviceSettings = {
+      const payload: DeviceSettingsInput = {
         ...this.formData,
         heartbeatInterval:    this.toNum(this.formData.heartbeatInterval),
         reportingInterval:    this.reportingIntervalSec(),
         apiKeyRotationDays:   this.toNum(this.formData.apiKeyRotationDays),
+        location:             this.formData.location ?? undefined,
+        description:          this.formData.description ?? undefined,
+        tags: this.tagsText.split(',').map(t => t.trim()).filter(Boolean),
       };
       delete payload.cpuThreshold;
       delete payload.memoryThreshold;

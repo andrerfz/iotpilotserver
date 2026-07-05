@@ -376,6 +376,11 @@
     "fields": {
       "type": "Tipo",
       "ip_address": "Indirizzo IP",
+      "hostname": "Hostname",
+      "location": "Posizione",
+      "description": "Descrizione",
+      "tags": "Tag",
+      "tags_placeholder": "es. tetto, prod, array-sensori",
       "ssh_enabled": "SSH abilitato",
       "auto_update": "Aggiornamento automatico",
       "metrics_enabled": "Metriche abilitate",

@@ -11,6 +11,18 @@ ui-input {
   text-align: right;
 }
 
+.device-info-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px 0 4px;
+
+  ui-input {
+    max-width: none;
+    text-align: left;
+  }
+}
+
 .rotate-key {
   margin-top: 12px;
 

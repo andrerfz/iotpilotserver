@@ -73,6 +73,7 @@ export const RESPONSE_SCHEMAS: Record<string, JsonSchema> = {
         output: strN, error: strN, exitCode: {type: 'integer', nullable: true}, createdAt: dt, executedAt: dtN,
     }),
     DeviceSettings: obj({
+        hostname: str, location: strN, description: strN, tags: arr(str),
         reportingInterval: int, heartbeatInterval: int, metricsEnabled: bool,
         cpuThreshold: num, memoryThreshold: num, temperatureThreshold: num, diskThreshold: num,
         sensorTempThreshold: num, batteryThreshold: num, networkMonitoring: bool, autoUpdate: bool,

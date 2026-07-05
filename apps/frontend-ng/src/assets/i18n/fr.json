@@ -376,6 +376,11 @@
     "fields": {
       "type": "Type",
       "ip_address": "Adresse IP",
+      "hostname": "Nom d'hôte",
+      "location": "Emplacement",
+      "description": "Description",
+      "tags": "Étiquettes",
+      "tags_placeholder": "ex. toit, prod, array-capteurs",
       "ssh_enabled": "SSH activé",
       "auto_update": "Mise à jour automatique",
       "metrics_enabled": "Métriques activées",

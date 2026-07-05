@@ -6,14 +6,18 @@ export interface DeviceSettings {
   autoUpdate?: boolean;
   batteryThreshold?: number;
   cpuThreshold?: number;
+  description?: string | null;
   diskThreshold?: number;
   heartbeatInterval?: number;
+  hostname?: string;
+  location?: string | null;
   memoryThreshold?: number;
   metricsEnabled?: boolean;
   networkMonitoring?: boolean;
   reportingInterval?: number;
   sensorTempThreshold?: number;
   sshEnabled?: boolean;
+  tags?: Array<string>;
   temperatureThreshold?: number;
   updateChannel?: 'stable' | 'beta' | 'nightly';
 }

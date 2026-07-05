@@ -2149,6 +2149,23 @@
             "DeviceSettings": {
                 "type": "object",
                 "properties": {
+                    "hostname": {
+                        "type": "string"
+                    },
+                    "location": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "description": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "tags": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
                     "reportingInterval": {
                         "type": "integer"
                     },

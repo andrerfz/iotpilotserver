@@ -8,7 +8,10 @@ import { getDeviceLogs } from '@ng/core/api/generated/fn/devices/get-device-logs
 import { listThresholds } from '@ng/core/api/generated/fn/monitoring/list-thresholds';
 import { createDeviceCommand } from '@ng/core/api/generated/fn/devices/create-device-command';
 import { updateDeviceAlert } from '@ng/core/api/generated/fn/devices/update-device-alert';
+import { getDeviceSettings } from '@ng/core/api/generated/fn/devices/get-device-settings';
+import { updateDeviceSettings } from '@ng/core/api/generated/fn/devices/update-device-settings';
 import type { Device } from '@ng/core/api/generated/models/device';
+import type { DeviceSettings } from '@ng/core/api/generated/models/device-settings';
 import type { Alert } from '@ng/core/api/generated/models/alert';
 import type { DeviceCommand } from '@ng/core/api/generated/models/device-command';
 import type { DeviceLogEntry } from '@ng/core/api/generated/models/device-log-entry';
@@ -34,6 +37,14 @@ const MOCK_COMMANDS: DeviceCommand[] = [
 const MOCK_LOGS: DeviceLogEntry[] = [
   { id: 'log-1', level: 'INFO', message: 'Agent started', source: 'agent', timestamp: '2026-06-13T10:00:00Z', deviceId: 'RPI-001' },
 ];
+
+const MOCK_SETTINGS: DeviceSettings = {
+  hostname: 'pi-kitchen',
+  location: 'Kitchen shelf',
+  description: 'Temp/humidity sensor',
+  tags: ['prod', 'sensor-array'],
+  reportingInterval: 300,
+};
 
 const MOCK_THRESHOLDS: Threshold[] = [
   { id: 'thr-1', name: 'High CPU', metricName: 'cpu_usage', operator: 'GREATER_THAN', value: 80, unit: '%', severity: 'HIGH', type: 'STATIC' },
@@ -205,6 +216,46 @@ describe('DeviceDetailService', () => {
       const { service } = setup(api);
 
       await expect(service.sendCommand('RPI-001', 'REBOOT')).rejects.toBeInstanceOf(ApiError);
+    });
+  });
+
+  describe('deviceSettings surface', () => {
+    it('load() invokes getDeviceSettings and populates hostname/location/description/tags', async () => {
+      const api = makeApi();
+      api.invoke.mockResolvedValue({ data: MOCK_SETTINGS });
+      const { service } = setup(api);
+
+      await service.deviceSettings.load({ id: 'RPI-001' });
+
+      expect(api.invoke).toHaveBeenCalledWith(getDeviceSettings, { id: 'RPI-001' });
+      expect(service.deviceSettings.data()).toEqual(MOCK_SETTINGS);
+    });
+  });
+
+  describe('updateSettings', () => {
+    it('dispatches updateDeviceSettings with hostname/location/description/tags and reloads', async () => {
+      const api = makeApi();
+      api.invoke.mockResolvedValue(undefined);
+      const { service } = setup(api);
+      const reloadSpy = vi.spyOn(service.deviceSettings, 'reload').mockResolvedValue(null);
+
+      await service.updateSettings('RPI-001', {
+        hostname: 'pi-kitchen-2',
+        location: 'Kitchen shelf',
+        description: 'Temp/humidity sensor',
+        tags: ['prod'],
+      });
+
+      expect(api.invoke).toHaveBeenCalledWith(updateDeviceSettings, {
+        id: 'RPI-001',
+        body: {
+          hostname: 'pi-kitchen-2',
+          location: 'Kitchen shelf',
+          description: 'Temp/humidity sensor',
+          tags: ['prod'],
+        },
+      });
+      expect(reloadSpy).toHaveBeenCalledOnce();
     });
   });
 

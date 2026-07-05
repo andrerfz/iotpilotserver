@@ -41,6 +41,33 @@
             <ion-label>{{ 'device_settings.fields.ip_address' | translate }}</ion-label>
             <ion-note slot="end">{{ device.data()?.ipAddress || '—' }}</ion-note>
           </ion-item>
+        </ion-list>
+
+        <div class="device-info-fields">
+          <ui-input
+            [label]="'device_settings.fields.hostname' | translate"
+            [(ngModel)]="formData.hostname"
+            name="hostname"
+          ></ui-input>
+          <ui-input
+            [label]="'device_settings.fields.location' | translate"
+            [(ngModel)]="formData.location"
+            name="location"
+          ></ui-input>
+          <ui-input
+            [label]="'device_settings.fields.description' | translate"
+            [(ngModel)]="formData.description"
+            name="description"
+          ></ui-input>
+          <ui-input
+            [label]="'device_settings.fields.tags' | translate"
+            [placeholder]="'device_settings.fields.tags_placeholder' | translate"
+            [(ngModel)]="tagsText"
+            name="tags"
+          ></ui-input>
+        </div>
+
+        <ion-list lines="none">
           @if (showSSH()) {
             <ion-item>
               <ion-label>{{ 'device_settings.fields.ssh_enabled' | translate }}</ion-label>
