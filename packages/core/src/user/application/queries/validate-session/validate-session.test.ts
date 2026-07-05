@@ -79,6 +79,7 @@ describe('ValidateSessionHandler', () => {
         undefined,
         'testuser'
       );
+      mockUser.publicId = 'user-public-123';
 
       mockSessionRepository.findByToken.mockResolvedValue(mockSession);
       mockUserRepository.findById.mockResolvedValue(mockUser);
@@ -87,7 +88,7 @@ describe('ValidateSessionHandler', () => {
 
       expect(result.valid).toBe(true);
       expect(result.user).toEqual({
-        id: 'user-123',
+        id: 'user-public-123',
         email: 'test@example.com',
         username: 'test@example.com',
         role: 'USER',

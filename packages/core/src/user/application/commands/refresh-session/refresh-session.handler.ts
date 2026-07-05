@@ -85,7 +85,13 @@ export class RefreshSessionHandler implements CommandHandler<RefreshSessionComma
             return {
                 token: newToken,
                 user: {
-                    id: user.getId().getValue(),
+                    // Public id, not the internal entity id — matches what login/
+                    // verify-2fa return and what every other API response (e.g.
+                    // GET /users) uses for `id`. Returning the internal id here
+                    // broke self-row comparisons on the frontend (e.g. Members
+                    // page's canManage()) for any session restored via refresh
+                    // instead of a fresh login.
+                    id: user.publicId,
                     email: user.getEmail().getValue(),
                     username: user.getDisplayName(),
                     role: user.getRole().getValue(),

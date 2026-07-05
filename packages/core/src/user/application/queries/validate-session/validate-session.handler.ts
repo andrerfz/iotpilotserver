@@ -69,7 +69,8 @@ export class ValidateSessionHandler implements QueryHandler<ValidateSessionQuery
       return {
         valid: true,
         user: {
-          id: user.getId().getValue(),
+          // Public id, matching login/me/refresh and every other API response.
+          id: user.publicId,
           email: user.getEmail().getValue(),
           username: user.getDisplayName(),
           role: user.getRole().getValue(),
