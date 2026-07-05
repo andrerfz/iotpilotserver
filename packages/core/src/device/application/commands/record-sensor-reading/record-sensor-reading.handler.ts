@@ -49,6 +49,12 @@ export class RecordSensorReadingHandler implements CommandHandler<RecordSensorRe
      * Publish AlertTriggeredEvent so the notification pipeline (routing →
      * dispatch → email) fires. Gated downstream by the user's alertNotifications
      * toggle. Never let a notification failure break reading ingestion.
+     *
+     * `severity` here is this handler's own local WARNING/CRITICAL vocabulary,
+     * which doesn't match AlertSeverity.fromString()'s accepted values
+     * (LOW/MEDIUM/HIGH/CRITICAL) — every WARNING alert threw here and was
+     * silently swallowed by the catch below, so it never actually notified.
+     * Map it the same way PrismaAlertRepository does when reading alerts back.
      */
     private async publishAlertTriggered(
         alertId: string, deviceBizId: string, customerId: string, severity: string,
@@ -56,11 +62,12 @@ export class RecordSensorReadingHandler implements CommandHandler<RecordSensorRe
     ): Promise<void> {
         if (!this.eventBus) return;
         try {
+            const domainSeverity = severity === 'CRITICAL' ? 'CRITICAL' : 'MEDIUM';
             await this.eventBus.publish(new AlertTriggeredEvent(
                 AlertId.fromString(alertId),
                 DeviceId.create(deviceBizId),
                 ThresholdId.create(),
-                AlertSeverity.fromString(severity),
+                AlertSeverity.fromString(domainSeverity),
                 CustomerId.create(customerId),
                 title,
                 message,
@@ -253,14 +260,13 @@ export class RecordSensorReadingHandler implements CommandHandler<RecordSensorRe
                     await this.publishAlertTriggered(created.id, device.deviceId, alertCustomerId, severity, created.title, created.message, device.name ?? device.hostname ?? device.deviceId);
                 } else if (existing.severity === 'WARNING' && severity === 'CRITICAL') {
                     // Escalate from WARNING to CRITICAL
+                    const title = 'Freezer Critical Temperature';
+                    const message = `Temperature reading of ${evalTemp.toFixed(1)}°C exceeds critical threshold (${thresholds.tempCrit.toFixed(1)}°C)`;
                     await this.prisma.alert.update({
                         where: { id: existing.id },
-                        data: {
-                            severity: 'CRITICAL' as any,
-                            title: 'Freezer Critical Temperature',
-                            message: `Temperature reading of ${evalTemp.toFixed(1)}°C exceeds critical threshold (${thresholds.tempCrit.toFixed(1)}°C)`
-                        }
+                        data: { severity: 'CRITICAL' as any, title, message },
                     });
+                    await this.publishAlertTriggered(existing.id, device.deviceId, alertCustomerId, severity, title, message, device.name ?? device.hostname ?? device.deviceId);
                 }
             } else if (latestTemp !== undefined && latestTemp <= thresholds.tempWarn) {
                 // Temperature back to normal — resolve any open alerts
@@ -308,14 +314,13 @@ export class RecordSensorReadingHandler implements CommandHandler<RecordSensorRe
                         data.batteryLevel <= thresholds.batteryCrit
                     ) {
                         // Escalate from WARNING to CRITICAL
+                        const title = 'Battery Critically Low';
+                        const message = `Battery at ${data.batteryLevel.toFixed(0)}% — charge the device immediately`;
                         await this.prisma.alert.update({
                             where: { id: existingBattery.id },
-                            data: {
-                                severity: 'CRITICAL' as any,
-                                title: 'Battery Critically Low',
-                                message: `Battery at ${data.batteryLevel.toFixed(0)}% — charge the device immediately`
-                            }
+                            data: { severity: 'CRITICAL' as any, title, message },
                         });
+                        await this.publishAlertTriggered(existingBattery.id, device.deviceId, alertCustomerId, 'CRITICAL', title, message, device.name ?? device.hostname ?? device.deviceId);
                     }
                 } else {
                     // Battery above warning line — resolve open alerts
