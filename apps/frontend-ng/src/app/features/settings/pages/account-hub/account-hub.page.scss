@@ -6,15 +6,28 @@
 }
 
 /* This hub uses a plain <router-outlet>, not <ion-router-outlet> — it gets none
-   of Ionic's automatic page-sizing, so the routed tab content (whatever wraps
-   its ion-content) must be sized explicitly or it defaults to auto/shrink-to-fit
-   height and its ion-content can't scroll internally (content silently clips). */
-router-outlet + * {
+   of Ionic's automatic page-sizing. The wrapper div itself sizes fine (it's in
+   this component's own template scope), but the routed child tag (e.g.
+   <app-settings-profile>) is a separate component — view encapsulation
+   means normal scoped CSS can't reach it (same reason shell.component needs
+   ::ng-deep for .ion-page). Without an explicit flex container there, its
+   ion-content has nothing to size against (ion-content's own internal
+   `flex: 1 1 auto` is a no-op unless its parent is a flex context), so it
+   collapses to near-zero height. ::ng-deep pierces that boundary. */
+.settings-hub__outlet {
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+
+  ::ng-deep > * {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
 }
 
 .settings-tabs {
