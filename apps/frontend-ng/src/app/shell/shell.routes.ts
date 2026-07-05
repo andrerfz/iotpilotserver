@@ -3,8 +3,7 @@ import { roleGuard, superadminTenantGuard } from '../core/auth/guards';
 
 /**
  * Child routes rendered inside the shell outlet. Each carries `breadcrumb`
- * (drives the topbar) plus `title`/`sub` for the placeholder pages. Real
- * feature modules replace the placeholder loadComponent as they land.
+ * (drives the topbar).
  */
 export const SHELL_CHILDREN: Routes = [
   {

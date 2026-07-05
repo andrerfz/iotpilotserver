@@ -4,7 +4,6 @@ import { firstValueFrom } from 'rxjs';
 import { Api } from '@ng/core/api/generated/api';
 import { ApiConfiguration } from '@ng/core/api/generated/api-configuration';
 import { listAdminDevices } from '@ng/core/api/generated/fn/admin/list-admin-devices';
-import { createDeviceCommand } from '@ng/core/api/generated/fn/devices/create-device-command';
 import { ApiError } from '@ng/core/errors/api-error';
 
 export interface AdminDevice {
@@ -61,11 +60,6 @@ export class AdminDevicesService {
     } finally {
       this._loading.set(false);
     }
-  }
-
-  async sendCommand(deviceId: string, command: 'REBOOT' | 'RESTART'): Promise<void> {
-    await this.api.invoke(createDeviceCommand, { id: deviceId, body: { command } });
-    await this.load(this.lastStatus);
   }
 
   /**
