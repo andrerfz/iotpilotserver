@@ -138,7 +138,23 @@ export const RESPONSE_SCHEMAS: Record<string, JsonSchema> = {
     AdminStats: obj({
         totalDevices: int, onlineDevices: int, totalUsers: int, totalCustomers: int, openAlerts: int,
     }),
-    SystemInfo: obj({version: str, uptime: num, environment: str}),
+    SystemInfo: obj({
+        system: obj({
+            platform: str, nodeVersion: str, uptime: num,
+            memoryUsage: obj({used: num, total: num, percentage: num}),
+            cpuUsage: num,
+        }),
+        database: obj({
+            status: str, version: str,
+            connections: obj({active: int, idle: int, max: int}),
+            size: str,
+        }),
+        application: obj({
+            version: str, environment: str, buildDate: dt,
+            features: arr(obj({name: str, enabled: bool})),
+        }),
+        recentActivity: arr(obj({id: str, type: str, description: str, timestamp: dt})),
+    }),
     Customer: obj({id: str, name: str, slug: str, createdAt: dt, deviceCount: {type: 'integer', nullable: true}}),
     HeartbeatResponse: obj({
         success: bool,

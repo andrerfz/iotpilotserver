@@ -2767,14 +2767,114 @@
             "SystemInfo": {
                 "type": "object",
                 "properties": {
-                    "version": {
-                        "type": "string"
+                    "system": {
+                        "type": "object",
+                        "properties": {
+                            "platform": {
+                                "type": "string"
+                            },
+                            "nodeVersion": {
+                                "type": "string"
+                            },
+                            "uptime": {
+                                "type": "number"
+                            },
+                            "memoryUsage": {
+                                "type": "object",
+                                "properties": {
+                                    "used": {
+                                        "type": "number"
+                                    },
+                                    "total": {
+                                        "type": "number"
+                                    },
+                                    "percentage": {
+                                        "type": "number"
+                                    }
+                                }
+                            },
+                            "cpuUsage": {
+                                "type": "number"
+                            }
+                        }
                     },
-                    "uptime": {
-                        "type": "number"
+                    "database": {
+                        "type": "object",
+                        "properties": {
+                            "status": {
+                                "type": "string"
+                            },
+                            "version": {
+                                "type": "string"
+                            },
+                            "connections": {
+                                "type": "object",
+                                "properties": {
+                                    "active": {
+                                        "type": "integer"
+                                    },
+                                    "idle": {
+                                        "type": "integer"
+                                    },
+                                    "max": {
+                                        "type": "integer"
+                                    }
+                                }
+                            },
+                            "size": {
+                                "type": "string"
+                            }
+                        }
                     },
-                    "environment": {
-                        "type": "string"
+                    "application": {
+                        "type": "object",
+                        "properties": {
+                            "version": {
+                                "type": "string"
+                            },
+                            "environment": {
+                                "type": "string"
+                            },
+                            "buildDate": {
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            "features": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string"
+                                        },
+                                        "enabled": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "recentActivity": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "string"
+                                },
+                                "type": {
+                                    "type": "string"
+                                },
+                                "description": {
+                                    "type": "string"
+                                },
+                                "timestamp": {
+                                    "type": "string",
+                                    "format": "date-time"
+                                }
+                            }
+                        }
                     }
                 }
             },

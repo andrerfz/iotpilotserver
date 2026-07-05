@@ -497,37 +497,24 @@ adminRouter.get('/system', requireAuth('ADMIN'), async (req: AuthenticatedReques
       return;
     }
 
-    // Get system metrics
-    const systemMetrics = {
-      cpu: {
-        cores: os.cpus().length,
-        model: os.cpus()[0].model,
-        loadAvg: os.loadavg(),
-        utilization: Math.round((1 - os.freemem() / os.totalmem()) * 100),
-      },
-      memory: {
-        total: os.totalmem(),
-        free: os.freemem(),
-        used: os.totalmem() - os.freemem(),
-        usedPercentage: Math.round((1 - os.freemem() / os.totalmem()) * 100),
-      },
-      uptime: os.uptime(),
+    const usedMem = os.totalmem() - os.freemem();
+    const system = {
       platform: os.platform(),
-      hostname: os.hostname(),
-      timestamp: new Date(),
+      nodeVersion: process.version,
+      uptime: os.uptime(),
+      memoryUsage: {
+        used: usedMem,
+        total: os.totalmem(),
+        percentage: Math.round((usedMem / os.totalmem()) * 100),
+      },
+      cpuUsage: Math.round((1 - os.freemem() / os.totalmem()) * 100),
     };
 
-    // Get database metrics
-    const dbMetrics = await getDatabaseMetrics(currentUser.role === 'SUPERADMIN');
+    const database = await getDatabaseInfo();
+    const application = getApplicationInfo();
+    const recentActivity = await getRecentActivity();
 
-    // Get application metrics
-    const appMetrics = await getApplicationMetrics(currentUser.role === 'SUPERADMIN');
-
-    send.ok(res, {
-      system: systemMetrics,
-      database: dbMetrics,
-      application: appMetrics,
-    });
+    send.ok(res, { system, database, application, recentActivity });
     return;
   } catch (err) {
     console.error('System health error:', err);
@@ -535,76 +522,95 @@ adminRouter.get('/system', requireAuth('ADMIN'), async (req: AuthenticatedReques
   }
 });
 
-// Helper function to get database metrics
-async function getDatabaseMetrics(isSuperAdmin: boolean) {
+// Real Postgres status/version/connections/size — matches the shape the
+// Admin > System page renders (status badge, version, connection bar, size).
+async function getDatabaseInfo() {
   try {
-    const [
-      userCount,
-      deviceCount,
-      alertCount,
-      customerCount,
-    ] = await Promise.all([
-      tenantPrisma.client.user.count(),
-      tenantPrisma.client.device.count(),
-      tenantPrisma.client.alert.count(),
-      isSuperAdmin
-        ? (tenantPrisma.client as any).customer?.count() ?? Promise.resolve(0)
-        : Promise.resolve(1),
+    const [versionRows, sizeRows, connRows, maxConnRows] = await Promise.all([
+      prisma.$queryRaw<{ version: string }[]>`SELECT version()`,
+      prisma.$queryRaw<{ size: string }[]>`SELECT pg_size_pretty(pg_database_size(current_database())) AS size`,
+      prisma.$queryRaw<{ state: string | null; count: bigint }[]>`
+        SELECT state, count(*) AS count FROM pg_stat_activity
+        WHERE datname = current_database() GROUP BY state
+      `,
+      prisma.$queryRaw<{ max_connections: string }[]>`SHOW max_connections`,
     ]);
 
-    const recentActivity = await tenantPrisma.client.device.findMany({
-      take: 5,
-      orderBy: { updatedAt: 'desc' },
-      select: {
-        id: true,
-        hostname: true,
-        updatedAt: true,
-      },
-    });
+    const rawVersion = versionRows[0]?.version ?? '';
+    // "PostgreSQL 15.4 on x86_64-pc-linux-gnu, compiled by gcc..." → "PostgreSQL 15.4"
+    const version = rawVersion.split(',')[0].match(/PostgreSQL \d+(\.\d+)?/)?.[0] ?? (rawVersion || 'unknown');
+
+    let active = 0;
+    let idle = 0;
+    for (const row of connRows) {
+      const n = Number(row.count);
+      if (row.state === 'active') active += n;
+      else idle += n;
+    }
 
     return {
-      counts: {
-        users: userCount,
-        devices: deviceCount,
-        alerts: alertCount,
-        customers: customerCount,
-      },
-      recentActivity,
-      status: 'healthy',
+      status: 'connected',
+      version,
+      connections: { active, idle, max: Number(maxConnRows[0]?.max_connections ?? 0) },
+      size: sizeRows[0]?.size ?? 'unknown',
     };
   } catch (error) {
     console.error('Database metrics error:', error);
     return {
       status: 'error',
-      error: 'Failed to fetch database metrics',
+      version: 'unknown',
+      connections: { active: 0, idle: 0, max: 0 },
+      size: 'unknown',
     };
   }
 }
 
-// Helper function to get application metrics
-async function getApplicationMetrics(isSuperAdmin: boolean) {
+// Static feature flags for this deployment (not user-configurable toggles —
+// just what this build supports) plus real app version/environment/startedAt.
+function getApplicationInfo() {
+  return {
+    version: appPackageVersion(),
+    environment: process.env.NODE_ENV || 'development',
+    // No build-metadata baked into the image (no git SHA/build timestamp ARG
+    // in the Dockerfile) — the most honest available signal is when this
+    // running instance came up, i.e. the last deploy/restart.
+    buildDate: new Date(Date.now() - process.uptime() * 1000).toISOString(),
+    features: [
+      { name: 'Multi-tenant', enabled: true },
+      { name: 'Advanced Metrics', enabled: true },
+      { name: 'Tailscale', enabled: true },
+    ],
+  };
+}
+
+let cachedAppVersion: string | undefined;
+function appPackageVersion(): string {
+  if (cachedAppVersion) return cachedAppVersion;
   try {
-    // In a real implementation, you would gather metrics from your application
-    // For now, we'll return some placeholder data
-    return {
-      status: 'healthy',
-      version: '1.0.0',
-      nodeVersion: process.version,
-      environment: process.env.NODE_ENV || 'development',
-      features: {
-        multiTenant: true,
-        advancedMetrics: true,
-        tailscale: true,
-      },
-      memory: process.memoryUsage(),
-      uptime: process.uptime(),
-    };
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    cachedAppVersion = require('../../package.json').version ?? 'unknown';
+  } catch {
+    cachedAppVersion = 'unknown';
+  }
+  return cachedAppVersion!;
+}
+
+async function getRecentActivity() {
+  try {
+    const devices = await tenantPrisma.client.device.findMany({
+      take: 5,
+      orderBy: { updatedAt: 'desc' },
+      select: { id: true, hostname: true, updatedAt: true },
+    });
+    return devices.map((d) => ({
+      id: d.id,
+      type: 'device_update',
+      description: `Device "${d.hostname}" updated`,
+      timestamp: d.updatedAt.toISOString(),
+    }));
   } catch (error) {
-    console.error('Application metrics error:', error);
-    return {
-      status: 'error',
-      error: 'Failed to fetch application metrics',
-    };
+    console.error('Recent activity error:', error);
+    return [];
   }
 }
 
