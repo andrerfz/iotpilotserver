@@ -23,18 +23,14 @@ async function setup() {
 }
 
 describe('OrgHubPage', () => {
-  it('renders org tab items', async () => {
+  it('renders the nav-select trigger showing the active tab', async () => {
     const { getByText } = await setup();
     expect(getByText('Organization')).toBeTruthy();
-    expect(getByText('Members')).toBeTruthy();
-    expect(getByText('Default thresholds')).toBeTruthy();
-    expect(getByText('API Keys')).toBeTruthy();
-    expect(getByText('App Config')).toBeTruthy();
   });
 
-  it('items contains the 5 expected paths in order', async () => {
+  it('navItems contains the 5 expected values in order', async () => {
     const { fixture } = await setup();
-    const paths = fixture.componentInstance.items.map((i) => i.path);
-    expect(paths).toEqual(['organization', 'members', 'thresholds', 'api-keys', 'app-config']);
+    const values = fixture.componentInstance.navItems.map((i) => i.value);
+    expect(values).toEqual(['organization', 'members', 'thresholds', 'api-keys', 'app-config']);
   });
 });

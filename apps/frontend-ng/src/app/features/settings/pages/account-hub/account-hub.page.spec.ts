@@ -19,17 +19,14 @@ async function setup() {
 }
 
 describe('AccountHubPage', () => {
-  it('renders account tab items', async () => {
+  it('renders the nav-select trigger showing the active tab', async () => {
     const { getByText } = await setup();
     expect(getByText('Profile')).toBeTruthy();
-    expect(getByText('Security')).toBeTruthy();
-    expect(getByText('Notifications')).toBeTruthy();
-    expect(getByText('Preferences')).toBeTruthy();
   });
 
-  it('items contains the 4 expected paths in order', async () => {
+  it('navItems contains the 4 expected values in order', async () => {
     const { fixture } = await setup();
-    const paths = fixture.componentInstance.items.map((i) => i.path);
-    expect(paths).toEqual(['profile', 'security', 'notifications', 'preferences']);
+    const values = fixture.componentInstance.navItems.map((i) => i.value);
+    expect(values).toEqual(['profile', 'security', 'notifications', 'preferences']);
   });
 });

@@ -1,14 +1,12 @@
 <div class="settings-hub">
-  <nav class="settings-tabs" aria-label="{{ 'settings.hub.account_title' | translate }}">
-    @for (item of items; track item.path) {
-      <a
-        class="settings-tabs__tab"
-        [routerLink]="item.path"
-        routerLinkActive="settings-tabs__tab--active"
-        [routerLinkActiveOptions]="{ exact: false }"
-      >{{ item.label | translate }}</a>
-    }
-  </nav>
+  <div class="settings-hub__nav">
+    <ui-nav-select
+      [items]="navItems"
+      [value]="activeValue()"
+      sheetTitle="settings.hub.account_title"
+      (valueChange)="onTabSelect($event)"
+    ></ui-nav-select>
+  </div>
   <div class="settings-hub__outlet">
     <router-outlet />
   </div>
