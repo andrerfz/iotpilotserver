@@ -130,18 +130,20 @@
           <div class="card-head">
             <ion-icon name="hardware-chip-outline" color="primary"></ion-icon>
             <span class="card-head__title">{{ chartMetricLabel() }}</span>
-            @if (availableDeviceTypeItems().length) {
-              <ui-nav-select
-                [items]="availableDeviceTypeItems()"
-                [value]="chartDeviceType() ?? ''"
-                sheetTitle="dashboard.chart_device_type_sheet_title"
-                (valueChange)="onChartDeviceTypeChange($event)">
-              </ui-nav-select>
-            }
-            <ui-date-range-picker
-              [value]="period()"
-              (valueChange)="onPeriodChange($event)">
-            </ui-date-range-picker>
+            <div class="card-head__controls">
+              @if (availableDeviceTypeItems().length) {
+                <ui-nav-select
+                  [items]="availableDeviceTypeItems()"
+                  [value]="chartDeviceType() ?? ''"
+                  sheetTitle="dashboard.chart_device_type_sheet_title"
+                  (valueChange)="onChartDeviceTypeChange($event)">
+                </ui-nav-select>
+              }
+              <ui-date-range-picker
+                [value]="period()"
+                (valueChange)="onPeriodChange($event)">
+              </ui-date-range-picker>
+            </div>
           </div>
           <div class="chart-card__body">
             @if (metricsLoading()) {
