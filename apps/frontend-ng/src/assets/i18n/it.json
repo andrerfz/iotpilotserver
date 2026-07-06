@@ -139,8 +139,10 @@
     "filter_sub": "Mostra solo dispositivi in questi stati",
     "live_alerts": "Avvisi attivi",
     "no_alerts": "Nessun avviso attivo",
-    "fleet_cpu": "CPU flotta",
-    "no_cpu_data": "Nessun dato CPU per questo periodo"
+    "no_metric_data": "Nessun dato per questo periodo",
+    "metric_cpu": "CPU",
+    "metric_temperature": "Temperatura",
+    "chart_device_type_sheet_title": "Tipo di dispositivo"
   },
   "devices": {
     "kpi": {

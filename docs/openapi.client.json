@@ -5476,6 +5476,71 @@
                         "bearerAuth": []
                     }
                 ],
+                "parameters": [
+                    {
+                        "name": "period",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "1h",
+                                "6h",
+                                "24h",
+                                "7d",
+                                "30d"
+                            ]
+                        },
+                        "description": "Relative time window"
+                    },
+                    {
+                        "name": "startTime",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        },
+                        "description": "Explicit range start (overrides period)"
+                    },
+                    {
+                        "name": "endTime",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        },
+                        "description": "Explicit range end (overrides period)"
+                    },
+                    {
+                        "name": "metrics",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Comma-separated metric names to include"
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "Max data points"
+                    },
+                    {
+                        "name": "deviceType",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Restrict to devices of this type (auto-selects the right metric + data source)"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Metrics",

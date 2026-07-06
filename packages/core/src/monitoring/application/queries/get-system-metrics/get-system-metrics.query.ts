@@ -10,7 +10,9 @@ export class GetSystemMetricsQuery implements Query {
         public readonly tenantId: CustomerId,
         public readonly timeRange?: TimeRange,
         public readonly metricNames?: string[],
-        public readonly limit?: number
+        public readonly limit?: number,
+        /** When set, restrict results to metrics reported by these devices (e.g. all devices of a given type). */
+        public readonly deviceIds?: string[]
     ) {}
 
     static create(
@@ -18,17 +20,19 @@ export class GetSystemMetricsQuery implements Query {
         startTime?: Date,
         endTime?: Date,
         metricNames?: string[],
-        limit?: number
+        limit?: number,
+        deviceIds?: string[]
     ): GetSystemMetricsQuery {
-        const timeRange = startTime && endTime 
-            ? TimeRange.create(startTime, endTime) 
+        const timeRange = startTime && endTime
+            ? TimeRange.create(startTime, endTime)
             : undefined;
-            
+
         return new GetSystemMetricsQuery(
             CustomerId.create(tenantId),
             timeRange,
             metricNames,
-            limit
+            limit,
+            deviceIds
         );
     }
 }

@@ -125,11 +125,19 @@
           }
         </ion-card>
 
-        <!-- Fleet CPU chart -->
+        <!-- Fleet metric chart -->
         <ion-card class="chart-card">
           <div class="card-head">
             <ion-icon name="hardware-chip-outline" color="primary"></ion-icon>
-            <span class="card-head__title">{{ 'dashboard.fleet_cpu' | translate }}</span>
+            <span class="card-head__title">{{ chartMetricLabel() }}</span>
+            @if (availableDeviceTypeItems().length) {
+              <ui-nav-select
+                [items]="availableDeviceTypeItems()"
+                [value]="chartDeviceType() ?? ''"
+                sheetTitle="dashboard.chart_device_type_sheet_title"
+                (valueChange)="onChartDeviceTypeChange($event)">
+              </ui-nav-select>
+            }
             <ui-date-range-picker
               [value]="period()"
               (valueChange)="onPeriodChange($event)">
@@ -141,7 +149,7 @@
             } @else if (cpuChartOptions()) {
               <div echarts [options]="cpuChartOptions()!" style="height: 150px;"></div>
             } @else {
-              <div class="chart-empty">{{ 'dashboard.no_cpu_data' | translate }}</div>
+              <div class="chart-empty">{{ 'dashboard.no_metric_data' | translate }}</div>
             }
           </div>
         </ion-card>

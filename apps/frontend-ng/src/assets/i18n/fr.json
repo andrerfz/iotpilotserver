@@ -139,8 +139,10 @@
     "filter_sub": "Afficher uniquement les appareils dans ces états",
     "live_alerts": "Alertes en direct",
     "no_alerts": "Aucune alerte active",
-    "fleet_cpu": "CPU de la flotte",
-    "no_cpu_data": "Aucune donnée CPU pour cette période"
+    "no_metric_data": "Aucune donnée pour cette période",
+    "metric_cpu": "CPU",
+    "metric_temperature": "Température",
+    "chart_device_type_sheet_title": "Type d'appareil"
   },
   "devices": {
     "kpi": {

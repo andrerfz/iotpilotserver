@@ -36,6 +36,11 @@ export class GetSystemMetricsHandler implements QueryHandler<GetSystemMetricsQue
             metrics = metrics.filter(m => query.metricNames!.includes(m.name));
         }
 
+        if (query.deviceIds && query.deviceIds.length > 0) {
+            const deviceIdSet = new Set(query.deviceIds);
+            metrics = metrics.filter(m => deviceIdSet.has(m.deviceId.value));
+        }
+
         const availableMetrics = [...new Set(metrics.map(m => m.name))];
 
         const summary: SystemMetricsResult['summary'] = {};

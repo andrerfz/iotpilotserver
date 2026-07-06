@@ -10,11 +10,47 @@ import { RequestBuilder } from '../../request-builder';
 import { MonitoringMetrics } from '../../models/monitoring-metrics';
 
 export interface GetMonitoringMetrics$Params {
+
+/**
+ * Relative time window
+ */
+  period?: '1h' | '6h' | '24h' | '7d' | '30d';
+
+/**
+ * Explicit range start (overrides period)
+ */
+  startTime?: string;
+
+/**
+ * Explicit range end (overrides period)
+ */
+  endTime?: string;
+
+/**
+ * Comma-separated metric names to include
+ */
+  metrics?: string;
+
+/**
+ * Max data points
+ */
+  limit?: number;
+
+/**
+ * Restrict to devices of this type (auto-selects the right metric + data source)
+ */
+  deviceType?: string;
 }
 
 export function getMonitoringMetrics(http: HttpClient, rootUrl: string, params?: GetMonitoringMetrics$Params, context?: HttpContext): Observable<StrictHttpResponse<MonitoringMetrics>> {
   const rb = new RequestBuilder(rootUrl, getMonitoringMetrics.PATH, 'get');
   if (params) {
+    rb.query('period', params.period, {});
+    rb.query('startTime', params.startTime, {});
+    rb.query('endTime', params.endTime, {});
+    rb.query('metrics', params.metrics, {});
+    rb.query('limit', params.limit, {});
+    rb.query('deviceType', params.deviceType, {});
   }
 
   return http.request(

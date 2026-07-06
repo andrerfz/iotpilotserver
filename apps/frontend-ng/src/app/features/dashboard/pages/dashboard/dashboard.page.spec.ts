@@ -100,24 +100,32 @@ describe('DashboardPage', () => {
   });
 
   describe('ionViewWillEnter', () => {
-    it('calls load on all three surfaces when view enters', async () => {
+    it('calls load on devices and alerts when view enters', async () => {
       const devices = makeSurface<Device[]>(MOCK_DEVICES);
       const alerts = makeSurface<Alert[]>([MOCK_ALERT]);
-      const metrics = makeSurface(null);
 
       const { fixture } = await render(DashboardPage, {
         imports: [RouterTestingModule],
-        providers: buildProviders({ devices, alerts, metrics }),
+        providers: buildProviders({ devices, alerts }),
       });
 
       devices.load.mockClear();
       alerts.load.mockClear();
-      metrics.load.mockClear();
       fixture.componentInstance.ionViewWillEnter();
 
       expect(devices.load).toHaveBeenCalledWith({});
       expect(alerts.load).toHaveBeenCalledWith({ status: 'active', limit: 5 });
-      expect(metrics.load).toHaveBeenCalledWith(expect.objectContaining({ period: expect.any(String) }));
+    });
+
+    it('loads monitoringMetrics reactively once devices resolve, filtered to the fleet chart\'s device type', async () => {
+      const metrics = makeSurface(null);
+      const { fixture } = await render(DashboardPage, {
+        imports: [RouterTestingModule],
+        providers: buildProviders({ metrics }),
+      });
+      await fixture.whenStable();
+
+      expect(metrics.load).toHaveBeenCalledWith({ period: '24h', deviceType: 'RaspberryPi' });
     });
   });
 
@@ -128,9 +136,36 @@ describe('DashboardPage', () => {
         imports: [RouterTestingModule],
         providers: buildProviders({ metrics }),
       });
+      await fixture.whenStable();
+      metrics.load.mockClear();
 
       fixture.componentInstance.onPeriodChange('7d');
-      expect(metrics.load).toHaveBeenCalledWith({ period: '7d' });
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(metrics.load).toHaveBeenCalledWith({ period: '7d', deviceType: 'RaspberryPi' });
+    });
+  });
+
+  describe('chart device-type change', () => {
+    it('calls monitoringMetrics.load with the selected device type', async () => {
+      const devices = makeSurface<Device[]>([
+        ...MOCK_DEVICES,
+        { id: 'dev-3', hostname: 'sensor-1', status: 'ONLINE', deviceType: 'ESP8266_SENSOR' },
+      ]);
+      const metrics = makeSurface(null);
+      const { fixture } = await render(DashboardPage, {
+        imports: [RouterTestingModule],
+        providers: buildProviders({ devices, metrics }),
+      });
+      await fixture.whenStable();
+      metrics.load.mockClear();
+
+      fixture.componentInstance.onChartDeviceTypeChange('ESP8266_SENSOR');
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(metrics.load).toHaveBeenCalledWith({ period: '24h', deviceType: 'ESP8266_SENSOR' });
     });
   });
 

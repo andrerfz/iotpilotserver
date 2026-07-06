@@ -139,8 +139,10 @@
     "filter_sub": "Show only devices in these states",
     "live_alerts": "Live alerts",
     "no_alerts": "No active alerts",
-    "fleet_cpu": "Fleet CPU",
-    "no_cpu_data": "No CPU data for this period"
+    "no_metric_data": "No data for this period",
+    "metric_cpu": "CPU",
+    "metric_temperature": "Temperature",
+    "chart_device_type_sheet_title": "Device type"
   },
   "devices": {
     "kpi": {

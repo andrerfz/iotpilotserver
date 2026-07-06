@@ -294,7 +294,14 @@ export function registerRoutes(): void {
     registry.registerPath({method: 'delete', path: '/monitoring/alerts/{id}', summary: 'Delete an alert', tags: ['Monitoring'],
         security: bearer, params: [idParam], response: MessageResponse, responseDescription: 'Alert deleted'});
     registry.registerPath({method: 'get', path: '/monitoring/metrics', summary: 'Aggregate metrics', tags: ['Monitoring'],
-        security: bearer, response: R.MonitoringMetrics, responseDescription: 'Metrics'});
+        security: bearer, response: R.MonitoringMetrics, responseDescription: 'Metrics', params: [
+            {name: 'period', in: 'query', schema: {type: 'string', enum: ['1h', '6h', '24h', '7d', '30d']}, description: 'Relative time window'},
+            {name: 'startTime', in: 'query', schema: {type: 'string', format: 'date-time'}, description: 'Explicit range start (overrides period)'},
+            {name: 'endTime', in: 'query', schema: {type: 'string', format: 'date-time'}, description: 'Explicit range end (overrides period)'},
+            {name: 'metrics', in: 'query', schema: {type: 'string'}, description: 'Comma-separated metric names to include'},
+            {name: 'limit', in: 'query', schema: {type: 'integer'}, description: 'Max data points'},
+            {name: 'deviceType', in: 'query', schema: {type: 'string'}, description: 'Restrict to devices of this type (auto-selects the right metric + data source)'},
+        ]});
     registry.registerPath({method: 'get', path: '/monitoring/reports', summary: 'Monitoring reports', tags: ['Monitoring'],
         security: bearer, response: R.MonitoringReport, responseDescription: 'Reports'});
     registry.registerPath({method: 'get', path: '/monitoring/thresholds', summary: 'List thresholds', tags: ['Monitoring'],

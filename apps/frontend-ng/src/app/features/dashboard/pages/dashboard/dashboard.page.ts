@@ -40,12 +40,14 @@ import {
   StatusDotComponent,
   SwipeListComponent,
   UiListRowComponent,
+  UiNavSelectComponent,
   ViewWillEnter,
   IonRefresher,
   IonRefresherContent,
 } from '@ng/shared/ui';
-import type { DevicePickerItem, PickerOption, ListRowCol } from '@ng/shared/ui';
+import type { DevicePickerItem, NavSelectItem, PickerOption, ListRowCol } from '@ng/shared/ui';
 import { deviceMetricCols as metricCols, deviceMetricMeta as metricMeta } from '../../device-metrics';
+import { hasSystemMetrics, deviceTypeLabel } from '../../device-capabilities';
 import type { Device } from '@ng/core/api/generated/models/device';
 import type { Alert } from '@ng/core/api/generated/models/alert';
 import { AlertsStream } from '@ng/core/realtime/alerts.stream';
@@ -97,6 +99,7 @@ const STATUS_OPTIONS: PickerOption[] = [
     DevicePickerComponent,
     MultiSelectPickerComponent,
     DateRangePickerComponent,
+    UiNavSelectComponent,
     RegisterDeviceSheetComponent,
     BleClaimSheetComponent,
     BottomSheetComponent,
@@ -127,6 +130,11 @@ export class DashboardPage implements ViewWillEnter {
   readonly devFilter = signal<string[]>([]);
   readonly statusFilter = signal<string[]>([]);
   readonly period = signal<string>('24h');
+  /** Which device type the fleet chart charts. Defaults to the first type
+   *  present in the fleet once devices load (see the sync effect below) —
+   *  a fleet with only sensor devices should never default to the Pi-only
+   *  'cpu_usage' metric, which would just show "no data" forever. */
+  readonly chartDeviceType = signal<string | null>(null);
 
   // ── Derived / computed ────────────────────────────────────────────────────
   readonly filteredDevices = computed(() =>
@@ -156,18 +164,37 @@ export class DashboardPage implements ViewWillEnter {
     return Math.round(avg);
   });
 
+  /** Distinct device types actually present in the fleet, as nav-select items. */
+  readonly availableDeviceTypeItems = computed<NavSelectItem[]>(() => {
+    const types = [...new Set(this._deviceRows().map(d => d.deviceType).filter((t): t is string => !!t))];
+    return types.map(t => ({ value: t, label: deviceTypeLabel(t) }));
+  });
+
+  /** Pi-like types report cpu_usage (via InfluxDB/Telegraf); everything else
+   *  (ESP8266/ESP32/Heltec sensors) only ever reports temperature (via the
+   *  Postgres DeviceMetric table) — see monitoring.router.ts's /metrics route. */
+  readonly chartMetricName = computed(() => hasSystemMetrics(this.chartDeviceType()) ? 'cpu_usage' : 'temperature');
+
+  readonly chartMetricLabel = computed(() =>
+    this.chartMetricName() === 'cpu_usage' ? this.t.instant('dashboard.metric_cpu') : this.t.instant('dashboard.metric_temperature'),
+  );
+
   readonly cpuChartOptions = computed<EChartsOption | null>(() => {
     const m = this.dashService.monitoringMetrics.data();
     if (!m) return null;
-    const cpuSeries = (m.metrics ?? [])
-      .filter(x => x.metricName === 'cpu_usage')
+    const metricName = this.chartMetricName();
+    const series = (m.metrics ?? [])
+      .filter(x => x.metricName === metricName)
       .map(x => [x.timestamp ?? '', x.value ?? 0]);
-    if (!cpuSeries.length) return null;
+    if (!series.length) return null;
+    const isTemperature = metricName === 'temperature';
     return {
       grid: { top: 8, right: 8, bottom: 24, left: 36, containLabel: false },
       xAxis: { type: 'time', axisLabel: { fontSize: 10 } },
-      yAxis: { type: 'value', min: 0, max: 100, axisLabel: { formatter: '{value}%', fontSize: 10 } },
-      series: [{ type: 'line', data: cpuSeries, smooth: true, symbol: 'none',
+      yAxis: isTemperature
+        ? { type: 'value', axisLabel: { formatter: '{value}°C', fontSize: 10 } }
+        : { type: 'value', min: 0, max: 100, axisLabel: { formatter: '{value}%', fontSize: 10 } },
+      series: [{ type: 'line', data: series, smooth: true, symbol: 'none',
         lineStyle: { color: 'var(--ion-color-primary)', width: 2 },
         areaStyle: { color: 'color-mix(in srgb, var(--ion-color-primary) 12%, transparent)' } }],
       tooltip: { trigger: 'axis' },
@@ -196,6 +223,30 @@ export class DashboardPage implements ViewWillEnter {
       if (a !== null) this._liveAlerts.set(a);
     });
 
+    // Default the fleet chart's device-type filter to the first type present
+    // in the fleet (and re-pick if the previously-selected type disappears —
+    // e.g. that device was removed) instead of leaving it unset/Pi-only.
+    effect(() => {
+      const items = this.availableDeviceTypeItems();
+      const current = this.chartDeviceType();
+      if (items.length === 0) {
+        if (current !== null) this.chartDeviceType.set(null);
+        return;
+      }
+      if (!current || !items.some(i => i.value === current)) {
+        this.chartDeviceType.set(items[0].value);
+      }
+    });
+
+    // Re-fetch the fleet chart whenever the selected device type changes.
+    effect(() => {
+      const type = this.chartDeviceType();
+      void this.dashService.monitoringMetrics.load({
+        period: this.period() as '1h' | '6h' | '24h' | '7d' | '30d',
+        deviceType: type ?? undefined,
+      });
+    });
+
     // Real-time alert:new → prepend to feed (cap at 5)
     this.alertsStream.alerts$
       .pipe(takeUntilDestroyed())
@@ -215,7 +266,15 @@ export class DashboardPage implements ViewWillEnter {
 
     toObservable(this.tenantCtx.customer)
         .pipe(skip(1), takeUntilDestroyed())
-        .subscribe(() => void this.loadData());
+        .subscribe(() => {
+          void this.loadData();
+          // Force a metrics reload even if the new tenant happens to share the
+          // same selected device-type string — the underlying fleet changed.
+          void this.dashService.monitoringMetrics.load({
+            period: this.period() as '1h' | '6h' | '24h' | '7d' | '30d',
+            deviceType: this.chartDeviceType() ?? undefined,
+          });
+        });
   }
 
   ionViewWillEnter(): void {
@@ -230,10 +289,11 @@ export class DashboardPage implements ViewWillEnter {
   }
 
   private async loadData(): Promise<void> {
+    // monitoringMetrics reloads reactively (see the constructor effect) once
+    // devices load and the fleet chart's device-type default is resolved.
     await Promise.allSettled([
       this.dashService.devices.load({}),
       this.dashService.alerts.load({ status: 'active', limit: 5 }),
-      this.dashService.monitoringMetrics.load({ period: this.period() as '1h' | '6h' | '24h' | '7d' | '30d' }),
     ]);
   }
 
@@ -249,7 +309,10 @@ export class DashboardPage implements ViewWillEnter {
 
   onPeriodChange(preset: string): void {
     this.period.set(preset);
-    void this.dashService.monitoringMetrics.load({ period: preset as '1h' | '6h' | '24h' | '7d' | '30d' });
+  }
+
+  onChartDeviceTypeChange(type: string): void {
+    this.chartDeviceType.set(type);
   }
 
   onDeviceRowClick(device: Device): void {

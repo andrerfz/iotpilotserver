@@ -24,6 +24,7 @@ import { validator } from '@iotpilot/core/shared/infrastructure/validation/valid
 import { Pagination } from '@iotpilot/core/shared/infrastructure/http/pagination.util';
 import { prisma } from '@iotpilot/core/shared/infrastructure/database/prisma.service';
 import { AlertEntity } from '@iotpilot/core/monitoring/domain/entities/alert.entity';
+import { getDeviceCapabilities } from '@iotpilot/core/device/domain/value-objects/device-type.vo';
 
 export const monitoringRouter = Router();
 
@@ -746,6 +747,7 @@ monitoringRouter.get('/metrics', requireAuth(), async (req: AuthenticatedRequest
         const period = (req.query.period as string) || '24h'; // '1h', '24h', '7d', '30d'
         const metricNames = (req.query.metrics as string | undefined)?.split(',').filter(Boolean);
         const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+        const deviceType = req.query.deviceType as string | undefined;
 
         console.log('📋 MONITORING METRICS GET: Query params:', {
             startTime: startTimeParam,
@@ -800,16 +802,67 @@ monitoringRouter.get('/metrics', requireAuth(), async (req: AuthenticatedRequest
             return;
         }
 
-        // Create and execute GetSystemMetrics query
-        const getSystemMetricsQuery = GetSystemMetricsQuery.create(
-            tenantId,
-            startTime,
-            endTime,
-            metricNames,
-            limit
-        );
+        // When a deviceType is given, resolve which devices of that type exist for
+        // this tenant and pick the right data source for its metrics: system-metric
+        // types (Pi/Orange Pi) are collected by Telegraf straight into InfluxDB
+        // (GetSystemMetricsQuery), but sensor types (ESP8266/ESP32/Heltec) never
+        // report there — their readings only ever land in Postgres's DeviceMetric
+        // table (the same one device-overview/device-network chart from). Without
+        // this branch, filtering the fleet chart to a sensor type would always
+        // come back empty even though the data genuinely exists, just elsewhere.
+        let metricsResult: { metrics: Array<{ metricName: string; value: number; timestamp: string; unit: string; deviceId?: string | null }>; summary: Record<string, unknown>; availableMetrics: string[]; lastUpdated: string };
+        let effectiveMetricNames = metricNames;
 
-        const metricsResult = await queryBus.execute(getSystemMetricsQuery);
+        if (deviceType) {
+            const caps = getDeviceCapabilities(deviceType);
+            const devicesOfType = await prisma.getClient().device.findMany({
+                where: { customerId: tenantId, deviceType: deviceType as any, deletedAt: null },
+                select: { id: true },
+            });
+            const deviceIds = devicesOfType.map((d: { id: string }) => d.id);
+
+            if (caps.systemMetrics) {
+                effectiveMetricNames = ['cpu_usage'];
+                const q = GetSystemMetricsQuery.create(tenantId, startTime, endTime, effectiveMetricNames, limit, deviceIds);
+                metricsResult = await queryBus.execute(q);
+            } else {
+                effectiveMetricNames = ['temperature'];
+                const rows = deviceIds.length
+                    ? await prisma.getClient().deviceMetric.findMany({
+                        where: {
+                            deviceId: { in: deviceIds },
+                            metric: 'temperature',
+                            deletedAt: null,
+                            ...(startTime && endTime ? { timestamp: { gte: startTime, lte: endTime } } : {}),
+                        },
+                        orderBy: { timestamp: 'asc' },
+                        take: limit,
+                        select: { deviceId: true, value: true, unit: true, timestamp: true },
+                    })
+                    : [];
+                metricsResult = {
+                    metrics: rows.map((r: { deviceId: string; value: number; unit: string | null; timestamp: Date }) => ({
+                        metricName: 'temperature',
+                        value: r.value,
+                        timestamp: r.timestamp.toISOString(),
+                        unit: r.unit ?? '°C',
+                        deviceId: r.deviceId,
+                    })),
+                    summary: {},
+                    availableMetrics: ['temperature'],
+                    lastUpdated: isoTimestamp(),
+                };
+            }
+        } else {
+            const getSystemMetricsQuery = GetSystemMetricsQuery.create(
+                tenantId,
+                startTime,
+                endTime,
+                metricNames,
+                limit
+            );
+            metricsResult = await queryBus.execute(getSystemMetricsQuery);
+        }
 
         console.log('✅ MONITORING METRICS GET: System metrics retrieved successfully:', {
             metricsCount: metricsResult.metrics?.length || 0,
@@ -830,7 +883,8 @@ monitoringRouter.get('/metrics', requireAuth(), async (req: AuthenticatedRequest
                 period
             },
             filters: {
-                metricNames: metricNames || [],
+                metricNames: effectiveMetricNames || [],
+                deviceType: deviceType || null,
                 limit
             },
             metadata: {
