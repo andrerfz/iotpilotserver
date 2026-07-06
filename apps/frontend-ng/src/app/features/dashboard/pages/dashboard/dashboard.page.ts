@@ -188,6 +188,9 @@ export class DashboardPage implements ViewWillEnter {
       .map(x => [x.timestamp ?? '', x.value ?? 0]);
     if (!series.length) return null;
     const isTemperature = metricName === 'temperature';
+    // ECharts renders to canvas and can't resolve CSS custom properties —
+    // needs literal colors, same as device-metrics.page.ts's per-metric palette.
+    const color = isTemperature ? '#e53e3e' : '#3880ff';
     return {
       grid: { top: 8, right: 8, bottom: 24, left: 36, containLabel: false },
       xAxis: { type: 'time', axisLabel: { fontSize: 10 } },
@@ -195,8 +198,8 @@ export class DashboardPage implements ViewWillEnter {
         ? { type: 'value', axisLabel: { formatter: '{value}°C', fontSize: 10 } }
         : { type: 'value', min: 0, max: 100, axisLabel: { formatter: '{value}%', fontSize: 10 } },
       series: [{ type: 'line', data: series, smooth: true, symbol: 'none',
-        lineStyle: { color: 'var(--ion-color-primary)', width: 2 },
-        areaStyle: { color: 'color-mix(in srgb, var(--ion-color-primary) 12%, transparent)' } }],
+        lineStyle: { color, width: 2 },
+        areaStyle: { color, opacity: 0.08 } }],
       tooltip: { trigger: 'axis' },
     };
   });

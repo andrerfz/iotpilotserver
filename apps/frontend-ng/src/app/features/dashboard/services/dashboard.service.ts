@@ -33,24 +33,33 @@ function makeSurface<T, P>(
   const loading = signal(false);
   const error = signal<ApiError | null>(null);
   let lastParams: P | undefined;
+  // Guards against out-of-order resolution: several reactive effects can each
+  // call `load()` in quick succession (e.g. the fleet chart's device-type
+  // default resolving right after the initial, filter-less load) — without
+  // this, whichever request happens to *resolve* last wins, even if it was
+  // issued first and is now stale, silently clobbering good data with empty.
+  let requestId = 0;
 
   async function load(params?: P): Promise<T | null> {
     lastParams = params;
+    const id = ++requestId;
     loading.set(true);
     error.set(null);
     try {
       const result = await fetcher(params);
-      data.set(result);
+      if (id === requestId) data.set(result);
       return result;
     } catch (e) {
-      error.set(
-        e instanceof ApiError
-          ? e
-          : new ApiError(0, 'UNKNOWN', e instanceof Error ? e.message : String(e)),
-      );
+      if (id === requestId) {
+        error.set(
+          e instanceof ApiError
+            ? e
+            : new ApiError(0, 'UNKNOWN', e instanceof Error ? e.message : String(e)),
+        );
+      }
       return null;
     } finally {
-      loading.set(false);
+      if (id === requestId) loading.set(false);
     }
   }
 
