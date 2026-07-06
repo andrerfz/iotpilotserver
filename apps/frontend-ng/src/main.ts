@@ -20,6 +20,7 @@ import { AppComponent } from './app/app.component';
 import { routes } from './app/app.routes';
 import { provideApi } from './app/core/api/api.config';
 import { authInterceptor } from './app/core/auth/auth.interceptor';
+import { envelopeInterceptor } from './app/core/api/envelope.interceptor';
 import { AuthService } from './app/core/auth/auth.service';
 import { provideTokenStorage } from './app/core/auth/token.storage';
 import { provideNativeTokenStorage } from './app/core/native/native.providers';
@@ -34,7 +35,9 @@ bootstrapApplication(AppComponent, {
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
     provideIonicAngular(),
     provideRouter(routes, withPreloading(PreloadAllModules)),
-    provideHttpClient(withInterceptors([authInterceptor])),
+    // envelopeInterceptor after authInterceptor: auth's 401-refresh retry calls
+    // `next(...)` internally, which must still pass through envelope-stripping.
+    provideHttpClient(withInterceptors([authInterceptor, envelopeInterceptor])),
     provideApi(),
     ...(Capacitor.isNativePlatform() ? provideNativeTokenStorage() : [provideTokenStorage()]),
     provideBle(),
