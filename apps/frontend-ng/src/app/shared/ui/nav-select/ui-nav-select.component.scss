@@ -1,13 +1,23 @@
+// The <ui-nav-select> host itself is the flex item in the parent row (e.g.
+// dashboard's card-head, settings-hub__nav) — without min-width:0 here, the
+// host defaults to shrink-to-fit content and the inner .nav-select's own
+// max-width:100% has nothing smaller than content to constrain against.
+:host {
+  display: inline-block;
+  min-width: 0;
+  max-width: 100%;
+}
+
 .nav-select {
   position: relative;
   display: inline-block;
-  // Shrinkable in a flex row (e.g. dashboard's card-head, settings-hub__nav)
-  // alongside another control (period picker) — without this, a long label
-  // (device type names run long: "Heltec WiFi LoRa 32 V3 Temperature Sensor")
-  // forces the trigger to its full content width and pushes the sibling
-  // control out of view instead of truncating.
+  // Shrinkable in a flex row alongside another control (period picker) —
+  // without this, a long label (device type names run long: "Heltec WiFi
+  // LoRa 32 V3 Temperature Sensor") forces the trigger to its full content
+  // width and pushes the sibling control out of view instead of truncating.
   min-width: 0;
   max-width: 100%;
+  width: 100%;
 
   &__trigger {
     display: flex;
