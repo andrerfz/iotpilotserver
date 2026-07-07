@@ -25,6 +25,17 @@ if (typeof window !== 'undefined' && !window.matchMedia) {
   } as MediaQueryList);
 }
 
+// jsdom lacks ResizeObserver, which ngx-echarts' directive requires on init
+// to auto-resize the chart. Provide an inert stub so specs that render a real
+// chart (e.g. ui-alert-trend-chart) don't need to mock the directive away.
+if (typeof window !== 'undefined' && !window.ResizeObserver) {
+  window.ResizeObserver = class {
+    observe(): void {}
+    unobserve(): void {}
+    disconnect(): void {}
+  };
+}
+
 getTestBed().initTestEnvironment(
   BrowserDynamicTestingModule,
   platformBrowserDynamicTesting(),

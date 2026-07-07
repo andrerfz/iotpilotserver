@@ -127,13 +127,11 @@
     <div class="section-head">{{ 'monitoring.chart.title' | translate }}</div>
     <ion-card class="chart-card">
       <ion-card-content>
-        @if (trendLoading()) {
-          <ion-skeleton-text [animated]="true" style="height: 120px;"></ion-skeleton-text>
-        } @else if (trendChartOptions()) {
-          <div echarts [options]="trendChartOptions()!" class="trend-chart"></div>
-        } @else {
-          <div class="dim">{{ 'monitoring.chart.no_data' | translate }}</div>
-        }
+        <ui-alert-trend-chart
+          [data]="_trendData()"
+          [loading]="trendLoading()"
+          [emptyLabel]="'monitoring.chart.no_data' | translate">
+        </ui-alert-trend-chart>
       </ion-card-content>
     </ion-card>
 

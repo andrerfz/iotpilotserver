@@ -10,8 +10,6 @@ import {
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { skip } from 'rxjs';
 import { Router } from '@angular/router';
-import { NgxEchartsDirective } from 'ngx-echarts';
-import type { EChartsOption } from 'echarts';
 import { addIcons } from 'ionicons';
 import {
   alertCircleOutline,
@@ -20,6 +18,7 @@ import {
 } from 'ionicons/icons';
 
 import {
+  AlertTrendChartComponent,
   DateRangePickerComponent,
   DevicePickerComponent,
   EmptyStateComponent,
@@ -86,7 +85,7 @@ function presetToTimeRange(preset: string): { startTime?: string; endTime?: stri
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    NgxEchartsDirective,
+    AlertTrendChartComponent,
     IonContent,
     IonButton,
     IonIcon,
@@ -147,22 +146,6 @@ export class MonitoringPage implements ViewWillEnter {
     this._liveAlerts().filter(a => !!a.resolved).length,
   );
   readonly totalCount = computed(() => this._liveAlerts().length);
-
-  readonly trendChartOptions = computed<EChartsOption | null>(() => {
-    const pts = this._trendData();
-    if (!pts.length) return null;
-    return {
-      grid: { top: 8, right: 8, bottom: 24, left: 36, containLabel: false },
-      xAxis: { type: 'category', data: pts.map(p => p.date ?? ''), axisLabel: { fontSize: 10 } },
-      yAxis: { type: 'value', minInterval: 1, axisLabel: { fontSize: 10 } },
-      series: [{
-        type: 'bar',
-        data: pts.map(p => p.count ?? 0),
-        itemStyle: { color: 'var(--ion-color-warning)' },
-      }],
-      tooltip: { trigger: 'axis' },
-    };
-  });
 
   readonly devicePickerItems = computed<DevicePickerItem[]>(() =>
     this.dashService.devices.data()?.map(d => ({

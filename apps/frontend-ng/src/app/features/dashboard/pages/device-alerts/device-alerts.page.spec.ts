@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { signal } from '@angular/core';
 import { Subject } from 'rxjs';
 import { provideHttpClient } from '@angular/common/http';
+import { provideEchartsCore } from 'ngx-echarts';
 import { render, screen } from '@testing-library/angular';
 import { RouterTestingModule } from '@angular/router/testing';
 import { DeviceAlertsPage } from './device-alerts.page';
@@ -42,6 +43,7 @@ function buildProviders(overrides: {
   const updateAlert = overrides.updateAlert ?? vi.fn().mockResolvedValue(undefined);
   return [
     provideHttpClient(),
+    provideEchartsCore({ echarts: () => import('echarts') }),
     {
       provide: DeviceDetailService,
       useValue: {

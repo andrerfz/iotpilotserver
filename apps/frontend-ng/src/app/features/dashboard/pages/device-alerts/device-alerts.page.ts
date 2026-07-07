@@ -19,6 +19,7 @@ import { addIcons } from 'ionicons';
 import { refreshOutline, settingsOutline, trashOutline } from 'ionicons/icons';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import {
+  AlertTrendChartComponent,
   IonButton,
   IonCard,
   IonCardContent,
@@ -77,6 +78,7 @@ const STATE_OPTIONS: PickerOption[] = [
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    AlertTrendChartComponent,
     TranslatePipe,
     IonContent,
     IonCard,
@@ -159,10 +161,6 @@ export class DeviceAlertsPage implements OnInit, AfterViewInit {
     }
     return list;
   });
-
-  readonly maxTrendCount = computed(() =>
-    Math.max(1, ...(this.trend.data() ?? []).map(p => p.count ?? 0)),
-  );
 
   readonly hasFilters = computed(
     () => this.severityFilter().length > 0 || this.stateFilter().length > 0,
@@ -309,17 +307,6 @@ export class DeviceAlertsPage implements OnInit, AfterViewInit {
 
   alertState(a: Alert): AlertState {
     return alertState(a);
-  }
-
-  trendBarHeight(count: number | undefined): number {
-    const max = this.maxTrendCount();
-    return max > 0 ? Math.round(((count ?? 0) / max) * 100) : 0;
-  }
-
-  formatTrendDate(date: string | undefined): string {
-    if (!date) return '';
-    const d = new Date(date);
-    return `${d.getMonth() + 1}/${d.getDate()}`;
   }
 
   formatAge(ts: string | undefined): string {

@@ -1,0 +1,17 @@
+:host {
+  display: block;
+}
+
+.trend-chart {
+  height: 150px;
+  width: 100%;
+}
+
+.trend-chart__empty {
+  height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  color: var(--text-muted);
+}

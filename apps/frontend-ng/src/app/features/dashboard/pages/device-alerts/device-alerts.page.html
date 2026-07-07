@@ -50,19 +50,7 @@
         <ion-card-title>{{ 'device_alerts.chart.title' | translate }} — {{ 'device_alerts.chart.period' | translate }}</ion-card-title>
       </ion-card-header>
       <ion-card-content>
-        <div class="trend-chart">
-          @for (point of trend.data() ?? []; track point.date) {
-            <div class="trend-chart__col">
-              <span class="trend-chart__count">{{ point.count ?? 0 }}</span>
-              <div class="trend-chart__track">
-                <div class="trend-chart__bar"
-                  [style.height.%]="trendBarHeight(point.count)">
-                </div>
-              </div>
-              <span class="trend-chart__label">{{ formatTrendDate(point.date) }}</span>
-            </div>
-          }
-        </div>
+        <ui-alert-trend-chart [data]="trend.data() ?? []"></ui-alert-trend-chart>
       </ion-card-content>
     </ion-card>
   }

@@ -146,6 +146,8 @@ export type { DeltaDir } from './data/metric-card.component';
 export { MetricGridComponent } from './data/metric-grid.component';
 export { UiSkeletonComponent } from './data/skeleton.component';
 export { EmptyStateComponent } from './data/empty-state.component';
+export { AlertTrendChartComponent } from './data/alert-trend-chart.component';
+export type { AlertTrendPoint } from './data/alert-trend-chart.component';
 // T6 — DataTable
 export { DataTableComponent } from './data/data-table.component';
 export type { ColumnDef } from './data/data-table.component';
