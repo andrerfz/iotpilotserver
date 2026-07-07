@@ -21,6 +21,7 @@ type PrismaCustomer = {
   description: string | null;
   contactEmail: string | null;
   status: PrismaCustomerStatus;
+  alertDedupEnabled: boolean;
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;
@@ -113,6 +114,7 @@ export class PrismaCustomerRepository implements CustomerRepository {
     const domain = customer.domain ?? settings.getCustomDomain() ?? null;
     const description = customer.description ?? null;
     const contactEmail = customer.contactEmail ?? null;
+    const alertDedupEnabled = customer.alertDedupEnabled;
 
     await this.prisma.customer.upsert({
       where: { id: customerId },
@@ -124,6 +126,7 @@ export class PrismaCustomerRepository implements CustomerRepository {
         domain,
         description,
         contactEmail,
+        alertDedupEnabled,
         subscriptionTier: 'FREE'
       },
       update: {
@@ -132,7 +135,8 @@ export class PrismaCustomerRepository implements CustomerRepository {
         status,
         domain,
         description,
-        contactEmail
+        contactEmail,
+        alertDedupEnabled
       }
     });
   }
@@ -183,6 +187,7 @@ export class PrismaCustomerRepository implements CustomerRepository {
     customer.updateDomain(data.domain ?? undefined);
     customer.updateDescription(data.description ?? undefined);
     customer.updateContact(data.contactEmail ?? undefined);
+    customer.updateAlertDedupEnabled(data.alertDedupEnabled ?? false);
     customer.setTimestamps(data.createdAt, data.updatedAt, data.deletedAt ?? undefined);
     customer.clearEvents();
     return customer;

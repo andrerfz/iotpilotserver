@@ -12,6 +12,7 @@ import {
   IonLabel,
   IonNote,
   IonSpinner,
+  IonToggle,
   UiInputComponent,
 } from '@ng/shared/ui';
 import { Api } from '@ng/core/api/generated/api';
@@ -38,6 +39,7 @@ import type { OrganizationProfileInput } from '@ng/core/api/generated/models/org
     IonItem,
     IonLabel,
     IonNote,
+    IonToggle,
     UiInputComponent,
   ],
 })
@@ -55,6 +57,7 @@ export class SettingsOrganizationPage implements OnInit {
     name: ['', [Validators.required, Validators.maxLength(255)]],
     contactEmail: ['', Validators.email],
     description: ['', Validators.maxLength(1000)],
+    alertDedupEnabled: [false],
   });
 
   readonly isSaving = signal(false);
@@ -72,6 +75,7 @@ export class SettingsOrganizationPage implements OnInit {
         name: data.name ?? '',
         contactEmail: data.contactEmail ?? '',
         description: data.description ?? '',
+        alertDedupEnabled: data.alertDedupEnabled ?? false,
       });
     } catch {
       this.error.set(this.t.instant('settings.organization.msg_load_failed'));
@@ -91,6 +95,7 @@ export class SettingsOrganizationPage implements OnInit {
         name: vals.name,
         contactEmail: vals.contactEmail || null,
         description: vals.description || null,
+        alertDedupEnabled: vals.alertDedupEnabled,
       };
       await this.api.invoke(updateOrganizationProfile, { body });
       this.success.set(this.t.instant('settings.organization.msg_saved'));

@@ -775,6 +775,10 @@
       "contact_email_ph": "contact@yourcompany.com",
       "description": "Description",
       "description_ph": "A short description of your organization",
+      "alert_dedup": {
+        "title": "Alert on every reading",
+        "desc": "Off (default): every reading past the threshold creates its own alert and email. On: collapse repeated breaches into a single open alert until resolved."
+      },
       "domain": "Email domain",
       "domain_hint": "New sign-ups with a matching email are auto-assigned to your organization. Contact support to change it.",
       "status": "Status",

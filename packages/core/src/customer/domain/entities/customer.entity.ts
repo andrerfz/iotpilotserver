@@ -13,6 +13,7 @@ export class CustomerEntity extends TenantScopedEntity<CustomerId> {
   private _description?: string;
   private _contactEmail?: string;
   private _domain?: string;
+  private _alertDedupEnabled: boolean = false;
   public createdAt: Date;
   public updatedAt: Date;
   public deletedAt?: Date;
@@ -78,6 +79,10 @@ export class CustomerEntity extends TenantScopedEntity<CustomerId> {
 
   get domain(): string | undefined {
     return this._domain;
+  }
+
+  get alertDedupEnabled(): boolean {
+    return this._alertDedupEnabled;
   }
 
   get isActive(): boolean {
@@ -153,6 +158,11 @@ export class CustomerEntity extends TenantScopedEntity<CustomerId> {
     this.updatedAt = new Date();
   }
 
+  updateAlertDedupEnabled(alertDedupEnabled: boolean): void {
+    this._alertDedupEnabled = alertDedupEnabled;
+    this.updatedAt = new Date();
+  }
+
   activate(): void {
     this._status = CustomerStatus.active();
     this.updatedAt = new Date();
@@ -192,6 +202,7 @@ export class CustomerEntity extends TenantScopedEntity<CustomerId> {
       description: this._description,
       contactEmail: this._contactEmail,
       domain: this._domain,
+      alertDedupEnabled: this._alertDedupEnabled,
       settings: this._settings.toJSON(),
       isActive: this.isActive,
       createdAt: this.createdAt,

@@ -214,6 +214,16 @@ export class RecordSensorReadingHandler implements CommandHandler<RecordSensorRe
         const alertCustomerId = device.customerId;
 
         if (alertCustomerId) {
+            // Per-customer toggle (Settings → Organization). Off by default: every
+            // breaching reading gets its own real alert + email. On: collapse
+            // repeated breaches into a single open alert, only re-notified on
+            // WARNING→CRITICAL escalation.
+            const customerRow = await this.prisma.customer.findUnique({
+                where: { id: alertCustomerId },
+                select: { alertDedupEnabled: true },
+            });
+            const dedupEnabled = customerRow?.alertDedupEnabled ?? false;
+
             // Per-device configurable thresholds (fall back to legacy defaults)
             const thresholds = await this.loadThresholds(device.id, alertCustomerId);
 
@@ -240,9 +250,11 @@ export class RecordSensorReadingHandler implements CommandHandler<RecordSensorRe
             if (tempBreached && evalTemp !== undefined) {
                 const severity = evalTemp > thresholds.tempCrit ? 'CRITICAL' : 'WARNING';
 
-                const existing = await this.prisma.alert.findFirst({
-                    where: { deviceId: device.id, type: 'HIGH_TEMPERATURE' as any, resolved: false }
-                });
+                const existing = dedupEnabled
+                    ? await this.prisma.alert.findFirst({
+                        where: { deviceId: device.id, type: 'HIGH_TEMPERATURE' as any, resolved: false }
+                    })
+                    : null;
 
                 if (!existing) {
                     const created = await this.prisma.alert.create({
@@ -291,9 +303,11 @@ export class RecordSensorReadingHandler implements CommandHandler<RecordSensorRe
                 if (data.batteryLevel <= thresholds.batteryWarn) {
                     const severity = data.batteryLevel <= thresholds.batteryCrit ? 'CRITICAL' : 'WARNING';
 
-                    const existingBattery = await this.prisma.alert.findFirst({
-                        where: { deviceId: device.id, type: 'LOW_BATTERY' as any, resolved: false }
-                    });
+                    const existingBattery = dedupEnabled
+                        ? await this.prisma.alert.findFirst({
+                            where: { deviceId: device.id, type: 'LOW_BATTERY' as any, resolved: false }
+                        })
+                        : null;
 
                     if (!existingBattery) {
                         const created = await this.prisma.alert.create({

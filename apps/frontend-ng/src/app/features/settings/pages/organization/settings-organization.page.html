@@ -24,6 +24,14 @@
           [label]="'settings.organization.description' | translate"
           [placeholder]="'settings.organization.description_ph' | translate" />
 
+        <ion-item lines="full" class="org-toggle">
+          <ion-label>
+            <h3>{{ 'settings.organization.alert_dedup.title' | translate }}</h3>
+            <p>{{ 'settings.organization.alert_dedup.desc' | translate }}</p>
+          </ion-label>
+          <ion-toggle [formControl]="form.controls.alertDedupEnabled" slot="end" />
+        </ion-item>
+
         <div class="org-readonly">
           <ion-item lines="none" class="org-readonly__item">
             <ion-label>

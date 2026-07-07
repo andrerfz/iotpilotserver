@@ -775,6 +775,10 @@
       "contact_email_ph": "contact@votreentreprise.com",
       "description": "Description",
       "description_ph": "Une brève description de votre organisation",
+      "alert_dedup": {
+        "title": "Alerter à chaque lecture",
+        "desc": "Désactivé (par défaut) : chaque lecture qui dépasse le seuil crée sa propre alerte et son propre email. Activé : regroupe les dépassements répétés en une seule alerte ouverte jusqu'à résolution."
+      },
       "domain": "Domaine email",
       "domain_hint": "Les nouvelles inscriptions avec un email correspondant sont automatiquement assignées à votre organisation. Contactez le support pour le modifier.",
       "status": "Statut",

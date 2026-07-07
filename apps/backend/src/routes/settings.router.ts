@@ -69,6 +69,7 @@ export const organizationProfileSchema = v.object({
   name: v.string({ min: 1, max: 255 }),
   contactEmail: v.optional(v.nullable(v.string({ email: true }))),
   description: v.optional(v.nullable(v.string({ max: 1000 }))),
+  alertDedupEnabled: v.optional(v.boolean()),
 });
 
 // Resolves the effective tenant ID for a request — prefers the SUPERADMIN
@@ -687,6 +688,7 @@ settingsRouter.get('/org', requireAuth('ADMIN'), async (req: AuthenticatedReques
       select: {
         id: true, name: true, slug: true, domain: true,
         contactEmail: true, description: true, status: true, createdAt: true,
+        alertDedupEnabled: true,
       },
     });
 
@@ -713,7 +715,7 @@ settingsRouter.put('/org', requireAuth('ADMIN'), async (req: AuthenticatedReques
       return;
     }
 
-    let validatedData: { name: string; contactEmail?: string | null; description?: string | null };
+    let validatedData: { name: string; contactEmail?: string | null; description?: string | null; alertDedupEnabled?: boolean };
     try {
       validatedData = organizationProfileSchema.parse(req.body) as typeof validatedData;
     } catch (e) {
@@ -740,6 +742,7 @@ settingsRouter.put('/org', requireAuth('ADMIN'), async (req: AuthenticatedReques
         validatedData.name,
         validatedData.description ?? undefined,
         validatedData.contactEmail ?? undefined,
+        validatedData.alertDedupEnabled,
       ),
     );
 
@@ -748,6 +751,7 @@ settingsRouter.put('/org', requireAuth('ADMIN'), async (req: AuthenticatedReques
       select: {
         id: true, name: true, slug: true, domain: true,
         contactEmail: true, description: true, status: true, createdAt: true,
+        alertDedupEnabled: true,
       },
     });
 

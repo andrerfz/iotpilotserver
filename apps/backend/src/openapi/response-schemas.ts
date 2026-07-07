@@ -133,7 +133,8 @@ export const RESPONSE_SCHEMAS: Record<string, JsonSchema> = {
     OrganizationProfile: objR({
         id: str, name: str, slug: str, domain: strN, contactEmail: strN, description: strN,
         status: {type: 'string', enum: ['ACTIVE', 'INACTIVE', 'SUSPENDED', 'PENDING']}, createdAt: dt,
-    }, ['id', 'name', 'slug', 'status', 'createdAt']),
+        alertDedupEnabled: bool,
+    }, ['id', 'name', 'slug', 'status', 'createdAt', 'alertDedupEnabled']),
     ChangePasswordResult: obj({message: str, wasCurrentSession: bool}),
     AdminStats: obj({
         totalDevices: int, onlineDevices: int, totalUsers: int, totalCustomers: int, openAlerts: int,

@@ -10,7 +10,7 @@ export class UpdateCustomerHandler {
   ) {}
 
   async handle(command: UpdateCustomerCommand): Promise<CustomerEntity> {
-    const { customerId, name, description, contactEmail } = command;
+    const { customerId, name, description, contactEmail, alertDedupEnabled } = command;
     const tenantContext = command.getTenantContext();
     
     const customerIdVO = CustomerId.create(customerId);
@@ -31,6 +31,10 @@ export class UpdateCustomerHandler {
 
     if (description !== undefined) {
       customer.updateDescription(description);
+    }
+
+    if (alertDedupEnabled !== undefined) {
+      customer.updateAlertDedupEnabled(alertDedupEnabled);
     }
 
     await this.customerRepository.save(customer, tenantContext);

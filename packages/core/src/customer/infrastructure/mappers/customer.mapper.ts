@@ -30,6 +30,9 @@ export class CustomerMapper {
     if (persistenceModel.domain) {
       customer.updateDomain(persistenceModel.domain);
     }
+    if (persistenceModel.alertDedupEnabled !== undefined) {
+      customer.updateAlertDedupEnabled(persistenceModel.alertDedupEnabled);
+    }
 
     // Set timestamps
     customer.setTimestamps(
@@ -54,6 +57,7 @@ export class CustomerMapper {
       description: customer.description,
       contactEmail: customer.contactEmail,
       domain: customer.domain,
+      alertDedupEnabled: customer.alertDedupEnabled,
       status: customer.status.value,
       isActive: customer.isActive,
       createdAt: customer.createdAt,

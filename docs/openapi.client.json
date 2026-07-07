@@ -1339,6 +1339,9 @@
                         "type": "string",
                         "maxLength": 1000,
                         "nullable": true
+                    },
+                    "alertDedupEnabled": {
+                        "type": "boolean"
                     }
                 },
                 "required": [
@@ -2723,6 +2726,9 @@
                     "createdAt": {
                         "type": "string",
                         "format": "date-time"
+                    },
+                    "alertDedupEnabled": {
+                        "type": "boolean"
                     }
                 },
                 "required": [
@@ -2730,7 +2736,8 @@
                     "name",
                     "slug",
                     "status",
-                    "createdAt"
+                    "createdAt",
+                    "alertDedupEnabled"
                 ]
             },
             "ChangePasswordResult": {

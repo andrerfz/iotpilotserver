@@ -25,6 +25,9 @@ function makePrisma(overrides: Partial<Record<string, unknown>> = {}) {
       findFirst: vi.fn().mockResolvedValue(DEVICE),
       update: vi.fn().mockResolvedValue(DEVICE),
     },
+    customer: {
+      findUnique: vi.fn().mockResolvedValue({ alertDedupEnabled: false }),
+    },
     deviceMetric: { createMany: vi.fn().mockResolvedValue({}) },
     threshold: { findMany: vi.fn().mockResolvedValue([]) },
     alert,
@@ -87,8 +90,11 @@ describe('RecordSensorReadingHandler — alert notifications', () => {
     expect(published.severity.getValue()).toBe('CRITICAL');
   });
 
-  it('notifies again when an existing WARNING alert escalates to CRITICAL', async () => {
+  it('notifies again when an existing WARNING alert escalates to CRITICAL (customer has dedup enabled)', async () => {
     const prisma = makePrisma({
+      customer: {
+        findUnique: vi.fn().mockResolvedValue({ alertDedupEnabled: true }),
+      },
       alert: {
         findFirst: vi.fn().mockResolvedValue({ id: 'alert-1', severity: 'WARNING' }),
         findMany: vi.fn().mockResolvedValue([]),
@@ -108,6 +114,34 @@ describe('RecordSensorReadingHandler — alert notifications', () => {
 
     expect(eventBus.publish).toHaveBeenCalledOnce();
     expect(prisma.getClient().alert.update).toHaveBeenCalledOnce();
+  });
+
+  it('creates a brand-new alert with the real reading on every breach when the customer has dedup disabled (default)', async () => {
+    // Even though an unresolved alert already exists, the customer's
+    // alertDedupEnabled is off (mocked default) so findFirst is never
+    // consulted and a fresh alert is created every time.
+    const prisma = makePrisma({
+      alert: {
+        findFirst: vi.fn().mockResolvedValue({ id: 'alert-1', severity: 'WARNING' }),
+        findMany: vi.fn().mockResolvedValue([]),
+        create: vi.fn().mockResolvedValue({ id: 'alert-2', title: 'Freezer Critical Temperature', message: 'msg' }),
+        update: vi.fn().mockResolvedValue({}),
+        updateMany: vi.fn().mockResolvedValue({}),
+      },
+    });
+    const handler = new RecordSensorReadingHandler(prisma, eventBus as any);
+
+    await handler.handle(makeCommand({
+      deviceId: 'device-biz-id',
+      readings: [{ temperature: 3.4 }],
+      alertPending: true,
+      alertTemp: 3.4,
+    }));
+
+    expect(prisma.getClient().alert.findFirst).not.toHaveBeenCalled();
+    expect(prisma.getClient().alert.create).toHaveBeenCalledOnce();
+    expect(prisma.getClient().alert.create.mock.calls[0][0].data.message).toContain('3.4');
+    expect(eventBus.publish).toHaveBeenCalledOnce();
   });
 
   it('never throws ingestion-fatally when the event bus itself throws', async () => {

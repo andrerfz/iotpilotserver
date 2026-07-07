@@ -223,6 +223,10 @@ model Customer {
   contactEmail     String?
   status           CustomerStatus @default(ACTIVE)
   subscriptionTier String         @default("FREE")
+  // Off by default: every sensor reading that breaches its threshold creates
+  // its own alert + email. When true, repeated breaches collapse into a
+  // single open alert per device/type (only re-notified on escalation).
+  alertDedupEnabled Boolean       @default(false)
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
   deletedAt        DateTime? // Soft delete support
