@@ -60,7 +60,7 @@ jobs:
       APP_URL: http://localhost:3000
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: pnpm/action-setup@v6 # pnpm version comes from package.json "packageManager"
 
@@ -70,7 +70,7 @@ jobs:
           cache: pnpm
 
       - name: Restore Turborepo cache
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: .turbo
           key: turbo-${{ runner.os }}-${{ github.sha }}
@@ -100,11 +100,11 @@ jobs:
     runs-on: ubuntu-24.04
     needs: [build]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: pnpm/action-setup@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
@@ -126,7 +126,7 @@ jobs:
     runs-on: ubuntu-24.04
     needs: [build]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: docker/setup-buildx-action@v4
 

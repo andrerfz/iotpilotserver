@@ -18,13 +18,13 @@ jobs:
         working-directory: apps/frontend-ng
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           version: ${{ env.PNPM_VERSION }}
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
@@ -108,7 +108,7 @@ jobs:
             -exportPath $RUNNER_TEMP/ipa
 
       - name: Upload .ipa artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: iotpilot-ios-${{ github.sha }}
           path: ${{ runner.temp }}/ipa/*.ipa
