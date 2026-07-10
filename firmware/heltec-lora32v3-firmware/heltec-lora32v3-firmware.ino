@@ -119,6 +119,13 @@ struct BufferedReading { float temperature; };
 RTC_DATA_ATTR BufferedReading readingBuffer[MAX_BUFFERED_READINGS];
 RTC_DATA_ATTR int             bufferCount = 0;
 
+// Cumulative time spent unclaimed in BLE/AP provisioning mode. Persists across
+// ESP.restart() loops within the same power-on session (RTC RAM survives a soft
+// restart) but is NOT preserved across a real RST/EN reset or power-cycle, so it
+// naturally resets to 0 whenever someone physically resets the device to provision it.
+RTC_DATA_ATTR uint32_t unclaimedProvisioningMs = 0;
+#define UNCLAIMED_SLEEP_TIMEOUT_MS (10UL * 60UL * 1000UL)  // 10 min unclaimed → sleep until physical reset
+
 // ====================
 // DISPLAY
 // ====================
@@ -177,6 +184,34 @@ void showDisplay(float temp, float battPct, int rssi, bool sent, bool sensorErr)
 
   oled.ssd1306_command(SSD1306_DISPLAYOFF);
   Serial.println("[DISPLAY] Off");
+}
+
+// Shown once the PRG button has been held FACTORY_RESET_HOLD_MS — confirms to the
+// user that WiFi credentials are being wiped before the device restarts.
+void showFactoryResetWarning() {
+  Serial.println("[DISPLAY] Factory reset warning");
+
+  Wire.begin(OLED_SDA_PIN, OLED_SCL_PIN);
+
+  if (!oled.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println("[DISPLAY] Init failed");
+    return;
+  }
+
+  oled.clearDisplay();
+  oled.setTextColor(SSD1306_WHITE);
+
+  oled.setTextSize(2);
+  oled.setCursor(0, 8);
+  oled.print("WiFi Reset");
+
+  oled.setTextSize(1);
+  oled.setCursor(0, 36);
+  oled.print("Clearing saved");
+  oled.setCursor(0, 46);
+  oled.print("network config...");
+
+  oled.display();
 }
 
 // ====================
@@ -565,6 +600,37 @@ bool sendDataWithRetry(float temperature, float batteryPct, float batteryV, bool
 }
 
 // ====================
+// UNCLAIMED PROVISIONING TIMEOUT
+// ====================
+
+// Sleeps indefinitely — no wake source armed, so only a physical RST/EN reset or
+// power cycle brings the device back (which also clears unclaimedProvisioningMs,
+// since RTC RAM doesn't survive that kind of reset). Saves battery while a device
+// sits unclaimed waiting for someone to pick it up and provision it.
+void sleepIndefinitelyUnclaimed() {
+  Serial.println("[PROVISION] 10 min unclaimed — sleeping until physical reset/power-cycle");
+  Serial.flush();
+  digitalWrite(LED_PIN, LED_OFF);
+  digitalWrite(VEXT_CTRL_PIN, HIGH);  // cut Vext (OLED + external rail)
+  esp_deep_sleep_start();
+}
+
+// Adds this phase's elapsed time to the running unclaimed total and either restarts
+// into the next provisioning attempt or, once the 10-minute budget is exhausted,
+// sleeps indefinitely instead. Only call this for genuinely-unclaimed flows — never
+// when an already-claimed device is just re-entering the WiFi setup portal.
+void restartOrSleepUnclaimed(uint32_t phaseStartMillis) {
+  unclaimedProvisioningMs += millis() - phaseStartMillis;
+  Serial.printf("[PROVISION] Unclaimed time: %lus / %lus\n",
+    unclaimedProvisioningMs / 1000, UNCLAIMED_SLEEP_TIMEOUT_MS / 1000);
+
+  if (unclaimedProvisioningMs >= UNCLAIMED_SLEEP_TIMEOUT_MS) {
+    sleepIndefinitelyUnclaimed();
+  }
+  ESP.restart();
+}
+
+// ====================
 // BLE SETUP MODE (first-claim provisioning)
 // Contract: docs/frontend/fe-ble-claiming/gatt-contract.md
 // ====================
@@ -714,6 +780,7 @@ bool setupBLE() {
   bleProvReceived = false;
   bleActivateReq  = false;
   bleProvBuf      = "";
+  unsigned long bleStartMillis = millis();
   scanWifiNetworks();   // cache nearby SSIDs (WiFi radio) before bringing up BLE
   bleStart(apName);
 
@@ -745,11 +812,15 @@ bool setupBLE() {
       bleSetStatus(wifiOk ? "ERR_TOKEN" : "ERR_WIFI");
       Serial.println("[BLE] Provisioning failed — rebooting to retry");
       delay(2000);
-      ESP.restart();
+      restartOrSleepUnclaimed(bleStartMillis);
     }
   }
 
   Serial.println("[BLE] Setup timeout — falling back to AP portal");
+  unclaimedProvisioningMs += millis() - bleStartMillis;
+  Serial.printf("[PROVISION] Unclaimed time: %lus / %lus\n",
+    unclaimedProvisioningMs / 1000, UNCLAIMED_SLEEP_TIMEOUT_MS / 1000);
+  if (unclaimedProvisioningMs >= UNCLAIMED_SLEEP_TIMEOUT_MS) sleepIndefinitelyUnclaimed();
   bleStop();
   return false;
 }
@@ -762,6 +833,7 @@ WiFiManager wifiManager;
 WiFiManagerParameter* param_claiming_token = nullptr;
 
 void setupWiFiManager() {
+  unsigned long apStartMillis = millis();
   char apName[32];
   uint64_t chipId = ESP.getEfuseMac();
   snprintf(apName, sizeof(apName), "IotPilot-Setup-%04X", (uint16_t)(chipId & 0xFFFF));
@@ -790,6 +862,7 @@ void setupWiFiManager() {
     delete param_claiming_token;
     param_claiming_token = nullptr;
     delay(3000);
+    if (needsActivation) restartOrSleepUnclaimed(apStartMillis);
     ESP.restart();
     return;
   }
@@ -807,7 +880,9 @@ void setupWiFiManager() {
       wifiManager.resetSettings();
       clearConfig();
       delay(3000);
-      ESP.restart();
+      // resetSettings()+clearConfig() already unclaimed the device locally —
+      // count this attempt regardless of the needsActivation value at entry.
+      restartOrSleepUnclaimed(apStartMillis);
     }
   } else if (!needsActivation) {
     wifiFailCount = 0;
@@ -817,7 +892,7 @@ void setupWiFiManager() {
     wifiManager.resetSettings();
     clearConfig();
     delay(3000);
-    ESP.restart();
+    restartOrSleepUnclaimed(apStartMillis);
   }
 }
 
@@ -852,11 +927,16 @@ void checkPrgButton() {
     if (elapsed >= FACTORY_RESET_HOLD_MS) {
       digitalWrite(LED_PIN, LED_ON);
       Serial.println("[BUTTON] Factory reset confirmed");
+      showFactoryResetWarning();
       WiFiManager wm;
       wm.resetSettings();
       clearConfig();
       wifiFailCount = 0;
-      delay(1000);
+      delay(2000);
+      // The SSD1306 keeps its last frame in its own display RAM across ESP.restart()
+      // (a soft CPU reset, not a power cycle) — turn it off explicitly or the warning
+      // stays on screen through the whole next boot/BLE-provisioning cycle.
+      oled.ssd1306_command(SSD1306_DISPLAYOFF);
       digitalWrite(LED_PIN, LED_OFF);
       ESP.restart();
     }

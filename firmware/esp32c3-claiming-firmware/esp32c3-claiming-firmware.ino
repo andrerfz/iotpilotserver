@@ -118,6 +118,14 @@ struct BufferedReading {
 RTC_DATA_ATTR BufferedReading readingBuffer[MAX_BUFFERED_READINGS];
 RTC_DATA_ATTR int             bufferCount = 0;
 
+// Cumulative time spent unclaimed in BLE/AP provisioning mode. Persists across
+// ESP.restart() loops within the same power-on session (RTC RAM survives a soft
+// restart) but is NOT preserved across the RST/EN button or a power-cycle — see
+// checkResetCounter() below, which relies on the same fact — so it naturally
+// resets to 0 whenever someone physically resets the device to provision it.
+RTC_DATA_ATTR uint32_t unclaimedProvisioningMs = 0;
+#define UNCLAIMED_SLEEP_TIMEOUT_MS (10UL * 60UL * 1000UL)  // 10 min unclaimed → sleep until physical reset
+
 // ====================
 // NVS CONFIG (Preferences)
 // ====================
@@ -495,6 +503,36 @@ bool sendDataWithRetry(float temperature, float batteryPct, float batteryV, bool
 }
 
 // ====================
+// UNCLAIMED PROVISIONING TIMEOUT
+// ====================
+
+// Sleeps indefinitely — no wake source armed, so only a physical RST/EN reset or
+// power cycle brings the device back (which also clears unclaimedProvisioningMs,
+// since RTC RAM doesn't survive that kind of reset). Saves battery while a device
+// sits unclaimed waiting for someone to pick it up and provision it.
+void sleepIndefinitelyUnclaimed() {
+  Serial.println("[PROVISION] 10 min unclaimed — sleeping until physical reset/power-cycle");
+  Serial.flush();
+  digitalWrite(LED_PIN, LED_OFF);
+  esp_deep_sleep_start();
+}
+
+// Adds this phase's elapsed time to the running unclaimed total and either restarts
+// into the next provisioning attempt or, once the 10-minute budget is exhausted,
+// sleeps indefinitely instead. Only call this for genuinely-unclaimed flows — never
+// when an already-claimed device is just re-entering the WiFi setup portal.
+void restartOrSleepUnclaimed(uint32_t phaseStartMillis) {
+  unclaimedProvisioningMs += millis() - phaseStartMillis;
+  Serial.printf("[PROVISION] Unclaimed time: %lus / %lus\n",
+    unclaimedProvisioningMs / 1000, UNCLAIMED_SLEEP_TIMEOUT_MS / 1000);
+
+  if (unclaimedProvisioningMs >= UNCLAIMED_SLEEP_TIMEOUT_MS) {
+    sleepIndefinitelyUnclaimed();
+  }
+  ESP.restart();
+}
+
+// ====================
 // WIFI SETUP PORTAL
 // ====================
 
@@ -660,6 +698,7 @@ bool setupBLE() {
   const char* idTail = idLen >= 4 ? config.deviceId + idLen - 4 : config.deviceId;
   snprintf(apName, sizeof(apName), "IotPilot-Setup-%s", idTail);
 
+  unsigned long bleStartMillis = millis();
   bleProvReceived = false;
   bleActivateReq  = false;
   bleProvBuf      = "";
@@ -699,6 +738,10 @@ bool setupBLE() {
   }
 
   Serial.println("[BLE] Setup timeout — falling back to AP portal");
+  unclaimedProvisioningMs += millis() - bleStartMillis;
+  Serial.printf("[PROVISION] Unclaimed time: %lus / %lus\n",
+    unclaimedProvisioningMs / 1000, UNCLAIMED_SLEEP_TIMEOUT_MS / 1000);
+  if (unclaimedProvisioningMs >= UNCLAIMED_SLEEP_TIMEOUT_MS) sleepIndefinitelyUnclaimed();
   bleStop();
   return false;
 }
@@ -706,6 +749,7 @@ bool setupBLE() {
 WiFiManagerParameter* param_claiming_token = nullptr;
 
 void setupWiFiManager() {
+  unsigned long apStartMillis = millis();
   char apName[32];
   uint64_t chipId = ESP.getEfuseMac();
   snprintf(apName, sizeof(apName), "IotPilot-Setup-%04X", (uint16_t)(chipId & 0xFFFF));
@@ -737,6 +781,7 @@ void setupWiFiManager() {
     delete param_claiming_token;
     param_claiming_token = nullptr;
     delay(3000);
+    if (needsActivation) restartOrSleepUnclaimed(apStartMillis);
     ESP.restart();
     return;
   }
@@ -759,7 +804,9 @@ void setupWiFiManager() {
       wifiManager.resetSettings();
       clearConfig();
       delay(3000);
-      ESP.restart();
+      // resetSettings()+clearConfig() already unclaimed the device locally —
+      // count this attempt regardless of the needsActivation value at entry.
+      restartOrSleepUnclaimed(apStartMillis);
     }
   } else if (!needsActivation) {
     // No token, but device already has credentials — just changed WiFi network
@@ -773,7 +820,7 @@ void setupWiFiManager() {
     wifiManager.resetSettings();
     clearConfig();
     delay(3000);
-    ESP.restart();
+    restartOrSleepUnclaimed(apStartMillis);
   }
 }
 
