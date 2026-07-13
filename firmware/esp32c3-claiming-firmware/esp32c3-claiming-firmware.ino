@@ -970,14 +970,21 @@ void attemptFirmwareUpdate(float batteryPct) {
 
   httpUpdate.rebootOnUpdate(true);  // reboots immediately into the new slot on success
 
+  // The download endpoint requires the same x-api-key auth as every other
+  // device-facing route — without this it 401s and HTTPUpdate reports that
+  // as "Wrong HTTP Code" (its switch has no case for 401).
+  HTTPUpdateRequestCB addApiKeyHeader = [](HTTPClient* http) {
+    http->addHeader("x-api-key", config.apiKey);
+  };
+
   WiFiClientSecure secureClient;
   WiFiClient plainClient;
   t_httpUpdate_return ret;
   if (strncmp(otaUrl, "https", 5) == 0) {
     secureClient.setInsecure();
-    ret = httpUpdate.update(secureClient, otaUrl);
+    ret = httpUpdate.update(secureClient, otaUrl, "", addApiKeyHeader);
   } else {
-    ret = httpUpdate.update(plainClient, otaUrl);
+    ret = httpUpdate.update(plainClient, otaUrl, "", addApiKeyHeader);
   }
 
   // HTTP_UPDATE_OK reboots before returning — anything reached here is a miss.
