@@ -1,4 +1,7 @@
 import { Router, Request, Response } from 'express';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as crypto from 'crypto';
 import { validator } from '@iotpilot/core/shared/infrastructure/validation/validation-helper';
 import { validateApiKey } from '@iotpilot/core/shared/infrastructure/authentication/auth.service';
 import { ServiceContainer } from '@iotpilot/core/shared/infrastructure/container/service-container';
@@ -21,6 +24,12 @@ import { send } from '../http/response.util';
 
 function isoTimestamp(): string {
     return new Date().toISOString();
+}
+
+// Same derivation used for webhookUrl in provision-device.handler.ts — keep in sync.
+function getPublicAppUrl(): string {
+    return process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL ||
+        (process.env.DOMAIN ? `https://${process.env.DOMAIN}` : 'https://iotpilotserver.test');
 }
 
 // ---------------------------------------------------------------------------
@@ -495,7 +504,7 @@ iotRouter.post('/temperature', async (req: Request, res: Response) => {
         const prisma = ServiceContainer.getInstance().getPrismaClient().getClient();
         const device = await prisma.device.findFirst({
             where: { deviceId: data.deviceId },
-            select: { id: true, capabilities: true, targetFirmwareVersion: true }
+            select: { id: true, capabilities: true, targetFirmwareVersion: true, deviceType: true }
         });
 
         // Notify connected dashboards — send the UUID so the page can match by URL param.
@@ -519,12 +528,90 @@ iotRouter.post('/temperature', async (req: Request, res: Response) => {
             config: { reportingInterval, deepSleepEnabled },
         };
         if (device?.targetFirmwareVersion) {
-            responseBody.firmware = { targetVersion: device.targetFirmwareVersion };
+            const domain = getPublicAppUrl();
+            responseBody.firmware = {
+                targetVersion: device.targetFirmwareVersion,
+                url: `${domain}/api/webhook/firmware/${device.deviceType}/${device.targetFirmwareVersion}?deviceId=${encodeURIComponent(data.deviceId)}`,
+            };
         }
 
         send.ok(res, responseBody);
     } catch (err) {
         logger.error('Failed to record sensor reading', err instanceof Error ? err : undefined);
+        send.fromError(res, err);
+    }
+});
+
+// ---------------------------------------------------------------------------
+// GET /webhook/firmware/:deviceType/:version?deviceId=... — OTA binary download
+// Serves the .bin a device was directed to fetch via the `firmware.url` field
+// in the /temperature response above (the URL is fully built server-side,
+// including deviceId, so the device firmware never constructs it). Authenticated
+// the same way as every other device-facing endpoint (x-api-key). Only serves
+// the exact version this specific device's targetFirmwareVersion is currently
+// set to — refuses anything else, so a valid key can never be used to pull an
+// artifact the device wasn't actually told to fetch.
+// Binaries live in apps/backend/firmware-releases/{deviceType}/{version}/firmware.bin
+// (local bind-mounted directory — see docker-compose volumes).
+// ---------------------------------------------------------------------------
+
+const FIRMWARE_RELEASES_DIR = path.join(__dirname, '../../firmware-releases');
+const DEVICE_TYPE_PATTERN = /^[A-Z0-9_]+$/;
+const VERSION_PATTERN = /^[A-Za-z0-9._-]+$/;
+
+iotRouter.get('/firmware/:deviceType/:version', async (req: Request, res: Response) => {
+    try {
+        const apiKey = req.headers['x-api-key'] as string | undefined;
+        if (!apiKey) {
+            send.unauthorized(res, 'API key required');
+            return;
+        }
+
+        const keyResult = await validateApiKey(apiKey);
+        if (!keyResult.valid || !keyResult.user) {
+            send.unauthorized(res, 'Invalid API key');
+            return;
+        }
+
+        const { deviceType, version } = req.params;
+        const deviceId = req.query.deviceId as string | undefined;
+        if (!DEVICE_TYPE_PATTERN.test(deviceType) || !VERSION_PATTERN.test(version) || !deviceId) {
+            send.badRequest(res, 'Invalid deviceType, version, or deviceId');
+            return;
+        }
+
+        const customerId = keyResult.apiKeyRecord?.customerId || keyResult.user.customerId;
+        if (!customerId) {
+            send.forbidden(res, 'No tenant context');
+            return;
+        }
+
+        const prisma = ServiceContainer.getInstance().getPrismaClient().getClient();
+        const device = await prisma.device.findFirst({
+            where: { deviceId, customerId },
+            select: { deviceType: true, targetFirmwareVersion: true },
+        });
+
+        if (!device || device.deviceType !== deviceType || device.targetFirmwareVersion !== version) {
+            send.notFound(res, 'No matching firmware target for this device');
+            return;
+        }
+
+        const filePath = path.join(FIRMWARE_RELEASES_DIR, deviceType, version, 'firmware.bin');
+        if (!fs.existsSync(filePath)) {
+            send.notFound(res, 'Firmware artifact not found');
+            return;
+        }
+
+        const fileBuffer = fs.readFileSync(filePath);
+        const md5 = crypto.createHash('md5').update(fileBuffer).digest('hex');
+
+        res.setHeader('Content-Type', 'application/octet-stream');
+        res.setHeader('Content-Length', fileBuffer.length);
+        res.setHeader('x-MD5', md5);
+        res.status(200).send(fileBuffer);
+    } catch (err) {
+        logger.error('Failed to serve firmware artifact', err instanceof Error ? err : undefined);
         send.fromError(res, err);
     }
 });

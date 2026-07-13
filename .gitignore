@@ -17,6 +17,9 @@ scripts/.flash-log.csv
 /logs/
 /backups/
 
+# OTA firmware artifacts (published via make firmware-publish-esp32c3)
+/apps/backend/firmware-releases/
+
 # SSL certificates and keys
 /traefik/config/certs/
 /traefik/acme/

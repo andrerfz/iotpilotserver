@@ -105,6 +105,7 @@ services:
       - ../../packages/core/src:/app/packages/core/src
       - ../../packages/core/package.json:/app/packages/core/package.json
       - ../../data:/app/data
+      - ../../apps/backend/firmware-releases:/app/apps/backend/firmware-releases
       - ../../logs:/app/logs
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3100/api/health"]

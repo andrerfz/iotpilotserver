@@ -99,6 +99,7 @@ services:
       - ../../apps/backend/src:/app/apps/backend/src
       - ../../packages/core/src:/app/packages/core/src
       - ../../packages/core/package.json:/app/packages/core/package.json
+      - ../../apps/backend/firmware-releases:/app/apps/backend/firmware-releases
     depends_on:
       postgres:
         condition: service_healthy

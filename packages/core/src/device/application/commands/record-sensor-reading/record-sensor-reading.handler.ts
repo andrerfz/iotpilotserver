@@ -205,6 +205,7 @@ export class RecordSensorReadingHandler implements CommandHandler<RecordSensorRe
                 ...(latestReading?.temperature !== undefined ? { temperature: latestReading.temperature } : {}),
                 ...(data.batteryLevel !== undefined ? { batteryLevel: data.batteryLevel } : {}),
                 ...(data.rssi !== undefined ? { signalStrength: data.rssi } : {}),
+                ...(data.firmwareVersion !== undefined ? { firmwareVersion: data.firmwareVersion } : {}),
             }
         });
 

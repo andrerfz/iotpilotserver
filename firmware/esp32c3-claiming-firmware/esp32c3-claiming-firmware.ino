@@ -19,6 +19,9 @@
  * - Wake from deep sleep (timer wakeup)
  * - Read DS18B20 temperature
  * - POST to webhook with API key
+ * - If the response carries a firmware directive for a version we're not
+ *   already on, and battery is sufficient, self-flash via HTTPUpdate into the
+ *   inactive OTA slot (see docs/firmware-ota/integration-contract.md Seam 2)
  * - Deep sleep for reportingInterval seconds
  *
  * WiFi failure handling:
@@ -50,6 +53,8 @@
 #include <ArduinoJson.h>
 #include <NimBLEDevice.h>   // BLE setup-mode provisioning (fe-ble-claiming A2/A3)
 #include "esp_system.h"     // esp_reset_reason() — distinguish RST/power from deep-sleep wake
+#include <Update.h>         // OTA flash-write API (writes into the inactive ota_0/ota_1 slot)
+#include <HTTPUpdate.h>     // wraps Update with the HTTP GET + x-MD5 integrity check
 
 // ====================
 // CONFIGURATION
@@ -77,7 +82,8 @@
 
 #define NVS_NAMESPACE          "iotpilot"
 #define WIFI_AP_PASSWORD       "iotpilot123"
-#define FIRMWARE_VERSION       "1.2.0"
+#define FIRMWARE_VERSION       "1.3.0"
+#define OTA_MIN_BATTERY_PCT    30.0     // skip a pending OTA update below this battery level
 #define FACTORY_RESET_PIN      9        // GPIO9 — BOOT button (active LOW, internal pull-up)
 #define FACTORY_RESET_HOLD_MS  5000     // Hold 5 seconds to trigger factory reset (BOOT-button boards)
 // RST-button factory reset: tap the RST button N times quickly. Deep-sleep timer wakes
@@ -395,6 +401,11 @@ bool activateDevice(const char* claimingToken) {
 // DATA TRANSMISSION
 // ====================
 
+// OTA directive received in the last report response (empty when none). Read by
+// sendData() below, consumed by attemptFirmwareUpdate() in setup().
+static char otaTargetVersion[16]  = "";
+static char otaUrl[200]           = "";
+
 bool sendData(float temperature, float batteryPct, float batteryV, bool sensorError = false) {
   HTTPClient http;
   WiFiClientSecure secureClient;
@@ -465,7 +476,8 @@ bool sendData(float temperature, float batteryPct, float batteryV, bool sensorEr
     clearBuffer();  // Clear offline buffer after successful bulk send
 
     // Apply config update from server response
-    DynamicJsonDocument res(512);
+    // 512 was enough before the firmware directive's url field; bump for headroom.
+    DynamicJsonDocument res(768);
     if (deserializeJson(res, http.getString()) == DeserializationError::Ok) {
       JsonObject cfg = res["data"]["config"];
       if (!cfg.isNull()) {
@@ -482,6 +494,19 @@ bool sendData(float temperature, float batteryPct, float batteryV, bool sensorEr
           Serial.printf("[CONFIG] Updated — interval: %ds  deepSleep: %s\n",
             newInterval, newDeepSleep ? "on" : "off");
         }
+      }
+
+      // Stash the OTA directive (if any) for attemptFirmwareUpdate(), called
+      // later from setup() while WiFi is still up. Clear it when the server
+      // sends none, so a stale directive from an earlier cycle can't linger.
+      JsonObject fw = res["data"]["firmware"];
+      const char* targetVersion = fw.isNull() ? "" : (fw["targetVersion"] | "");
+      const char* url = fw.isNull() ? "" : (fw["url"] | "");
+      if (strlen(targetVersion) > 0 && strlen(url) > 0) {
+        strncpy(otaTargetVersion, targetVersion, sizeof(otaTargetVersion) - 1);
+        strncpy(otaUrl, url, sizeof(otaUrl) - 1);
+      } else {
+        otaTargetVersion[0] = '\0';
       }
     }
   } else {
@@ -912,6 +937,53 @@ void checkResetCounter() {
 }
 
 // ====================
+// OTA UPDATE
+// ====================
+
+// Called from setup() right after a successful report, while WiFi is still up.
+// No-op unless the server's response carried a directive for a version we're
+// not already running. Writes into the *inactive* OTA slot (min_spiffs already
+// provides ota_0/ota_1 — see scripts/publish-firmware-esp32c3.sh) and only
+// switches after HTTPUpdate's own x-MD5 verification passes. A failed or
+// partial download leaves the current slot untouched — this simply retries on
+// the next wake, since the server keeps sending the same directive until this
+// device's reported firmwareVersion catches up. No brick risk.
+void attemptFirmwareUpdate(float batteryPct) {
+  if (strlen(otaTargetVersion) == 0) return;
+  if (strcmp(otaTargetVersion, FIRMWARE_VERSION) == 0) return;
+
+  if (batteryPct >= 0.0 && batteryPct < OTA_MIN_BATTERY_PCT) {
+    Serial.printf("[OTA] Target %s available but battery %.0f%% < %.0f%% — skipping this cycle\n",
+      otaTargetVersion, batteryPct, OTA_MIN_BATTERY_PCT);
+    return;
+  }
+
+  Serial.printf("[OTA] Updating %s -> %s\n", FIRMWARE_VERSION, otaTargetVersion);
+  Serial.printf("[OTA] URL: %s\n", otaUrl);
+  Serial.flush();
+
+  httpUpdate.rebootOnUpdate(true);  // reboots immediately into the new slot on success
+
+  WiFiClientSecure secureClient;
+  WiFiClient plainClient;
+  t_httpUpdate_return ret;
+  if (strncmp(otaUrl, "https", 5) == 0) {
+    secureClient.setInsecure();
+    ret = httpUpdate.update(secureClient, otaUrl);
+  } else {
+    ret = httpUpdate.update(plainClient, otaUrl);
+  }
+
+  // HTTP_UPDATE_OK reboots before returning — anything reached here is a miss.
+  if (ret == HTTP_UPDATE_NO_UPDATES) {
+    Serial.println("[OTA] Server reports no update needed");
+  } else {
+    Serial.printf("[OTA] Failed (%d): %s — will retry next wake\n",
+      httpUpdate.getLastError(), httpUpdate.getLastErrorString().c_str());
+  }
+}
+
+// ====================
 // DEEP SLEEP
 // ====================
 
@@ -1032,6 +1104,10 @@ void setup() {
     bufferReading(temp);
     Serial.println("[BUFFER] Send failed — reading buffered for next cycle");
   }
+
+  // WiFi must still be up for this — no-ops unless the report response above
+  // carried a directive for a version we're not already on.
+  attemptFirmwareUpdate(batteryPct);
 
   WiFi.disconnect(true);
   enterDeepSleep();

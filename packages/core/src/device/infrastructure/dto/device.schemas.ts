@@ -89,6 +89,7 @@ export const TemperatureWebhookResponseSchema = z.object({
     }),
     firmware: z.object({
         targetVersion: z.string(),
+        url: z.string(),
     }).optional(),
 });
 
