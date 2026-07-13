@@ -68,7 +68,7 @@ info "Compiling ${FIRMWARE} for OTA release ${VERSION}..."
 rm -rf "$BUILD_DIR" && mkdir -p "$BUILD_DIR"
 arduino-cli compile \
     --fqbn "$BOARD" \
-    --build-property "compiler.cpp.extra_flags=-DACTIVATION_URL=\"${ACTIVATION_URL}\"" \
+    --build-property "compiler.cpp.extra_flags=-DACTIVATION_URL=\"${ACTIVATION_URL}\" -DFIRMWARE_VERSION=\"${VERSION}\"" \
     --output-dir "$BUILD_DIR" \
     "$FIRMWARE"
 
