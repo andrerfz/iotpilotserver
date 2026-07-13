@@ -87,7 +87,7 @@
 // the version this binary reports on boot must always match, or the server
 // keeps re-sending the same directive forever since it never sees a match).
 #ifndef FIRMWARE_VERSION
-#define FIRMWARE_VERSION       "1.3.0"
+#define FIRMWARE_VERSION       "1.3.1"
 #endif
 #define OTA_MIN_BATTERY_PCT    30.0     // skip a pending OTA update below this battery level
 #define FACTORY_RESET_PIN      9        // GPIO9 — BOOT button (active LOW, internal pull-up)
