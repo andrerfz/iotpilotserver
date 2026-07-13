@@ -12,7 +12,11 @@ export interface RequestFirmwareUpdateResult {
 export class RequestFirmwareUpdateHandler
   implements CommandHandler<RequestFirmwareUpdateCommand, RequestFirmwareUpdateResult>
 {
-  constructor(private readonly prisma: PrismaClient) {}
+  constructor(private readonly prismaService: PrismaService) {}
+
+  private get prisma(): PrismaClient {
+    return this.prismaService.getClient();
+  }
 
   async handle(command: RequestFirmwareUpdateCommand): Promise<RequestFirmwareUpdateResult> {
     const { deviceId, targetVersion } = command;
