@@ -20,8 +20,9 @@
  * - Read DS18B20 temperature
  * - POST to webhook with API key
  * - If the response carries a firmware directive for a version we're not
- *   already on, and battery is sufficient, self-flash via HTTPUpdate into the
- *   inactive OTA slot (see docs/firmware-ota/integration-contract.md Seam 2)
+ *   already on, and battery is sufficient, self-flash (manual HTTPClient +
+ *   Update, not HTTPUpdate — see attemptFirmwareUpdate()) into the inactive
+ *   OTA slot (see docs/firmware-ota/integration-contract.md Seam 2)
  * - Deep sleep for reportingInterval seconds
  *
  * WiFi failure handling:
@@ -54,7 +55,6 @@
 #include <NimBLEDevice.h>   // BLE setup-mode provisioning (fe-ble-claiming A2/A3)
 #include "esp_system.h"     // esp_reset_reason() — distinguish RST/power from deep-sleep wake
 #include <Update.h>         // OTA flash-write API (writes into the inactive ota_0/ota_1 slot)
-#include <HTTPUpdate.h>     // wraps Update with the HTTP GET + x-MD5 integrity check
 
 // ====================
 // CONFIGURATION
@@ -946,14 +946,53 @@ void checkResetCounter() {
 // OTA UPDATE
 // ====================
 
+// Manually de-chunks an HTTP/1.1 "Transfer-Encoding: chunked" body while
+// streaming it into Update. Needed because Cloudflare (the production edge)
+// always re-chunks this dynamic route — dropping Content-Length — and
+// UpdateClass doesn't implement Stream, so HTTPClient's own chunked-decoding
+// writeToStream() can't target it directly. Standard chunked framing:
+// "<hex-size>\r\n<size bytes of data>\r\n" repeated, terminated by a "0\r\n".
+size_t writeChunkedStreamToUpdate(Stream& stream, size_t expectedTotal) {
+  size_t written = 0;
+  uint8_t buf[512];
+  while (written < expectedTotal) {
+    String sizeLine = stream.readStringUntil('\n');
+    sizeLine.trim();
+    if (sizeLine.length() == 0) continue;  // tolerate a stray blank line
+    long chunkLen = strtol(sizeLine.c_str(), NULL, 16);
+    if (chunkLen <= 0) break;  // terminator chunk
+
+    long remaining = chunkLen;
+    while (remaining > 0) {
+      size_t toRead = remaining < (long)sizeof(buf) ? remaining : sizeof(buf);
+      int got = stream.readBytes(buf, toRead);
+      if (got <= 0) return written;  // timeout / connection lost
+      Update.write(buf, got);
+      written += got;
+      remaining -= got;
+    }
+    stream.readStringUntil('\n');  // consume the CRLF that follows chunk data
+  }
+  return written;
+}
+
 // Called from setup() right after a successful report, while WiFi is still up.
 // No-op unless the server's response carried a directive for a version we're
 // not already running. Writes into the *inactive* OTA slot (min_spiffs already
 // provides ota_0/ota_1 — see scripts/publish-firmware-esp32c3.sh) and only
-// switches after HTTPUpdate's own x-MD5 verification passes. A failed or
-// partial download leaves the current slot untouched — this simply retries on
-// the next wake, since the server keeps sending the same directive until this
-// device's reported firmwareVersion catches up. No brick risk.
+// switches after the x-MD5 check passes. A failed or partial download leaves
+// the current slot untouched — this simply retries on the next wake, since the
+// server keeps sending the same directive until this device's reported
+// firmwareVersion catches up. No brick risk.
+//
+// Deliberately NOT using the HTTPUpdate helper: it hardcodes HTTP/1.0
+// (http.useHTTP10(true) inside handleUpdate(), no public override), and the
+// production edge (Cloudflare) drops Content-Length for both HTTP/1.0 AND 1.1
+// responses on this dynamic route (1.0 gets no length at all, 1.1 gets
+// re-chunked) — HTTPUpdate then aborts with "Server Did Not Report Size"
+// before it even starts. Driving HTTPClient + Update ourselves lets us read
+// the real size from the X-Content-Length header (a custom header, which
+// passes through the edge untouched) and de-chunk manually when needed.
 void attemptFirmwareUpdate(float batteryPct) {
   if (strlen(otaTargetVersion) == 0) return;
   if (strcmp(otaTargetVersion, FIRMWARE_VERSION) == 0) return;
@@ -968,32 +1007,74 @@ void attemptFirmwareUpdate(float batteryPct) {
   Serial.printf("[OTA] URL: %s\n", otaUrl);
   Serial.flush();
 
-  httpUpdate.rebootOnUpdate(true);  // reboots immediately into the new slot on success
-
-  // The download endpoint requires the same x-api-key auth as every other
-  // device-facing route — without this it 401s and HTTPUpdate reports that
-  // as "Wrong HTTP Code" (its switch has no case for 401).
-  HTTPUpdateRequestCB addApiKeyHeader = [](HTTPClient* http) {
-    http->addHeader("x-api-key", config.apiKey);
-  };
-
+  HTTPClient http;
   WiFiClientSecure secureClient;
   WiFiClient plainClient;
-  t_httpUpdate_return ret;
   if (strncmp(otaUrl, "https", 5) == 0) {
     secureClient.setInsecure();
-    ret = httpUpdate.update(secureClient, otaUrl, "", addApiKeyHeader);
+    http.begin(secureClient, otaUrl);
   } else {
-    ret = httpUpdate.update(plainClient, otaUrl, "", addApiKeyHeader);
+    http.begin(plainClient, otaUrl);
+  }
+  http.addHeader("x-api-key", config.apiKey);
+  http.setTimeout(30000);
+
+  const char* headerKeys[] = {"x-MD5", "X-Content-Length", "Transfer-Encoding"};
+  http.collectHeaders(headerKeys, 3);
+
+  int httpCode = http.GET();
+  if (httpCode != HTTP_CODE_OK) {
+    Serial.printf("[OTA] Download failed — HTTP %d — will retry next wake\n", httpCode);
+    http.end();
+    return;
   }
 
-  // HTTP_UPDATE_OK reboots before returning — anything reached here is a miss.
-  if (ret == HTTP_UPDATE_NO_UPDATES) {
-    Serial.println("[OTA] Server reports no update needed");
-  } else {
-    Serial.printf("[OTA] Failed (%d): %s — will retry next wake\n",
-      httpUpdate.getLastError(), httpUpdate.getLastErrorString().c_str());
+  int len = http.getSize();  // Content-Length, or -1 if the edge stripped it
+  if (len <= 0) {
+    String xlen = http.header("X-Content-Length");
+    len = xlen.length() ? xlen.toInt() : 0;
   }
+  if (len <= 0) {
+    Serial.println("[OTA] Could not determine artifact size — will retry next wake");
+    http.end();
+    return;
+  }
+
+  String md5 = http.header("x-MD5");
+  if (md5.length() == 32 && !Update.setMD5(md5.c_str())) {
+    Serial.printf("[OTA] Invalid MD5 header (%s) — aborting\n", md5.c_str());
+    http.end();
+    return;
+  }
+
+  if (!Update.begin(len)) {
+    Serial.printf("[OTA] Update.begin failed: %s\n", Update.errorString());
+    http.end();
+    return;
+  }
+
+  bool chunked = http.header("Transfer-Encoding").equalsIgnoreCase("chunked");
+  size_t written = chunked
+    ? writeChunkedStreamToUpdate(*http.getStreamPtr(), (size_t)len)
+    : Update.writeStream(*http.getStreamPtr());
+
+  if (written != (size_t)len) {
+    Serial.printf("[OTA] Wrote %u of %d bytes — aborting, will retry next wake\n", (unsigned)written, len);
+    Update.abort();
+    http.end();
+    return;
+  }
+
+  if (!Update.end(true)) {
+    Serial.printf("[OTA] Update.end failed: %s — will retry next wake\n", Update.errorString());
+    http.end();
+    return;
+  }
+
+  http.end();
+  Serial.println("[OTA] Update applied — rebooting into new slot");
+  Serial.flush();
+  ESP.restart();
 }
 
 // ====================

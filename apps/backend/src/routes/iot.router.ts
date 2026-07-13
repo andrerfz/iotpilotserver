@@ -608,6 +608,10 @@ iotRouter.get('/firmware/:deviceType/:version', async (req: Request, res: Respon
 
         res.setHeader('Content-Type', 'application/octet-stream');
         res.setHeader('Content-Length', fileBuffer.length);
+        // Cloudflare drops Content-Length on this dynamic route and re-chunks the
+        // response — the device reads the real size from this custom header
+        // instead (custom headers pass through the edge untouched).
+        res.setHeader('X-Content-Length', fileBuffer.length);
         res.setHeader('x-MD5', md5);
         res.status(200).send(fileBuffer);
     } catch (err) {
