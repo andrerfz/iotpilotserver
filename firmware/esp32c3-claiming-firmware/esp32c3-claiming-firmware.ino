@@ -1010,6 +1010,12 @@ void attemptFirmwareUpdate(float batteryPct) {
   HTTPClient http;
   WiFiClientSecure secureClient;
   WiFiClient plainClient;
+  // Stream::_timeout defaults to 1000ms — too tight for readBytes()/
+  // readStringUntil() on a real TLS connection through Cloudflare; the manual
+  // chunk decoder below reads directly off this client, not through
+  // http.setTimeout() (which only covers HTTPClient's own header parsing).
+  secureClient.setTimeout(15000);
+  plainClient.setTimeout(15000);
   if (strncmp(otaUrl, "https", 5) == 0) {
     secureClient.setInsecure();
     http.begin(secureClient, otaUrl);
