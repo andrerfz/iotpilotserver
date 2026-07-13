@@ -946,35 +946,26 @@ void checkResetCounter() {
 // OTA UPDATE
 // ====================
 
-// Manually de-chunks an HTTP/1.1 "Transfer-Encoding: chunked" body while
-// streaming it into Update. Needed because Cloudflare (the production edge)
-// always re-chunks this dynamic route — dropping Content-Length — and
-// UpdateClass doesn't implement Stream, so HTTPClient's own chunked-decoding
-// writeToStream() can't target it directly. Standard chunked framing:
-// "<hex-size>\r\n<size bytes of data>\r\n" repeated, terminated by a "0\r\n".
-size_t writeChunkedStreamToUpdate(Stream& stream, size_t expectedTotal) {
+// Minimal Stream adapter so HTTPClient::writeToStream() — which already knows
+// how to de-chunk Transfer-Encoding: chunked — can write straight into
+// Update. UpdateClass doesn't implement Stream itself, and reaching for the
+// raw socket ourselves (tried first) desyncs from whatever HTTPClient already
+// consumed/buffered while parsing headers, corrupting the image. Only write()
+// is ever called on the destination by writeToStreamDataBlock(); the read-side
+// pure virtuals are required by the Stream interface but never invoked here.
+class UpdateStream : public Stream {
+public:
   size_t written = 0;
-  uint8_t buf[512];
-  while (written < expectedTotal) {
-    String sizeLine = stream.readStringUntil('\n');
-    sizeLine.trim();
-    if (sizeLine.length() == 0) continue;  // tolerate a stray blank line
-    long chunkLen = strtol(sizeLine.c_str(), NULL, 16);
-    if (chunkLen <= 0) break;  // terminator chunk
-
-    long remaining = chunkLen;
-    while (remaining > 0) {
-      size_t toRead = remaining < (long)sizeof(buf) ? remaining : sizeof(buf);
-      int got = stream.readBytes(buf, toRead);
-      if (got <= 0) return written;  // timeout / connection lost
-      Update.write(buf, got);
-      written += got;
-      remaining -= got;
-    }
-    stream.readStringUntil('\n');  // consume the CRLF that follows chunk data
+  size_t write(uint8_t b) override { return write(&b, 1); }
+  size_t write(const uint8_t* buf, size_t len) override {
+    size_t n = Update.write(const_cast<uint8_t*>(buf), len);
+    written += n;
+    return n;
   }
-  return written;
-}
+  int available() override { return 0; }
+  int read() override { return -1; }
+  int peek() override { return -1; }
+};
 
 // Called from setup() right after a successful report, while WiFi is still up.
 // No-op unless the server's response carried a directive for a version we're
@@ -1059,12 +1050,10 @@ void attemptFirmwareUpdate(float batteryPct) {
     return;
   }
 
-  bool chunked = http.header("Transfer-Encoding").equalsIgnoreCase("chunked");
-  size_t written = chunked
-    ? writeChunkedStreamToUpdate(*http.getStreamPtr(), (size_t)len)
-    : Update.writeStream(*http.getStreamPtr());
+  UpdateStream updateStream;
+  int written = http.writeToStream(&updateStream);
 
-  if (written != (size_t)len) {
+  if (written < 0 || (size_t)written != (size_t)len) {
     Serial.printf("[OTA] Wrote %u of %d bytes — aborting, will retry next wake\n", (unsigned)written, len);
     Update.abort();
     http.end();
