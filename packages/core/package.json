@@ -19,7 +19,7 @@
     "@bull-board/api": "^7.2.1",
     "@bull-board/express": "^7.2.1",
     "@influxdata/influxdb-client": "^1.33.2",
-    "@nestjs/common": "^10.3.3",
+    "@nestjs/common": "^11.1.28",
     "@nestjs/config": "^4.0.4",
     "@paralleldrive/cuid2": "^2.2.2",
     "@prisma/client": "^6.19.0",
