@@ -2,7 +2,7 @@
 
 .PHONY: help install start stop restart logs status clean build deploy backup restore update
 .PHONY: device-preregister device-flash device-toolchain-install
-.PHONY: device-flash-esp32c3 device-toolchain-install-esp32c3 firmware-publish-esp32c3
+.PHONY: device-flash-esp32c3 device-toolchain-install-esp32c3 firmware-publish-esp32c3 firmware-publish-heltec32v3
 .PHONY: device-flash-heltec32v3 device-toolchain-install-heltec32v3
 .PHONY: device-serial
 .PHONY: local-install local-start local-stop local-restart local-restart-app local-recreate-app local-status local-clean
@@ -165,6 +165,7 @@ help:
 	@echo "  device-flash-heltec32v3           - Flash Heltec WiFi LoRa 32 V3: ID=IOT-XXXX-YYYY PORT=/dev/..."
 	@echo "  device-toolchain-install-heltec32v3 - Install arduino-cli + Heltec toolchain"
 	@echo "  firmware-publish-esp32c3          - Publish OTA build: VERSION=1.3.0 [PROD=1]"
+	@echo "  firmware-publish-heltec32v3       - Publish OTA build: VERSION=1.3.0 [PROD=1]"
 	@echo ""
 	@echo "⏰ Queue & Scheduled Tasks:"
 	@echo "  schedule-list        - List scheduled jobs (like Laravel schedule:list)"
@@ -1149,6 +1150,9 @@ device-flash-esp32c3:
 
 firmware-publish-esp32c3:
 	@SERVER_URL=$(SERVER_URL) PROD=$(PROD) ./scripts/publish-firmware-esp32c3.sh $(VERSION)
+
+firmware-publish-heltec32v3:
+	@SERVER_URL=$(SERVER_URL) PROD=$(PROD) ./scripts/publish-firmware-heltec32v3.sh $(VERSION)
 
 device-toolchain-install-esp32c3:
 	@echo "📟 Installing ESP32-C3 manufacturing toolchain (LILYGO T-OI Plus)..."

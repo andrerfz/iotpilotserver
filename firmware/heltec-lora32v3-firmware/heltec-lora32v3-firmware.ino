@@ -41,6 +41,7 @@
 #include <DallasTemperature.h>
 #include <ArduinoJson.h>
 #include <NimBLEDevice.h>   // BLE setup-mode provisioning (fe-ble-claiming A4)
+#include <Update.h>         // OTA flash-write API (writes into the inactive ota_0/ota_1 slot)
 #include <SPI.h>
 #include "driver/rtc_io.h"  // RTC pullup for the PRG-button deep-sleep wakeup
 
@@ -89,7 +90,15 @@ void enterDeepSleep(uint32_t overrideSeconds = 0);
 
 #define NVS_NAMESPACE          "iotpilot"
 #define WIFI_AP_PASSWORD       "iotpilot123"
-#define FIRMWARE_VERSION       "1.2.0"
+// Override at compile time for OTA releases: -DFIRMWARE_VERSION=\"1.3.1\"
+// (scripts/publish-firmware-heltec32v3.sh does this — the release folder name
+// and the version this binary reports on boot must always match, or the
+// server keeps re-sending the same directive forever since it never sees a
+// match). See firmware/esp32c3-claiming-firmware for the same pattern.
+#ifndef FIRMWARE_VERSION
+#define FIRMWARE_VERSION       "1.3.0"
+#endif
+#define OTA_MIN_BATTERY_PCT    30.0     // skip a pending OTA update below this battery level
 #define FACTORY_RESET_HOLD_MS  10000  // PRG hold 10s → factory reset
 #define RELEASE_DEBOUNCE_MS    80     // sustained HIGH before treating PRG as released
 #define DISPLAY_ON_SECONDS     5      // seconds to show display before sleeping
@@ -509,6 +518,11 @@ bool activateDevice(const char* claimingToken) {
 // DATA TRANSMISSION
 // ====================
 
+// OTA directive received in the last report response (empty when none). Read by
+// sendData() below, consumed by attemptFirmwareUpdate() in setup().
+static char otaTargetVersion[16]  = "";
+static char otaUrl[200]           = "";
+
 bool sendData(float temperature, float batteryPct, float batteryV, bool sensorError = false) {
   HTTPClient http;
   WiFiClientSecure secureClient;
@@ -564,7 +578,8 @@ bool sendData(float temperature, float batteryPct, float batteryV, bool sensorEr
     Serial.println("[SEND] OK");
     clearBuffer();
 
-    DynamicJsonDocument res(512);
+    // 512 was enough before the firmware directive's url field; bump for headroom.
+    DynamicJsonDocument res(768);
     if (deserializeJson(res, http.getString()) == DeserializationError::Ok) {
       JsonObject cfg = res["data"]["config"];
       if (!cfg.isNull()) {
@@ -579,6 +594,19 @@ bool sendData(float temperature, float batteryPct, float batteryV, bool sensorEr
           saveConfig();
           Serial.printf("[CONFIG] Updated — interval: %ds\n", newInterval);
         }
+      }
+
+      // Stash the OTA directive (if any) for attemptFirmwareUpdate(), called
+      // later from setup() while WiFi is still up. Clear it when the server
+      // sends none, so a stale directive from an earlier cycle can't linger.
+      JsonObject fw = res["data"]["firmware"];
+      const char* targetVersion = fw.isNull() ? "" : (fw["targetVersion"] | "");
+      const char* url = fw.isNull() ? "" : (fw["url"] | "");
+      if (strlen(targetVersion) > 0 && strlen(url) > 0) {
+        strncpy(otaTargetVersion, targetVersion, sizeof(otaTargetVersion) - 1);
+        strncpy(otaUrl, url, sizeof(otaUrl) - 1);
+      } else {
+        otaTargetVersion[0] = '\0';
       }
     }
   } else {
@@ -948,6 +976,138 @@ void checkPrgButton() {
 }
 
 // ====================
+// OTA UPDATE
+// ====================
+
+// Minimal Stream adapter so HTTPClient::writeToStream() — which already knows
+// how to de-chunk Transfer-Encoding: chunked — can write straight into
+// Update. UpdateClass doesn't implement Stream itself, and reaching for the
+// raw socket directly desyncs from whatever HTTPClient already
+// consumed/buffered while parsing headers, corrupting the image (learned the
+// hard way on the C3 — see that firmware's history). Only write() is ever
+// called on the destination by writeToStreamDataBlock(); the read-side pure
+// virtuals are required by the Stream interface but never invoked here.
+class UpdateStream : public Stream {
+public:
+  size_t written = 0;
+  size_t write(uint8_t b) override { return write(&b, 1); }
+  size_t write(const uint8_t* buf, size_t len) override {
+    size_t n = Update.write(const_cast<uint8_t*>(buf), len);
+    written += n;
+    return n;
+  }
+  int available() override { return 0; }
+  int read() override { return -1; }
+  int peek() override { return -1; }
+};
+
+// Called from setup() right after a successful report, while WiFi is still up.
+// No-op unless the server's response carried a directive for a version we're
+// not already running. Writes into the *inactive* OTA slot (the Heltec's
+// default_8MB partition scheme already has ota_0/ota_1 — see
+// scripts/publish-firmware-heltec32v3.sh) and only switches after the x-MD5
+// check passes. A failed or partial download leaves the current slot
+// untouched — this simply retries on the next wake, since the server keeps
+// sending the same directive until this device's reported firmwareVersion
+// catches up. No brick risk.
+//
+// Deliberately NOT using the HTTPUpdate helper: it hardcodes HTTP/1.0 (no
+// public override), and the production edge (Cloudflare) drops
+// Content-Length for both HTTP/1.0 AND 1.1 responses on this dynamic route
+// (1.0 gets no length at all, 1.1 gets re-chunked) — HTTPUpdate then aborts
+// with "Server Did Not Report Size" before it even starts. Driving
+// HTTPClient + Update ourselves lets us read the real size from the
+// X-Content-Length header (a custom header, which passes through the edge
+// untouched) and reuse HTTPClient's own chunked decoder via writeToStream().
+void attemptFirmwareUpdate(float batteryPct) {
+  if (strlen(otaTargetVersion) == 0) return;
+  if (strcmp(otaTargetVersion, FIRMWARE_VERSION) == 0) return;
+
+  if (batteryPct >= 0.0 && batteryPct < OTA_MIN_BATTERY_PCT) {
+    Serial.printf("[OTA] Target %s available but battery %.0f%% < %.0f%% — skipping this cycle\n",
+      otaTargetVersion, batteryPct, OTA_MIN_BATTERY_PCT);
+    return;
+  }
+
+  Serial.printf("[OTA] Updating %s -> %s\n", FIRMWARE_VERSION, otaTargetVersion);
+  Serial.printf("[OTA] URL: %s\n", otaUrl);
+  Serial.flush();
+
+  HTTPClient http;
+  WiFiClientSecure secureClient;
+  WiFiClient plainClient;
+  // Stream::_timeout defaults to 1000ms — too tight for a real TLS connection
+  // through Cloudflare; HTTPClient's internal chunked-decoding reads
+  // (writeToStream()) use this same client's timeout, not http.setTimeout()
+  // (which only covers HTTPClient's own header parsing).
+  secureClient.setTimeout(15000);
+  plainClient.setTimeout(15000);
+  if (strncmp(otaUrl, "https", 5) == 0) {
+    secureClient.setInsecure();
+    http.begin(secureClient, otaUrl);
+  } else {
+    http.begin(plainClient, otaUrl);
+  }
+  http.addHeader("x-api-key", config.apiKey);
+  http.setTimeout(30000);
+
+  const char* headerKeys[] = {"x-MD5", "X-Content-Length", "Transfer-Encoding"};
+  http.collectHeaders(headerKeys, 3);
+
+  int httpCode = http.GET();
+  if (httpCode != HTTP_CODE_OK) {
+    Serial.printf("[OTA] Download failed — HTTP %d — will retry next wake\n", httpCode);
+    http.end();
+    return;
+  }
+
+  int len = http.getSize();  // Content-Length, or -1 if the edge stripped it
+  if (len <= 0) {
+    String xlen = http.header("X-Content-Length");
+    len = xlen.length() ? xlen.toInt() : 0;
+  }
+  if (len <= 0) {
+    Serial.println("[OTA] Could not determine artifact size — will retry next wake");
+    http.end();
+    return;
+  }
+
+  String md5 = http.header("x-MD5");
+  if (md5.length() == 32 && !Update.setMD5(md5.c_str())) {
+    Serial.printf("[OTA] Invalid MD5 header (%s) — aborting\n", md5.c_str());
+    http.end();
+    return;
+  }
+
+  if (!Update.begin(len)) {
+    Serial.printf("[OTA] Update.begin failed: %s\n", Update.errorString());
+    http.end();
+    return;
+  }
+
+  UpdateStream updateStream;
+  int written = http.writeToStream(&updateStream);
+
+  if (written < 0 || (size_t)written != (size_t)len) {
+    Serial.printf("[OTA] Wrote %u of %d bytes — aborting, will retry next wake\n", (unsigned)written, len);
+    Update.abort();
+    http.end();
+    return;
+  }
+
+  if (!Update.end(true)) {
+    Serial.printf("[OTA] Update.end failed: %s — will retry next wake\n", Update.errorString());
+    http.end();
+    return;
+  }
+
+  http.end();
+  Serial.println("[OTA] Update applied — rebooting into new slot");
+  Serial.flush();
+  ESP.restart();
+}
+
+// ====================
 // DEEP SLEEP
 // ====================
 
@@ -1071,6 +1231,10 @@ void setup() {
     bufferReading(temp);
     Serial.println("[BUFFER] Send failed — reading buffered for next cycle");
   }
+
+  // WiFi must still be up for this — no-ops unless the report response above
+  // carried a directive for a version we're not already on.
+  attemptFirmwareUpdate(batteryPct);
 
   WiFi.disconnect(true);
 
