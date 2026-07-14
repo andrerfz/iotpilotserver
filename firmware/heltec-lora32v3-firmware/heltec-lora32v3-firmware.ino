@@ -96,7 +96,7 @@ void enterDeepSleep(uint32_t overrideSeconds = 0);
 // server keeps re-sending the same directive forever since it never sees a
 // match). See firmware/esp32c3-claiming-firmware for the same pattern.
 #ifndef FIRMWARE_VERSION
-#define FIRMWARE_VERSION       "1.3.0"
+#define FIRMWARE_VERSION       "1.3.1"
 #endif
 #define OTA_MIN_BATTERY_PCT    30.0     // skip a pending OTA update below this battery level
 #define FACTORY_RESET_HOLD_MS  10000  // PRG hold 10s → factory reset
