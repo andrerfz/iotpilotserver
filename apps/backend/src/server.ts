@@ -186,8 +186,10 @@ function buildRateLimiter(opts: LimiterOptions) {
   }
 }
 
-// General API limiter — generous; verified Tailscale-sourced traffic is exempt
-// so the device fleet is not throttled.
+// General API limiter — generous for normal dashboard/admin traffic. Verified
+// Tailscale-sourced traffic (the Linux hub fleet, reachable over Tailscale) is
+// exempt, but ESP sensors connect over plain WiFi/HTTPS, not Tailscale, so this
+// does NOT exempt the IoT device fleet — see webhookLimiter below for that.
 const apiLimiter = buildRateLimiter({
   max: process.env.NODE_ENV === 'production' ? 100 : 1000,
   prefix: 'rl:',
@@ -205,6 +207,19 @@ const authLimiter = buildRateLimiter({
   skipSuccessfulRequests: true,
 });
 
+// Device webhook limiter — the apiLimiter's 100/15min budget is shared by IP
+// with every human/dashboard request from that network, and ESP sensors are
+// NOT Tailscale-sourced (see apiLimiter comment above) so they got no
+// exemption at all. A single office IP running normal dev/dashboard traffic
+// was enough to 429 a real production sensor's legitimate report — the actual
+// security boundary on these routes is the per-device x-api-key, not the IP
+// rate limit, so this budget just needs to be generous enough to never be the
+// bottleneck for a low-frequency reporting fleet.
+const webhookLimiter = buildRateLimiter({
+  max: process.env.NODE_ENV === 'production' ? 2000 : 5000,
+  prefix: 'rl:webhook:',
+});
+
 // Mount the strict limiter on the brute-forceable auth entry points, before the
 // general limiter. The general '/api/' limiter continues to skip everything
 // under '/auth/', so these endpoints are covered by the auth limiter alone.
@@ -213,8 +228,12 @@ app.use(
   authLimiter,
 );
 
+// Mount the generous device limiter on /api/webhook/*, before the general
+// limiter (which skips this prefix, same pattern as /auth/ above).
+app.use('/api/webhook/', webhookLimiter);
+
 app.use('/api/', (req, res, next) => {
-  if (req.path.startsWith('/auth/')) return next();
+  if (req.path.startsWith('/auth/') || req.path.startsWith('/webhook/')) return next();
   return apiLimiter(req, res, next);
 });
 
