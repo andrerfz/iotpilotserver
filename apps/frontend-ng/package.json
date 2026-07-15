@@ -39,7 +39,7 @@
     "@ngx-translate/core": "^18.0.0",
     "@ngx-translate/http-loader": "^18.0.0",
     "echarts": "^6.1.0",
-    "ionicons": "7.4.0",
+    "ionicons": "8.0.13",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",
     "ngx-echarts": "^22.0.0",
