@@ -40,7 +40,7 @@ import {
   SwipeListComponent,
 } from '@ng/shared/ui';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import type { DevicePickerItem, PickerOption, SwipeAction } from '@ng/shared/ui';
+import type { DevicePickerItem, PickerOption, SwipeAction, DateRangeValue } from '@ng/shared/ui';
 import type { Alert } from '@ng/core/api/generated/models/alert';
 import { AlertDetailSheetComponent } from '../../components/alert-detail-sheet/alert-detail-sheet.component';
 import { DashboardService } from '../../services/dashboard.service';
@@ -125,7 +125,7 @@ export class MonitoringPage implements ViewWillEnter {
   readonly severityFilter = signal<string[]>([]);
   readonly stateFilter = signal<string[]>([]);
   readonly deviceFilter = signal<string[]>([]);
-  readonly period = signal<string>('24h');
+  readonly period = signal<DateRangeValue>('24h');
 
   readonly filteredAlerts = computed(() =>
     applyAlertFilters(this._liveAlerts(), {
@@ -192,11 +192,19 @@ export class MonitoringPage implements ViewWillEnter {
     ]);
   }
 
-  onPeriodChange(preset: string): void {
-    this.period.set(preset);
-    void this.dashService.alerts.load(presetToTimeRange(preset));
-    const trendPeriod: '7d' | '30d' = preset === '30d' ? '30d' : '7d';
-    void this.dashService.alertsTrend.load({ period: trendPeriod });
+  onPeriodChange(value: DateRangeValue): void {
+    this.period.set(value);
+    if (typeof value === 'string') {
+      void this.dashService.alerts.load(presetToTimeRange(value));
+      const trendPeriod: '7d' | '30d' = value === '30d' ? '30d' : '7d';
+      void this.dashService.alertsTrend.load({ period: trendPeriod });
+      return;
+    }
+    // Custom range — the alerts endpoint already accepts arbitrary startTime/endTime.
+    // The trend chart backend only takes fixed 7d/30d presets, so fall back to 30d
+    // as a best-effort approximation for a custom window (not in scope to extend).
+    void this.dashService.alerts.load({ startTime: value.start, endTime: value.end });
+    void this.dashService.alertsTrend.load({ period: '30d' });
   }
 
   private readonly detailSheet = viewChild<AlertDetailSheetComponent>('detailSheet');

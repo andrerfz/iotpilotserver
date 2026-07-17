@@ -1,5 +1,7 @@
-/* Presets + mini calendar — ported 1:1 from prototype app.css
-   (".presets", ".preset*", ".cal*"). */
+/* Presets + mini calendar — base classes ported from prototype app.css
+   (".presets", ".preset*", ".cal*"). Month-nav (".cal__nav") and the time
+   inputs (".cal-time-*") are new — the prototype's calendar was a static
+   mockup with no real interaction, only these state classes to react to. */
 
 .presets { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
 .preset {
@@ -21,10 +23,32 @@
 .cal { margin-top: 14px; }
 .cal__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
 .cal__month { font-size: 13px; font-weight: 600; }
+.cal__nav {
+  width: 28px; height: 28px; flex: none; display: grid; place-items: center; cursor: pointer;
+  background: var(--surface); border: 1px solid var(--ui-border); border-radius: var(--r-sm);
+  color: var(--text-muted); transition: color .12s, border-color .12s;
+}
+.cal__nav:hover { color: var(--text); border-color: var(--border-strong); }
+.cal__nav ion-icon { width: 15px; height: 15px; }
 .cal__grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
 .cal__dow { font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); text-align: center; padding: 4px 0; }
 .cal__day {
-  aspect-ratio: 1; display: grid; place-items: center; border-radius: 6px;
+  aspect-ratio: 1; display: grid; place-items: center; border-radius: 6px; cursor: pointer;
   font-size: 12.5px; color: var(--text); font-variant-numeric: tabular-nums;
+  border: none; background: none; padding: 0; font-family: var(--font-sans);
 }
+.cal__day:hover { background: var(--surface-2); }
+.cal__day--range { background: var(--primary-weak); border-radius: 0; }
 .cal__day--end { background: var(--primary); color: var(--primary-ink); }
+.cal__day--today { border: 1px solid var(--border-strong); }
+
+.cal-time-row { display: flex; gap: 8px; margin-top: 14px; }
+.cal-time-row .field { flex: 1; display: flex; flex-direction: column; align-items: stretch; height: auto; padding: 6px 10px; gap: 2px; }
+.cal-time-label {
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: var(--ls-label);
+  text-transform: uppercase; color: var(--text-dim);
+}
+.cal-time-row input[type='time'] {
+  border: none; background: none; outline: none; color: var(--text);
+  font-family: var(--font-sans); font-size: 13.5px; width: 100%;
+}

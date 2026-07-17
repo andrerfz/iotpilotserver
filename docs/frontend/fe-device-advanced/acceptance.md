@@ -6,7 +6,7 @@
 |---|---|
 | T1 | `make ng-api-generate` runs cleanly after OpenAPI edits; `DeviceMetrics`, `MetricPoint`, `SshResult` types exist in generated models; service spec tests pass; `/fe-check` green |
 | T2 | Navigating `/app/devices/:id/metrics`, `/app/devices/:id/terminal`, `/app/devices/:id/settings` renders stub content (not a 404 or blank); Terminal tab absent for a sensor device |
-| T3 | Period selector changes reload chart data; each MetricCard shows the last-series value with correct color; empty-series cards show "No data available"; Refresh button triggers a fresh load |
+| T3 | Period selector changes reload chart data; picking a custom day range (optionally narrowed by start/end time) reloads with `startTime`/`endTime` instead of `period`; each MetricCard shows the last-series value with correct color; empty-series cards show "No data available"; Refresh button triggers a fresh load |
 | T4 | Offline device shows EmptyState — no terminal rendered; online device shows "Connect Terminal" card; after connect, typing a command and pressing Enter appends `$ cmd` + response to the output; Clear wipes output; `executeSSH` called with correct `deviceId` and `command` |
 | T5 | Form pre-fills with loaded settings; changing any General field marks form dirty and shows unsaved banner; Reset restores original values; Monitoring section shows correct controls for sensor vs system device type |
 | T6 | Save calls `updateSettings` with current form values; Rotate Key shows new key inline + Copy works; Revoke SSH prompts confirmation then saves `sshEnabled: false`; Network+Agent fields save correctly; Security section hidden for sensor devices |
@@ -24,9 +24,16 @@ Feature: Device Metrics
 
   Scenario: Change metrics period
     Given I am on the metrics tab
-    When I click the "1h" segment button
+    When I open the period picker and select the "1h" preset
     Then the charts reload with 1h data
-    And the period selector shows "1h" as active
+    And the period chip shows "1h" as active
+
+  Scenario: Custom date+time range
+    Given I am on the metrics tab
+    When I open the period picker, click a start day and an end day, and set a start/end time
+    Then the charts reload bounded to that exact start/end
+    And the period chip shows the picked date range instead of a preset
+    And chart axis labels show dates instead of time-of-day when the range spans 36h or more
 
   Scenario: No metrics data
     Given the device has no InfluxDB data

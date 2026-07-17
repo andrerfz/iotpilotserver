@@ -264,7 +264,8 @@
       "title": "Error al cargar las métricas",
       "retry": "Reintentar"
     },
-    "no_chart_data": "No hay datos disponibles"
+    "no_chart_data": "No hay datos disponibles",
+    "period": "Período"
   },
   "device_alerts": {
     "states": {
@@ -1169,6 +1170,7 @@
     },
     "date_range": {
       "last_hour": "Última hora",
+      "last_6h": "Últimas 6 horas",
       "last_24h": "Últimas 24 horas",
       "last_7d": "Últimos 7 días",
       "last_30d": "Últimos 30 días",
@@ -1176,7 +1178,9 @@
       "subtitle": "Preajuste rápido o rango personalizado",
       "custom": "Rango personalizado",
       "period": "Período",
-      "custom_short": "Personalizado"
+      "custom_short": "Personalizado",
+      "start_time": "Hora de inicio",
+      "end_time": "Hora de fin"
     }
   },
   "status": {

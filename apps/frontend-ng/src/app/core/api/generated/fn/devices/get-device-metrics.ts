@@ -20,6 +20,16 @@ export interface GetDeviceMetrics$Params {
  * period
  */
   period?: string;
+
+/**
+ * startTime
+ */
+  startTime?: string;
+
+/**
+ * endTime
+ */
+  endTime?: string;
 }
 
 export function getDeviceMetrics(http: HttpClient, rootUrl: string, params: GetDeviceMetrics$Params, context?: HttpContext): Observable<StrictHttpResponse<DeviceMetrics>> {
@@ -27,6 +37,8 @@ export function getDeviceMetrics(http: HttpClient, rootUrl: string, params: GetD
   if (params) {
     rb.path('id', params.id, {});
     rb.query('period', params.period, {});
+    rb.query('startTime', params.startTime, {});
+    rb.query('endTime', params.endTime, {});
   }
 
   return http.request(

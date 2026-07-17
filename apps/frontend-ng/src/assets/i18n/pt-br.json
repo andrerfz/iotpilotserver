@@ -264,7 +264,8 @@
       "title": "Falha ao carregar métricas",
       "retry": "Tentar novamente"
     },
-    "no_chart_data": "Nenhum dado disponível"
+    "no_chart_data": "Nenhum dado disponível",
+    "period": "Período"
   },
   "device_alerts": {
     "states": {
@@ -1169,6 +1170,7 @@
     },
     "date_range": {
       "last_hour": "Última hora",
+      "last_6h": "Últimas 6 horas",
       "last_24h": "Últimas 24 horas",
       "last_7d": "Últimos 7 dias",
       "last_30d": "Últimos 30 dias",
@@ -1176,7 +1178,9 @@
       "subtitle": "Predefinição rápida ou intervalo personalizado",
       "custom": "Intervalo personalizado",
       "period": "Período",
-      "custom_short": "Personalizado"
+      "custom_short": "Personalizado",
+      "start_time": "Hora de início",
+      "end_time": "Hora de término"
     }
   },
   "status": {

@@ -264,7 +264,8 @@
       "title": "Failed to load metrics",
       "retry": "Retry"
     },
-    "no_chart_data": "No data available"
+    "no_chart_data": "No data available",
+    "period": "Period"
   },
   "device_alerts": {
     "states": {
@@ -1169,6 +1170,7 @@
     },
     "date_range": {
       "last_hour": "Last hour",
+      "last_6h": "Last 6 hours",
       "last_24h": "Last 24 hours",
       "last_7d": "Last 7 days",
       "last_30d": "Last 30 days",
@@ -1176,7 +1178,9 @@
       "subtitle": "Quick preset or custom range",
       "custom": "Custom range",
       "period": "Period",
-      "custom_short": "Custom"
+      "custom_short": "Custom",
+      "start_time": "Start time",
+      "end_time": "End time"
     }
   },
   "status": {

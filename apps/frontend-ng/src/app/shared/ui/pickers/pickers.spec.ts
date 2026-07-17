@@ -20,10 +20,17 @@ interface MultiHarness {
 }
 interface MappedHarness { options(): PickerOption[]; }
 interface DateHarness {
+  onWillOpen(): void;
   save(): void;
-  draft: { set(v: string): void };
-  cells: (number | null)[];
-  today: number;
+  selectPreset(id: string): void;
+  onDayClick(day: number): void;
+  prevMonth(): void;
+  nextMonth(): void;
+  mode: { (): 'preset' | 'custom' };
+  draftPreset: { (): string };
+  cells: () => (number | null)[];
+  today: () => number | null;
+  viewMonth: { (): number; set(v: number): void };
 }
 
 const OPTS: PickerOption[] = [
@@ -164,7 +171,8 @@ describe('DateRangePickerComponent', () => {
       on: { valueChange: onChange },
     });
     const c = fixture.componentInstance as unknown as DateHarness;
-    c.draft.set('30d'); // willOpen would sync from value; user then picks a preset
+    c.onWillOpen();
+    c.selectPreset('30d'); // user picks a different preset than the current value
     c.save();
     expect(onChange).toHaveBeenCalledWith('30d');
   });
@@ -174,8 +182,64 @@ describe('DateRangePickerComponent', () => {
       inputs: {},
     });
     const c = fixture.componentInstance as unknown as DateHarness;
-    const dayCount = c.cells.filter((x: number | null) => x !== null).length;
+    const cells = c.cells();
+    const dayCount = cells.filter((x: number | null) => x !== null).length;
     expect(dayCount).toBeGreaterThanOrEqual(28);
-    expect(c.cells).toContain(c.today);
+    expect(cells).toContain(c.today());
+  });
+
+  it('clicking two calendar days and saving emits a custom {start,end} range', async () => {
+    const onChange = vi.fn();
+    const { fixture } = await render(DateRangePickerComponent, {
+      inputs: { value: '24h' },
+      on: { valueChange: onChange },
+    });
+    const c = fixture.componentInstance as unknown as DateHarness;
+    c.onWillOpen();
+    c.onDayClick(3);
+    c.onDayClick(10);
+    c.save();
+
+    expect(onChange).toHaveBeenCalledTimes(1);
+    const emitted = onChange.mock.calls[0][0] as { start: string; end: string };
+    expect(new Date(emitted.start).getDate()).toBe(3);
+    expect(new Date(emitted.end).getDate()).toBe(10);
+    expect(c.mode()).toBe('custom');
+  });
+
+  it('clicking a day out of order still resolves start before end', async () => {
+    const onChange = vi.fn();
+    const { fixture } = await render(DateRangePickerComponent, {
+      inputs: {},
+      on: { valueChange: onChange },
+    });
+    const c = fixture.componentInstance as unknown as DateHarness;
+    c.onWillOpen();
+    c.onDayClick(15);
+    c.onDayClick(5); // clicked before the first pick — should become the start
+    c.save();
+
+    const emitted = onChange.mock.calls[0][0] as { start: string; end: string };
+    expect(new Date(emitted.start).getDate()).toBe(5);
+    expect(new Date(emitted.end).getDate()).toBe(15);
+  });
+
+  it('reopening after a custom range restores preset mode when picking a preset', async () => {
+    const onChange = vi.fn();
+    const { fixture } = await render(DateRangePickerComponent, {
+      inputs: { value: '24h' },
+      on: { valueChange: onChange },
+    });
+    const c = fixture.componentInstance as unknown as DateHarness;
+    c.onWillOpen();
+    c.onDayClick(3);
+    c.onDayClick(10);
+    expect(c.mode()).toBe('custom');
+
+    c.selectPreset('7d');
+    expect(c.mode()).toBe('preset');
+    expect(c.draftPreset()).toBe('7d');
+    c.save();
+    expect(onChange).toHaveBeenCalledWith('7d');
   });
 });

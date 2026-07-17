@@ -264,7 +264,8 @@
       "title": "Caricamento metriche non riuscito",
       "retry": "Riprova"
     },
-    "no_chart_data": "Nessun dato disponibile"
+    "no_chart_data": "Nessun dato disponibile",
+    "period": "Periodo"
   },
   "device_alerts": {
     "states": {
@@ -1169,6 +1170,7 @@
     },
     "date_range": {
       "last_hour": "Ultima ora",
+      "last_6h": "Ultime 6 ore",
       "last_24h": "Ultime 24 ore",
       "last_7d": "Ultimi 7 giorni",
       "last_30d": "Ultimi 30 giorni",
@@ -1176,7 +1178,9 @@
       "subtitle": "Preimpostazione rapida o intervallo personalizzato",
       "custom": "Intervallo personalizzato",
       "period": "Periodo",
-      "custom_short": "Personalizzato"
+      "custom_short": "Personalizzato",
+      "start_time": "Ora di inizio",
+      "end_time": "Ora di fine"
     }
   },
   "status": {

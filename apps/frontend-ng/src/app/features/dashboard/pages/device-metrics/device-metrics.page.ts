@@ -21,49 +21,66 @@ import {
   IonCardContent,
   IonCardHeader,
   IonCardTitle,
-  IonSegment,
-  IonSegmentButton,
-  IonLabel,
   IonButton,
   IonIcon,
   IonSkeletonText,
   MetricCardComponent,
   MetricGridComponent,
   EmptyStateComponent,
+  DateRangePickerComponent,
 } from '@ng/shared/ui';
 import type { MetricPoint } from '@ng/core/api/generated/models/metric-point';
+import type { DeviceMetrics } from '@ng/core/api/generated/models/device-metrics';
+import type { DateRangePreset, DateRangeValue } from '@ng/shared/ui';
 import { DeviceDetailService } from '../../services/device-detail.service';
 import { hasSystemMetrics, hasSensorMetrics } from '../../device-capabilities';
 import { formatMetric } from '../../metric-format';
 
 addIcons({ refreshOutline });
 
-const PERIODS = [
-  { value: '1h', label: '1h' },
-  { value: '6h', label: '6h' },
-  { value: '24h', label: '24h' },
-  { value: '7d', label: '7d' },
+// Same 1h/6h/24h/7d presets the old fixed segment offered (no 30d — that one's
+// Monitoring-specific), now shown inside the shared picker's sheet.
+const PERIODS: DateRangePreset[] = [
+  { id: '1h', label: 'ui.date_range.last_hour', hint: 'now − 60m' },
+  { id: '6h', label: 'ui.date_range.last_6h', hint: 'now − 6h' },
+  { id: '24h', label: 'ui.date_range.last_24h', hint: 'now − 24h' },
+  { id: '7d', label: 'ui.date_range.last_7d', hint: 'now − 7d' },
 ];
+
+const PERIOD_SPAN_MS: Record<string, number> = {
+  '1h': 3_600_000,
+  '6h': 6 * 3_600_000,
+  '24h': 24 * 3_600_000,
+  '7d': 7 * 86_400_000,
+};
+
+/** Custom ranges shorter than this show time-of-day axis labels; longer ones show dates. */
+const DATE_LABEL_THRESHOLD_MS = 36 * 3_600_000;
+
+function rangeSpanMs(value: DateRangeValue): number {
+  if (typeof value === 'string') return PERIOD_SPAN_MS[value] ?? PERIOD_SPAN_MS['24h'];
+  return new Date(value.end).getTime() - new Date(value.start).getTime();
+}
 
 function lastValue(series: MetricPoint[] | undefined): number | null {
   if (!series?.length) return null;
   return series[series.length - 1].value ?? null;
 }
 
-function formatTs(ts: string, period: string): string {
+function formatTs(ts: string, useDateLabels: boolean): string {
   const d = new Date(ts);
-  if (period === '7d') return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+  if (useDateLabels) return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
   return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
 function buildLineChart(
   series: MetricPoint[] | undefined,
-  period: string,
+  useDateLabels: boolean,
   color: string,
   unit: string,
 ): EChartsOption | null {
   if (!series?.length) return null;
-  const data = series.map(p => ({ time: formatTs(p.timestamp!, period), value: Math.round((p.value ?? 0) * 10) / 10 }));
+  const data = series.map(p => ({ time: formatTs(p.timestamp!, useDateLabels), value: Math.round((p.value ?? 0) * 10) / 10 }));
   return {
     grid: { top: 8, right: 8, bottom: 24, left: 40, containLabel: false },
     xAxis: { type: 'category', data: data.map(d => d.time), axisLabel: { fontSize: 10 }, boundaryGap: false },
@@ -119,15 +136,13 @@ function batteryColor(v: number | null): string {
     IonCardContent,
     IonCardHeader,
     IonCardTitle,
-    IonSegment,
-    IonSegmentButton,
-    IonLabel,
     IonButton,
     IonIcon,
     IonSkeletonText,
     MetricCardComponent,
     MetricGridComponent,
     EmptyStateComponent,
+    DateRangePickerComponent,
   ],
 })
 export class DeviceMetricsPage implements OnInit {
@@ -138,8 +153,9 @@ export class DeviceMetricsPage implements OnInit {
 
   private readonly deviceId = signal('');
   readonly metrics = this.svc.deviceMetrics;
-  readonly period = signal<'1h' | '6h' | '24h' | '7d'>('24h');
+  readonly period = signal<DateRangeValue>('24h');
   readonly periods = PERIODS;
+  readonly useDateLabels = computed(() => rangeSpanMs(this.period()) >= DATE_LABEL_THRESHOLD_MS);
 
   readonly showSystem = computed(() => hasSystemMetrics(this.svc.device.data()?.deviceType));
   readonly showSensor = computed(() => hasSensorMetrics(this.svc.device.data()?.deviceType));
@@ -164,11 +180,11 @@ export class DeviceMetricsPage implements OnInit {
   readonly tempIconBg       = computed(() => `color-mix(in srgb, var(--ion-color-${tempColor(this.tempLast())}) 15%, transparent)`);
   readonly batteryIconBg    = computed(() => `color-mix(in srgb, var(--ion-color-${batteryColor(this.batteryLast())}) 15%, transparent)`);
 
-  readonly cpuChart     = computed(() => buildLineChart(this.metricData()['cpu'],           this.period(), '#3880ff', '%'));
-  readonly memChart     = computed(() => buildLineChart(this.metricData()['memory'],        this.period(), '#7928ca', '%'));
-  readonly diskChart    = computed(() => buildLineChart(this.metricData()['disk'],          this.period(), '#f5a623', '%'));
-  readonly tempChart    = computed(() => buildLineChart(this.metricData()['temperature'],   this.period(), '#e53e3e', '°C'));
-  readonly batteryChart = computed(() => buildLineChart(this.metricData()['battery_level'], this.period(), '#2dd36f', '%'));
+  readonly cpuChart     = computed(() => buildLineChart(this.metricData()['cpu'],           this.useDateLabels(), '#3880ff', '%'));
+  readonly memChart     = computed(() => buildLineChart(this.metricData()['memory'],        this.useDateLabels(), '#7928ca', '%'));
+  readonly diskChart    = computed(() => buildLineChart(this.metricData()['disk'],          this.useDateLabels(), '#f5a623', '%'));
+  readonly tempChart    = computed(() => buildLineChart(this.metricData()['temperature'],   this.useDateLabels(), '#e53e3e', '°C'));
+  readonly batteryChart = computed(() => buildLineChart(this.metricData()['battery_level'], this.useDateLabels(), '#2dd36f', '%'));
 
   constructor() {
     const id = this.route.parent?.snapshot.paramMap.get('id') ?? '';
@@ -188,13 +204,18 @@ export class DeviceMetricsPage implements OnInit {
 
   ngOnInit(): void {
     this.topbar.set('topbar.metrics');
-    void this.metrics.load({ id: this.deviceId(), period: this.period() });
+    void this.loadMetrics(this.period());
   }
 
-  onPeriodChange(event: CustomEvent): void {
-    const p = event.detail.value as '1h' | '6h' | '24h' | '7d';
-    this.period.set(p);
-    void this.metrics.load({ id: this.deviceId(), period: p });
+  onRangeChange(value: DateRangeValue): void {
+    this.period.set(value);
+    void this.loadMetrics(value);
+  }
+
+  private loadMetrics(value: DateRangeValue): Promise<DeviceMetrics | null> {
+    return typeof value === 'string'
+      ? this.metrics.load({ id: this.deviceId(), period: value })
+      : this.metrics.load({ id: this.deviceId(), startTime: value.start, endTime: value.end });
   }
 
   onRefresh(): void {

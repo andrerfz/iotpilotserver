@@ -245,7 +245,7 @@ export function registerRoutes(): void {
     registry.registerPath({method: 'get', path: '/devices/{id}/logs', summary: 'Get device logs', tags: ['Devices'],
         security: bearer, params: [idParam, q('limit','integer'), q('level'), q('source'), q('search')], response: R.DeviceLogEntry, envelope: 'paginated', responseDescription: 'Logs'});
     registry.registerPath({method: 'get', path: '/devices/{id}/metrics', summary: 'Get device metrics', tags: ['Devices'],
-        security: bearer, params: [idParam, q('period')], response: R.DeviceMetrics, responseDescription: 'Metrics'});
+        security: bearer, params: [idParam, q('period'), q('startTime'), q('endTime')], response: R.DeviceMetrics, responseDescription: 'Metrics'});
     registry.registerPath({method: 'get', path: '/devices/{id}/settings', summary: 'Get device settings', tags: ['Devices'],
         security: bearer, params: [idParam], response: R.DeviceSettings, responseDescription: 'Settings'});
     registry.registerPath({method: 'put', path: '/devices/{id}/settings', summary: 'Update device settings (incl. alert thresholds)', tags: ['Devices'],

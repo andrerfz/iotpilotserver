@@ -533,10 +533,14 @@
                         "properties": {
                             "targetVersion": {
                                 "type": "string"
+                            },
+                            "url": {
+                                "type": "string"
                             }
                         },
                         "required": [
-                            "targetVersion"
+                            "targetVersion",
+                            "url"
                         ],
                         "additionalProperties": false
                     }
@@ -4666,6 +4670,24 @@
                             "type": "string"
                         },
                         "description": "period"
+                    },
+                    {
+                        "name": "startTime",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "startTime"
+                    },
+                    {
+                        "name": "endTime",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "endTime"
                     }
                 ],
                 "responses": {

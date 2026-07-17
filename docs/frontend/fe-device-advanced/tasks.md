@@ -85,7 +85,7 @@ T5 requires T1 + T2. T6 requires T5 (extends the same page file).
   1. **`DeviceMetricsPage`** — `metrics` child route (replaces stub from T2):
      - Route param: `id` from parent route via `ActivatedRoute` or `input()`.
      - On init: calls `deviceDetailService.deviceMetrics.load({ id, period: '24h' })`.
-     - **Period selector**: `IonSegment` / `IonSegmentButton` for 1h, 6h, 24h, 7d. On segment change: calls `.load({ id, period })`.
+     - **Period selector**: `ui-date-range-picker` (shared component) with presets 1h, 6h, 24h, 7d, plus a real custom range (click a start day, click an end day, optional per-side time-of-day). Presets call `.load({ id, period })`; a custom range calls `.load({ id, startTime, endTime })` (backend `GET /devices/:id/metrics` accepts `startTime`/`endTime` as an alternative to `period`, added post-launch). Chart axis labels switch from time-of-day to date once the resolved range spans ≥ 36h, regardless of preset vs. custom.
      - **Current-value row** (4 `MetricCard`s using `ui-metric-card`): CPU, Memory, Disk, Temperature. Value = last element of respective series from `deviceMetrics.data()?.metrics`. Color coding (matching legacy thresholds):
        - CPU: danger > 80%, warning > 60%, default otherwise
        - Memory: danger > 85%, warning > 70%

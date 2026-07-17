@@ -9,6 +9,7 @@ export interface TemperatureWebhookResponse {
   deviceId: string;
   firmware?: {
 'targetVersion': string;
+'url': string;
 };
   success: boolean;
 }

@@ -2,13 +2,12 @@
 
   <!-- Period selector -->
   <div class="metrics-header">
-    <ion-segment [value]="period()" (ionChange)="onPeriodChange($event)" mode="md" class="metrics-period">
-      @for (p of periods; track p.value) {
-        <ion-segment-button [value]="p.value">
-          <ion-label>{{ p.label }}</ion-label>
-        </ion-segment-button>
-      }
-    </ion-segment>
+    <ui-date-range-picker
+      [label]="'device_metrics.period' | translate"
+      [value]="period()"
+      [presets]="periods"
+      (valueChange)="onRangeChange($event)">
+    </ui-date-range-picker>
     <ion-button fill="outline" color="medium" size="small" (click)="onRefresh()" [disabled]="metrics.loading()">
       <ion-icon slot="icon-only" name="refresh-outline"></ion-icon>
     </ion-button>

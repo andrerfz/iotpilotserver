@@ -1796,27 +1796,42 @@ devicesRouter.get('/:id/metrics', requireAuth(), async (req: AuthenticatedReques
         }
 
         const metric = req.query.metric as string || 'all';
-        const period = req.query.period as string || '24h';
+        let period = req.query.period as string || '24h';
         const resolution = req.query.resolution as string || 'auto';
 
         const now = new Date();
         let startDate: Date;
+        let endDate = now;
 
-        switch (period) {
-            case '1h':
-                startDate = new Date(now.getTime() - 60 * 60 * 1000);
-                break;
-            case '6h':
-                startDate = new Date(now.getTime() - 6 * 60 * 60 * 1000);
-                break;
-            case '7d':
-                startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-                break;
-            case '30d':
-                startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-                break;
-            default: // 24h
-                startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        // Custom range takes precedence over the period preset when both a valid
+        // startTime and endTime are supplied — the underlying query/handler already
+        // accept an arbitrary {from,to}, this just exposes that at the route.
+        const startTimeParam = req.query.startTime as string | undefined;
+        const endTimeParam = req.query.endTime as string | undefined;
+        const customStart = startTimeParam ? new Date(startTimeParam) : undefined;
+        const customEnd = endTimeParam ? new Date(endTimeParam) : undefined;
+
+        if (customStart && customEnd && !isNaN(customStart.getTime()) && !isNaN(customEnd.getTime())) {
+            startDate = customStart;
+            endDate = customEnd;
+            period = 'custom';
+        } else {
+            switch (period) {
+                case '1h':
+                    startDate = new Date(now.getTime() - 60 * 60 * 1000);
+                    break;
+                case '6h':
+                    startDate = new Date(now.getTime() - 6 * 60 * 60 * 1000);
+                    break;
+                case '7d':
+                    startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                    break;
+                case '30d':
+                    startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                    break;
+                default: // 24h
+                    startDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+            }
         }
 
         // A SUPERADMIN has no customerId of their own; scope the query to the
@@ -1838,7 +1853,7 @@ devicesRouter.get('/:id/metrics', requireAuth(), async (req: AuthenticatedReques
 
         const getDeviceMetricsQuery = GetDeviceMetricsQuery.create(
             deviceId,
-            { from: startDate, to: now },
+            { from: startDate, to: endDate },
             metric === 'all'
                 ? ['cpu', 'memory', 'disk', 'network', 'temperature', 'battery_level', 'wifi_rssi']
                 : metric.split(','),
