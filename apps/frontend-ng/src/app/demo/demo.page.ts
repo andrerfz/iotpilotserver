@@ -1,4 +1,4 @@
-import { Component, signal, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { addIcons } from 'ionicons';
 import { hardwareChipOutline, speedometerOutline, notificationsOutline, checkmark } from 'ionicons/icons';
@@ -14,7 +14,7 @@ import {
   MultiSelectPickerComponent, PickerOption,
   DevicePickerComponent, DevicePickerItem,
   UserPickerComponent, UserPickerItem,
-  DateRangePickerComponent,
+  DateRangePickerComponent, DateRangeValue,
   AppLogoComponent, NetworkStatusComponent, MaintenanceBannerComponent,
 } from '@ng/shared/ui';
 
@@ -226,7 +226,7 @@ addIcons({ hardwareChipOutline, speedometerOutline, notificationsOutline, checkm
           </div>
           <p class="muted">
             statuses={{ pickedStatuses().length }} · devices={{ pickedDevices().length }} ·
-            users={{ pickedUsers().length }} · period={{ period() }}
+            users={{ pickedUsers().length }} · period={{ periodLabel() }}
           </p>
         </section>
 
@@ -322,7 +322,11 @@ export class DemoPage {
   protected readonly pickedStatuses = signal<string[]>([]);
   protected readonly pickedDevices = signal<string[]>([]);
   protected readonly pickedUsers = signal<string[]>([]);
-  protected readonly period = signal('24h');
+  protected readonly period = signal<DateRangeValue>('24h');
+  protected readonly periodLabel = computed(() => {
+    const v = this.period();
+    return typeof v === 'string' ? v : `${v.start} → ${v.end}`;
+  });
   protected readonly statusPickerOptions: PickerOption[] = [
     { value: 'ONLINE', label: 'Online', dot: 'ONLINE' },
     { value: 'OFFLINE', label: 'Offline', dot: 'OFFLINE' },

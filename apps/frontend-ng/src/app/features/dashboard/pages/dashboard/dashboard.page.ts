@@ -45,7 +45,7 @@ import {
   IonRefresher,
   IonRefresherContent,
 } from '@ng/shared/ui';
-import type { DevicePickerItem, NavSelectItem, PickerOption, ListRowCol } from '@ng/shared/ui';
+import type { DevicePickerItem, NavSelectItem, PickerOption, ListRowCol, DateRangeValue } from '@ng/shared/ui';
 import { deviceMetricCols as metricCols, deviceMetricMeta as metricMeta } from '../../device-metrics';
 import { hasSystemMetrics, deviceTypeLabel } from '../../device-capabilities';
 import type { Device } from '@ng/core/api/generated/models/device';
@@ -310,8 +310,11 @@ export class DashboardPage implements ViewWillEnter {
     return metricMeta(d, this.t);
   }
 
-  onPeriodChange(preset: string): void {
-    this.period.set(preset);
+  // This page's fleet-wide chart only supports the fixed preset periods today
+  // (no startTime/endTime wiring here, unlike Monitoring/Device Metrics) — a
+  // custom range from the picker is a no-op rather than a scope expansion.
+  onPeriodChange(value: DateRangeValue): void {
+    if (typeof value === 'string') this.period.set(value);
   }
 
   onChartDeviceTypeChange(type: string): void {
