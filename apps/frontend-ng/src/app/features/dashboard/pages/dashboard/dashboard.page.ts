@@ -129,7 +129,7 @@ export class DashboardPage implements ViewWillEnter {
   // ── Filter state ──────────────────────────────────────────────────────────
   readonly devFilter = signal<string[]>([]);
   readonly statusFilter = signal<string[]>([]);
-  readonly period = signal<string>('24h');
+  readonly period = signal<DateRangeValue>('24h');
   /** Which device type the fleet chart charts. Defaults to the first type
    *  present in the fleet once devices load (see the sync effect below) —
    *  a fleet with only sensor devices should never default to the Pi-only
@@ -245,7 +245,7 @@ export class DashboardPage implements ViewWillEnter {
     effect(() => {
       const type = this.chartDeviceType();
       void this.dashService.monitoringMetrics.load({
-        period: this.period() as '1h' | '6h' | '24h' | '7d' | '30d',
+        ...this.fleetMetricsRange(),
         deviceType: type ?? undefined,
       });
     });
@@ -274,7 +274,7 @@ export class DashboardPage implements ViewWillEnter {
           // Force a metrics reload even if the new tenant happens to share the
           // same selected device-type string — the underlying fleet changed.
           void this.dashService.monitoringMetrics.load({
-            period: this.period() as '1h' | '6h' | '24h' | '7d' | '30d',
+            ...this.fleetMetricsRange(),
             deviceType: this.chartDeviceType() ?? undefined,
           });
         });
@@ -310,11 +310,18 @@ export class DashboardPage implements ViewWillEnter {
     return metricMeta(d, this.t);
   }
 
-  // This page's fleet-wide chart only supports the fixed preset periods today
-  // (no startTime/endTime wiring here, unlike Monitoring/Device Metrics) — a
-  // custom range from the picker is a no-op rather than a scope expansion.
   onPeriodChange(value: DateRangeValue): void {
-    if (typeof value === 'string') this.period.set(value);
+    this.period.set(value);
+  }
+
+  /** GET /monitoring/metrics already accepts startTime/endTime as an
+   *  alternative to period (confirmed in the generated client) — translate
+   *  the picker's value into whichever this endpoint expects. */
+  private fleetMetricsRange(): { period?: '1h' | '6h' | '24h' | '7d' | '30d'; startTime?: string; endTime?: string } {
+    const value = this.period();
+    return typeof value === 'string'
+      ? { period: value as '1h' | '6h' | '24h' | '7d' | '30d' }
+      : { startTime: value.start, endTime: value.end };
   }
 
   onChartDeviceTypeChange(type: string): void {

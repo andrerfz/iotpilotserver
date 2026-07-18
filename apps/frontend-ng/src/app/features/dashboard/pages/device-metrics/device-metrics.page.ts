@@ -15,6 +15,7 @@ import { addIcons } from 'ionicons';
 import { refreshOutline } from 'ionicons/icons';
 import { TranslatePipe } from '@ngx-translate/core';
 import { SocketService } from '@ng/core/realtime/socket.service';
+import { ToastService } from '@ng/core/errors/toast.service';
 import {
   IonContent,
   IonCard,
@@ -150,6 +151,7 @@ export class DeviceMetricsPage implements OnInit {
   private readonly topbar = inject(TopbarService);
   private readonly svc = inject(DeviceDetailService);
   private readonly socketService = inject(SocketService);
+  private readonly toast = inject(ToastService);
 
   private readonly deviceId = signal('');
   readonly metrics = this.svc.deviceMetrics;
@@ -212,14 +214,21 @@ export class DeviceMetricsPage implements OnInit {
     void this.loadMetrics(value);
   }
 
-  private loadMetrics(value: DateRangeValue): Promise<DeviceMetrics | null> {
-    return typeof value === 'string'
-      ? this.metrics.load({ id: this.deviceId(), period: value })
-      : this.metrics.load({ id: this.deviceId(), startTime: value.start, endTime: value.end });
+  private async loadMetrics(value: DateRangeValue): Promise<DeviceMetrics | null> {
+    const result = typeof value === 'string'
+      ? await this.metrics.load({ id: this.deviceId(), period: value })
+      : await this.metrics.load({ id: this.deviceId(), startTime: value.start, endTime: value.end });
+    // A failed reload otherwise fails silently: metrics.data() still holds the
+    // previous successful result, so neither the loading skeleton nor the
+    // error empty-state show — the page just keeps rendering stale data with
+    // no indication anything went wrong.
+    const error = this.metrics.error();
+    if (result === null && error) void this.toast.error(error);
+    return result;
   }
 
   onRefresh(): void {
-    void this.metrics.reload();
+    void this.loadMetrics(this.period());
   }
 
   readonly formatMetric = formatMetric;

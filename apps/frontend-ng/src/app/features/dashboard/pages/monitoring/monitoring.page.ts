@@ -194,17 +194,20 @@ export class MonitoringPage implements ViewWillEnter {
 
   onPeriodChange(value: DateRangeValue): void {
     this.period.set(value);
-    if (typeof value === 'string') {
-      void this.dashService.alerts.load(presetToTimeRange(value));
-      const trendPeriod: '7d' | '30d' = value === '30d' ? '30d' : '7d';
-      void this.dashService.alertsTrend.load({ period: trendPeriod });
-      return;
-    }
-    // Custom range — the alerts endpoint already accepts arbitrary startTime/endTime.
-    // The trend chart backend only takes fixed 7d/30d presets, so fall back to 30d
-    // as a best-effort approximation for a custom window (not in scope to extend).
-    void this.dashService.alerts.load({ startTime: value.start, endTime: value.end });
-    void this.dashService.alertsTrend.load({ period: '30d' });
+    const load = typeof value === 'string'
+      ? this.dashService.alerts.load(presetToTimeRange(value))
+      : this.dashService.alerts.load({ startTime: value.start, endTime: value.end }); // custom range — already accepted
+    void load.then(result => {
+      // A failed reload otherwise fails silently: alerts.data() still holds the
+      // previous result, so the page just keeps showing stale alerts with no
+      // indication the range change didn't actually take.
+      const error = this.dashService.alerts.error();
+      if (result === null && error) void this.toast.error(error);
+    });
+    // The trend chart backend only takes fixed 7d/30d presets, so a custom range
+    // falls back to 30d as a best-effort approximation (not in scope to extend).
+    const trendPeriod: '7d' | '30d' = value === '30d' ? '30d' : typeof value === 'string' ? '7d' : '30d';
+    void this.dashService.alertsTrend.load({ period: trendPeriod });
   }
 
   private readonly detailSheet = viewChild<AlertDetailSheetComponent>('detailSheet');
