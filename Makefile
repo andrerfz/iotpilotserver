@@ -6,11 +6,10 @@
 .PHONY: device-flash-heltec32v3 device-toolchain-install-heltec32v3
 .PHONY: device-serial
 .PHONY: local-install local-start local-stop local-restart local-restart-app local-recreate-app local-status local-clean
-.PHONY: dev-start dev-stop dev-restart dev-logs dev-shell
 .PHONY: local-logs-app local-logs-influxdb local-logs-loki local-logs-postgres local-logs-redis local-logs-traefik local-logs-tailscale
 .PHONY: dev shell health migrate migrate-reset migrate-dev db-push db-setup db-status db-shell apply-migration
 .PHONY: fresh-setup local-start-with-migration test-alerts openapi-client
-.PHONY: test lint route-list openapi-check openapi-diff openapi openapi-gen-check test-api test-ci test-db test-influxdb test-integration test-unit test-fresh test-file test-debug test-watch test-coverage test-env-check test-integration-full test-performance test-security test-clean test-db-with-data test-influxdb-connection test-services test-smoke test-all
+.PHONY: route-list openapi-check openapi-diff openapi openapi-gen-check test-db test-db-with-data test-smoke
 .PHONY: create-superadmin list-superadmins reset-superadmin-password delete-superadmin
 .PHONY: sync-node-modules clean-dev
 .PHONY: queue-status queue-failed queue-retry queue-clean queue-drain queue-dashboard
@@ -42,13 +41,6 @@ help:
 	@echo "  fresh-setup           - Complete fresh setup with migrations"
 	@echo "  local-start-with-migration - Start with auto-migration"
 	@echo ""
-	@echo "🔥 Development Mode (Hot Reload):"
-	@echo "  dev-start            - Start with hot reload (auto-updates on code changes)"
-	@echo "  dev-stop             - Stop development mode"
-	@echo "  dev-restart          - Restart development mode"
-	@echo "  dev-logs             - Follow development logs"
-	@echo "  dev-shell            - Open shell in dev container"
-	@echo ""
 	@echo "🗄️ Database:"
 	@echo "  db-setup             - Setup database from scratch"
 	@echo "  migrate              - Run Prisma migrations"
@@ -60,34 +52,12 @@ help:
 	@echo "  apply-migration      - Apply SQL migration manually"
 	@echo "  apply-seeds          - Apply seed data if missing"
 	@echo ""
-	@echo "🧪 Testing (Docker-based):"
-	@echo "  test                 - Run all tests (with error summary)"
-	@echo "  test-summary         - Run tests, show top 10 failures"
-	@echo "  test-working         - Run only passing tests (fast)"
-	@echo "  test-unit            - Run unit tests only"
-	@echo "  test-integration     - Run integration tests only"
-	@echo "  test-debug           - Run tests with verbose output"
-	@echo "  test-influxdb        - Run InfluxDB tests"
-	@echo "  test-ci              - Run CI tests with coverage"
-	@echo "  test-fresh           - Run tests in fresh container"
-	@echo "  test-coverage        - Generate test coverage report"
-	@echo "  test-debug           - Run tests with verbose output"
-	@echo "  test-watch           - Run tests in watch mode"
-	@echo "  test-file FILE=...   - Test specific file"
-	@echo "  test-all             - Complete test suite"
-	@echo "  test-smoke           - Quick smoke tests"
-	@echo ""
-	@echo "🔍 Service Testing:"
+	@echo "🧪 Testing:"
+	@echo "  test-smoke           - Quick smoke test (API health + DB)"
 	@echo "  test-db              - Test database connectivity"
 	@echo "  test-db-with-data    - Test database with sample data"
-	@echo "  test-services        - Test all service connections"
-	@echo "  test-influxdb-connection - Test InfluxDB from app"
-	@echo "  test-api             - Test API endpoints"
-	@echo "  test-env-check       - Check test environment"
-	@echo "  test-performance     - Run performance tests"
-	@echo "  test-security        - Run security tests"
-	@echo "  test-integration-full - Full integration with all services"
-	@echo "  test-clean           - Clean test artifacts"
+	@echo "  test-alerts          - Test alert pipeline against the dev stack"
+	@echo "  (frontend-ng unit/lint/type-check tests: see ng-lint/ng-type-check/ng-test below)"
 	@echo ""
 	@echo "🔧 Development:"
 	@echo "  dev                  - Start development (alias for local-start)"
@@ -518,37 +488,6 @@ local-status:
 	@echo ""
 	@docker stats --no-stream --format "table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}"
 
-# Development mode commands (Hot Reload)
-dev-start: check-env
-	@echo "🔥 Starting development mode with hot reload..."
-	@docker compose -f infra/docker/docker-compose.local.yml -f infra/docker/docker-compose.dev.yml --env-file .env.local up -d --build
-	@echo "⏳ Waiting for app to start..."
-	@sleep 15
-	@echo "✅ Development mode started!"
-	@echo "  • Main Dashboard:    https://iotpilotserver.test:9443"
-	@echo "  • Cloudflare Tunnel: https://dashboarddev.iotpilot.app"
-	@echo "  • Hot reload:        ✓ Enabled"
-	@echo ""
-	@echo "💡 Any changes to /app/src will auto-reload!"
-	@echo "📝 Check logs with: make dev-logs"
-
-dev-stop:
-	@echo "⏹️  Stopping development mode..."
-	@docker compose -f infra/docker/docker-compose.local.yml -f infra/docker/docker-compose.dev.yml --env-file .env.local down
-
-dev-restart:
-	@echo "🔄 Restarting development mode..."
-	@docker compose -f infra/docker/docker-compose.local.yml -f infra/docker/docker-compose.dev.yml --env-file .env.local restart iotpilot-ng
-	@echo "✅ Development mode restarted!"
-
-dev-logs:
-	@echo "📋 Development logs (Ctrl+C to exit):"
-	@docker logs -f iotpilot-server-ng
-
-dev-shell:
-	@echo "🐚 Opening development shell..."
-	@docker exec -it iotpilot-server-ng /bin/sh
-
 local-logs-app:
 	@echo "📋 Local logs for $(SERVICE):"
 	@docker compose -f $(LOCAL_COMPOSE_FILE) logs -f --tail=100 $(SERVICE)
@@ -588,49 +527,6 @@ local-clean:
 # =============================================================================
 
 dev: local-start
-
-test:
-	@echo "🧪 Running tests in Docker..."
-	@TMPFILE=$$(mktemp); \
-		set -o pipefail; \
-		if $(EXEC_FRONTEND) npm test -- --reporter=basic --bail=1 2>&1 | tee $$TMPFILE; then \
-			TEST_EXIT=0; \
-		else \
-			TEST_EXIT=$$?; \
-		fi; \
-		set +o pipefail; \
-		echo ""; \
-		FAILED_COUNT=$$(grep -c "FAIL " $$TMPFILE 2>/dev/null || echo "0"); \
-		ERROR_COUNT=$$(grep -c "Error:" $$TMPFILE 2>/dev/null || echo "0"); \
-		if [ $$FAILED_COUNT -gt 0 ] || [ $$ERROR_COUNT -gt 0 ]; then \
-			echo "═══════════════════════════════════════════════════════════"; \
-			echo "❌ Test Failures Summary"; \
-			echo "═══════════════════════════════════════════════════════════"; \
-			echo ""; \
-			if [ $$FAILED_COUNT -gt 0 ]; then \
-				echo "📋 Failed Tests (showing first 10):"; \
-				echo ""; \
-				grep "FAIL " $$TMPFILE | head -n 10; \
-				if [ $$FAILED_COUNT -gt 10 ]; then \
-					echo ""; \
-					echo "... (showing 10 of $$FAILED_COUNT failures)"; \
-				fi; \
-				echo ""; \
-			fi; \
-			echo "📊 Test Summary:"; \
-			grep -E "Test Files|Tests " $$TMPFILE | tail -2 || echo "  No summary available"; \
-			echo ""; \
-			echo "═══════════════════════════════════════════════════════════"; \
-			echo "💡 Tip: Run 'make test-debug' for full verbose output"; \
-			echo "═══════════════════════════════════════════════════════════"; \
-		fi; \
-		rm -f $$TMPFILE; \
-		if [ $$TEST_EXIT -eq 0 ]; then \
-			make lint; \
-			echo "✅ Tests complete!"; \
-		else \
-			exit $$TEST_EXIT; \
-		fi
 
 # ─── frontend-ng (Ionic + Angular) ──────────────────────────────────────────
 # ng-dev starts the dev server; the rest exec npm scripts inside its container.
@@ -837,31 +733,14 @@ test-db-with-data: check-env
 	@make check-and-setup-db
 	@make test-db
 
-test-influxdb-connection: check-env
-	@echo "📊 Testing InfluxDB connection from app..."
-	@$(EXEC_FRONTEND) npm test -- --run src/__tests__/influxdb-connection
-
-test-services: check-env
-	@echo "🔧 Testing all service connections..."
-	@make test-db
-	@make test-influxdb-connection
-	@echo "✅ All service tests complete!"
-
 test-smoke: check-env
 	@echo "💨 Running smoke tests..."
 	@curl -f http://localhost:3001/api/health 2>/dev/null && echo "✅ API healthy" || echo "❌ API unhealthy"
 	@make test-db
 
-test-api: check-env
-	@echo "🌐 Testing API endpoints..."
-	@$(EXEC_FRONTEND) npm test -- --run src/__tests__/api
-
 test-alerts:
 	@echo "🚨 Testing alert pipeline against the DEV stack..."
 	@bash scripts/test-alert-pipeline.sh
-
-when: test-env-check test-fresh test-services test-smoke
-	@echo "🎉 All tests completed!"
 
 # =============================================================================
 # MAINTENANCE COMMANDS

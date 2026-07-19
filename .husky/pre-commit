@@ -7,8 +7,7 @@ echo ""
 if ! docker info > /dev/null 2>&1; then
     echo "❌ Docker is not running!"
     echo "💡 Please start Docker and ensure services are running:"
-    echo "   make dev-start   (recommended: hot reload)"
-    echo "   make local-start (alternative)"
+    echo "   make local-start"
     exit 1
 fi
 
