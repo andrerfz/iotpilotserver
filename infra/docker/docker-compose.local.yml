@@ -300,7 +300,11 @@ services:
     command: -config.file=/etc/loki/local-config.yaml
     restart: unless-stopped
     healthcheck:
-      test: [ "CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3100/ready || exit 1" ]
+      # -Y off: OrbStack injects HTTP_PROXY/ALL_PROXY into every container, and
+      # busybox wget doesn't reliably honor NO_PROXY for localhost — without this
+      # the request gets routed through OrbStack's proxy and 502s, so the
+      # healthcheck never passes even though Loki itself is up.
+      test: [ "CMD-SHELL", "wget -Y off --no-verbose --tries=1 --spider http://localhost:3100/ready || exit 1" ]
       interval: 30s
       timeout: 10s
       retries: 3
