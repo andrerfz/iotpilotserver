@@ -24,10 +24,15 @@ const devRoutes: Routes = [
 
 export const routes: Routes = [
   {
+    // rootRedirectGuard always resolves to a UrlTree (redirects to /app or
+    // /login), so this route never actually renders a component — `children: []`
+    // only exists to satisfy the Router's route-config validator, which requires
+    // one of component/loadComponent/redirectTo/children/loadChildren on every
+    // route (a guard alone isn't enough).
     path: '',
     pathMatch: 'full',
     canActivate: [rootRedirectGuard],
-    loadComponent: () => import('./home/home.page').then((m) => m.HomePage),
+    children: [],
   },
   {
     path: 'login',
@@ -49,10 +54,6 @@ export const routes: Routes = [
       import('./features/auth/pages/accept-invite/accept-invite.page').then(
         (m) => m.AcceptInvitePage,
       ),
-  },
-  {
-    path: 'home',
-    loadComponent: () => import('./home/home.page').then((m) => m.HomePage),
   },
   {
     path: 'smoke',

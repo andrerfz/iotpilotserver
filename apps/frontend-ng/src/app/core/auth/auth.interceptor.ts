@@ -4,7 +4,7 @@ import {
   HttpInterceptorFn,
   HttpRequest,
 } from '@angular/common/http';
-import { inject } from '@angular/core';
+import { inject, Injector } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, from, Observable, switchMap, throwError } from 'rxjs';
 import { WITH_CREDENTIALS } from '../api/http-context';
@@ -45,7 +45,12 @@ function withBearer<T>(req: HttpRequest<T>, token: string | null, withCreds: boo
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const tokens = inject(TokenStorage);
   const auth = inject(AuthService);
-  const router = inject(Router);
+  // Resolved lazily (only on an actual 401) via injector.get(), not inject(Router)
+  // up front: this interceptor also carries restoreSession()'s refresh call during
+  // the APP_INITIALIZER phase, and eagerly resolving Router there races with
+  // IonRouterOutlet's own Router injection during root-component creation,
+  // triggering NG0200 (circular dependency) on every cold app load.
+  const injector = inject(Injector);
   const tenantCtx = inject(TenantContextService);
 
   const withCreds = req.context.get(WITH_CREDENTIALS);
@@ -70,6 +75,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
             return from(auth.refresh()).pipe(
               switchMap((ok): Observable<HttpEvent<unknown>> => {
                 if (!ok) {
+                  const router = injector.get(Router);
                   router.navigate(['/login'], { queryParams: { returnUrl: router.url } });
                   return throwError(() => ApiError.fromHttp(err));
                 }
