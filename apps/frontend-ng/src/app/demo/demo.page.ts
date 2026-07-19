@@ -16,6 +16,8 @@ import {
   UserPickerComponent, UserPickerItem,
   DateRangePickerComponent, DateRangeValue,
   AppLogoComponent, NetworkStatusComponent, MaintenanceBannerComponent,
+  UiCollectionComponent, UiScopePillComponent, UiSectionComponent,
+  UiSettingRowComponent, UiPageComponent, UiSkeletonComponent,
 } from '@ng/shared/ui';
 
 interface DeviceRow extends Record<string, unknown> {
@@ -46,6 +48,8 @@ addIcons({ hardwareChipOutline, speedometerOutline, notificationsOutline, checkm
     FilterChipComponent, BottomSheetComponent,
     MultiSelectPickerComponent, DevicePickerComponent, UserPickerComponent, DateRangePickerComponent,
     AppLogoComponent, NetworkStatusComponent, MaintenanceBannerComponent,
+    UiCollectionComponent, UiScopePillComponent, UiSectionComponent,
+    UiSettingRowComponent, UiPageComponent, UiSkeletonComponent,
   ],
   template: `
     <ion-header>
@@ -245,6 +249,61 @@ addIcons({ hardwareChipOutline, speedometerOutline, notificationsOutline, checkm
             </p>
           </div>
         </section>
+
+        <!-- T13 — Orphan kit components (built, not yet adopted by any real page) -->
+        <section class="card">
+          <h2>T13 — Collection, scope pill, settings section/row, skeleton, page scaffold</h2>
+
+          <p class="cal-label">ui-scope-pill</p>
+          <div class="row">
+            <ui-scope-pill scope="personal"></ui-scope-pill>
+            <ui-scope-pill scope="tenant"></ui-scope-pill>
+            <ui-scope-pill scope="platform"></ui-scope-pill>
+            <ui-scope-pill scope="device"></ui-scope-pill>
+          </div>
+
+          <p class="cal-label">ui-skeleton</p>
+          <div class="card inner">
+            <ui-skeleton [lines]="3" [widths]="['40%', '100%', '70%']"></ui-skeleton>
+          </div>
+
+          <p class="cal-label">ui-section + ui-setting-row</p>
+          <div class="card inner" style="padding:0;">
+            <ui-section title="Notifications" description="Choose how you want to be notified">
+              <ion-button aside size="small" fill="clear">Reset</ion-button>
+              <ui-setting-row label="Email alerts" description="Send a copy of every alert to your email">
+                <ui-switch [(ngModel)]="notify"></ui-switch>
+              </ui-setting-row>
+              <ui-setting-row label="Push notifications">
+                <ui-switch></ui-switch>
+              </ui-setting-row>
+            </ui-section>
+          </div>
+
+          <p class="cal-label">ui-collection (resize the window to see it swap table ↔ swipe list)</p>
+          <div class="card inner">
+            <ui-collection
+              [columns]="columns"
+              [rows]="rows"
+              mobilePrimary="name"
+              mobileSecondary="status"
+              [rowClickable]="true"
+              (rowClick)="lastClicked.set($event.name)">
+            </ui-collection>
+          </div>
+
+          <p class="cal-label">ui-page (scaffold: title/subtitle/actions/tabs/loading — shown inline, not full-screen)</p>
+          <div class="card inner" style="padding:0; overflow:hidden;">
+            <ui-page [title]="pageDemoTitle()" subtitle="Full page scaffold with header, actions and loading state" [loading]="pageDemoLoading()">
+              <div actions>
+                <ion-button size="small" fill="outline" (click)="pageDemoLoading.set(!pageDemoLoading())">
+                  Toggle loading
+                </ion-button>
+              </div>
+              <p class="muted" style="padding:0 0 8px;">Page body content goes here.</p>
+            </ui-page>
+          </div>
+        </section>
       </div>
     </ion-content>
   `,
@@ -335,6 +394,10 @@ export class DemoPage {
   protected readonly demoDevices: DevicePickerItem[] = this.rows.map(r => ({
     id: r.name, name: r.name, status: r.status, location: 'Rack A',
   }));
+  // T13 — orphan components
+  protected readonly pageDemoTitle = signal('Devices');
+  protected readonly pageDemoLoading = signal(false);
+
   protected readonly demoUsers: UserPickerItem[] = [
     { id: 'u1', name: 'Ada Lovelace', email: 'ada@iot.io', role: 'ADMIN' },
     { id: 'u2', name: 'Bo Turing', email: 'bo@iot.io', role: 'USER' },
