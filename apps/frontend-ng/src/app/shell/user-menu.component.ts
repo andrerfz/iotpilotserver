@@ -4,14 +4,19 @@ import {
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { IonIcon, ThemeService } from '@ng/shared/ui';
+import type { Theme } from '@ng/shared/ui/theme/theme.service';
 import { TranslatePipe } from '@ngx-translate/core';
 import { addIcons } from 'ionicons';
 import {
-  personOutline, sunnyOutline, moonOutline, logOutOutline,
+  personOutline, sunnyOutline, moonOutline, contrastOutline, logOutOutline,
 } from 'ionicons/icons';
 import { AuthService } from '../core/auth/auth.service';
 
-addIcons({ personOutline, sunnyOutline, moonOutline, logOutOutline });
+addIcons({ personOutline, sunnyOutline, moonOutline, contrastOutline, logOutOutline });
+
+/** light -> dark -> system -> light. Matches the 3-way selector in Settings ▸ Preferences. */
+const NEXT_THEME: Record<Theme, Theme> = { light: 'dark', dark: 'system', system: 'light' };
+const THEME_ICON: Record<Theme, string> = { light: 'sunny-outline', dark: 'moon-outline', system: 'contrast-outline' };
 
 /**
  * User menu — prototype `UserMenu` merged with legacy `user-menu.tsx` behavior.
@@ -91,8 +96,10 @@ export class UserMenuComponent {
   protected readonly avatarFg = computed(() => `hsl(${this.hue()} 65% 64%)`);
   protected readonly avatarBorder = computed(() => `hsl(${this.hue()} 55% 50% / 0.35)`);
 
-  protected readonly themeIcon = computed(() => this.themeService.theme() === 'dark' ? 'sunny-outline' : 'moon-outline');
-  protected readonly themeLabel = computed(() => this.themeService.theme() === 'dark' ? 'shell.theme.light' : 'shell.theme.dark');
+  // Icon/label describe what clicking will switch TO next (light → dark → system → light).
+  private readonly nextTheme = computed(() => NEXT_THEME[this.themeService.theme()]);
+  protected readonly themeIcon = computed(() => THEME_ICON[this.nextTheme()]);
+  protected readonly themeLabel = computed(() => `shell.theme.${this.nextTheme()}`);
 
   @HostListener('document:click', ['$event'])
   protected onDocClick(e: MouseEvent): void {
@@ -110,7 +117,7 @@ export class UserMenuComponent {
   }
 
   protected toggleTheme(): void {
-    this.themeService.setTheme(this.themeService.theme() === 'dark' ? 'light' : 'dark');
+    this.themeService.setTheme(this.nextTheme());
   }
 
   protected async signOut(): Promise<void> {

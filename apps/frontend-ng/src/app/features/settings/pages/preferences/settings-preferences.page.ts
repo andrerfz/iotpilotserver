@@ -16,7 +16,6 @@ import {
 import { Api } from '@ng/core/api/generated/api';
 import { TopbarService } from '@ng/shell/topbar.service';
 import { ThemeService, type Theme } from '@ng/shared/ui/theme/theme.service';
-import { getSystemSettings } from '@ng/core/api/generated/fn/settings/get-system-settings';
 import { updateSystemSettings } from '@ng/core/api/generated/fn/settings/update-system-settings';
 import type { SystemSettings } from '@ng/core/api/generated/models/system-settings';
 
@@ -48,7 +47,6 @@ export class SettingsPreferencesPage implements OnInit {
   private readonly themeService = inject(ThemeService);
   private readonly t = inject(TranslateService);
 
-  readonly isLoading = signal(true);
   readonly saveError = signal('');
   readonly saveSuccess = signal('');
   readonly isSaving = signal(false);
@@ -57,27 +55,19 @@ export class SettingsPreferencesPage implements OnInit {
   // Save button, flipped by onThemeChange() below.
   readonly form = this.fb.nonNullable.group({});
 
+  // ThemeService already holds the current preference (loaded once at app
+  // boot via loadFromServer(), right after restoreSession() — see main.ts).
+  // Reading it directly here means opening this page never re-fetches and
+  // re-applies a possibly-stale server copy over whatever's live on screen.
   readonly currentTheme = this.themeService.theme;
 
   private _ready = false;
 
-  async ngOnInit(): Promise<void> {
+  ngOnInit(): void {
     this.topbar.set('settings.tabs.preferences');
     this.destroyRef.onDestroy(() => this.topbar.clear());
-    try {
-      const res = await this.api.invoke(getSystemSettings, {});
-      const data = (res as unknown as { data?: typeof res }).data ?? res;
-      // Apply the theme persisted server-side so it follows the user across devices.
-      if (data.theme) {
-        this.themeService.setTheme(data.theme as Theme);
-      }
-    } catch {
-      this.saveError.set(this.t.instant('settings.system.msg_load_failed'));
-    } finally {
-      this.isLoading.set(false);
-    }
-    await Promise.resolve();
-    this._ready = true;
+    // Skip the ionChange that ion-segment fires for its initial [value] binding.
+    queueMicrotask(() => { this._ready = true; });
   }
 
   onThemeChange(event: Event): void {

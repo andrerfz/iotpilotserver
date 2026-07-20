@@ -39,8 +39,16 @@ bootstrapApplication(AppComponent, {
     ...(Capacitor.isNativePlatform() ? provideNativeTokenStorage() : [provideTokenStorage()]),
     provideBle(),
     provideQueryHandler(GetHealthHandler),
-    provideAppInitializer(() => { inject(ThemeService); }),
-    provideAppInitializer(() => inject(AuthService).restoreSession()),
+    provideAppInitializer(() => {
+      const auth = inject(AuthService);
+      const theme = inject(ThemeService);
+      // loadFromServer() must run after restoreSession() resolves: it needs the
+      // bearer token attached (via the auth interceptor) to fetch the signed-in
+      // user's stored preference, and a synced-then-stable session before
+      // applying it — otherwise it'd race an unauthenticated 401 or overwrite a
+      // theme choice made before the session was confirmed.
+      return auth.restoreSession().then(() => theme.loadFromServer());
+    }),
     provideEchartsCore({ echarts: () => import('echarts') }),
     provideTranslateService({ fallbackLang: 'en' }),
     provideTranslateHttpLoader({ prefix: './assets/i18n/', suffix: '.json' }),
