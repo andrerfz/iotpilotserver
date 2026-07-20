@@ -29,7 +29,6 @@ import {
   IonContent,
   IonCard,
   IonCardContent,
-  IonSkeletonText,
   IonButton,
   IonIcon,
   MetricCardComponent,
@@ -37,6 +36,7 @@ import {
   DataTableComponent,
   EmptyStateComponent,
   StatusBadgeComponent,
+  UiSkeletonComponent,
 } from '@ng/shared/ui';
 import type { ColumnDef } from '@ng/shared/ui';
 import type { DeviceCommand } from '@ng/core/api/generated/models/device-command';
@@ -63,7 +63,6 @@ function lastVal(series: MetricPoint[] | undefined): number | null {
     IonContent,
     IonCard,
     IonCardContent,
-    IonSkeletonText,
     IonButton,
     IonIcon,
     MetricCardComponent,
@@ -71,6 +70,7 @@ function lastVal(series: MetricPoint[] | undefined): number | null {
     DataTableComponent,
     EmptyStateComponent,
     StatusBadgeComponent,
+    UiSkeletonComponent,
     CommandSheetComponent,
     TranslatePipe,
   ],

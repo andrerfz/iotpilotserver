@@ -8,7 +8,7 @@
         [formControl]="roleControlFor(row)"
         [loading]="roleUpdatingId() === row.id" />
     } @else {
-      <span>{{ row.role }}</span>
+      <ui-role-badge [role]="row.role"></ui-role-badge>
     }
   </ng-template>
 

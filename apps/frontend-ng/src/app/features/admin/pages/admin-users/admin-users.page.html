@@ -56,7 +56,7 @@
     <div class="detail-list">
       <div class="detail-row"><span class="detail-row__k">{{ 'fields.name' | translate }}</span><span class="detail-row__v">{{ u.name ?? u.username ?? '—' }}</span></div>
       <div class="detail-row"><span class="detail-row__k">{{ 'fields.email' | translate }}</span><span class="detail-row__v">{{ u.email }}</span></div>
-      <div class="detail-row"><span class="detail-row__k">{{ 'fields.role' | translate }}</span><span class="detail-row__v">{{ u.role }}</span></div>
+      <div class="detail-row"><span class="detail-row__k">{{ 'fields.role' | translate }}</span><span class="detail-row__v"><ui-role-badge [role]="u.role"></ui-role-badge></span></div>
       <div class="detail-row"><span class="detail-row__k">{{ 'fields.status' | translate }}</span><span class="detail-row__v"><ui-status-badge [status]="u.status"></ui-status-badge></span></div>
       @if (u.createdAt) {
         <div class="detail-row"><span class="detail-row__k">{{ 'fields.joined' | translate }}</span><span class="detail-row__v">{{ u.createdAt }}</span></div>

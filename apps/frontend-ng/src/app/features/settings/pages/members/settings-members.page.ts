@@ -30,6 +30,7 @@ import {
   IonToolbar,
   DataTableComponent,
   StatusBadgeComponent,
+  RoleBadgeComponent,
   UiInputComponent,
   UiSelectComponent,
 } from '@ng/shared/ui';
@@ -69,6 +70,7 @@ const ROLE_OPTIONS: SelectOption[] = [
     IonToolbar,
     DataTableComponent,
     StatusBadgeComponent,
+    RoleBadgeComponent,
     UiInputComponent,
     UiSelectComponent,
   ],

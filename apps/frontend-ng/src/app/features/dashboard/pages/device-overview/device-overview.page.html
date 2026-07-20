@@ -103,7 +103,7 @@
                 </ion-button>
               </div>
               @if (commands.loading()) {
-                <ion-skeleton-text [animated]="true" style="height: 80px; width: 100%; border-radius: 6px;"></ion-skeleton-text>
+                <ui-skeleton height="80px"></ui-skeleton>
               } @else if ((commands.data()?.length ?? 0) === 0) {
                 <ui-empty-state [title]="'device_overview.no_commands' | translate"></ui-empty-state>
               } @else {
