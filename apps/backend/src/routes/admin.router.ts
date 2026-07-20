@@ -474,6 +474,86 @@ adminRouter.get('/logs', requireAuth('ADMIN'), async (req: AuthenticatedRequest,
   }
 });
 
+/**
+ * GET /api/admin/audit-logs
+ *
+ * List audit trail entries (who did what, on what resource) for the current
+ * tenant. ADMIN or SUPERADMIN only. Unlike DeviceLog, AuditLog has a direct
+ * customerId column, so tenant scoping doesn't need a join.
+ */
+adminRouter.get('/audit-logs', requireAuth('ADMIN'), async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const currentUser = req.user;
+    if (!currentUser) {
+      send.unauthorized(res, 'Authentication required');
+      return;
+    }
+    if (currentUser.role !== 'ADMIN' && currentUser.role !== 'SUPERADMIN') {
+      send.forbidden(res, 'Insufficient permissions');
+      return;
+    }
+
+    const eventType = req.query.eventType as string | undefined || undefined;
+    const resource = req.query.resource as string | undefined || undefined;
+    const success = req.query.success as string | undefined || undefined;
+    const search = req.query.search as string | undefined || undefined;
+    const page = Math.max(1, parseInt(req.query.page as string || '1'));
+    const limit = Math.min(200, Math.max(1, parseInt(req.query.limit as string || '50')));
+    const skip = (page - 1) * limit;
+
+    const tenantFilter = currentUser.role === 'SUPERADMIN'
+      ? {}
+      : { customerId: currentUser.customerId };
+
+    const where: any = { ...tenantFilter };
+    if (eventType) where.eventType = eventType;
+    if (resource) where.resource = resource;
+    if (success !== undefined) where.success = success === 'true';
+    if (search) {
+      where.OR = [
+        { resource: { contains: search, mode: 'insensitive' } },
+        { action: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    const [logs, totalCount, resources, eventTypes] = await Promise.all([
+      prismaService.getClient().auditLog.findMany({
+        where,
+        orderBy: { timestamp: 'desc' },
+        skip,
+        take: limit,
+        include: {
+          user: { select: { username: true, email: true } },
+        },
+      }),
+      prismaService.getClient().auditLog.count({ where }),
+      prismaService.getClient().auditLog.findMany({
+        where: tenantFilter,
+        select: { resource: true },
+        distinct: ['resource'],
+      }),
+      prismaService.getClient().auditLog.findMany({
+        where: tenantFilter,
+        select: { eventType: true },
+        distinct: ['eventType'],
+      }),
+    ]);
+
+    const pagination = Pagination.create(page, limit, totalCount);
+    send.ok(res, logs, {
+      pagination,
+      filters: {
+        resources: resources.map((r: { resource: string }) => r.resource),
+        eventTypes: eventTypes.map((e: { eventType: string }) => e.eventType),
+      },
+    });
+    return;
+  } catch (err) {
+    console.error('Audit logs error:', err);
+    send.fromError(res, err);
+  }
+});
+
 // ---------------------------------------------------------------------------
 // System health
 // ---------------------------------------------------------------------------

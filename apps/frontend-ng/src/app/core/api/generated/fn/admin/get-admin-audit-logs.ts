@@ -7,24 +7,24 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
-import { DeviceLogEntry } from '../../models/device-log-entry';
+import { AuditLogEntry } from '../../models/audit-log-entry';
 
-export interface GetAdminLogs$Params {
-
-/**
- * level
- */
-  level?: string;
+export interface GetAdminAuditLogs$Params {
 
 /**
- * deviceId
+ * eventType
  */
-  deviceId?: string;
+  eventType?: string;
 
 /**
- * source
+ * resource
  */
-  source?: string;
+  resource?: string;
+
+/**
+ * success
+ */
+  success?: string;
 
 /**
  * search
@@ -37,12 +37,12 @@ export interface GetAdminLogs$Params {
   page?: number;
 }
 
-export function getAdminLogs(http: HttpClient, rootUrl: string, params?: GetAdminLogs$Params, context?: HttpContext): Observable<StrictHttpResponse<Array<DeviceLogEntry>>> {
-  const rb = new RequestBuilder(rootUrl, getAdminLogs.PATH, 'get');
+export function getAdminAuditLogs(http: HttpClient, rootUrl: string, params?: GetAdminAuditLogs$Params, context?: HttpContext): Observable<StrictHttpResponse<Array<AuditLogEntry>>> {
+  const rb = new RequestBuilder(rootUrl, getAdminAuditLogs.PATH, 'get');
   if (params) {
-    rb.query('level', params.level, {});
-    rb.query('deviceId', params.deviceId, {});
-    rb.query('source', params.source, {});
+    rb.query('eventType', params.eventType, {});
+    rb.query('resource', params.resource, {});
+    rb.query('success', params.success, {});
     rb.query('search', params.search, {});
     rb.query('page', params.page, {});
   }
@@ -52,9 +52,9 @@ export function getAdminLogs(http: HttpClient, rootUrl: string, params?: GetAdmi
   ).pipe(
     filter((r: any): r is HttpResponse<any> => r instanceof HttpResponse),
     map((r: HttpResponse<any>) => {
-      return r as StrictHttpResponse<Array<DeviceLogEntry>>;
+      return r as StrictHttpResponse<Array<AuditLogEntry>>;
     })
   );
 }
 
-getAdminLogs.PATH = '/admin/logs';
+getAdminAuditLogs.PATH = '/admin/audit-logs';

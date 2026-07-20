@@ -16,6 +16,7 @@ export type { AllSettings } from './models/all-settings';
 export type { ApiKey } from './models/api-key';
 export type { ApiKeyCreated } from './models/api-key-created';
 export type { ApproveUserInput } from './models/approve-user-input';
+export type { AuditLogEntry } from './models/audit-log-entry';
 export type { AuthData } from './models/auth-data';
 export type { BatchAlertInput } from './models/batch-alert-input';
 export type { BulkDeviceInput } from './models/bulk-device-input';

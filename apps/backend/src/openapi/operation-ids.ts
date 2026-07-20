@@ -65,6 +65,7 @@ export const OPERATION_IDS: Record<string, string> = {
     'get /admin/users': 'listAdminUsers',
     'post /admin/users/{id}/approve': 'approveAdminUser',
     'get /admin/logs': 'getAdminLogs',
+    'get /admin/audit-logs': 'getAdminAuditLogs',
     'get /admin/system': 'getAdminSystem',
     'get /admin/customers': 'listAdminCustomers',
     'post /admin/customers': 'createAdminCustomer',

@@ -319,7 +319,9 @@ export function registerRoutes(): void {
     registry.registerPath({method: 'post', path: '/admin/users/{id}/approve', summary: 'Approve a pending user', tags: ['Admin'],
         security: bearer, params: [idParam], request: ApproveUserInput, response: R.User, responseDescription: 'User approved'});
     registry.registerPath({method: 'get', path: '/admin/logs', summary: 'System logs', tags: ['Admin'],
-        security: bearer, response: R.DeviceLogEntry, envelope: 'paginated', responseDescription: 'Logs'});
+        security: bearer, params: [q('level'), q('deviceId'), q('source'), q('search'), q('page','integer')], response: R.DeviceLogEntry, envelope: 'paginated', responseDescription: 'Logs'});
+    registry.registerPath({method: 'get', path: '/admin/audit-logs', summary: 'Audit logs', tags: ['Admin'],
+        security: bearer, params: [q('eventType'), q('resource'), q('success'), q('search'), q('page','integer')], response: R.AuditLogEntry, envelope: 'paginated', responseDescription: 'Audit logs'});
     registry.registerPath({method: 'get', path: '/admin/system', summary: 'System info', tags: ['Admin'],
         security: bearer, response: R.SystemInfo, responseDescription: 'System info'});
     registry.registerPath({method: 'get', path: '/admin/stats', summary: 'Platform stats', tags: ['Admin'],

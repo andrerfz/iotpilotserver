@@ -21,6 +21,7 @@ export type { AllSettings } from './models/all-settings';
 export type { ApiKey } from './models/api-key';
 export type { ApiKeyCreated } from './models/api-key-created';
 export type { ApproveUserInput } from './models/approve-user-input';
+export type { AuditLogEntry } from './models/audit-log-entry';
 export type { AuthData } from './models/auth-data';
 export type { BatchAlertInput } from './models/batch-alert-input';
 export type { BulkDeviceInput } from './models/bulk-device-input';
@@ -209,6 +210,8 @@ export type { ApproveAdminUser$Params as ApproveAdminUser$Params } from './fn/ad
 export { approveAdminUser as approveAdminUser } from './fn/admin/approve-admin-user';
 export type { GetAdminLogs$Params as GetAdminLogs$Params } from './fn/admin/get-admin-logs';
 export { getAdminLogs as getAdminLogs } from './fn/admin/get-admin-logs';
+export type { GetAdminAuditLogs$Params as GetAdminAuditLogs$Params } from './fn/admin/get-admin-audit-logs';
+export { getAdminAuditLogs as getAdminAuditLogs } from './fn/admin/get-admin-audit-logs';
 export type { GetAdminSystem$Params as GetAdminSystem$Params } from './fn/admin/get-admin-system';
 export { getAdminSystem as getAdminSystem } from './fn/admin/get-admin-system';
 export type { GetAdminStats$Params as GetAdminStats$Params } from './fn/admin/get-admin-stats';

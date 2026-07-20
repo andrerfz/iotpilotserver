@@ -93,6 +93,10 @@ export const RESPONSE_SCHEMAS: Record<string, JsonSchema> = {
         id: str, deviceId: str, level: {type: 'string', enum: ['DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL']},
         message: str, source: strN, timestamp: dt,
     }),
+    AuditLogEntry: obj({
+        id: str, eventType: str, userId: str, customerId: strN, resource: str, action: str,
+        success: bool, errorMessage: strN, timestamp: dt,
+    }),
     MetricPoint: obj({timestamp: dt, value: num, unit: str}),
     DeviceMetrics: obj({
         metrics: {type: 'object', additionalProperties: arr(ref('MetricPoint'))},

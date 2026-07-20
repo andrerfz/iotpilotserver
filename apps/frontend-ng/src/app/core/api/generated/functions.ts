@@ -113,6 +113,8 @@ export type { ApproveAdminUser$Params as ApproveAdminUser$Params } from './fn/ad
 export { approveAdminUser as approveAdminUser } from './fn/admin/approve-admin-user';
 export type { GetAdminLogs$Params as GetAdminLogs$Params } from './fn/admin/get-admin-logs';
 export { getAdminLogs as getAdminLogs } from './fn/admin/get-admin-logs';
+export type { GetAdminAuditLogs$Params as GetAdminAuditLogs$Params } from './fn/admin/get-admin-audit-logs';
+export { getAdminAuditLogs as getAdminAuditLogs } from './fn/admin/get-admin-audit-logs';
 export type { GetAdminSystem$Params as GetAdminSystem$Params } from './fn/admin/get-admin-system';
 export { getAdminSystem as getAdminSystem } from './fn/admin/get-admin-system';
 export type { GetAdminStats$Params as GetAdminStats$Params } from './fn/admin/get-admin-stats';
