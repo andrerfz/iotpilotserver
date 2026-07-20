@@ -819,6 +819,10 @@
       },
       "quick_access": "Quick Access",
       "cards": {
+        "customers": {
+          "label": "Customer Management",
+          "desc": "Create, edit and manage tenant customers."
+        },
         "devices": {
           "label": "Device Management",
           "desc": "View, restart and manage all devices."
@@ -1090,7 +1094,8 @@
     },
     "theme": {
       "light": "Light mode",
-      "dark": "Dark mode"
+      "dark": "Dark mode",
+      "system": "System mode"
     },
     "user_menu": {
       "aria": "User menu",

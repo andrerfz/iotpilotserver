@@ -819,6 +819,10 @@
       },
       "quick_access": "Acesso rápido",
       "cards": {
+        "customers": {
+          "label": "Gerenciamento de clientes",
+          "desc": "Crie, edite e gerencie clientes (tenants)."
+        },
         "devices": {
           "label": "Gerenciamento de dispositivos",
           "desc": "Visualize, reinicie e gerencie todos os dispositivos."
@@ -1090,7 +1094,8 @@
     },
     "theme": {
       "light": "Modo claro",
-      "dark": "Modo escuro"
+      "dark": "Modo escuro",
+      "system": "Modo sistema"
     },
     "user_menu": {
       "aria": "Menu do usuário",
