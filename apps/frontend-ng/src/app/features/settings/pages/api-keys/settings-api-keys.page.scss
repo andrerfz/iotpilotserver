@@ -1,5 +1,13 @@
 .filter-bar {
   margin-bottom: 12px;
+
+  .filter-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+
+    ui-search-field { flex: 1; min-width: 160px; }
+  }
 }
 
 .apikey-banner {

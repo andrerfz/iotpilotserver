@@ -41,6 +41,17 @@
   <h3 class="overview-section">{{ 'admin.overview.quick_access' | translate }}</h3>
 
   <div class="overview-links">
+    @if ((svc.data()?.customerCount ?? -1) >= 0) {
+      <a class="overview-link" routerLink="/app/admin/customers">
+        <div class="overview-link__icon">
+          <ion-icon name="business-outline"></ion-icon>
+        </div>
+        <div>
+          <div class="overview-link__title">{{ 'admin.overview.cards.customers.label' | translate }}</div>
+          <div class="overview-link__sub">{{ 'admin.overview.cards.customers.desc' | translate }}</div>
+        </div>
+      </a>
+    }
     <a class="overview-link" routerLink="/app/devices">
       <div class="overview-link__icon">
         <ion-icon name="hardware-chip-outline"></ion-icon>
