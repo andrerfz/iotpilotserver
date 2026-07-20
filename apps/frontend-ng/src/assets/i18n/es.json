@@ -518,7 +518,12 @@
     },
     "filters": {
       "all_devices": "Todos los dispositivos",
-      "all_sources": "Todas las fuentes"
+      "all_sources": "Todas las fuentes",
+      "all_event_types": "Todos los tipos de evento",
+      "all_resources": "Todos los recursos",
+      "all_results": "Todos los resultados",
+      "success": "Correcto",
+      "failed": "Fallido"
     },
     "actions": {
       "reload": "Recargar",
@@ -529,7 +534,12 @@
       "level": "Nivel",
       "device": "Dispositivo",
       "source": "Fuente",
-      "message": "Mensaje"
+      "message": "Mensaje",
+      "event": "Evento",
+      "user": "Usuario",
+      "resource": "Recurso",
+      "action": "Acción",
+      "success": "Resultado"
     },
     "failed": {
       "title": "Error al cargar los registros",

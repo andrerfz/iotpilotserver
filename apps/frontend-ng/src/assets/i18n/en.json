@@ -518,7 +518,12 @@
     },
     "filters": {
       "all_devices": "All Devices",
-      "all_sources": "All Sources"
+      "all_sources": "All Sources",
+      "all_event_types": "All Event Types",
+      "all_resources": "All Resources",
+      "all_results": "All Results",
+      "success": "Success",
+      "failed": "Failed"
     },
     "actions": {
       "reload": "Reload",
@@ -529,7 +534,12 @@
       "level": "Level",
       "device": "Device",
       "source": "Source",
-      "message": "Message"
+      "message": "Message",
+      "event": "Event",
+      "user": "User",
+      "resource": "Resource",
+      "action": "Action",
+      "success": "Result"
     },
     "failed": {
       "title": "Failed to load logs",

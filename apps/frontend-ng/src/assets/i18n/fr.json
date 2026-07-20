@@ -518,7 +518,12 @@
     },
     "filters": {
       "all_devices": "Tous les appareils",
-      "all_sources": "Toutes les sources"
+      "all_sources": "Toutes les sources",
+      "all_event_types": "Tous les types d'événement",
+      "all_resources": "Toutes les ressources",
+      "all_results": "Tous les résultats",
+      "success": "Réussi",
+      "failed": "Échoué"
     },
     "actions": {
       "reload": "Recharger",
@@ -529,7 +534,12 @@
       "level": "Niveau",
       "device": "Appareil",
       "source": "Source",
-      "message": "Message"
+      "message": "Message",
+      "event": "Événement",
+      "user": "Utilisateur",
+      "resource": "Ressource",
+      "action": "Action",
+      "success": "Résultat"
     },
     "failed": {
       "title": "Échec du chargement des journaux",

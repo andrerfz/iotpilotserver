@@ -518,7 +518,12 @@
     },
     "filters": {
       "all_devices": "Tutti i dispositivi",
-      "all_sources": "Tutte le sorgenti"
+      "all_sources": "Tutte le sorgenti",
+      "all_event_types": "Tutti i tipi di evento",
+      "all_resources": "Tutte le risorse",
+      "all_results": "Tutti i risultati",
+      "success": "Riuscito",
+      "failed": "Fallito"
     },
     "actions": {
       "reload": "Ricarica",
@@ -529,7 +534,12 @@
       "level": "Livello",
       "device": "Dispositivo",
       "source": "Sorgente",
-      "message": "Messaggio"
+      "message": "Messaggio",
+      "event": "Evento",
+      "user": "Utente",
+      "resource": "Risorsa",
+      "action": "Azione",
+      "success": "Esito"
     },
     "failed": {
       "title": "Caricamento log non riuscito",

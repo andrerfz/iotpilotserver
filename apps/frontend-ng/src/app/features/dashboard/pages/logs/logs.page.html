@@ -20,13 +20,19 @@
         <ui-search-field [placeholder]="'logs.search_placeholder' | translate"
           [value]="searchQuery()" (valueChange)="onSearchInput($event)">
         </ui-search-field>
-        <ui-select [placeholder]="'logs.levels.all' | translate" [options]="levelOptions" [(ngModel)]="levelFilter" (ngModelChange)="onFilterChange()"></ui-select>
-        <ui-select [placeholder]="'logs.filters.all_devices' | translate" [options]="deviceOptions()" [(ngModel)]="deviceFilter" (ngModelChange)="onFilterChange()"></ui-select>
-        @if (hasSourceFilter()) {
-          <ui-select [placeholder]="'logs.filters.all_sources' | translate" [options]="sourceOptions()" [(ngModel)]="sourceFilter" (ngModelChange)="onFilterChange()"></ui-select>
+        @if (activeTab() === 'ops') {
+          <ui-select [placeholder]="'logs.levels.all' | translate" [options]="levelOptions" [(ngModel)]="levelFilter" (ngModelChange)="onFilterChange()"></ui-select>
+          <ui-select [placeholder]="'logs.filters.all_devices' | translate" [options]="deviceOptions()" [(ngModel)]="deviceFilter" (ngModelChange)="onFilterChange()"></ui-select>
+          @if (hasSourceFilter()) {
+            <ui-select [placeholder]="'logs.filters.all_sources' | translate" [options]="sourceOptions()" [(ngModel)]="sourceFilter" (ngModelChange)="onFilterChange()"></ui-select>
+          }
+        } @else {
+          <ui-select [placeholder]="'logs.filters.all_event_types' | translate" [options]="eventTypeOptions()" [(ngModel)]="eventTypeFilter" (ngModelChange)="onFilterChange()"></ui-select>
+          <ui-select [placeholder]="'logs.filters.all_resources' | translate" [options]="resourceOptions()" [(ngModel)]="resourceFilter" (ngModelChange)="onFilterChange()"></ui-select>
+          <ui-select [placeholder]="'logs.filters.all_results' | translate" [options]="successOptions" [(ngModel)]="successFilter" (ngModelChange)="onFilterChange()"></ui-select>
         }
         <div class="filter-row__actions">
-          <ion-button fill="outline" color="medium" size="small" (click)="svc.reload()" [disabled]="svc.loading()">
+          <ion-button fill="outline" color="medium" size="small" (click)="reload()" [disabled]="activeLoading()">
             <ion-icon slot="icon-only" name="reload-outline"></ion-icon>
           </ion-button>
         </div>
@@ -35,9 +41,9 @@
   </ion-card>
 
   <!-- Content: error state -->
-  @if (svc.error() && !svc.logs().length) {
+  @if (activeError() && !(activeTab() === 'audit' ? auditSvc.logs() : svc.logs()).length) {
     <ui-empty-state [title]="'logs.failed.title' | translate" [hasAction]="true">
-      <ion-button action fill="outline" size="small" (click)="svc.reload()">{{ 'logs.failed.retry' | translate }}</ion-button>
+      <ion-button action fill="outline" size="small" (click)="reload()">{{ 'logs.failed.retry' | translate }}</ion-button>
     </ui-empty-state>
   } @else {
     <ion-card>
@@ -90,33 +96,35 @@
               <thead>
                 <tr>
                   <th class="col-ts">{{ 'logs.table.timestamp' | translate }}</th>
-                  <th class="col-level">{{ 'logs.table.level' | translate }}</th>
-                  <th class="col-device">{{ 'logs.table.device' | translate }}</th>
-                  <th class="col-source">{{ 'logs.table.source' | translate }}</th>
-                  <th>{{ 'logs.table.message' | translate }}</th>
+                  <th>{{ 'logs.table.event' | translate }}</th>
+                  <th>{{ 'logs.table.user' | translate }}</th>
+                  <th>{{ 'logs.table.resource' | translate }}</th>
+                  <th>{{ 'logs.table.action' | translate }}</th>
+                  <th class="col-level">{{ 'logs.table.success' | translate }}</th>
                 </tr>
               </thead>
               <tbody>
-                @if (svc.loading()) {
+                @if (auditSvc.loading()) {
                   @for (_ of [1,2,3,4,5]; track $index) {
                     <tr>
-                      <td colspan="5"><ion-skeleton-text [animated]="true" style="height:18px;border-radius:4px;"></ion-skeleton-text></td>
+                      <td colspan="6"><ion-skeleton-text [animated]="true" style="height:18px;border-radius:4px;"></ion-skeleton-text></td>
                     </tr>
                   }
-                } @else if (!svc.logs().length) {
+                } @else if (!auditSvc.logs().length) {
                   <tr>
-                    <td colspan="5" class="logs-empty">{{ 'logs.empty' | translate }}</td>
+                    <td colspan="6" class="logs-empty">{{ 'logs.empty' | translate }}</td>
                   </tr>
                 } @else {
-                  @for (log of svc.logs(); track log.id) {
+                  @for (log of auditSvc.logs(); track log.id) {
                     <tr>
                       <td class="col-ts">{{ formatTs(log.timestamp) }}</td>
+                      <td>{{ log.eventType }}</td>
+                      <td>{{ log.user?.username ?? log.user?.email ?? log.userId }}</td>
+                      <td>{{ log.resource }}</td>
+                      <td>{{ log.action }}</td>
                       <td class="col-level">
-                        <ion-badge [color]="levelColor(log.level)">{{ log.level }}</ion-badge>
+                        <ion-badge [color]="successColor(log.success)">{{ (log.success ? 'logs.filters.success' : 'logs.filters.failed') | translate }}</ion-badge>
                       </td>
-                      <td class="col-device">{{ log.device?.hostname ?? '—' }}</td>
-                      <td class="col-source">{{ log.source ?? 'system' }}</td>
-                      <td class="col-msg">{{ log.message }}</td>
                     </tr>
                   }
                 }
@@ -124,22 +132,22 @@
             </table>
           } @else {
             <div class="log-cards">
-              @if (svc.loading()) {
+              @if (auditSvc.loading()) {
                 @for (_ of [1,2,3]; track $index) {
                   <ion-skeleton-text [animated]="true" style="height:54px;border-radius:10px;"></ion-skeleton-text>
                 }
-              } @else if (!svc.logs().length) {
+              } @else if (!auditSvc.logs().length) {
                 <div class="logs-empty">{{ 'logs.empty' | translate }}</div>
               } @else {
-                @for (log of svc.logs(); track log.id) {
+                @for (log of auditSvc.logs(); track log.id) {
                   <div class="log-card" role="button" tabindex="0"
-                    (click)="openDetail(log)" (keydown.enter)="openDetail(log)">
+                    (click)="openAuditDetail(log)" (keydown.enter)="openAuditDetail(log)">
                     <div class="log-card__head">
-                      <ion-badge [color]="levelColor(log.level)">{{ log.level }}</ion-badge>
+                      <ion-badge [color]="successColor(log.success)">{{ (log.success ? 'logs.filters.success' : 'logs.filters.failed') | translate }}</ion-badge>
                       <span class="log-card__ts">{{ formatTs(log.timestamp) }}</span>
                     </div>
-                    <div class="log-card__msg">{{ log.message }}</div>
-                    <div class="log-card__src">{{ log.device?.hostname ?? '—' }} · {{ log.source ?? 'system' }}</div>
+                    <div class="log-card__msg">{{ log.eventType }} · {{ log.action }}</div>
+                    <div class="log-card__src">{{ log.user?.username ?? log.user?.email ?? log.userId }} · {{ log.resource }}</div>
                   </div>
                 }
               }
@@ -149,17 +157,17 @@
 
       </ion-card-content>
 
-      @if (svc.pagination().pages > 1) {
+      @if (activePagination().pages > 1) {
         <div class="logs-pager">
           <ion-button fill="clear" size="small"
-            [disabled]="currentPage() <= 1 || svc.loading()"
+            [disabled]="currentPage() <= 1 || activeLoading()"
             (click)="goToPage(currentPage() - 1)">{{ 'common.previous' | translate }}</ion-button>
           <span class="logs-pager__info">
-            {{ 'common.page' | translate }} {{ currentPage() }} {{ 'common.of' | translate }} {{ svc.pagination().pages }}
-            &nbsp;·&nbsp; {{ svc.pagination().total }} {{ 'common.total' | translate }}
+            {{ 'common.page' | translate }} {{ currentPage() }} {{ 'common.of' | translate }} {{ activePagination().pages }}
+            &nbsp;·&nbsp; {{ activePagination().total }} {{ 'common.total' | translate }}
           </span>
           <ion-button fill="clear" size="small"
-            [disabled]="currentPage() >= svc.pagination().pages || svc.loading()"
+            [disabled]="currentPage() >= activePagination().pages || activeLoading()"
             (click)="goToPage(currentPage() + 1)">{{ 'common.next' | translate }}</ion-button>
         </div>
       }
@@ -190,7 +198,7 @@
     </div>
   </ui-bottom-sheet>
 
-  <!-- Log detail sheet (audit tab, mobile) -->
+  <!-- Log detail sheet (mobile tap — ops or audit row, never both at once) -->
   <ui-bottom-sheet #logSheet [title]="'logs.detail' | translate" [showSave]="false">
     @if (selectedLog(); as log) {
       <div class="detail-list">
@@ -199,6 +207,19 @@
         <div class="detail-row"><span class="detail-row__k">{{ 'logs.table.device' | translate }}</span><span class="detail-row__v">{{ log.device?.hostname ?? '—' }}</span></div>
         <div class="detail-row"><span class="detail-row__k">{{ 'logs.table.source' | translate }}</span><span class="detail-row__v detail-row__v--mono">{{ log.source ?? 'system' }}</span></div>
         <div class="detail-row"><span class="detail-row__k">{{ 'logs.table.message' | translate }}</span><span class="detail-row__v">{{ log.message }}</span></div>
+      </div>
+    }
+    @if (selectedAuditLog(); as log) {
+      <div class="detail-list">
+        <div class="detail-row"><span class="detail-row__k">{{ 'logs.table.timestamp' | translate }}</span><span class="detail-row__v detail-row__v--mono">{{ formatTs(log.timestamp) }}</span></div>
+        <div class="detail-row"><span class="detail-row__k">{{ 'logs.table.event' | translate }}</span><span class="detail-row__v">{{ log.eventType }}</span></div>
+        <div class="detail-row"><span class="detail-row__k">{{ 'logs.table.user' | translate }}</span><span class="detail-row__v">{{ log.user?.username ?? log.user?.email ?? log.userId }}</span></div>
+        <div class="detail-row"><span class="detail-row__k">{{ 'logs.table.resource' | translate }}</span><span class="detail-row__v detail-row__v--mono">{{ log.resource }}</span></div>
+        <div class="detail-row"><span class="detail-row__k">{{ 'logs.table.action' | translate }}</span><span class="detail-row__v">{{ log.action }}</span></div>
+        <div class="detail-row"><span class="detail-row__k">{{ 'logs.table.success' | translate }}</span><span class="detail-row__v">{{ (log.success ? 'logs.filters.success' : 'logs.filters.failed') | translate }}</span></div>
+        @if (log.errorMessage) {
+          <div class="detail-row"><span class="detail-row__k">{{ 'common.error' | translate }}</span><span class="detail-row__v">{{ log.errorMessage }}</span></div>
+        }
       </div>
     }
   </ui-bottom-sheet>
