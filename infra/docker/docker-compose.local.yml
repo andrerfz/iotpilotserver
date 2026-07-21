@@ -339,6 +339,9 @@ services:
     volumes:
       - ../traefik/traefik.local.yml:/etc/traefik/traefik.yml:ro
       - ../traefik/dynamic:/etc/traefik/dynamic:ro
+      # Self-signed local cert — local-only, kept out of dynamic/ (shared with
+      # production) so prod doesn't try to load a .test certificate.
+      - ../traefik/dynamic-local/tls.yml:/etc/traefik/dynamic/tls.yml:ro
       - ../traefik/certs:/etc/traefik/certs:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
     restart: unless-stopped

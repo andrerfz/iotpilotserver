@@ -25,7 +25,12 @@ providers:
 certificatesResolvers:
   letsencrypt:
     acme:
-      email: "${ACME_EMAIL}"
+      # Traefik's static config file is parsed as plain YAML — it does NOT expand
+      # ${VAR} (that's shell/compose syntax) or {{ env "VAR" }} (that's the dynamic
+      # file provider's templating, unavailable here). The literal string
+      # "${ACME_EMAIL}" was being sent to Let's Encrypt as the contact address and
+      # rejected (invalidContact). Not a secret, so just hardcode it.
+      email: "support@iotpilot.app"
       storage: /etc/traefik/acme/acme.json
       httpChallenge:
         entryPoint: web

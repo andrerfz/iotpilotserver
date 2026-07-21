@@ -295,7 +295,10 @@ services:
 
   # Traefik reverse proxy with Tailscale integration
   traefik:
-    image: traefik:v3.0
+    # v3.0 (pinned mid-2024) shipped a Docker client too old for current Docker
+    # Engine (API 1.24 vs the host's 1.40+) — the docker provider couldn't read
+    # any container labels. v3.6 is compatible.
+    image: traefik:v3.6
     container_name: iotpilot-traefik
     mem_limit: 96m
     ports:
@@ -303,7 +306,6 @@ services:
       - "443:443"
       - "8080:8080"
     environment:
-      - ACME_EMAIL=${ACME_EMAIL}
       - DOMAIN=${DOMAIN}
       - TRAEFIK_AUTH=${TRAEFIK_AUTH}
     volumes:
