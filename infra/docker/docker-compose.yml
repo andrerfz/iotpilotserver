@@ -2,7 +2,15 @@ version: '3.8'
 
 services:
   # Tailscale Sidecar - Core networking component
+  #
+  # Built for the original self-host plan (OrangePi as the production server,
+  # accessed over the Tailscale network) — abandoned in favor of EC2 +
+  # Cloudflare Tunnel, which doesn't route through this or Traefik at all.
+  # Gated behind a profile so `docker compose up -d` (what every deploy runs)
+  # skips it; the config stays in place if self-hosting is revisited.
+  # Reactivate with: docker compose --profile standalone-host up -d
   tailscale:
+    profiles: ["standalone-host"]
     image: tailscale/tailscale:latest
     container_name: iotpilot-tailscale
     hostname: iotpilot-server
@@ -294,7 +302,15 @@ services:
       - iotpilot-network
 
   # Traefik reverse proxy with Tailscale integration
+  #
+  # Not in the current production request path: dashboard.iotpilot.app and
+  # iotpilot.app both resolve to Cloudflare, which reaches this host only via
+  # the cloudflared tunnel straight to each container — never through
+  # Traefik's :80/:443. Same self-host-plan origin as tailscale above; gated
+  # behind the same profile. Reactivate with:
+  # docker compose --profile standalone-host up -d
   traefik:
+    profiles: ["standalone-host"]
     # v3.0 (pinned mid-2024) shipped a Docker client too old for current Docker
     # Engine (API 1.24 vs the host's 1.40+) — the docker provider couldn't read
     # any container labels. v3.6 is compatible.
